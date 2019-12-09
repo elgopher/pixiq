@@ -1,5 +1,7 @@
 package ram
 
+import "github.com/jacekolszak/pixiq/color"
+
 func NewImage(width, height int) *Image {
 	return &Image{
 		width:  width,
@@ -57,4 +59,12 @@ func (s Selection) Line(y int) Line {
 }
 
 type Line struct {
+}
+
+// Set sets pixel color with given local X coordinate
+func (l Line) Set(x int, c color.Color) {
+}
+
+func (l Line) Get(x int) color.Color {
+	return color.Color{}
 }
