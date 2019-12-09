@@ -16,8 +16,6 @@ RUN apk add --no-cache --virtual .build-deps bash gcc musl-dev openssl go && \
     rm go.tgz && \
     cd /usr/local/go/src/ && \
     ./make.bash && \
-    echo "export PATH=\"/usr/local/go/bin:\$PATH\"" >/etc/profile.d/go && \
-    echo "export GOPATH=/opt/go/" >>/etc/profile.d/go && \
-    echo "export PATH=\$PATH:\$GOPATH/bin" >>/etc/profile.d/go && \
     apk del .build-deps
+ENV GOPATH=/opt/go/ PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
 
