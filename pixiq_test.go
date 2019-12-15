@@ -98,7 +98,7 @@ func TestImage_Selection(t *testing.T) {
 
 func TestSelection_WithSize(t *testing.T) {
 	images := pixiq.NewImages()
-	image := images.New(4, 2)
+	image := images.New(0, 0)
 
 	t.Run("should set selection width to zero if given width is negative", func(t *testing.T) {
 		selection := image.Selection(1, 2)
