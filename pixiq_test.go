@@ -68,3 +68,71 @@ func TestImages_New(t *testing.T) {
 		}
 	})
 }
+
+func TestImage_Selection(t *testing.T) {
+	images := pixiq.NewImages()
+	image := images.New(4, 2)
+
+	t.Run("should create a selection for negative x", func(t *testing.T) {
+		selection := image.Selection(-1, 0)
+		require.NotNil(t, selection)
+		assert.Equal(t, selection.X(), -1)
+	})
+
+	t.Run("should create a selection for negative y", func(t *testing.T) {
+		selection := image.Selection(0, -1)
+		require.NotNil(t, selection)
+		assert.Equal(t, selection.Y(), -1)
+	})
+
+	t.Run("should create a selection", func(t *testing.T) {
+		selection := image.Selection(1, 2)
+		require.NotNil(t, selection)
+		assert.Equal(t, selection.X(), 1)
+		assert.Equal(t, selection.Y(), 2)
+		assert.Equal(t, selection.Width(), 0)
+		assert.Equal(t, selection.Height(), 0)
+	})
+
+}
+
+func TestSelection_WithSize(t *testing.T) {
+	images := pixiq.NewImages()
+	image := images.New(4, 2)
+
+	t.Run("should set selection width to zero if given width is negative", func(t *testing.T) {
+		selection := image.Selection(1, 2)
+		// when
+		selection = selection.WithSize(-1, 4)
+		assert.Equal(t, selection.Width(), 0)
+	})
+
+	t.Run("should set selection width to zero if given width is negative and previously width was set to positive number", func(t *testing.T) {
+		selection := image.Selection(1, 2).WithSize(5, 0)
+		// when
+		selection = selection.WithSize(-1, 4)
+		assert.Equal(t, selection.Width(), 0)
+	})
+
+	t.Run("should set selection height to zero if given height is negative", func(t *testing.T) {
+		selection := image.Selection(1, 2)
+		// when
+		selection = selection.WithSize(3, -1)
+		assert.Equal(t, selection.Height(), 0)
+	})
+
+	t.Run("should set selection height to zero if given height is negative and previously height was set to positive number", func(t *testing.T) {
+		selection := image.Selection(1, 2).WithSize(0, 5)
+		// when
+		selection = selection.WithSize(3, -1)
+		assert.Equal(t, selection.Height(), 0)
+	})
+
+	t.Run("should set selection size", func(t *testing.T) {
+		selection := image.Selection(1, 2)
+		// when
+		selection = selection.WithSize(3, 4)
+		assert.Equal(t, selection.Width(), 3)
+		assert.Equal(t, selection.Height(), 4)
+	})
+}

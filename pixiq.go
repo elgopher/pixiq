@@ -39,3 +39,44 @@ func (i *Image) Width() int {
 func (i *Image) Height() int {
 	return i.height
 }
+
+func (i *Image) Selection(x int, y int) Selection {
+	var s Selection
+	s.x = x
+	s.y = y
+	return s
+}
+
+type Selection struct {
+	x, y, width, height int
+}
+
+func (s Selection) Width() int {
+	return s.width
+}
+
+func (s Selection) Height() int {
+	return s.height
+}
+
+func (s Selection) X() int {
+	return s.x
+}
+
+func (s Selection) Y() int {
+	return s.y
+}
+
+func (s Selection) WithSize(width, height int) Selection {
+	if width > 0 {
+		s.width = width
+	} else {
+		s.width = 0
+	}
+	if height > 0 {
+		s.height = height
+	} else {
+		s.height = 0
+	}
+	return s
+}
