@@ -69,6 +69,7 @@ type Selection struct {
 	width, height int
 }
 
+// Image returns image for which the selection was made
 func (s Selection) Image() *Image {
 	return s.image
 }
