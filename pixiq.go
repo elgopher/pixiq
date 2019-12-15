@@ -43,10 +43,10 @@ func (i *Image) Height() int {
 // Selection makes a rectangular selection starting at a given position. The position has to be top-left position.
 // Both x and y can be negative, meaning that selection starts outside the image.
 func (i *Image) Selection(x int, y int) Selection {
-	var s Selection
-	s.x = x
-	s.y = y
-	return s
+	return Selection{
+		x: x,
+		y: y,
+	}
 }
 
 // Selection marks a selection on top of the image.
