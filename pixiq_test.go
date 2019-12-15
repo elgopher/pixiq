@@ -71,24 +71,52 @@ func TestImages_New(t *testing.T) {
 
 func TestImage_Selection(t *testing.T) {
 	images := pixiq.NewImages()
-	image := images.New(4, 2)
+	image := images.New(0, 0)
 
 	t.Run("should create a selection for negative x", func(t *testing.T) {
 		selection := image.Selection(-1, 0)
-		assert.Equal(t, selection.X(), -1)
+		assert.Equal(t, -1, selection.ImageX())
 	})
 
 	t.Run("should create a selection for negative y", func(t *testing.T) {
 		selection := image.Selection(0, -1)
-		assert.Equal(t, selection.Y(), -1)
+		assert.Equal(t, -1, selection.ImageY())
 	})
 
 	t.Run("should create a selection", func(t *testing.T) {
 		selection := image.Selection(1, 2)
-		assert.Equal(t, selection.X(), 1)
-		assert.Equal(t, selection.Y(), 2)
-		assert.Equal(t, selection.Width(), 0)
-		assert.Equal(t, selection.Height(), 0)
+		assert.Equal(t, 1, selection.ImageX())
+		assert.Equal(t, 2, selection.ImageY())
+		assert.Equal(t, 0, selection.Width())
+		assert.Equal(t, 0, selection.Height())
+		assert.Same(t, image, selection.Image())
+	})
+}
+
+func TestSelection_Selection(t *testing.T) {
+	images := pixiq.NewImages()
+	image := images.New(0, 0)
+
+	t.Run("should create a selection for negative x", func(t *testing.T) {
+		selection := image.Selection(2, 0)
+		subject := selection.Selection(-1, 0)
+		assert.Equal(t, 1, subject.ImageX())
+	})
+
+	t.Run("should create a selection for negative y", func(t *testing.T) {
+		selection := image.Selection(0, 2)
+		subject := selection.Selection(0, -1)
+		assert.Equal(t, 1, subject.ImageY())
+	})
+
+	t.Run("should create a selection out of selection", func(t *testing.T) {
+		selection := image.Selection(1, 2)
+		subject := selection.Selection(2, 3)
+		assert.Equal(t, 3, subject.ImageX())
+		assert.Equal(t, 5, subject.ImageY())
+		assert.Equal(t, 0, subject.Width())
+		assert.Equal(t, 0, subject.Height())
+		assert.Same(t, image, subject.Image())
 	})
 }
 
@@ -100,10 +128,11 @@ func TestImage_WholeImageSelection(t *testing.T) {
 		// when
 		selection := image.WholeImageSelection()
 		// then
-		assert.Equal(t, selection.X(), 0)
-		assert.Equal(t, selection.Y(), 0)
-		assert.Equal(t, selection.Width(), 3)
-		assert.Equal(t, selection.Height(), 2)
+		assert.Equal(t, 0, selection.ImageX())
+		assert.Equal(t, 0, selection.ImageY())
+		assert.Equal(t, 3, selection.Width())
+		assert.Equal(t, 2, selection.Height())
+		assert.Same(t, image, selection.Image())
 	})
 }
 
@@ -115,35 +144,35 @@ func TestSelection_WithSize(t *testing.T) {
 		selection := image.Selection(1, 2)
 		// when
 		selection = selection.WithSize(-1, 4)
-		assert.Equal(t, selection.Width(), 0)
+		assert.Equal(t, 0, selection.Width())
 	})
 
 	t.Run("should clamp width to zero if given width is negative and previously width was set to positive number", func(t *testing.T) {
 		selection := image.Selection(1, 2).WithSize(5, 0)
 		// when
 		selection = selection.WithSize(-1, 4)
-		assert.Equal(t, selection.Width(), 0)
+		assert.Equal(t, 0, selection.Width())
 	})
 
 	t.Run("should set selection height to zero if given height is negative", func(t *testing.T) {
 		selection := image.Selection(1, 2)
 		// when
 		selection = selection.WithSize(3, -1)
-		assert.Equal(t, selection.Height(), 0)
+		assert.Equal(t, 0, selection.Height())
 	})
 
 	t.Run("should clamp height to zero if given height is negative and previously height was set to positive number", func(t *testing.T) {
 		selection := image.Selection(1, 2).WithSize(0, 5)
 		// when
 		selection = selection.WithSize(3, -1)
-		assert.Equal(t, selection.Height(), 0)
+		assert.Equal(t, 0, selection.Height())
 	})
 
 	t.Run("should set selection size", func(t *testing.T) {
 		selection := image.Selection(1, 2)
 		// when
 		selection = selection.WithSize(3, 4)
-		assert.Equal(t, selection.Width(), 3)
-		assert.Equal(t, selection.Height(), 4)
+		assert.Equal(t, 3, selection.Width())
+		assert.Equal(t, 4, selection.Height())
 	})
 }
