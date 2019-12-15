@@ -7,16 +7,13 @@ import (
 )
 
 func BenchmarkRGBAi(b *testing.B) {
-	b.StopTimer()
 	var (
 		red   = 557
 		green = -867
 		blue  = 612
 		alpha = -403
 	)
-	b.StartTimer()
 	benchmarkRGBAi(b, red, green, blue, alpha)
-	b.StopTimer()
 }
 
 func benchmarkRGBAi(b *testing.B, red int, green int, blue int, alpha int) pixiq.Color {
