@@ -40,6 +40,8 @@ func (i *Image) Height() int {
 	return i.height
 }
 
+// Selection makes a rectangular selection starting at a given position. The position has to be top-left position.
+// Both x and y can be negative, meaning that selection starts outside the image.
 func (i *Image) Selection(x int, y int) Selection {
 	var s Selection
 	s.x = x
@@ -47,26 +49,32 @@ func (i *Image) Selection(x int, y int) Selection {
 	return s
 }
 
+// Selection marks a selection on top of the image.
 type Selection struct {
 	x, y, width, height int
 }
 
+// Width returns the width of selection in pixels.
 func (s Selection) Width() int {
 	return s.width
 }
 
+// Height returns the height of selection in pixels.
 func (s Selection) Height() int {
 	return s.height
 }
 
+// X returns the starting position
 func (s Selection) X() int {
 	return s.x
 }
 
+// Y returns the starting position
 func (s Selection) Y() int {
 	return s.y
 }
 
+// WithSize creates a new selection with specified size in pixels. Width or height are clamped to 0
 func (s Selection) WithSize(width, height int) Selection {
 	if width > 0 {
 		s.width = width
