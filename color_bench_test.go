@@ -16,7 +16,7 @@ func BenchmarkRGBAi(b *testing.B) {
 	benchmarkRGBAi(b, red, green, blue, alpha)
 }
 
-func benchmarkRGBAi(b *testing.B, red int, green int, blue int, alpha int) pixiq.Color {
+func benchmarkRGBAi(b *testing.B, red, green, blue, alpha int) pixiq.Color {
 	var c pixiq.Color
 	for i := 0; i < b.N; i++ {
 		c = pixiq.RGBAi(red, green, blue, alpha)
