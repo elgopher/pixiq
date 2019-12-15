@@ -21,6 +21,7 @@ func (i *Images) New(width, height int) *Image {
 	return &Image{
 		width:  w,
 		height: h,
+		pixels: make([]Color, w*h),
 	}
 }
 
@@ -30,7 +31,9 @@ func (i *Images) New(width, height int) *Image {
 // The cost of creating an Image is huge therefore new images should be created sporadically, ideally when
 // the application starts.
 type Image struct {
-	width, height int
+	width  int
+	height int
+	pixels []Color
 }
 
 // Width returns the number of pixels in a row.
@@ -55,14 +58,12 @@ func (i *Image) Selection(x int, y int) Selection {
 
 // WholeImageSelection make selection of entire image.
 func (i *Image) WholeImageSelection() Selection {
-	return Selection{
-		width:  i.width,
-		height: i.height,
-		image:  i,
-	}
+	return i.Selection(0, 0).WithSize(i.width, i.height)
 }
 
-// Selection marks a selection on top of the image.
+// Selection marks a selection on top of the image. Most Selection methods - such as Color, SetColor and Selection use local
+// coordinates which means that top-left corner of Selection is an origin (0,0). This position can be different than
+// position given in image coordinates.
 type Selection struct {
 	image         *Image
 	x, y          int
@@ -118,4 +119,21 @@ func (s Selection) Selection(localX, localY int) Selection {
 		y:     localY + s.y,
 		image: s.image,
 	}
+}
+
+// Color returns the color of the pixel at a specific position. Passed coordinates are local,
+// which means that the top-left corner of selection is equivalent to localX=0, localY=0.
+// Negative coordinates are supported. If pixel is outside the image boundaries then transparent color is returned.
+func (s Selection) Color(localX, localY int) Color {
+	if localX < 0 || localY < 0 || localY >= s.image.height {
+		return Transparent
+	}
+	return s.image.pixels[localY*s.image.width+localX]
+}
+
+// SetColor set the color of the pixel at specific position. Passed coordinates are local,
+// which means that the top-left corner of selection is equivalent to localX=0, localY=0.
+// Negative coordinates are supported. If pixel is outside the image boundaries then nothing happens.
+func (s Selection) SetColor(localX, localY int, color Color) {
+	s.image.pixels[0] = color
 }

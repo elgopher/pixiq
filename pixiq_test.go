@@ -9,6 +9,8 @@ import (
 	"github.com/jacekolszak/pixiq"
 )
 
+var transparent = pixiq.RGBA(0, 0, 0, 0)
+
 func TestNewImages(t *testing.T) {
 	t.Run("should create image factory", func(t *testing.T) {
 		images := pixiq.NewImages()
@@ -175,4 +177,75 @@ func TestSelection_WithSize(t *testing.T) {
 		assert.Equal(t, 3, selection.Width())
 		assert.Equal(t, 4, selection.Height())
 	})
+}
+
+func TestSelection_Color(t *testing.T) {
+	t.Run("by default all image colors are transparent", func(t *testing.T) {
+		// given
+		images := pixiq.NewImages()
+		image := images.New(2, 3)
+		selection := image.Selection(0, 0).WithSize(2, 3)
+		for y := 0; y < 3; y++ {
+			for x := 0; x < 2; x++ {
+				// when
+				color := selection.Color(x, y)
+				// then
+				assert.Equal(t, transparent, color)
+			}
+		}
+	})
+	t.Run("pixels outside the image are transparent", func(t *testing.T) {
+		// given
+		width, height := 2, 3
+		image := imageOfColor(width, height, pixiq.RGBA(10, 20, 30, 40))
+		tests := map[string]struct{ x, y int }{
+			"on the left": {
+				x: -1, y: 0,
+			},
+			"on the right": {
+				x: width, y: 0,
+			},
+			"above": {
+				x: 0, y: -1,
+			},
+			"under": {
+				x: 0, y: height,
+			},
+		}
+		selection := image.Selection(0, 0).WithSize(width, height)
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				// when
+				color := selection.Color(test.x, test.y)
+				// then
+				assert.Equal(t, transparent, color)
+			})
+		}
+	})
+	t.Run("should set pixel color", func(t *testing.T) {
+		// given
+		images := pixiq.NewImages()
+		image := images.New(2, 2)
+		selection := image.Selection(0, 0).WithSize(2, 2)
+		color := pixiq.RGBA(10, 20, 30, 40)
+		// when
+		selection.SetColor(0, 0, color)
+		// then
+		assert.Equal(t, color, selection.Color(0, 0))
+		assert.Equal(t, transparent, selection.Color(1, 0))
+		assert.Equal(t, transparent, selection.Color(0, 1))
+		assert.Equal(t, transparent, selection.Color(1, 1))
+	})
+}
+
+func imageOfColor(width, height int, color pixiq.Color) *pixiq.Image {
+	images := pixiq.NewImages()
+	image := images.New(width, height)
+	selection := image.Selection(0, 0).WithSize(width, height)
+	for y := 0; y < height; y++ {
+		for x := 0; x < width; x++ {
+			selection.SetColor(x, y, color)
+		}
+	}
+	return image
 }
