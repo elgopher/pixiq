@@ -49,6 +49,14 @@ func (i *Image) Selection(x int, y int) Selection {
 	}
 }
 
+// WholeImageSelection make selection of entire image
+func (i *Image) WholeImageSelection() Selection {
+	return Selection{
+		width:  i.width,
+		height: i.height,
+	}
+}
+
 // Selection marks a selection on top of the image.
 type Selection struct {
 	x, y, width, height int

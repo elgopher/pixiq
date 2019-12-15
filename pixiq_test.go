@@ -75,25 +75,36 @@ func TestImage_Selection(t *testing.T) {
 
 	t.Run("should create a selection for negative x", func(t *testing.T) {
 		selection := image.Selection(-1, 0)
-		require.NotNil(t, selection)
 		assert.Equal(t, selection.X(), -1)
 	})
 
 	t.Run("should create a selection for negative y", func(t *testing.T) {
 		selection := image.Selection(0, -1)
-		require.NotNil(t, selection)
 		assert.Equal(t, selection.Y(), -1)
 	})
 
 	t.Run("should create a selection", func(t *testing.T) {
 		selection := image.Selection(1, 2)
-		require.NotNil(t, selection)
 		assert.Equal(t, selection.X(), 1)
 		assert.Equal(t, selection.Y(), 2)
 		assert.Equal(t, selection.Width(), 0)
 		assert.Equal(t, selection.Height(), 0)
 	})
+}
 
+func TestImage_WholeImageSelection(t *testing.T) {
+	t.Run("should create a selection of whole image", func(t *testing.T) {
+		// given
+		images := pixiq.NewImages()
+		image := images.New(3, 2)
+		// when
+		selection := image.WholeImageSelection()
+		// then
+		assert.Equal(t, selection.X(), 0)
+		assert.Equal(t, selection.Y(), 0)
+		assert.Equal(t, selection.Width(), 3)
+		assert.Equal(t, selection.Height(), 2)
+	})
 }
 
 func TestSelection_WithSize(t *testing.T) {
