@@ -6,7 +6,7 @@ Create Pixel Art games in Golang with fun and ease.
 
 ## What you can do with Pixiq?
 
-+ draw images on the screen in real time using your favourite [Go programming language](https://golang.org/)
++ draw images on a screen in real time using your favourite [Go programming language](https://golang.org/)
 + manipulate every single pixel directly or with the use of tools
 
 ## What is Pixel Art?
