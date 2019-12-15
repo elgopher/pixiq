@@ -2,7 +2,7 @@ test:
 	go test -race -v ./...
 
 lint:
-	golint
+	golint ./...
 
 test-ci:
 	./ci/run-tests.sh
