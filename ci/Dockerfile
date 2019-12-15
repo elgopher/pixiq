@@ -17,5 +17,7 @@ RUN apk add --no-cache --virtual .build-deps bash gcc musl-dev openssl go && \
     cd /usr/local/go/src/ && \
     ./make.bash && \
     apk del .build-deps
-ENV GOPATH=/opt/go/ PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
+ENV GOPATH=/opt/go/ PATH=$PATH:/usr/local/go/bin:/opt/go/bin
 
+# Install golint
+RUN go get -u golang.org/x/lint/golint
