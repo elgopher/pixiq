@@ -5,7 +5,8 @@ version: 2
 jobs:
   build:
     docker:
-      - image: hakyer/opengl-go-glfw:19.0.8.1
+      - image: hakyer/opengl-go-glfw:19.0.8.2
     steps:
       - checkout
+      - run: make lint
       - run: make test-ci

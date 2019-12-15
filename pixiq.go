@@ -24,8 +24,11 @@ func (i *Images) New(width, height int) *Image {
 	}
 }
 
-// Image is a 2D picture composed of pixels each having specific color. The cost of creating an Image is huge therefore
-// new images should be created sporadically, ideally when the application starts.
+// Image is a 2D picture composed of pixels each having a specific color. Image is using 2 coordinates: X and Y to
+// specify the position of a pixel. The origin (0,0) is at the top-left corner of the image.
+//
+// The cost of creating an Image is huge therefore new images should be created sporadically, ideally when
+// the application starts.
 type Image struct {
 	width, height int
 }
@@ -44,14 +47,31 @@ func (i *Image) Height() int {
 // Both x and y can be negative, meaning that selection starts outside the image.
 func (i *Image) Selection(x int, y int) Selection {
 	return Selection{
-		x: x,
-		y: y,
+		x:     x,
+		y:     y,
+		image: i,
+	}
+}
+
+// WholeImageSelection make selection of entire image
+func (i *Image) WholeImageSelection() Selection {
+	return Selection{
+		width:  i.width,
+		height: i.height,
+		image:  i,
 	}
 }
 
 // Selection marks a selection on top of the image.
 type Selection struct {
-	x, y, width, height int
+	image         *Image
+	x, y          int
+	width, height int
+}
+
+// Image returns image for which the selection was made
+func (s Selection) Image() *Image {
+	return s.image
 }
 
 // Width returns the width of selection in pixels.
@@ -64,13 +84,13 @@ func (s Selection) Height() int {
 	return s.height
 }
 
-// X returns the starting position
-func (s Selection) X() int {
+// ImageX returns the starting position in image coordinates
+func (s Selection) ImageX() int {
 	return s.x
 }
 
-// Y returns the starting position
-func (s Selection) Y() int {
+// ImageY returns the starting position in image coordinates
+func (s Selection) ImageY() int {
 	return s.y
 }
 
@@ -87,4 +107,15 @@ func (s Selection) WithSize(width, height int) Selection {
 		s.height = 0
 	}
 	return s
+}
+
+// Selection makes a new selection using the coordinates of existing selection. Passed coordinates are local, which means
+// that the top-left corner of existing selection is (0,0).
+// Both coordinates can be negative, meaning that selection starts outside the original selection.
+func (s Selection) Selection(localX, localY int) Selection {
+	return Selection{
+		x:     localX + s.x,
+		y:     localY + s.y,
+		image: s.image,
+	}
 }
