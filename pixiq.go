@@ -53,7 +53,7 @@ func (i *Image) Selection(x int, y int) Selection {
 	}
 }
 
-// WholeImageSelection make selection of entire image
+// WholeImageSelection make selection of entire image.
 func (i *Image) WholeImageSelection() Selection {
 	return Selection{
 		width:  i.width,
@@ -69,7 +69,7 @@ type Selection struct {
 	width, height int
 }
 
-// Image returns image for which the selection was made
+// Image returns image for which the selection was made.
 func (s Selection) Image() *Image {
 	return s.image
 }
@@ -84,17 +84,17 @@ func (s Selection) Height() int {
 	return s.height
 }
 
-// ImageX returns the starting position in image coordinates
+// ImageX returns the starting position in image coordinates.
 func (s Selection) ImageX() int {
 	return s.x
 }
 
-// ImageY returns the starting position in image coordinates
+// ImageY returns the starting position in image coordinates.
 func (s Selection) ImageY() int {
 	return s.y
 }
 
-// WithSize creates a new selection with specified size in pixels. Width or height are clamped to 0
+// WithSize creates a new selection with specified size in pixels. Width or height are clamped to 0 if necessarily.
 func (s Selection) WithSize(width, height int) Selection {
 	if width > 0 {
 		s.width = width
@@ -109,8 +109,8 @@ func (s Selection) WithSize(width, height int) Selection {
 	return s
 }
 
-// Selection makes a new selection using the coordinates of existing selection. Passed coordinates are local, which means
-// that the top-left corner of existing selection is (0,0).
+// Selection makes a new selection using the coordinates of existing selection. Passed coordinates are local,
+// which means that the top-left corner of existing selection is equivalent to localX=0, localY=0.
 // Both coordinates can be negative, meaning that selection starts outside the original selection.
 func (s Selection) Selection(localX, localY int) Selection {
 	return Selection{
