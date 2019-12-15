@@ -1,24 +1,28 @@
 package pixiq_test
 
 import (
-	"fmt"
-	"math/rand"
 	"testing"
 
 	"github.com/jacekolszak/pixiq"
 )
 
 func BenchmarkRGBAi(b *testing.B) {
-	var c pixiq.Color
 	b.StopTimer()
-	red := rand.Int()
-	green := rand.Int()
-	blue := rand.Int()
-	alpha := rand.Int()
+	var (
+		red   = 557
+		green = -867
+		blue  = 612
+		alpha = -403
+	)
 	b.StartTimer()
+	benchmarkRGBAi(b, red, green, blue, alpha)
+	b.StopTimer()
+}
+
+func benchmarkRGBAi(b *testing.B, red int, green int, blue int, alpha int) pixiq.Color {
+	var c pixiq.Color
 	for i := 0; i < b.N; i++ {
 		c = pixiq.RGBAi(red, green, blue, alpha)
 	}
-	b.StopTimer()
-	fmt.Println(c.R() + c.G() + c.B() + c.A())
+	return c
 }
