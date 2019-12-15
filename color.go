@@ -1,5 +1,8 @@
 package pixiq
 
+// Transparent is a special color where each component is zero (including alpha)
+var Transparent = RGBA(0, 0, 0, 0)
+
 // Color represents pixel color using 4 components: Red, Green, Black and Alpha.
 // Red, Green and Blue components are not premultiplied by alpha (aka straight alpha), that is RGB and alpha are
 // independent. You can change one without affecting the other.
