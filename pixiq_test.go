@@ -29,11 +29,42 @@ func TestImages_New(t *testing.T) {
 		require.NotNil(t, image)
 		assert.Equal(t, 0, image.Height())
 	})
-	t.Run("should create a new image", func(t *testing.T) {
+	t.Run("should create an image of any size", func(t *testing.T) {
+		// given
+		tests := map[string]struct {
+			width, height int
+		}{
+			"0x0": {
+				width:  0,
+				height: 0,
+			},
+			"0x1": {
+				width:  0,
+				height: 1,
+			},
+			"1x0": {
+				width:  1,
+				height: 0,
+			},
+			"1x1": {
+				width:  1,
+				height: 1,
+			},
+			"2x3": {
+				width:  2,
+				height: 3,
+			},
+		}
 		images := pixiq.NewImages()
-		image := images.New(2, 3)
-		require.NotNil(t, image)
-		assert.Equal(t, 2, image.Width())
-		assert.Equal(t, 3, image.Height())
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				// when
+				image := images.New(test.width, test.height)
+				// then
+				require.NotNil(t, image)
+				assert.Equal(t, test.width, image.Width())
+				assert.Equal(t, test.height, image.Height())
+			})
+		}
 	})
 }
