@@ -125,7 +125,7 @@ func (s Selection) Selection(localX, localY int) Selection {
 // which means that the top-left corner of selection is equivalent to localX=0, localY=0.
 // Negative coordinates are supported. If pixel is outside the image boundaries then transparent color is returned.
 func (s Selection) Color(localX, localY int) Color {
-	if localX < 0 || localY < 0 || localY >= s.image.height {
+	if localX < 0 || localY < 0 || localY >= s.image.height || localX >= s.image.width {
 		return Transparent
 	}
 	return s.image.pixels[localY*s.image.width+localX]
