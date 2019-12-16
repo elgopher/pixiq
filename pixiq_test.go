@@ -218,6 +218,36 @@ func TestSelection_Color(t *testing.T) {
 			})
 		}
 	})
+
+	t.Run("setting pixel outside the image does nothing", func(t *testing.T) {
+		width, height := 2, 3
+		imageColor := pixiq.RGBA(10, 20, 30, 40)
+		image := imageOfColor(width, height, imageColor)
+		tests := map[string]struct{ x, y int }{
+			"on the left": {
+				x: -1, y: 0,
+			},
+			"on the right": {
+				x: width, y: 0,
+			},
+			"above": {
+				x: 0, y: -1,
+			},
+			"under": {
+				x: 0, y: height,
+			},
+		}
+		selection := image.Selection(0, 0).WithSize(width, height)
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				// when
+				selection.SetColor(test.x, test.y, pixiq.RGBA(50, 60, 70, 80))
+				// then
+				assertColorImage(t, image, imageColor)
+			})
+		}
+	})
+
 	t.Run("should set color of", func(t *testing.T) {
 		color := pixiq.RGBA(10, 20, 30, 40)
 		tests := map[string]struct {
@@ -329,4 +359,12 @@ func imageOfColor(width, height int, color pixiq.Color) *pixiq.Image {
 		}
 	}
 	return image
+}
+
+func assertColorImage(t *testing.T, image *pixiq.Image, color pixiq.Color) {
+	for y := 0; y < image.Height(); y++ {
+		for x := 0; x < image.Width(); x++ {
+			assert.Equal(t, image.Selection(x, y).Color(0, 0), color)
+		}
+	}
 }
