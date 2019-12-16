@@ -247,11 +247,11 @@ func TestSelection_Color(t *testing.T) {
 		}
 	})
 
-	t.Run("should set pixel color inside the selection", func(t *testing.T) {
+	t.Run("should set pixel color inside the whole image selection", func(t *testing.T) {
 		color := pixiq.RGBA(10, 20, 30, 40)
 		tests := map[string]struct {
-			width, height int
 			x, y          int
+			width, height int
 			expected      [][]pixiq.Color
 		}{
 			"pixel (0,0) for 2x2 image": {
@@ -329,6 +329,16 @@ func TestSelection_Color(t *testing.T) {
 					{transparent},
 					{color}},
 			},
+			"pixel (1,1) for 3x3 image": {
+				x:      1,
+				y:      1,
+				width:  3,
+				height: 3,
+				expected: [][]pixiq.Color{
+					{transparent, transparent, transparent},
+					{transparent, color, transparent},
+					{transparent, transparent, transparent}},
+			},
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
@@ -346,6 +356,7 @@ func TestSelection_Color(t *testing.T) {
 			})
 		}
 	})
+
 }
 
 func imageOfColor(width, height int, color pixiq.Color) *pixiq.Image {
