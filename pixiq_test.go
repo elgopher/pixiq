@@ -32,7 +32,6 @@ func TestImages_New(t *testing.T) {
 		assert.Equal(t, 0, image.Height())
 	})
 	t.Run("should create an image of any size", func(t *testing.T) {
-		// given
 		tests := map[string]struct {
 			width, height int
 		}{
@@ -124,7 +123,6 @@ func TestSelection_Selection(t *testing.T) {
 
 func TestImage_WholeImageSelection(t *testing.T) {
 	t.Run("should create a selection of whole image", func(t *testing.T) {
-		// given
 		images := pixiq.NewImages()
 		image := images.New(3, 2)
 		// when
@@ -181,7 +179,6 @@ func TestSelection_WithSize(t *testing.T) {
 
 func TestSelection_Color(t *testing.T) {
 	t.Run("by default all image colors are transparent", func(t *testing.T) {
-		// given
 		images := pixiq.NewImages()
 		image := images.New(2, 3)
 		selection := image.Selection(0, 0).WithSize(2, 3)
@@ -195,7 +192,6 @@ func TestSelection_Color(t *testing.T) {
 		}
 	})
 	t.Run("pixels outside the image are transparent", func(t *testing.T) {
-		// given
 		width, height := 2, 3
 		image := imageOfColor(width, height, pixiq.RGBA(10, 20, 30, 40))
 		tests := map[string]struct{ x, y int }{
@@ -222,19 +218,104 @@ func TestSelection_Color(t *testing.T) {
 			})
 		}
 	})
-	t.Run("should set pixel color", func(t *testing.T) {
-		// given
-		images := pixiq.NewImages()
-		image := images.New(2, 2)
-		selection := image.Selection(0, 0).WithSize(2, 2)
+	t.Run("should set color of", func(t *testing.T) {
 		color := pixiq.RGBA(10, 20, 30, 40)
-		// when
-		selection.SetColor(0, 0, color)
-		// then
-		assert.Equal(t, color, selection.Color(0, 0))
-		assert.Equal(t, transparent, selection.Color(1, 0))
-		assert.Equal(t, transparent, selection.Color(0, 1))
-		assert.Equal(t, transparent, selection.Color(1, 1))
+		tests := map[string]struct {
+			width, height int
+			x, y          int
+			expected      [][]pixiq.Color
+		}{
+			"pixel (0,0) for 2x2 image": {
+				x:      0,
+				y:      0,
+				width:  2,
+				height: 2,
+				expected: [][]pixiq.Color{
+					{color, transparent},
+					{transparent, transparent}},
+			},
+			"pixel (1,0) for 2x2 image": {
+				x:      1,
+				y:      0,
+				width:  2,
+				height: 2,
+				expected: [][]pixiq.Color{
+					{transparent, color},
+					{transparent, transparent}},
+			},
+			"pixel (0,1) for 2x2 image": {
+				x:      0,
+				y:      1,
+				width:  2,
+				height: 2,
+				expected: [][]pixiq.Color{
+					{transparent, transparent},
+					{color, transparent}},
+			},
+			"pixel (1,1) for 2x2 image": {
+				x:      1,
+				y:      1,
+				width:  2,
+				height: 2,
+				expected: [][]pixiq.Color{
+					{transparent, transparent},
+					{transparent, color}},
+			},
+			"pixel (0,0) for 1x1 image": {
+				x:        0,
+				y:        0,
+				width:    1,
+				height:   1,
+				expected: [][]pixiq.Color{{color}},
+			},
+			"pixel (0,0) for 2x1 image": {
+				x:        0,
+				y:        0,
+				width:    2,
+				height:   1,
+				expected: [][]pixiq.Color{{color, transparent}},
+			},
+			"pixel (1,0) for 2x1 image": {
+				x:        1,
+				y:        0,
+				width:    2,
+				height:   1,
+				expected: [][]pixiq.Color{{transparent, color}},
+			},
+			"pixel (0,0) for 1x2 image": {
+				x:      0,
+				y:      0,
+				width:  1,
+				height: 2,
+				expected: [][]pixiq.Color{
+					{color},
+					{transparent}},
+			},
+			"pixel (0,1) for 1x2 image": {
+				x:      0,
+				y:      1,
+				width:  1,
+				height: 2,
+				expected: [][]pixiq.Color{
+					{transparent},
+					{color}},
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				images := pixiq.NewImages()
+				image := images.New(test.width, test.height)
+				selection := image.Selection(0, 0).WithSize(2, 2)
+				// when
+				selection.SetColor(test.x, test.y, color)
+				// then
+				for y, line := range test.expected {
+					for x := 0; x < len(line); x++ {
+						assert.Equal(t, line[x], selection.Color(x, y))
+					}
+				}
+			})
+		}
 	})
 }
 

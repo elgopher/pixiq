@@ -135,5 +135,5 @@ func (s Selection) Color(localX, localY int) Color {
 // which means that the top-left corner of selection is equivalent to localX=0, localY=0.
 // Negative coordinates are supported. If pixel is outside the image boundaries then nothing happens.
 func (s Selection) SetColor(localX, localY int, color Color) {
-	s.image.pixels[0] = color
+	s.image.pixels[localY*s.image.width+localX] = color
 }
