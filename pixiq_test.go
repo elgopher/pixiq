@@ -178,8 +178,9 @@ func TestSelection_WithSize(t *testing.T) {
 }
 
 func TestSelection_Color(t *testing.T) {
+	images := pixiq.NewImages()
+
 	t.Run("by default all image colors are transparent", func(t *testing.T) {
-		images := pixiq.NewImages()
 		selection := images.New(2, 3).WholeImageSelection()
 		for y := 0; y < 3; y++ {
 			for x := 0; x < 2; x++ {
@@ -190,6 +191,8 @@ func TestSelection_Color(t *testing.T) {
 			}
 		}
 	})
+
+	// TODO add tests if partial selection is used too
 	t.Run("pixels outside the image are transparent", func(t *testing.T) {
 		width, height := 2, 3
 		image := imageOfColor(width, height, pixiq.RGBA(10, 20, 30, 40))
@@ -221,7 +224,6 @@ func TestSelection_Color(t *testing.T) {
 	t.Run("setting pixel outside the image does not change the image", func(t *testing.T) {
 		width, height := 2, 3
 		imageColor := pixiq.RGBA(10, 20, 30, 40)
-		image := imageOfColor(width, height, imageColor)
 		tests := map[string]struct{ x, y int }{
 			"on the left": {
 				x: -1, y: 0,
@@ -236,9 +238,10 @@ func TestSelection_Color(t *testing.T) {
 				x: 0, y: height,
 			},
 		}
-		selection := image.Selection(0, 0).WithSize(width, height)
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
+				image := imageOfColor(width, height, imageColor)
+				selection := image.Selection(0, 0).WithSize(width, height)
 				// when
 				selection.SetColor(test.x, test.y, pixiq.RGBA(50, 60, 70, 80))
 				// then
@@ -342,7 +345,7 @@ func TestSelection_Color(t *testing.T) {
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
-				images := pixiq.NewImages()
+				images := images
 				image := images.New(test.width, test.height)
 				selection := image.WholeImageSelection()
 				// when
@@ -350,13 +353,86 @@ func TestSelection_Color(t *testing.T) {
 				// then
 				for y, line := range test.expected {
 					for x := 0; x < len(line); x++ {
-						assert.Equal(t, line[x], selection.Color(x, y))
+						assert.Equal(t, line[x], selection.Color(x, y), "position (%d,%d)", x, y)
 					}
 				}
 			})
 		}
 	})
 
+	t.Run("should set pixel color inside the partial image selection", func(t *testing.T) {
+		color := pixiq.RGBA(10, 20, 30, 40)
+		tests := map[string]struct {
+			x, y      int
+			selection pixiq.Selection
+			// expected:
+			selectionColors [][]pixiq.Color
+			imageColors     [][]pixiq.Color
+		}{
+			"pixel (1,0) for image 2x2, selection starting at (-1,0) with size (2,1)": {
+				x:         1,
+				y:         0,
+				selection: images.New(2, 2).Selection(-1, 0).WithSize(2, 1),
+				selectionColors: [][]pixiq.Color{
+					{transparent, color}},
+				imageColors: [][]pixiq.Color{
+					{color, transparent},
+					{transparent, transparent}},
+			},
+			"pixel (0,1) for image 2x2, selection starting at (0,-1) with size (1,2)": {
+				x:         0,
+				y:         1,
+				selection: images.New(2, 2).Selection(0, -1).WithSize(1, 2),
+				selectionColors: [][]pixiq.Color{
+					{transparent},
+					{color}},
+				imageColors: [][]pixiq.Color{
+					{color, transparent},
+					{transparent, transparent}},
+			},
+			"pixel (0,0) for image 2x2, selection starting at (1,0) with size (2,1)": {
+				x:         0,
+				y:         0,
+				selection: images.New(2, 2).Selection(1, 0).WithSize(2, 1),
+				selectionColors: [][]pixiq.Color{
+					{color, transparent}},
+				imageColors: [][]pixiq.Color{
+					{transparent, color},
+					{transparent, transparent}},
+			},
+			"pixel (0,0) for image 2x2, selection starting at (0,1) with size (1,2)": {
+				x:         0,
+				y:         0,
+				selection: images.New(2, 2).Selection(0, 1).WithSize(1, 2),
+				selectionColors: [][]pixiq.Color{
+					{color},
+					{transparent}},
+				imageColors: [][]pixiq.Color{
+					{transparent, transparent},
+					{color, transparent}},
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				// when
+				test.selection.SetColor(test.x, test.y, color)
+				// then
+				for y, line := range test.selectionColors {
+					for x := 0; x < len(line); x++ {
+						assert.Equal(t, line[x], test.selection.Color(x, y), "selection position (%d,%d)", x, y)
+					}
+				}
+				// and
+				wholeImageSelection := test.selection.Image().WholeImageSelection()
+				for y, line := range test.imageColors {
+					for x := 0; x < len(line); x++ {
+						assert.Equal(t, line[x], wholeImageSelection.Color(x, y), "image position (%d,%d)", x, y)
+					}
+				}
+			})
+		}
+
+	})
 }
 
 func imageOfColor(width, height int, color pixiq.Color) *pixiq.Image {
@@ -374,7 +450,7 @@ func imageOfColor(width, height int, color pixiq.Color) *pixiq.Image {
 func assertColorImage(t *testing.T, image *pixiq.Image, color pixiq.Color) {
 	for y := 0; y < image.Height(); y++ {
 		for x := 0; x < image.Width(); x++ {
-			assert.Equal(t, image.Selection(x, y).Color(0, 0), color)
+			assert.Equal(t, image.Selection(x, y).Color(0, 0), color, "position (%d, %d)", x, y)
 		}
 	}
 }
