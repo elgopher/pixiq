@@ -334,7 +334,7 @@ func TestSelection_Color(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				images := pixiq.NewImages()
 				image := images.New(test.width, test.height)
-				selection := image.Selection(0, 0).WithSize(2, 2)
+				selection := image.WholeImageSelection()
 				// when
 				selection.SetColor(test.x, test.y, color)
 				// then
