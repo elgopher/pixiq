@@ -180,8 +180,7 @@ func TestSelection_WithSize(t *testing.T) {
 func TestSelection_Color(t *testing.T) {
 	t.Run("by default all image colors are transparent", func(t *testing.T) {
 		images := pixiq.NewImages()
-		image := images.New(2, 3)
-		selection := image.Selection(0, 0).WithSize(2, 3)
+		selection := images.New(2, 3).WholeImageSelection()
 		for y := 0; y < 3; y++ {
 			for x := 0; x < 2; x++ {
 				// when
@@ -219,7 +218,7 @@ func TestSelection_Color(t *testing.T) {
 		}
 	})
 
-	t.Run("setting pixel outside the image does nothing", func(t *testing.T) {
+	t.Run("setting pixel outside the image does not change the image", func(t *testing.T) {
 		width, height := 2, 3
 		imageColor := pixiq.RGBA(10, 20, 30, 40)
 		image := imageOfColor(width, height, imageColor)
@@ -248,7 +247,7 @@ func TestSelection_Color(t *testing.T) {
 		}
 	})
 
-	t.Run("should set color of", func(t *testing.T) {
+	t.Run("should set pixel color inside the selection", func(t *testing.T) {
 		color := pixiq.RGBA(10, 20, 30, 40)
 		tests := map[string]struct {
 			width, height int
