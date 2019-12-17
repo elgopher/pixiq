@@ -181,57 +181,49 @@ func TestSelection_Color(t *testing.T) {
 	images := pixiq.NewImages()
 
 	t.Run("should return transparent color for pixel outside the image", func(t *testing.T) {
-		image := images.New(0, 0)
-		selection := image.WholeImageSelection()
-		// when
-		color := selection.Color(0, 0)
-		// then
-		assert.Equal(t, transparent, color)
-	})
-
-	t.Run("should return transparent color for pixel outside the image", func(t *testing.T) {
-		image := images.New(1, 1)
-		selection := image.WholeImageSelection()
-		// when
-		color := selection.Color(1, 0)
-		// then
-		assert.Equal(t, transparent, color)
-	})
-
-	t.Run("should return transparent color for pixel outside the image", func(t *testing.T) {
-		image := images.New(1, 1)
-		selection := image.WholeImageSelection()
-		// when
-		color := selection.Color(0, 1)
-		// then
-		assert.Equal(t, transparent, color)
-	})
-
-	t.Run("should return transparent color for pixel outside the image", func(t *testing.T) {
-		image := images.New(1, 1)
-		selection := image.WholeImageSelection()
-		// when
-		color := selection.Color(-1, 0)
-		// then
-		assert.Equal(t, transparent, color)
-	})
-
-	t.Run("should return transparent color for pixel outside the image", func(t *testing.T) {
-		image := images.New(1, 1)
-		selection := image.WholeImageSelection()
-		// when
-		color := selection.Color(0, -1)
-		// then
-		assert.Equal(t, transparent, color)
-	})
-
-	t.Run("should return transparent color for pixel outside the image", func(t *testing.T) {
-		image := images.New(2, 2)
-		selection := image.WholeImageSelection()
-		// when
-		color := selection.Color(0, 2)
-		// then
-		assert.Equal(t, transparent, color)
+		tests := map[string]struct {
+			image *pixiq.Image
+			x, y  int
+		}{
+			"1": {
+				image: images.New(0, 0),
+				x:     0,
+				y:     0,
+			},
+			"2": {
+				image: images.New(1, 1),
+				x:     1,
+				y:     0,
+			},
+			"3": {
+				image: images.New(1, 1),
+				x:     0,
+				y:     1,
+			},
+			"4": {
+				image: images.New(1, 1),
+				x:     -1,
+				y:     0,
+			},
+			"5": {
+				image: images.New(1, 1),
+				x:     0,
+				y:     -1,
+			},
+			"6": {
+				image: images.New(2, 2),
+				x:     0,
+				y:     2,
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				selection := test.image.WholeImageSelection()
+				// when
+				color := selection.Color(test.x, test.y)
+				assert.Equal(t, transparent, color)
+			})
+		}
 	})
 
 }
