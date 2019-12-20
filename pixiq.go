@@ -126,16 +126,18 @@ func (s Selection) Selection(localX, localY int) Selection {
 // Negative coordinates are supported. If pixel is outside the image boundaries then transparent color is returned.
 // It is possible to get the color outside the selection.
 func (s Selection) Color(localX, localY int) Color {
-	if localX+s.x < 0 {
+	x := localX + s.x
+	if x < 0 {
 		return Transparent
 	}
-	if localY+s.y < 0 {
+	y := localY + s.y
+	if y < 0 {
 		return Transparent
 	}
-	if localX+s.x >= s.image.width {
+	if x >= s.image.width {
 		return Transparent
 	}
-	index := localX + s.x + localY*s.width
+	index := x + y*s.image.width
 	if len(s.image.pixels) <= index {
 		return Transparent
 	}

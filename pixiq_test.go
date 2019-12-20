@@ -252,6 +252,14 @@ func TestSelection_Color(t *testing.T) {
 		assert.Equal(t, color, selection.Color(0, -1))
 	})
 
+	t.Run("should return color for pixel outside the selection", func(t *testing.T) {
+		image := images.New(1, 2)
+		image.WholeImageSelection().SetColor(0, 1, color)
+		selection := image.Selection(0, 1)
+		// expect
+		assert.Equal(t, color, selection.Color(0, 0))
+	})
+
 }
 
 func TestSelection_SetColor(t *testing.T) {
