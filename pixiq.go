@@ -124,17 +124,18 @@ func (s Selection) Selection(localX, localY int) Selection {
 // Color returns the color of the pixel at a specific position. Passed coordinates are local,
 // which means that the top-left corner of selection is equivalent to localX=0, localY=0.
 // Negative coordinates are supported. If pixel is outside the image boundaries then transparent color is returned.
+// It is possible to get the color outside the selection.
 func (s Selection) Color(localX, localY int) Color {
-	if localX < 0 {
+	if localX+s.x < 0 {
 		return Transparent
 	}
-	if localY < 0 {
+	if localY+s.y < 0 {
 		return Transparent
 	}
-	if localX >= s.width {
+	if localX+s.x >= s.image.width {
 		return Transparent
 	}
-	index := localX + localY*s.width
+	index := localX + s.x + localY*s.width
 	if len(s.image.pixels) <= index {
 		return Transparent
 	}
@@ -144,17 +145,20 @@ func (s Selection) Color(localX, localY int) Color {
 // SetColor set the color of the pixel at specific position. Passed coordinates are local,
 // which means that the top-left corner of selection is equivalent to localX=0, localY=0.
 // Negative coordinates are supported. If pixel is outside the image boundaries then nothing happens.
+// It is possible to set the color outside the selection.
 func (s Selection) SetColor(localX, localY int, color Color) {
-	if localX < 0 {
+	x := localX + s.x
+	if x < 0 {
 		return
 	}
-	if localY < 0 {
+	y := localY + s.y
+	if y < 0 {
 		return
 	}
-	if localX >= s.width {
+	if x >= s.image.width {
 		return
 	}
-	index := localX + localY*s.width
+	index := x + y*s.image.width
 	if len(s.image.pixels) <= index {
 		return
 	}
