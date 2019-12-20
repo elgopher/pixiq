@@ -9,7 +9,7 @@ func NewImages() *Images {
 type Images struct {
 }
 
-// New creates an Image with specified size given in pixels.
+// New creates an Image with specified size given in pixels. Width and height are clamped to zero if negative.
 func (i *Images) New(width, height int) *Image {
 	var w, h int
 	if width > 0 {

@@ -124,15 +124,34 @@ func TestSelection_Selection(t *testing.T) {
 func TestImage_WholeImageSelection(t *testing.T) {
 	t.Run("should create a selection of whole image", func(t *testing.T) {
 		images := pixiq.NewImages()
-		image := images.New(3, 2)
-		// when
-		selection := image.WholeImageSelection()
-		// then
-		assert.Equal(t, 0, selection.ImageX())
-		assert.Equal(t, 0, selection.ImageY())
-		assert.Equal(t, 3, selection.Width())
-		assert.Equal(t, 2, selection.Height())
-		assert.Same(t, image, selection.Image())
+		tests := map[string]struct {
+			image          *pixiq.Image
+			expectedWidth  int
+			expectedHeight int
+		}{
+			"1": {
+				image:          images.New(0, 0),
+				expectedWidth:  0,
+				expectedHeight: 0,
+			},
+			"2": {
+				image:          images.New(3, 2),
+				expectedWidth:  3,
+				expectedHeight: 2,
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				// when
+				selection := test.image.WholeImageSelection()
+				// then
+				assert.Equal(t, 0, selection.ImageX())
+				assert.Equal(t, 0, selection.ImageY())
+				assert.Equal(t, test.expectedWidth, selection.Width())
+				assert.Equal(t, test.expectedHeight, selection.Height())
+				assert.Same(t, test.image, selection.Image())
+			})
+		}
 	})
 }
 
