@@ -95,7 +95,7 @@ func (s Selection) ImageY() int {
 	return s.y
 }
 
-// WithSize creates a new selection with specified size in pixels. Width or height are clamped to 0 if necessarily.
+// WithSize creates a new selection with specified size in pixels. Negative width or height are clamped to 0.
 func (s Selection) WithSize(width, height int) Selection {
 	if width > 0 {
 		s.width = width
