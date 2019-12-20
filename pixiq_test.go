@@ -226,38 +226,40 @@ func TestSelection_Color(t *testing.T) {
 		}
 	})
 
-	color := pixiq.RGBA(10, 20, 30, 40)
+	t.Run("should return color for pixel outside the selection and inside the image", func(t *testing.T) {
+		color := pixiq.RGBA(10, 20, 30, 40)
 
-	t.Run("should return color for pixel outside the selection", func(t *testing.T) {
-		image := images.New(1, 1)
-		image.WholeImageSelection().SetColor(0, 0, color)
-		selection := image.Selection(1, 0)
-		// expect
-		assert.Equal(t, color, selection.Color(-1, 0))
-	})
+		t.Run("1", func(t *testing.T) {
+			image := images.New(1, 1)
+			image.WholeImageSelection().SetColor(0, 0, color)
+			selection := image.Selection(1, 0)
+			// expect
+			assert.Equal(t, color, selection.Color(-1, 0))
+		})
 
-	t.Run("should return color for pixel outside the selection", func(t *testing.T) {
-		image := images.New(1, 1)
-		image.WholeImageSelection().SetColor(0, 0, color)
-		selection := image.Selection(-1, 0)
-		// expect
-		assert.Equal(t, color, selection.Color(1, 0))
-	})
+		t.Run("2", func(t *testing.T) {
+			image := images.New(1, 1)
+			image.WholeImageSelection().SetColor(0, 0, color)
+			selection := image.Selection(-1, 0)
+			// expect
+			assert.Equal(t, color, selection.Color(1, 0))
+		})
 
-	t.Run("should return color for pixel outside the selection", func(t *testing.T) {
-		image := images.New(1, 1)
-		image.WholeImageSelection().SetColor(0, 0, color)
-		selection := image.Selection(0, 1)
-		// expect
-		assert.Equal(t, color, selection.Color(0, -1))
-	})
+		t.Run("3", func(t *testing.T) {
+			image := images.New(1, 1)
+			image.WholeImageSelection().SetColor(0, 0, color)
+			selection := image.Selection(0, 1)
+			// expect
+			assert.Equal(t, color, selection.Color(0, -1))
+		})
 
-	t.Run("should return color for pixel outside the selection", func(t *testing.T) {
-		image := images.New(1, 2)
-		image.WholeImageSelection().SetColor(0, 1, color)
-		selection := image.Selection(0, 1)
-		// expect
-		assert.Equal(t, color, selection.Color(0, 0))
+		t.Run("4", func(t *testing.T) {
+			image := images.New(1, 2)
+			image.WholeImageSelection().SetColor(0, 1, color)
+			selection := image.Selection(0, 1)
+			// expect
+			assert.Equal(t, color, selection.Color(0, 0))
+		})
 	})
 
 }
