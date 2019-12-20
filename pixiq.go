@@ -46,8 +46,8 @@ func (i *Image) Height() int {
 	return i.height
 }
 
-// Selection makes a rectangular selection starting at a given position. The position has to be top-left position.
-// Both x and y can be negative, meaning that selection starts outside the image.
+// Selection creates an area pointing to the image at a given starting position (x and y). The position must be a top
+// left corner of the selection. Both x and y can be negative, meaning that selection starts outside the image.
 func (i *Image) Selection(x int, y int) Selection {
 	return Selection{
 		x:     x,
@@ -61,9 +61,9 @@ func (i *Image) WholeImageSelection() Selection {
 	return i.Selection(0, 0).WithSize(i.width, i.height)
 }
 
-// Selection marks a selection on top of the image. Most Selection methods - such as Color, SetColor and Selection use local
-// coordinates which means that top-left corner of Selection is an origin (0,0). This position can be different than
-// position given in image coordinates.
+// Selection points to a specific area of the image. It has a starting position (top-left corner) and optional size.
+// Most Selection methods - such as Color, SetColor and Selection use local coordinates as parameters. Top left corner
+// of selection has (0,0) local coordinates.
 type Selection struct {
 	image         *Image
 	x, y          int
