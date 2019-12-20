@@ -218,7 +218,7 @@ func TestSelection_Color(t *testing.T) {
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
-				selection := test.image.WholeImageSelection()
+				selection := test.image.Selection(0, 0)
 				// when
 				color := selection.Color(test.x, test.y)
 				assert.Equal(t, transparent, color)
@@ -231,7 +231,7 @@ func TestSelection_Color(t *testing.T) {
 
 		t.Run("1", func(t *testing.T) {
 			image := images.New(1, 1)
-			image.WholeImageSelection().SetColor(0, 0, color)
+			image.Selection(0, 0).SetColor(0, 0, color)
 			selection := image.Selection(1, 0)
 			// expect
 			assert.Equal(t, color, selection.Color(-1, 0))
@@ -239,7 +239,7 @@ func TestSelection_Color(t *testing.T) {
 
 		t.Run("2", func(t *testing.T) {
 			image := images.New(1, 1)
-			image.WholeImageSelection().SetColor(0, 0, color)
+			image.Selection(0, 0).SetColor(0, 0, color)
 			selection := image.Selection(-1, 0)
 			// expect
 			assert.Equal(t, color, selection.Color(1, 0))
@@ -247,7 +247,7 @@ func TestSelection_Color(t *testing.T) {
 
 		t.Run("3", func(t *testing.T) {
 			image := images.New(1, 1)
-			image.WholeImageSelection().SetColor(0, 0, color)
+			image.Selection(0, 0).SetColor(0, 0, color)
 			selection := image.Selection(0, 1)
 			// expect
 			assert.Equal(t, color, selection.Color(0, -1))
@@ -255,7 +255,7 @@ func TestSelection_Color(t *testing.T) {
 
 		t.Run("4", func(t *testing.T) {
 			image := images.New(1, 2)
-			image.WholeImageSelection().SetColor(0, 1, color)
+			image.Selection(0, 0).SetColor(0, 1, color)
 			selection := image.Selection(0, 1)
 			// expect
 			assert.Equal(t, color, selection.Color(0, 0))
@@ -271,7 +271,7 @@ func TestSelection_SetColor(t *testing.T) {
 	t.Run("should set pixel color inside the image", func(t *testing.T) {
 
 		t.Run("1", func(t *testing.T) {
-			selection := images.New(1, 1).WholeImageSelection()
+			selection := images.New(1, 1).Selection(0, 0)
 			// when
 			selection.SetColor(0, 0, color)
 			assert.Equal(t, color, selection.Color(0, 0))
@@ -310,21 +310,21 @@ func TestSelection_SetColor(t *testing.T) {
 	t.Run("setting pixel color outside the image does nothing", func(t *testing.T) {
 
 		t.Run("1", func(t *testing.T) {
-			selection := images.New(0, 0).WholeImageSelection()
+			selection := images.New(0, 0).Selection(0, 0)
 			// when
 			selection.SetColor(0, 0, color)
 			assert.Equal(t, transparent, selection.Color(0, 0))
 		})
 
 		t.Run("2", func(t *testing.T) {
-			selection := images.New(1, 1).WholeImageSelection()
+			selection := images.New(1, 1).Selection(0, 0)
 			// when
 			selection.SetColor(1, 0, color)
 			assert.Equal(t, transparent, selection.Color(0, 0))
 		})
 
 		t.Run("3", func(t *testing.T) {
-			selection := images.New(1, 1).WholeImageSelection()
+			selection := images.New(1, 1).Selection(0, 0)
 			// when
 			selection.SetColor(0, 1, color)
 			assert.Equal(t, transparent, selection.Color(0, 0))
@@ -350,14 +350,14 @@ func TestSelection_SetColor(t *testing.T) {
 		})
 
 		t.Run("6", func(t *testing.T) {
-			selection := images.New(1, 1).WholeImageSelection()
+			selection := images.New(1, 1).Selection(0, 0)
 			// when
 			selection.SetColor(-1, 0, color)
 			assert.Equal(t, transparent, selection.Color(0, 0))
 		})
 
 		t.Run("7", func(t *testing.T) {
-			selection := images.New(1, 1).WholeImageSelection()
+			selection := images.New(1, 1).Selection(0, 0)
 			// when
 			selection.SetColor(0, -1, color)
 			assert.Equal(t, transparent, selection.Color(0, 0))
@@ -371,7 +371,7 @@ func TestSelection_SetColor(t *testing.T) {
 			selection := image.Selection(0, 0)
 			// when
 			selection.SetColor(0, 0, color)
-			assert.Equal(t, color, image.WholeImageSelection().Color(0, 0))
+			assert.Equal(t, color, image.Selection(0, 0).Color(0, 0))
 		})
 
 		t.Run("2", func(t *testing.T) {
@@ -399,7 +399,7 @@ func TestSelection_SetColor(t *testing.T) {
 			selection := image.Selection(-1, 0)
 			// when
 			selection.SetColor(1, 0, color)
-			assert.Equal(t, color, image.WholeImageSelection().Color(0, 0))
+			assert.Equal(t, color, image.Selection(0, 0).Color(0, 0))
 		})
 
 		t.Run("5", func(t *testing.T) {
