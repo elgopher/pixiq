@@ -51,4 +51,38 @@ func TestWindow_Loop(t *testing.T) {
 		assert.Equal(t, 2, executionCount)
 	})
 
+	t.Run("frame should provide Selection for whole window's image", func(t *testing.T) {
+		windows := pixiq.NewWindows()
+		tests := map[string]struct {
+			width, height int
+		}{
+			"0x0": {
+				width:  0,
+				height: 0,
+			},
+			"1x2": {
+				width:  1,
+				height: 2,
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				window := windows.New(test.width, test.height)
+				var selection pixiq.Selection
+				// when
+				window.Loop(func(frame *pixiq.Frame) {
+					selection = frame.ImageSelection()
+					frame.CloseWindowEventually()
+				})
+				// then
+				assert.Equal(t, 0, selection.ImageX())
+				assert.Equal(t, 0, selection.ImageY())
+				assert.Equal(t, test.width, selection.Width())
+				assert.Equal(t, test.height, selection.Height())
+				assert.NotNil(t, selection.Image())
+			})
+
+		}
+	})
+
 }
