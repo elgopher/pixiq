@@ -9,7 +9,7 @@ func NewImages() *Images {
 type Images struct {
 }
 
-// New creates an Image with specified size given in pixels.
+// New creates an Image with specified size given in pixels. Width and height are clamped to zero if negative.
 func (i *Images) New(width, height int) *Image {
 	var w, h int
 	if width > 0 {
@@ -21,6 +21,7 @@ func (i *Images) New(width, height int) *Image {
 	return &Image{
 		width:  w,
 		height: h,
+		pixels: make([]Color, w*h),
 	}
 }
 
@@ -30,7 +31,9 @@ func (i *Images) New(width, height int) *Image {
 // The cost of creating an Image is huge therefore new images should be created sporadically, ideally when
 // the application starts.
 type Image struct {
-	width, height int
+	width  int
+	height int
+	pixels []Color
 }
 
 // Width returns the number of pixels in a row.
@@ -43,8 +46,8 @@ func (i *Image) Height() int {
 	return i.height
 }
 
-// Selection makes a rectangular selection starting at a given position. The position has to be top-left position.
-// Both x and y can be negative, meaning that selection starts outside the image.
+// Selection creates an area pointing to the image at a given starting position (x and y). The position must be a top
+// left corner of the selection. Both x and y can be negative, meaning that selection starts outside the image.
 func (i *Image) Selection(x int, y int) Selection {
 	return Selection{
 		x:     x,
@@ -55,14 +58,12 @@ func (i *Image) Selection(x int, y int) Selection {
 
 // WholeImageSelection make selection of entire image.
 func (i *Image) WholeImageSelection() Selection {
-	return Selection{
-		width:  i.width,
-		height: i.height,
-		image:  i,
-	}
+	return i.Selection(0, 0).WithSize(i.width, i.height)
 }
 
-// Selection marks a selection on top of the image.
+// Selection points to a specific area of the image. It has a starting position (top-left corner) and optional size.
+// Most Selection methods - such as Color, SetColor and Selection use local coordinates as parameters. Top left corner
+// of selection has (0,0) local coordinates.
 type Selection struct {
 	image         *Image
 	x, y          int
@@ -94,7 +95,7 @@ func (s Selection) ImageY() int {
 	return s.y
 }
 
-// WithSize creates a new selection with specified size in pixels. Width or height are clamped to 0 if necessarily.
+// WithSize creates a new selection with specified size in pixels. Negative width or height are clamped to 0.
 func (s Selection) WithSize(width, height int) Selection {
 	if width > 0 {
 		s.width = width
@@ -118,4 +119,50 @@ func (s Selection) Selection(localX, localY int) Selection {
 		y:     localY + s.y,
 		image: s.image,
 	}
+}
+
+// Color returns the color of the pixel at a specific position. Passed coordinates are local,
+// which means that the top-left corner of selection is equivalent to localX=0, localY=0.
+// Negative coordinates are supported. If pixel is outside the image boundaries then transparent color is returned.
+// It is possible to get the color outside the selection.
+func (s Selection) Color(localX, localY int) Color {
+	x := localX + s.x
+	if x < 0 {
+		return Transparent
+	}
+	y := localY + s.y
+	if y < 0 {
+		return Transparent
+	}
+	if x >= s.image.width {
+		return Transparent
+	}
+	index := x + y*s.image.width
+	if len(s.image.pixels) <= index {
+		return Transparent
+	}
+	return s.image.pixels[index]
+}
+
+// SetColor set the color of the pixel at specific position. Passed coordinates are local,
+// which means that the top-left corner of selection is equivalent to localX=0, localY=0.
+// Negative coordinates are supported. If pixel is outside the image boundaries then nothing happens.
+// It is possible to set the color outside the selection.
+func (s Selection) SetColor(localX, localY int, color Color) {
+	x := localX + s.x
+	if x < 0 {
+		return
+	}
+	y := localY + s.y
+	if y < 0 {
+		return
+	}
+	if x >= s.image.width {
+		return
+	}
+	index := x + y*s.image.width
+	if len(s.image.pixels) <= index {
+		return
+	}
+	s.image.pixels[index] = color
 }

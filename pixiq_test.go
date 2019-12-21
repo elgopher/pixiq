@@ -9,6 +9,8 @@ import (
 	"github.com/jacekolszak/pixiq"
 )
 
+var transparent = pixiq.RGBA(0, 0, 0, 0)
+
 func TestNewImages(t *testing.T) {
 	t.Run("should create image factory", func(t *testing.T) {
 		images := pixiq.NewImages()
@@ -30,7 +32,6 @@ func TestImages_New(t *testing.T) {
 		assert.Equal(t, 0, image.Height())
 	})
 	t.Run("should create an image of any size", func(t *testing.T) {
-		// given
 		tests := map[string]struct {
 			width, height int
 		}{
@@ -122,17 +123,35 @@ func TestSelection_Selection(t *testing.T) {
 
 func TestImage_WholeImageSelection(t *testing.T) {
 	t.Run("should create a selection of whole image", func(t *testing.T) {
-		// given
 		images := pixiq.NewImages()
-		image := images.New(3, 2)
-		// when
-		selection := image.WholeImageSelection()
-		// then
-		assert.Equal(t, 0, selection.ImageX())
-		assert.Equal(t, 0, selection.ImageY())
-		assert.Equal(t, 3, selection.Width())
-		assert.Equal(t, 2, selection.Height())
-		assert.Same(t, image, selection.Image())
+		tests := map[string]struct {
+			image          *pixiq.Image
+			expectedWidth  int
+			expectedHeight int
+		}{
+			"1": {
+				image:          images.New(0, 0),
+				expectedWidth:  0,
+				expectedHeight: 0,
+			},
+			"2": {
+				image:          images.New(3, 2),
+				expectedWidth:  3,
+				expectedHeight: 2,
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				// when
+				selection := test.image.WholeImageSelection()
+				// then
+				assert.Equal(t, 0, selection.ImageX())
+				assert.Equal(t, 0, selection.ImageY())
+				assert.Equal(t, test.expectedWidth, selection.Width())
+				assert.Equal(t, test.expectedHeight, selection.Height())
+				assert.Same(t, test.image, selection.Image())
+			})
+		}
 	})
 }
 
@@ -175,4 +194,266 @@ func TestSelection_WithSize(t *testing.T) {
 		assert.Equal(t, 3, selection.Width())
 		assert.Equal(t, 4, selection.Height())
 	})
+}
+
+func TestSelection_Color(t *testing.T) {
+	images := pixiq.NewImages()
+
+	t.Run("should return transparent color for pixel outside the image", func(t *testing.T) {
+		tests := map[string]struct {
+			image *pixiq.Image
+			x, y  int
+		}{
+			"1": {
+				image: images.New(0, 0),
+				x:     0,
+				y:     0,
+			},
+			"2": {
+				image: images.New(1, 1),
+				x:     1,
+				y:     0,
+			},
+			"3": {
+				image: images.New(1, 1),
+				x:     0,
+				y:     1,
+			},
+			"4": {
+				image: images.New(1, 1),
+				x:     -1,
+				y:     0,
+			},
+			"5": {
+				image: images.New(1, 1),
+				x:     0,
+				y:     -1,
+			},
+			"6": {
+				image: images.New(2, 2),
+				x:     0,
+				y:     2,
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				selection := test.image.Selection(0, 0)
+				// when
+				color := selection.Color(test.x, test.y)
+				assert.Equal(t, transparent, color)
+			})
+		}
+	})
+
+	t.Run("should return color for pixel outside the selection and inside the image", func(t *testing.T) {
+		color := pixiq.RGBA(10, 20, 30, 40)
+
+		t.Run("1", func(t *testing.T) {
+			image := images.New(1, 1)
+			image.Selection(0, 0).SetColor(0, 0, color)
+			selection := image.Selection(1, 0)
+			// expect
+			assert.Equal(t, color, selection.Color(-1, 0))
+		})
+
+		t.Run("2", func(t *testing.T) {
+			image := images.New(1, 1)
+			image.Selection(0, 0).SetColor(0, 0, color)
+			selection := image.Selection(-1, 0)
+			// expect
+			assert.Equal(t, color, selection.Color(1, 0))
+		})
+
+		t.Run("3", func(t *testing.T) {
+			image := images.New(1, 1)
+			image.Selection(0, 0).SetColor(0, 0, color)
+			selection := image.Selection(0, 1)
+			// expect
+			assert.Equal(t, color, selection.Color(0, -1))
+		})
+
+		t.Run("4", func(t *testing.T) {
+			image := images.New(1, 2)
+			image.Selection(0, 0).SetColor(0, 1, color)
+			selection := image.Selection(0, 1)
+			// expect
+			assert.Equal(t, color, selection.Color(0, 0))
+		})
+	})
+
+}
+
+func TestSelection_SetColor(t *testing.T) {
+	images := pixiq.NewImages()
+	color := pixiq.RGBA(10, 20, 30, 40)
+
+	t.Run("should set pixel color inside the image", func(t *testing.T) {
+
+		t.Run("1", func(t *testing.T) {
+			selection := images.New(1, 1).Selection(0, 0)
+			// when
+			selection.SetColor(0, 0, color)
+			assert.Equal(t, color, selection.Color(0, 0))
+		})
+
+		t.Run("2", func(t *testing.T) {
+			selection := images.New(2, 1).WholeImageSelection()
+			// when
+			selection.SetColor(1, 0, color)
+			assertColors(t, selection, [][]pixiq.Color{
+				{transparent, color},
+			})
+		})
+
+		t.Run("3", func(t *testing.T) {
+			selection := images.New(1, 2).WholeImageSelection()
+			// when
+			selection.SetColor(0, 1, color)
+			assertColors(t, selection, [][]pixiq.Color{
+				{transparent},
+				{color},
+			})
+		})
+
+		t.Run("4", func(t *testing.T) {
+			selection := images.New(2, 2).WholeImageSelection()
+			// when
+			selection.SetColor(0, 1, color)
+			assertColors(t, selection, [][]pixiq.Color{
+				{transparent, transparent},
+				{color, transparent},
+			})
+		})
+	})
+
+	t.Run("setting pixel color outside the image does nothing", func(t *testing.T) {
+
+		t.Run("1", func(t *testing.T) {
+			selection := images.New(0, 0).Selection(0, 0)
+			// when
+			selection.SetColor(0, 0, color)
+			assert.Equal(t, transparent, selection.Color(0, 0))
+		})
+
+		t.Run("2", func(t *testing.T) {
+			selection := images.New(1, 1).Selection(0, 0)
+			// when
+			selection.SetColor(1, 0, color)
+			assert.Equal(t, transparent, selection.Color(0, 0))
+		})
+
+		t.Run("3", func(t *testing.T) {
+			selection := images.New(1, 1).Selection(0, 0)
+			// when
+			selection.SetColor(0, 1, color)
+			assert.Equal(t, transparent, selection.Color(0, 0))
+		})
+
+		t.Run("4", func(t *testing.T) {
+			selection := images.New(2, 1).WholeImageSelection()
+			// when
+			selection.SetColor(0, 1, color)
+			assertColors(t, selection, [][]pixiq.Color{
+				{transparent, transparent},
+			})
+		})
+
+		t.Run("5", func(t *testing.T) {
+			selection := images.New(1, 2).WholeImageSelection()
+			// when
+			selection.SetColor(1, 0, color)
+			assertColors(t, selection, [][]pixiq.Color{
+				{transparent},
+				{transparent},
+			})
+		})
+
+		t.Run("6", func(t *testing.T) {
+			selection := images.New(1, 1).Selection(0, 0)
+			// when
+			selection.SetColor(-1, 0, color)
+			assert.Equal(t, transparent, selection.Color(0, 0))
+		})
+
+		t.Run("7", func(t *testing.T) {
+			selection := images.New(1, 1).Selection(0, 0)
+			// when
+			selection.SetColor(0, -1, color)
+			assert.Equal(t, transparent, selection.Color(0, 0))
+		})
+	})
+
+	t.Run("should set pixel color outside the selection", func(t *testing.T) {
+
+		t.Run("1", func(t *testing.T) {
+			image := images.New(1, 1)
+			selection := image.Selection(0, 0)
+			// when
+			selection.SetColor(0, 0, color)
+			assert.Equal(t, color, image.Selection(0, 0).Color(0, 0))
+		})
+
+		t.Run("2", func(t *testing.T) {
+			image := images.New(2, 1)
+			selection := image.Selection(1, 0)
+			// when
+			selection.SetColor(0, 0, color)
+			assertColors(t, image.WholeImageSelection(), [][]pixiq.Color{
+				{transparent, color},
+			})
+		})
+
+		t.Run("3", func(t *testing.T) {
+			image := images.New(2, 1)
+			selection := image.Selection(1, 0)
+			// when
+			selection.SetColor(-1, 0, color)
+			assertColors(t, image.WholeImageSelection(), [][]pixiq.Color{
+				{color, transparent},
+			})
+		})
+
+		t.Run("4", func(t *testing.T) {
+			image := images.New(1, 1)
+			selection := image.Selection(-1, 0)
+			// when
+			selection.SetColor(1, 0, color)
+			assert.Equal(t, color, image.Selection(0, 0).Color(0, 0))
+		})
+
+		t.Run("5", func(t *testing.T) {
+			image := images.New(1, 2)
+			selection := image.Selection(0, 1)
+			// when
+			selection.SetColor(0, 0, color)
+			assertColors(t, image.WholeImageSelection(), [][]pixiq.Color{
+				{transparent},
+				{color},
+			})
+		})
+
+		t.Run("6", func(t *testing.T) {
+			image := images.New(1, 2)
+			selection := image.Selection(0, 1)
+			// when
+			selection.SetColor(0, -1, color)
+			assertColors(t, image.WholeImageSelection(), [][]pixiq.Color{
+				{color},
+				{transparent},
+			})
+		})
+	})
+
+}
+
+func assertColors(t *testing.T, selection pixiq.Selection, expectedColorLines [][]pixiq.Color) {
+	assert.Equal(t, len(expectedColorLines), selection.Height(), "number of lines should be equal to selection height")
+	for y := 0; y < selection.Height(); y++ {
+		expectedColorLine := expectedColorLines[y]
+		assert.Equal(t, len(expectedColorLine), selection.Width(), "number of pixels in a row should be equal to selection width")
+		for x := 0; x < selection.Width(); x++ {
+			color := selection.Color(x, y)
+			assert.Equal(t, expectedColorLine[x], color, "position (%d,%d)", x, y)
+		}
+	}
 }

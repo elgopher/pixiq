@@ -7,6 +7,9 @@ import (
 
 func main() {
 	opengl.Run(func(images *pixiq.Images) {
-		images.New(16, 16)
+		image := images.New(16, 16)
+		selection := image.WholeImageSelection()
+		red := pixiq.RGBA(255, 0, 0, 255)
+		selection.SetColor(4, 4, red)
 	})
 }
