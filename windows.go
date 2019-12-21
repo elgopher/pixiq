@@ -37,3 +37,22 @@ func (w *Window) Width() int {
 func (w *Window) Height() int {
 	return w.height
 }
+
+// Loop starts the main loop. It will execute onEachFrame function for each frame, as soon as window is closed. This
+// function blocks the current goroutine.
+func (w *Window) Loop(onEachFrame func(frame *Frame)) {
+	frame := &Frame{}
+	for !frame.closeWindow {
+		onEachFrame(frame)
+	}
+}
+
+// Frame is a current
+type Frame struct {
+	closeWindow bool
+}
+
+// CloseWindowEventually closes the window as soon as onEachFrame function is finished
+func (w *Frame) CloseWindowEventually() {
+	w.closeWindow = true
+}

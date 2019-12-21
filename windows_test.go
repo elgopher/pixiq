@@ -33,3 +33,22 @@ func TestWindow_New(t *testing.T) {
 		assert.Equal(t, 2, win.Height())
 	})
 }
+
+func TestWindow_Loop(t *testing.T) {
+	windows := pixiq.NewWindows()
+	window := windows.New(0, 0)
+
+	t.Run("should run callback function until window is closed", func(t *testing.T) {
+		executionCount := 0
+		// when
+		window.Loop(func(frame *pixiq.Frame) {
+			executionCount += 1
+			if executionCount == 2 {
+				frame.CloseWindowEventually()
+			}
+		})
+		// then
+		assert.Equal(t, 2, executionCount)
+	})
+
+}
