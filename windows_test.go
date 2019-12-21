@@ -9,15 +9,27 @@ import (
 	"github.com/jacekolszak/pixiq"
 )
 
+var openFakeWindow = func(width, height int) pixiq.SystemWindow {
+	return &fakeSystemWindow{}
+}
+
+type fakeSystemWindow struct {
+	drawCount int
+}
+
+func (f *fakeSystemWindow) Draw() {
+	f.drawCount += 1
+}
+
 func TestNewWindows(t *testing.T) {
 	t.Run("should return Windows object for creating windows", func(t *testing.T) {
-		windows := pixiq.NewWindows()
+		windows := pixiq.NewWindows(openFakeWindow)
 		assert.NotNil(t, windows)
 	})
 }
 
 func TestWindow_New(t *testing.T) {
-	windows := pixiq.NewWindows()
+	windows := pixiq.NewWindows(openFakeWindow)
 	t.Run("should clamp width to 0 if negative", func(t *testing.T) {
 		win := windows.New(-1, 0)
 		require.NotNil(t, win)
@@ -39,7 +51,7 @@ func TestWindow_New(t *testing.T) {
 func TestWindow_Loop(t *testing.T) {
 
 	t.Run("should run callback function until window is closed", func(t *testing.T) {
-		windows := pixiq.NewWindows()
+		windows := pixiq.NewWindows(openFakeWindow)
 		window := windows.New(0, 0)
 		executionCount := 0
 		// when
@@ -54,7 +66,7 @@ func TestWindow_Loop(t *testing.T) {
 	})
 
 	t.Run("frame should provide Image for the whole window", func(t *testing.T) {
-		windows := pixiq.NewWindows()
+		windows := pixiq.NewWindows(openFakeWindow)
 		tests := map[string]struct {
 			width, height int
 		}{
@@ -80,8 +92,25 @@ func TestWindow_Loop(t *testing.T) {
 				assert.Equal(t, test.width, image.Width())
 				assert.Equal(t, test.height, image.Height())
 			})
-
 		}
+	})
+
+	t.Run("should draw image for each frame", func(t *testing.T) {
+		fakeWindow := &fakeSystemWindow{}
+		windows := pixiq.NewWindows(func(width, height int) pixiq.SystemWindow {
+			return fakeWindow
+		})
+		window := windows.New(0, 0)
+		executionCount := 0
+		// when
+		window.Loop(func(frame *pixiq.Frame) {
+			executionCount += 1
+			if executionCount == 2 {
+				frame.CloseWindowEventually()
+			}
+		})
+		// then
+		assert.Equal(t, 2, fakeWindow.drawCount)
 	})
 
 }
