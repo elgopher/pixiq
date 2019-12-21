@@ -9,27 +9,27 @@ import (
 	"github.com/jacekolszak/pixiq"
 )
 
-var openFakeWindow = func(width, height int) pixiq.SystemWindow {
-	return &fakeSystemWindow{}
+var openWindowMock = func(width, height int) pixiq.SystemWindow {
+	return &systemWindowMock{}
 }
 
-type fakeSystemWindow struct {
+type systemWindowMock struct {
 	drawCount int
 }
 
-func (f *fakeSystemWindow) Draw() {
+func (f *systemWindowMock) Draw() {
 	f.drawCount += 1
 }
 
 func TestNewWindows(t *testing.T) {
 	t.Run("should return Windows object for creating windows", func(t *testing.T) {
-		windows := pixiq.NewWindows(openFakeWindow)
+		windows := pixiq.NewWindows(openWindowMock)
 		assert.NotNil(t, windows)
 	})
 }
 
 func TestWindow_New(t *testing.T) {
-	windows := pixiq.NewWindows(openFakeWindow)
+	windows := pixiq.NewWindows(openWindowMock)
 	t.Run("should clamp width to 0 if negative", func(t *testing.T) {
 		win := windows.New(-1, 0)
 		require.NotNil(t, win)
@@ -51,7 +51,7 @@ func TestWindow_New(t *testing.T) {
 func TestWindow_Loop(t *testing.T) {
 
 	t.Run("should run callback function until window is closed", func(t *testing.T) {
-		windows := pixiq.NewWindows(openFakeWindow)
+		windows := pixiq.NewWindows(openWindowMock)
 		window := windows.New(0, 0)
 		executionCount := 0
 		// when
@@ -66,7 +66,7 @@ func TestWindow_Loop(t *testing.T) {
 	})
 
 	t.Run("frame should provide Image for the whole window", func(t *testing.T) {
-		windows := pixiq.NewWindows(openFakeWindow)
+		windows := pixiq.NewWindows(openWindowMock)
 		tests := map[string]struct {
 			width, height int
 		}{
@@ -96,9 +96,9 @@ func TestWindow_Loop(t *testing.T) {
 	})
 
 	t.Run("should draw image for each frame", func(t *testing.T) {
-		fakeWindow := &fakeSystemWindow{}
+		windowMock := &systemWindowMock{}
 		windows := pixiq.NewWindows(func(width, height int) pixiq.SystemWindow {
-			return fakeWindow
+			return windowMock
 		})
 		window := windows.New(0, 0)
 		executionCount := 0
@@ -110,7 +110,7 @@ func TestWindow_Loop(t *testing.T) {
 			}
 		})
 		// then
-		assert.Equal(t, 2, fakeWindow.drawCount)
+		assert.Equal(t, 2, windowMock.drawCount)
 	})
 
 }
