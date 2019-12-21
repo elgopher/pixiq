@@ -1,10 +1,12 @@
 package pixiq_test
 
 import (
-	"github.com/jacekolszak/pixiq"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
+
+	"github.com/jacekolszak/pixiq"
 )
 
 func TestNewWindows(t *testing.T) {
@@ -35,10 +37,10 @@ func TestWindow_New(t *testing.T) {
 }
 
 func TestWindow_Loop(t *testing.T) {
-	windows := pixiq.NewWindows()
-	window := windows.New(0, 0)
 
 	t.Run("should run callback function until window is closed", func(t *testing.T) {
+		windows := pixiq.NewWindows()
+		window := windows.New(0, 0)
 		executionCount := 0
 		// when
 		window.Loop(func(frame *pixiq.Frame) {
@@ -51,7 +53,7 @@ func TestWindow_Loop(t *testing.T) {
 		assert.Equal(t, 2, executionCount)
 	})
 
-	t.Run("frame should provide Selection for whole window's image", func(t *testing.T) {
+	t.Run("frame should provide Image for the whole window", func(t *testing.T) {
 		windows := pixiq.NewWindows()
 		tests := map[string]struct {
 			width, height int
@@ -68,18 +70,15 @@ func TestWindow_Loop(t *testing.T) {
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
 				window := windows.New(test.width, test.height)
-				var selection pixiq.Selection
+				var image *pixiq.Image
 				// when
 				window.Loop(func(frame *pixiq.Frame) {
-					selection = frame.ImageSelection()
+					image = frame.Image()
 					frame.CloseWindowEventually()
 				})
 				// then
-				assert.Equal(t, 0, selection.ImageX())
-				assert.Equal(t, 0, selection.ImageY())
-				assert.Equal(t, test.width, selection.Width())
-				assert.Equal(t, test.height, selection.Height())
-				assert.NotNil(t, selection.Image())
+				assert.Equal(t, test.width, image.Width())
+				assert.Equal(t, test.height, image.Height())
 			})
 
 		}

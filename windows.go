@@ -27,8 +27,9 @@ func (w *Windows) New(width, height int) *Window {
 
 // Window is area where image will be drawn
 type Window struct {
-	width, height int
-	image         *Image
+	width  int
+	height int
+	image  *Image
 }
 
 // Width returns width of the window in pixels
@@ -45,7 +46,7 @@ func (w *Window) Height() int {
 // function blocks the current goroutine.
 func (w *Window) Loop(onEachFrame func(frame *Frame)) {
 	frame := &Frame{}
-	frame.imageSelection = w.image.WholeImageSelection()
+	frame.image = w.image
 	for !frame.closeWindow {
 		onEachFrame(frame)
 	}
@@ -53,8 +54,8 @@ func (w *Window) Loop(onEachFrame func(frame *Frame)) {
 
 // Frame
 type Frame struct {
-	closeWindow    bool
-	imageSelection Selection
+	closeWindow bool
+	image       *Image
 }
 
 // CloseWindowEventually closes the window as soon as onEachFrame function is finished
@@ -62,7 +63,7 @@ func (w *Frame) CloseWindowEventually() {
 	w.closeWindow = true
 }
 
-// ImageSelection returns the whole Image window selection
-func (w *Frame) ImageSelection() Selection {
-	return w.imageSelection
+// Image returns the whole window Image
+func (w *Frame) Image() *Image {
+	return w.image
 }
