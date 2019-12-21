@@ -52,7 +52,7 @@ func (w *Window) Loop(onEachFrame func(frame *Frame)) {
 	}
 }
 
-// Frame
+// Frame provides the whole window image which will be drawn on a screen after making modifications
 type Frame struct {
 	closeWindow bool
 	image       *Image
@@ -63,7 +63,7 @@ func (w *Frame) CloseWindowEventually() {
 	w.closeWindow = true
 }
 
-// Image returns the whole window Image
+// Image returns the whole window Image, which can be modified
 func (w *Frame) Image() *Image {
 	return w.image
 }
