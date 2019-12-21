@@ -9,7 +9,7 @@ import (
 func BenchmarkSelection_SetColor(b *testing.B) {
 	b.StopTimer()
 	color := pixiq.RGBA(10, 20, 30, 40)
-	images := pixiq.NewImages()
+	images := pixiq.NewImages(newAcceleratedImageStub)
 	image := images.New(1920, 1080)
 	selection := image.WholeImageSelection()
 	height := selection.Height()
@@ -26,7 +26,7 @@ func BenchmarkSelection_SetColor(b *testing.B) {
 
 func BenchmarkSelection_Color(b *testing.B) {
 	b.StopTimer()
-	images := pixiq.NewImages()
+	images := pixiq.NewImages(newAcceleratedImageStub)
 	image := images.New(1920, 1080)
 	selection := image.WholeImageSelection()
 	height := selection.Height()

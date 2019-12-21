@@ -1,12 +1,16 @@
 package pixiq
 
 // NewImages returns a factory of images which can be passed around to every place where you construct new images.
-func NewImages() *Images {
-	return &Images{}
+func NewImages(newAcceleratedImage NewAcceleratedImage) *Images {
+	if newAcceleratedImage == nil {
+		panic("nil newAcceleratedImage parameter for pixiq.NewImages()")
+	}
+	return &Images{newAcceleratedImage: newAcceleratedImage}
 }
 
 // Images is a factory of images used to create new images.
 type Images struct {
+	newAcceleratedImage NewAcceleratedImage
 }
 
 // New creates an Image with specified size given in pixels. Width and height are clamped to zero if negative.
@@ -19,9 +23,10 @@ func (i *Images) New(width, height int) *Image {
 		h = height
 	}
 	return &Image{
-		width:  w,
-		height: h,
-		pixels: make([]Color, w*h),
+		width:               w,
+		height:              h,
+		pixels:              make([]Color, w*h),
+		newAcceleratedImage: i.newAcceleratedImage,
 	}
 }
 
@@ -31,9 +36,11 @@ func (i *Images) New(width, height int) *Image {
 // The cost of creating an Image is huge therefore new images should be created sporadically, ideally when
 // the application starts.
 type Image struct {
-	width  int
-	height int
-	pixels []Color
+	width               int
+	height              int
+	pixels              []Color
+	accelerateImage     AcceleratedImage
+	newAcceleratedImage NewAcceleratedImage
 }
 
 // Width returns the number of pixels in a row.
@@ -59,6 +66,17 @@ func (i *Image) Selection(x int, y int) Selection {
 // WholeImageSelection make selection of entire image.
 func (i *Image) WholeImageSelection() Selection {
 	return i.Selection(0, 0).WithSize(i.width, i.height)
+}
+
+func (i *Image) uploadAcceleratedImage() {
+	if i.accelerateImage == nil {
+		i.accelerateImage = i.newAcceleratedImage(i.width, i.height)
+	}
+	i.accelerateImage.Upload(i.pixels)
+}
+
+func (i *Image) acceleratedImage() AcceleratedImage {
+	return i.accelerateImage
 }
 
 // Selection points to a specific area of the image. It has a starting position (top-left corner) and optional size.
