@@ -5,6 +5,7 @@ func NewWindows(newAcceleratedImage NewAcceleratedImage, openWindow func(width, 
 	return &Windows{images: NewImages(newAcceleratedImage), openWindow: openWindow}
 }
 
+// SystemWindow is an operating system window
 type SystemWindow interface {
 	Draw(image AcceleratedImage)
 }
