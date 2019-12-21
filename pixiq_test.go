@@ -11,7 +11,7 @@ import (
 
 var transparent = pixiq.RGBA(0, 0, 0, 0)
 
-var newAcceleratedImageStub = func(width, height int) pixiq.AcceleratedImage {
+var newAcceleratedImageStub pixiq.NewAcceleratedImage = func(width, height int) pixiq.AcceleratedImage {
 	return nil
 }
 
