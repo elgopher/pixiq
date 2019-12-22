@@ -136,10 +136,6 @@ func TestWindow_Loop(t *testing.T) {
 			newImageMock := func(width, height int) pixiq.AcceleratedImage {
 				return imageMock
 			}
-			windowMock := &systemWindowMock{}
-			openWindowMock := func(width, height int) pixiq.SystemWindow {
-				return windowMock
-			}
 			windows := pixiq.NewWindows(newImageMock, openWindowMock)
 			window := windows.New(0, 0)
 			// when
@@ -153,10 +149,6 @@ func TestWindow_Loop(t *testing.T) {
 			imageMock := &acceleratedImageMock{}
 			newImageMock := func(width, height int) pixiq.AcceleratedImage {
 				return imageMock
-			}
-			windowMock := &systemWindowMock{}
-			openWindowMock := func(width, height int) pixiq.SystemWindow {
-				return windowMock
 			}
 			windows := pixiq.NewWindows(newImageMock, openWindowMock)
 			window := windows.New(1, 1)
@@ -175,10 +167,6 @@ func TestWindow_Loop(t *testing.T) {
 			newImageMock := func(width, height int) pixiq.AcceleratedImage {
 				return imageMock
 			}
-			windowMock := &systemWindowMock{}
-			openWindowMock := func(width, height int) pixiq.SystemWindow {
-				return windowMock
-			}
 			windows := pixiq.NewWindows(newImageMock, openWindowMock)
 			window := windows.New(1, 1)
 			color := pixiq.RGBA(10, 20, 30, 40)
@@ -195,10 +183,6 @@ func TestWindow_Loop(t *testing.T) {
 			imageMock := &acceleratedImageMock{}
 			newImageMock := func(width, height int) pixiq.AcceleratedImage {
 				return imageMock
-			}
-			windowMock := &systemWindowMock{}
-			openWindowMock := func(width, height int) pixiq.SystemWindow {
-				return windowMock
 			}
 			windows := pixiq.NewWindows(newImageMock, openWindowMock)
 			window := windows.New(1, 2)
@@ -219,10 +203,6 @@ func TestWindow_Loop(t *testing.T) {
 			newImageMock := func(width, height int) pixiq.AcceleratedImage {
 				return imageMock
 			}
-			windowMock := &systemWindowMock{}
-			openWindowMock := func(width, height int) pixiq.SystemWindow {
-				return windowMock
-			}
 			windows := pixiq.NewWindows(newImageMock, openWindowMock)
 			window := windows.New(2, 1)
 			color0 := pixiq.RGBA(10, 20, 30, 40)
@@ -241,10 +221,6 @@ func TestWindow_Loop(t *testing.T) {
 			imageMock := &acceleratedImageMock{}
 			newImageMock := func(width, height int) pixiq.AcceleratedImage {
 				return imageMock
-			}
-			windowMock := &systemWindowMock{}
-			openWindowMock := func(width, height int) pixiq.SystemWindow {
-				return windowMock
 			}
 			windows := pixiq.NewWindows(newImageMock, openWindowMock)
 			window := windows.New(2, 2)
