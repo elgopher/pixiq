@@ -1,8 +1,8 @@
 package pixiq
 
 // NewWindows returns a factory of Window objects.
-func NewWindows(newAcceleratedImage NewAcceleratedImage, openWindow func(width, height int) SystemWindow) *Windows {
-	return &Windows{images: NewImages(newAcceleratedImage), openWindow: openWindow}
+func NewWindows(images AcceleratedImages, openWindow func(width, height int) SystemWindow) *Windows {
+	return &Windows{images: NewImages(images), openWindow: openWindow}
 }
 
 // SystemWindow is an operating system window

@@ -1,16 +1,16 @@
 package pixiq
 
 // NewImages returns a factory of images which can be passed around to every place where you construct new images.
-func NewImages(newAcceleratedImage NewAcceleratedImage) *Images {
-	if newAcceleratedImage == nil {
-		panic("nil newAcceleratedImage parameter for pixiq.NewImages()")
+func NewImages(images AcceleratedImages) *Images {
+	if images == nil {
+		panic("nil AcceleratedImages parameter for pixiq.NewImages()")
 	}
-	return &Images{newAcceleratedImage: newAcceleratedImage}
+	return &Images{acceleratedImages: images}
 }
 
 // Images is a factory of images used to create new images.
 type Images struct {
-	newAcceleratedImage NewAcceleratedImage
+	acceleratedImages AcceleratedImages
 }
 
 // New creates an Image with specified size given in pixels. Width and height are clamped to zero if negative.
@@ -23,10 +23,10 @@ func (i *Images) New(width, height int) *Image {
 		h = height
 	}
 	return &Image{
-		width:               w,
-		height:              h,
-		pixels:              make([]Color, w*h),
-		newAcceleratedImage: i.newAcceleratedImage,
+		width:             w,
+		height:            h,
+		pixels:            make([]Color, w*h),
+		acceleratedImages: i.acceleratedImages,
 	}
 }
 
@@ -36,11 +36,11 @@ func (i *Images) New(width, height int) *Image {
 // The cost of creating an Image is huge therefore new images should be created sporadically, ideally when
 // the application starts.
 type Image struct {
-	width               int
-	height              int
-	pixels              []Color
-	accelerateImage     AcceleratedImage
-	newAcceleratedImage NewAcceleratedImage
+	width             int
+	height            int
+	pixels            []Color
+	accelerateImage   AcceleratedImage
+	acceleratedImages AcceleratedImages
 }
 
 // Width returns the number of pixels in a row.
@@ -70,7 +70,7 @@ func (i *Image) WholeImageSelection() Selection {
 
 func (i *Image) uploadAcceleratedImage() {
 	if i.accelerateImage == nil {
-		i.accelerateImage = i.newAcceleratedImage(i.width, i.height)
+		i.accelerateImage = i.acceleratedImages.New(i.width, i.height)
 	}
 	i.accelerateImage.Upload(i.pixels)
 }
