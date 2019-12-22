@@ -41,16 +41,17 @@ func TestWindow_Loop(t *testing.T) {
 	t.Run("should run callback function until window is closed", func(t *testing.T) {
 		windows := pixiq.NewWindows(&fakeAcceleratedImages{}, openWindowMock)
 		window := windows.New(0, 0)
-		executionCount := 0
+		frameNumber := 1
 		// when
 		window.Loop(func(frame *pixiq.Frame) {
-			executionCount += 1
-			if executionCount == 2 {
+			if frameNumber == 2 {
 				frame.CloseWindowEventually()
+			} else {
+				frameNumber += 1
 			}
 		})
 		// then
-		assert.Equal(t, 2, executionCount)
+		assert.Equal(t, 2, frameNumber)
 	})
 
 	t.Run("frame should provide Image for the whole window", func(t *testing.T) {
@@ -91,12 +92,13 @@ func TestWindow_Loop(t *testing.T) {
 		images := &fakeAcceleratedImages{}
 		windows := pixiq.NewWindows(images, openWindowMock)
 		window := windows.New(0, 0)
-		executionCount := 0
+		frameNumber := 1
 		// when
 		window.Loop(func(frame *pixiq.Frame) {
-			executionCount += 1
-			if executionCount == 2 {
+			if frameNumber == 2 {
 				frame.CloseWindowEventually()
+			} else {
+				frameNumber += 1
 			}
 		})
 		// then
@@ -194,6 +196,27 @@ func TestWindow_Loop(t *testing.T) {
 			})
 			// then
 			images.assertOneImageWithPixels(t, []pixiq.Color{color0, color1, color2, color3})
+		})
+		t.Run("after second frame, 1x1", func(t *testing.T) {
+			images := &fakeAcceleratedImages{}
+			windows := pixiq.NewWindows(images, openWindowMock)
+			window := windows.New(1, 1)
+			frameNumber := 1
+			color0 := pixiq.RGBA(10, 20, 30, 40)
+			color1 := pixiq.RGBA(50, 60, 70, 80)
+			// when
+			window.Loop(func(frame *pixiq.Frame) {
+				selection := frame.Image().Selection(0, 0)
+				if frameNumber == 1 {
+					selection.SetColor(0, 0, color0)
+					frameNumber += 1
+				} else {
+					selection.SetColor(0, 0, color1)
+					frame.CloseWindowEventually()
+				}
+			})
+			// then
+			images.assertOneImageWithPixels(t, []pixiq.Color{color1})
 		})
 	})
 
