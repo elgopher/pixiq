@@ -34,7 +34,11 @@ type fakeAcceleratedImage struct {
 }
 
 func (a *fakeAcceleratedImage) Upload(pixels []pixiq.Color) {
-	a.pixels = pixels
+	a.pixels = make([]pixiq.Color, len(pixels))
+	// copy pixels to ensure that Upload method has been called
+	for i, pixel := range pixels {
+		a.pixels[i] = pixel
+	}
 }
 
 var openWindowMock = func(width, height int) pixiq.SystemWindow {
