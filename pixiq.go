@@ -8,6 +8,18 @@ func NewImages(images AcceleratedImages) *Images {
 	return &Images{acceleratedImages: images}
 }
 
+// AcceleratedImages is a container of accelerated images.
+type AcceleratedImages interface {
+	// New creates an accelerated image. This can be a texture on a video card or something totally different.
+	New(width, height int) AcceleratedImage
+}
+
+// AcceleratedImage is an image processed externally (outside the CPU).
+type AcceleratedImage interface {
+	// Upload send pixels colors sorted by coordinates. First all pixels are sent for y=0, from left to right.
+	Upload(pixels []Color)
+}
+
 // Images is a factory of images used to create new images.
 type Images struct {
 	acceleratedImages AcceleratedImages
@@ -23,10 +35,9 @@ func (i *Images) New(width, height int) *Image {
 		h = height
 	}
 	return &Image{
-		width:             w,
-		height:            h,
-		pixels:            make([]Color, w*h),
-		acceleratedImages: i.acceleratedImages,
+		width:  w,
+		height: h,
+		pixels: make([]Color, w*h),
 	}
 }
 
@@ -36,11 +47,9 @@ func (i *Images) New(width, height int) *Image {
 // The cost of creating an Image is huge therefore new images should be created sporadically, ideally when
 // the application starts.
 type Image struct {
-	width             int
-	height            int
-	pixels            []Color
-	accelerateImage   AcceleratedImage
-	acceleratedImages AcceleratedImages
+	width  int
+	height int
+	pixels []Color
 }
 
 // Width returns the number of pixels in a row.
@@ -66,17 +75,6 @@ func (i *Image) Selection(x int, y int) Selection {
 // WholeImageSelection make selection of entire image.
 func (i *Image) WholeImageSelection() Selection {
 	return i.Selection(0, 0).WithSize(i.width, i.height)
-}
-
-func (i *Image) uploadAcceleratedImage() {
-	if i.accelerateImage == nil {
-		i.accelerateImage = i.acceleratedImages.New(i.width, i.height)
-	}
-	i.accelerateImage.Upload(i.pixels)
-}
-
-func (i *Image) acceleratedImage() AcceleratedImage {
-	return i.accelerateImage
 }
 
 // Selection points to a specific area of the image. It has a starting position (top-left corner) and optional size.

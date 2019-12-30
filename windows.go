@@ -1,19 +1,23 @@
 package pixiq
 
 // NewWindows returns a factory of Window objects.
-func NewWindows(images AcceleratedImages, openWindow func(width, height int) SystemWindow) *Windows {
-	return &Windows{images: NewImages(images), openWindow: openWindow}
+func NewWindows(images *Images, windows SystemWindows) *Windows {
+	return &Windows{images: images, systemWindows: windows}
+}
+
+type SystemWindows interface {
+	Open(width, height int) SystemWindow
 }
 
 // SystemWindow is an operating system window
 type SystemWindow interface {
-	Draw(image AcceleratedImage)
+	Draw(image *Image)
 }
 
 // Windows is a factory of Window objects
 type Windows struct {
-	images     *Images
-	openWindow func(width, height int) SystemWindow
+	images        *Images
+	systemWindows SystemWindows
 }
 
 // New creates a new window with width and height given in pixels.
@@ -28,7 +32,7 @@ func (w *Windows) New(width, height int) *Window {
 		width:  width,
 		height: height,
 		image:  w.images.New(width, height),
-		window: w.openWindow(width, height),
+		window: w.systemWindows.Open(width, height),
 	}
 }
 
@@ -57,8 +61,7 @@ func (w *Window) Loop(onEachFrame func(frame *Frame)) {
 	frame.image = w.image
 	for !frame.closeWindow {
 		onEachFrame(frame)
-		w.image.uploadAcceleratedImage()
-		w.window.Draw(w.image.acceleratedImage())
+		w.window.Draw(w.image)
 	}
 }
 

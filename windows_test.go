@@ -11,13 +11,13 @@ import (
 
 func TestNewWindows(t *testing.T) {
 	t.Run("should return Windows object for creating windows", func(t *testing.T) {
-		windows := pixiq.NewWindows(&fakeAcceleratedImages{}, openWindowMock)
+		windows := pixiq.NewWindows(pixiq.NewImages(&fakeAcceleratedImages{}), &systemWindowsMock{})
 		assert.NotNil(t, windows)
 	})
 }
 
 func TestWindow_New(t *testing.T) {
-	windows := pixiq.NewWindows(&fakeAcceleratedImages{}, openWindowMock)
+	windows := pixiq.NewWindows(pixiq.NewImages(&fakeAcceleratedImages{}), &systemWindowsMock{})
 	t.Run("should clamp width to 0 if negative", func(t *testing.T) {
 		win := windows.New(-1, 0)
 		require.NotNil(t, win)
@@ -39,9 +39,9 @@ func TestWindow_New(t *testing.T) {
 func TestWindow_Loop(t *testing.T) {
 
 	t.Run("should run callback function until window is closed", func(t *testing.T) {
-		windows := pixiq.NewWindows(&fakeAcceleratedImages{}, openWindowMock)
+		windows := pixiq.NewWindows(pixiq.NewImages(&fakeAcceleratedImages{}), &systemWindowsMock{})
 		window := windows.New(0, 0)
-		frameNumber := 1
+		frameNumber := 0
 		// when
 		window.Loop(func(frame *pixiq.Frame) {
 			if frameNumber == 2 {
@@ -55,7 +55,7 @@ func TestWindow_Loop(t *testing.T) {
 	})
 
 	t.Run("frame should provide Image for the whole window", func(t *testing.T) {
-		windows := pixiq.NewWindows(&fakeAcceleratedImages{}, openWindowMock)
+		windows := pixiq.NewWindows(pixiq.NewImages(&fakeAcceleratedImages{}), &systemWindowsMock{})
 		tests := map[string]struct {
 			width, height int
 		}{
@@ -84,15 +84,29 @@ func TestWindow_Loop(t *testing.T) {
 		}
 	})
 
-	t.Run("should draw accelerated image for each frame", func(t *testing.T) {
-		windowMock := &systemWindowMock{}
-		openWindowMock := func(width, height int) pixiq.SystemWindow {
-			return windowMock
-		}
-		images := &fakeAcceleratedImages{}
-		windows := pixiq.NewWindows(images, openWindowMock)
+	t.Run("should open system window", func(t *testing.T) {
+		images := pixiq.NewImages(&fakeAcceleratedImages{})
+		systemWindows := &systemWindowsMock{}
+		windows := pixiq.NewWindows(images, systemWindows)
+		window := windows.New(1, 2)
+		// when
+		window.Loop(func(frame *pixiq.Frame) {
+			frame.CloseWindowEventually()
+		})
+		// then
+		require.Len(t, systemWindows.openWindows, 1)
+		win := systemWindows.openWindows[0]
+		assert.Equal(t, 1, win.width)
+		assert.Equal(t, 2, win.height)
+	})
+
+	t.Run("should draw image for each frame", func(t *testing.T) {
+		images := pixiq.NewImages(&fakeAcceleratedImages{})
+		systemWindows := &systemWindowsMock{}
+		windows := pixiq.NewWindows(images, systemWindows)
 		window := windows.New(0, 0)
 		frameNumber := 1
+		var recordedImages []*pixiq.Image
 		// when
 		window.Loop(func(frame *pixiq.Frame) {
 			if frameNumber == 2 {
@@ -100,42 +114,35 @@ func TestWindow_Loop(t *testing.T) {
 			} else {
 				frameNumber += 1
 			}
+			recordedImages = append(recordedImages, frame.Image())
 		})
 		// then
-		assert.Equal(t, []pixiq.AcceleratedImage{images.images[0], images.images[0]}, windowMock.imagesDrawn)
+		require.Len(t, systemWindows.openWindows, 1)
+		win := systemWindows.openWindows[0]
+		assert.Equal(t, recordedImages, win.imagesDrawn)
 	})
 
-	t.Run("should upload initial, transparent image", func(t *testing.T) {
-		t.Run("0x0", func(t *testing.T) {
-			images := &fakeAcceleratedImages{}
-			windows := pixiq.NewWindows(images, openWindowMock)
-			window := windows.New(0, 0)
-			// when
-			window.Loop(func(frame *pixiq.Frame) {
-				frame.CloseWindowEventually()
-			})
-			// then
-			images.assertOneImageWithPixels(t, []pixiq.Color{})
+	t.Run("initial window image is transparent", func(t *testing.T) {
+		images := pixiq.NewImages(&fakeAcceleratedImages{})
+		windows := pixiq.NewWindows(images, &systemWindowsMock{})
+		window := windows.New(1, 1)
+		var image *pixiq.Image
+		// when
+		window.Loop(func(frame *pixiq.Frame) {
+			image = frame.Image()
+			frame.CloseWindowEventually()
 		})
-		t.Run("1x1", func(t *testing.T) {
-			images := &fakeAcceleratedImages{}
-			windows := pixiq.NewWindows(images, openWindowMock)
-			window := windows.New(1, 1)
-			// when
-			window.Loop(func(frame *pixiq.Frame) {
-				frame.CloseWindowEventually()
-			})
-			// then
-			images.assertOneImageWithPixels(t, []pixiq.Color{transparent})
-		})
+		// then
+		assert.Equal(t, transparent, image.WholeImageSelection().Color(0, 0))
 	})
 
-	t.Run("should upload modified window image", func(t *testing.T) {
-		t.Run("1x1", func(t *testing.T) {
-			images := &fakeAcceleratedImages{}
-			windows := pixiq.NewWindows(images, openWindowMock)
-			window := windows.New(1, 1)
+	t.Run("should draw modified window image", func(t *testing.T) {
+		t.Run("first frame", func(t *testing.T) {
 			color := pixiq.RGBA(10, 20, 30, 40)
+			images := pixiq.NewImages(&fakeAcceleratedImages{})
+			systemWindows := &systemWindowsMock{}
+			windows := pixiq.NewWindows(images, systemWindows)
+			window := windows.New(1, 1)
 			// when
 			window.Loop(func(frame *pixiq.Frame) {
 				selection := frame.Image().Selection(0, 0)
@@ -143,81 +150,70 @@ func TestWindow_Loop(t *testing.T) {
 				frame.CloseWindowEventually()
 			})
 			// then
-			images.assertOneImageWithPixels(t, []pixiq.Color{color})
+			require.Len(t, systemWindows.openWindows, 1)
+			win := systemWindows.openWindows[0]
+			require.Len(t, win.imagesDrawn, 1)
+			assert.Equal(t, color, win.imagesDrawn[0].WholeImageSelection().Color(0, 0))
 		})
-		t.Run("1x2", func(t *testing.T) {
-			images := &fakeAcceleratedImages{}
-			windows := pixiq.NewWindows(images, openWindowMock)
-			window := windows.New(1, 2)
-			color0 := pixiq.RGBA(10, 20, 30, 40)
-			color1 := pixiq.RGBA(50, 60, 70, 80)
-			// when
-			window.Loop(func(frame *pixiq.Frame) {
-				selection := frame.Image().Selection(0, 0)
-				selection.SetColor(0, 0, color0)
-				selection.SetColor(0, 1, color1)
-				frame.CloseWindowEventually()
-			})
-			// then
-			images.assertOneImageWithPixels(t, []pixiq.Color{color0, color1})
-		})
-		t.Run("2x1", func(t *testing.T) {
-			images := &fakeAcceleratedImages{}
-			windows := pixiq.NewWindows(images, openWindowMock)
-			window := windows.New(2, 1)
-			color0 := pixiq.RGBA(10, 20, 30, 40)
-			color1 := pixiq.RGBA(50, 60, 70, 80)
-			// when
-			window.Loop(func(frame *pixiq.Frame) {
-				selection := frame.Image().Selection(0, 0)
-				selection.SetColor(0, 0, color0)
-				selection.SetColor(1, 0, color1)
-				frame.CloseWindowEventually()
-			})
-			// then
-			images.assertOneImageWithPixels(t, []pixiq.Color{color0, color1})
-		})
-		t.Run("2x2", func(t *testing.T) {
-			images := &fakeAcceleratedImages{}
-			windows := pixiq.NewWindows(images, openWindowMock)
-			window := windows.New(2, 2)
-			color0 := pixiq.RGBA(10, 20, 30, 40)
-			color1 := pixiq.RGBA(50, 60, 70, 80)
-			color2 := pixiq.RGBA(90, 100, 110, 120)
-			color3 := pixiq.RGBA(130, 140, 150, 160)
-			// when
-			window.Loop(func(frame *pixiq.Frame) {
-				selection := frame.Image().Selection(0, 0)
-				selection.SetColor(0, 0, color0)
-				selection.SetColor(1, 0, color1)
-				selection.SetColor(0, 1, color2)
-				selection.SetColor(1, 1, color3)
-				frame.CloseWindowEventually()
-			})
-			// then
-			images.assertOneImageWithPixels(t, []pixiq.Color{color0, color1, color2, color3})
-		})
-		t.Run("after second frame, 1x1", func(t *testing.T) {
-			images := &fakeAcceleratedImages{}
-			windows := pixiq.NewWindows(images, openWindowMock)
+		t.Run("second frame", func(t *testing.T) {
+			color1 := pixiq.RGBA(10, 20, 30, 40)
+			color2 := pixiq.RGBA(10, 20, 30, 40)
+			images := pixiq.NewImages(&fakeAcceleratedImages{})
+			systemWindows := &systemWindowsMock{}
+			windows := pixiq.NewWindows(images, systemWindows)
 			window := windows.New(1, 1)
 			frameNumber := 1
-			color0 := pixiq.RGBA(10, 20, 30, 40)
-			color1 := pixiq.RGBA(50, 60, 70, 80)
 			// when
 			window.Loop(func(frame *pixiq.Frame) {
 				selection := frame.Image().Selection(0, 0)
-				if frameNumber == 1 {
-					selection.SetColor(0, 0, color0)
-					frameNumber += 1
+				if frameNumber == 2 {
+					selection.SetColor(0, 0, color2)
+					frame.CloseWindowEventually()
 				} else {
 					selection.SetColor(0, 0, color1)
-					frame.CloseWindowEventually()
+					frameNumber += 1
 				}
 			})
 			// then
-			images.assertOneImageWithPixels(t, []pixiq.Color{color1})
+			require.Len(t, systemWindows.openWindows, 1)
+			win := systemWindows.openWindows[0]
+			require.Len(t, win.imagesDrawn, 2)
+			assert.Equal(t, color1, win.imagesDrawn[0].WholeImageSelection().Color(0, 0))
+			assert.Equal(t, color2, win.imagesDrawn[1].WholeImageSelection().Color(0, 0))
 		})
 	})
 
+}
+
+type systemWindowsMock struct {
+	openWindows []*systemWindowMock
+}
+
+func (s *systemWindowsMock) Open(width, height int) pixiq.SystemWindow {
+	win := &systemWindowMock{width: width, height: height}
+	s.openWindows = append(s.openWindows, win)
+	return win
+}
+
+type systemWindowMock struct {
+	imagesDrawn []*pixiq.Image
+	width       int
+	height      int
+}
+
+func (f *systemWindowMock) Draw(image *pixiq.Image) {
+	f.imagesDrawn = append(f.imagesDrawn, clone(image))
+}
+
+func clone(original *pixiq.Image) *pixiq.Image {
+	images := pixiq.NewImages(&fakeAcceleratedImages{})
+	clone := images.New(original.Width(), original.Height())
+	originalSelection := original.WholeImageSelection()
+	cloneSelection := clone.WholeImageSelection()
+	for y := 0; y < originalSelection.Height(); y++ {
+		for x := 0; x < originalSelection.Width(); x++ {
+			cloneSelection.SetColor(x, y, originalSelection.Color(x, y))
+		}
+	}
+	return clone
 }
