@@ -168,7 +168,7 @@ func TestWindow_Loop(t *testing.T) {
 			frameNumber := 1
 			// when
 			window.Loop(func(frame *pixiq.Frame) {
-				selection := frame.Image().Selection(0, 0)
+				selection := frame.Image().WholeImageSelection()
 				switch frameNumber {
 				case 1:
 					selection.SetColor(0, 0, color1)
