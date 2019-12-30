@@ -13,20 +13,20 @@ var transparent = pixiq.RGBA(0, 0, 0, 0)
 
 func TestNewImages(t *testing.T) {
 	t.Run("should create image factory", func(t *testing.T) {
-		images := pixiq.NewImages()
+		images := pixiq.NewImages(&fakeAcceleratedImages{})
 		assert.NotNil(t, images)
 	})
 }
 
 func TestImages_New(t *testing.T) {
 	t.Run("should create an image of zero width when given width is less than 0", func(t *testing.T) {
-		images := pixiq.NewImages()
+		images := pixiq.NewImages(&fakeAcceleratedImages{})
 		image := images.New(-1, 4)
 		require.NotNil(t, image)
 		assert.Equal(t, 0, image.Width())
 	})
 	t.Run("should create an image of zero height when given height is less than 0", func(t *testing.T) {
-		images := pixiq.NewImages()
+		images := pixiq.NewImages(&fakeAcceleratedImages{})
 		image := images.New(2, -1)
 		require.NotNil(t, image)
 		assert.Equal(t, 0, image.Height())
@@ -56,7 +56,7 @@ func TestImages_New(t *testing.T) {
 				height: 3,
 			},
 		}
-		images := pixiq.NewImages()
+		images := pixiq.NewImages(&fakeAcceleratedImages{})
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
 				// when
@@ -71,7 +71,7 @@ func TestImages_New(t *testing.T) {
 }
 
 func TestImage_Selection(t *testing.T) {
-	images := pixiq.NewImages()
+	images := pixiq.NewImages(&fakeAcceleratedImages{})
 	image := images.New(0, 0)
 
 	t.Run("should create a selection for negative x", func(t *testing.T) {
@@ -95,7 +95,7 @@ func TestImage_Selection(t *testing.T) {
 }
 
 func TestSelection_Selection(t *testing.T) {
-	images := pixiq.NewImages()
+	images := pixiq.NewImages(&fakeAcceleratedImages{})
 	image := images.New(0, 0)
 
 	t.Run("should create a selection for negative x", func(t *testing.T) {
@@ -123,7 +123,7 @@ func TestSelection_Selection(t *testing.T) {
 
 func TestImage_WholeImageSelection(t *testing.T) {
 	t.Run("should create a selection of whole image", func(t *testing.T) {
-		images := pixiq.NewImages()
+		images := pixiq.NewImages(&fakeAcceleratedImages{})
 		tests := map[string]struct {
 			image          *pixiq.Image
 			expectedWidth  int
@@ -156,7 +156,7 @@ func TestImage_WholeImageSelection(t *testing.T) {
 }
 
 func TestSelection_WithSize(t *testing.T) {
-	images := pixiq.NewImages()
+	images := pixiq.NewImages(&fakeAcceleratedImages{})
 	image := images.New(0, 0)
 
 	t.Run("should set selection width to zero if given width is negative", func(t *testing.T) {
@@ -197,7 +197,7 @@ func TestSelection_WithSize(t *testing.T) {
 }
 
 func TestSelection_Color(t *testing.T) {
-	images := pixiq.NewImages()
+	images := pixiq.NewImages(&fakeAcceleratedImages{})
 
 	t.Run("should return transparent color for pixel outside the image", func(t *testing.T) {
 		tests := map[string]struct {
@@ -284,7 +284,7 @@ func TestSelection_Color(t *testing.T) {
 }
 
 func TestSelection_SetColor(t *testing.T) {
-	images := pixiq.NewImages()
+	images := pixiq.NewImages(&fakeAcceleratedImages{})
 	color := pixiq.RGBA(10, 20, 30, 40)
 
 	t.Run("should set pixel color inside the image", func(t *testing.T) {

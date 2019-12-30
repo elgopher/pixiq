@@ -1,12 +1,28 @@
 package pixiq
 
 // NewImages returns a factory of images which can be passed around to every place where you construct new images.
-func NewImages() *Images {
-	return &Images{}
+func NewImages(images AcceleratedImages) *Images {
+	if images == nil {
+		panic("nil AcceleratedImages parameter for pixiq.NewImages()")
+	}
+	return &Images{acceleratedImages: images}
+}
+
+// AcceleratedImages is a container of accelerated images.
+type AcceleratedImages interface {
+	// New creates an accelerated image. This can be a texture on a video card or something totally different.
+	New(width, height int) AcceleratedImage
+}
+
+// AcceleratedImage is an image processed externally (outside the CPU).
+type AcceleratedImage interface {
+	// Upload send pixels colors sorted by coordinates. First all pixels are sent for y=0, from left to right.
+	Upload(pixels []Color)
 }
 
 // Images is a factory of images used to create new images.
 type Images struct {
+	acceleratedImages AcceleratedImages
 }
 
 // New creates an Image with specified size given in pixels. Width and height are clamped to zero if negative.
