@@ -39,7 +39,8 @@ func TestWindow_New(t *testing.T) {
 func TestWindow_Loop(t *testing.T) {
 
 	t.Run("should run callback function until window is closed", func(t *testing.T) {
-		windows := pixiq.NewWindows(pixiq.NewImages(&fakeAcceleratedImages{}), &systemWindowsMock{})
+		images := pixiq.NewImages(&fakeAcceleratedImages{})
+		windows := pixiq.NewWindows(images, &systemWindowsMock{})
 		window := windows.New(0, 0)
 		frameNumber := 0
 		// when
@@ -55,7 +56,8 @@ func TestWindow_Loop(t *testing.T) {
 	})
 
 	t.Run("frame should provide Image for the whole window", func(t *testing.T) {
-		windows := pixiq.NewWindows(pixiq.NewImages(&fakeAcceleratedImages{}), &systemWindowsMock{})
+		images := pixiq.NewImages(&fakeAcceleratedImages{})
+		windows := pixiq.NewWindows(images, &systemWindowsMock{})
 		tests := map[string]struct {
 			width, height int
 		}{
@@ -109,10 +111,11 @@ func TestWindow_Loop(t *testing.T) {
 		var recordedImages []*pixiq.Image
 		// when
 		window.Loop(func(frame *pixiq.Frame) {
-			if frameNumber == 2 {
-				frame.CloseWindowEventually()
-			} else {
+			switch frameNumber {
+			case 1:
 				frameNumber += 1
+			case 2:
+				frame.CloseWindowEventually()
 			}
 			recordedImages = append(recordedImages, frame.Image())
 		})
@@ -137,7 +140,7 @@ func TestWindow_Loop(t *testing.T) {
 	})
 
 	t.Run("should draw modified window image", func(t *testing.T) {
-		t.Run("first frame", func(t *testing.T) {
+		t.Run("after first frame", func(t *testing.T) {
 			color := pixiq.RGBA(10, 20, 30, 40)
 			images := pixiq.NewImages(&fakeAcceleratedImages{})
 			systemWindows := &systemWindowsMock{}
@@ -155,7 +158,7 @@ func TestWindow_Loop(t *testing.T) {
 			require.Len(t, win.imagesDrawn, 1)
 			assert.Equal(t, color, win.imagesDrawn[0].WholeImageSelection().Color(0, 0))
 		})
-		t.Run("second frame", func(t *testing.T) {
+		t.Run("after second frame", func(t *testing.T) {
 			color1 := pixiq.RGBA(10, 20, 30, 40)
 			color2 := pixiq.RGBA(10, 20, 30, 40)
 			images := pixiq.NewImages(&fakeAcceleratedImages{})
@@ -166,12 +169,13 @@ func TestWindow_Loop(t *testing.T) {
 			// when
 			window.Loop(func(frame *pixiq.Frame) {
 				selection := frame.Image().Selection(0, 0)
-				if frameNumber == 2 {
-					selection.SetColor(0, 0, color2)
-					frame.CloseWindowEventually()
-				} else {
+				switch frameNumber {
+				case 1:
 					selection.SetColor(0, 0, color1)
 					frameNumber += 1
+				case 2:
+					selection.SetColor(0, 0, color2)
+					frame.CloseWindowEventually()
 				}
 			})
 			// then
