@@ -5,7 +5,9 @@ func NewWindows(images *Images, windows SystemWindows) *Windows {
 	return &Windows{images: images, systemWindows: windows}
 }
 
+// SystemWindows is an API for creating system windows
 type SystemWindows interface {
+	// Open creates and show system window
 	Open(width, height int) SystemWindow
 }
 
