@@ -23,7 +23,6 @@ func New(loop *MainThreadLoop) *OpenGL {
 		if err != nil {
 			panic(err)
 		}
-		defer window.ShouldClose() // TODO
 		window.MakeContextCurrent()
 	})
 	return &OpenGL{textures: &textures{}, glfwWindows: &glfwWindows{}}
