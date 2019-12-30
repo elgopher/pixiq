@@ -446,6 +446,92 @@ func TestSelection_SetColor(t *testing.T) {
 
 }
 
+func TestImage_Upload(t *testing.T) {
+	t.Run("should create accelerated image", func(t *testing.T) {
+		images := pixiq.NewImages(&fakeAcceleratedImages{})
+		image := images.New(0, 0)
+		// when
+		acceleratedImage := image.Upload().(*fakeAcceleratedImage)
+		// then
+		assert.NotNil(t, acceleratedImage)
+	})
+	t.Run("accelerated image should have same dimensions", func(t *testing.T) {
+		tests := map[string]struct{ width, height int }{
+			"0x0": {
+				width:  0,
+				height: 0,
+			},
+			"1x2": {
+				width:  1,
+				height: 2,
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				images := pixiq.NewImages(&fakeAcceleratedImages{})
+				image := images.New(test.width, test.height)
+				// when
+				acceleratedImage := image.Upload().(*fakeAcceleratedImage)
+				// then
+				assert.Equal(t, test.width, acceleratedImage.width)
+				assert.Equal(t, test.height, acceleratedImage.height)
+			})
+		}
+	})
+	t.Run("should upload pixels", func(t *testing.T) {
+		t.Run("0x0", func(t *testing.T) {
+			images := pixiq.NewImages(&fakeAcceleratedImages{})
+			image := images.New(0, 0)
+			// when
+			acceleratedImage := image.Upload().(*fakeAcceleratedImage)
+			// then
+			assert.NotNil(t, acceleratedImage.pixels)
+			assert.Len(t, acceleratedImage.pixels, 0)
+		})
+		t.Run("1x1", func(t *testing.T) {
+			images := pixiq.NewImages(&fakeAcceleratedImages{})
+			image := images.New(1, 1)
+			color := pixiq.RGBA(10, 20, 30, 40)
+			image.Selection(0, 0).SetColor(0, 0, color)
+			// when
+			acceleratedImage := image.Upload().(*fakeAcceleratedImage)
+			// then
+			require.Len(t, acceleratedImage.pixels, 1)
+			assert.Equal(t, color, acceleratedImage.pixels[0])
+		})
+		t.Run("2x2", func(t *testing.T) {
+			images := pixiq.NewImages(&fakeAcceleratedImages{})
+			image := images.New(2, 2)
+			color1 := pixiq.RGBA(10, 20, 30, 40)
+			color2 := pixiq.RGBA(50, 50, 60, 70)
+			color3 := pixiq.RGBA(80, 90, 100, 110)
+			color4 := pixiq.RGBA(120, 130, 140, 150)
+			selection := image.Selection(0, 0)
+			selection.SetColor(0, 0, color1)
+			selection.SetColor(1, 0, color2)
+			selection.SetColor(0, 1, color3)
+			selection.SetColor(1, 1, color4)
+			// when
+			acceleratedImage := image.Upload().(*fakeAcceleratedImage)
+			// then
+			require.Len(t, acceleratedImage.pixels, 4)
+			assert.Equal(t, color1, acceleratedImage.pixels[0])
+			assert.Equal(t, color2, acceleratedImage.pixels[1])
+			assert.Equal(t, color3, acceleratedImage.pixels[2])
+			assert.Equal(t, color4, acceleratedImage.pixels[3])
+		})
+	})
+	t.Run("should reuse previously created AcceleratedImage", func(t *testing.T) {
+		images := pixiq.NewImages(&fakeAcceleratedImages{})
+		image := images.New(0, 0)
+		acceleratedImage1 := image.Upload()
+		// when
+		acceleratedImage2 := image.Upload()
+		// then
+		assert.Same(t, acceleratedImage1, acceleratedImage2)
+	})
+}
+
 func assertColors(t *testing.T, selection pixiq.Selection, expectedColorLines [][]pixiq.Color) {
 	assert.Equal(t, len(expectedColorLines), selection.Height(), "number of lines should be equal to selection height")
 	for y := 0; y < selection.Height(); y++ {

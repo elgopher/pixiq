@@ -6,10 +6,13 @@ import (
 )
 
 func main() {
-	opengl.Run(func(images *pixiq.Images) {
-		image := images.New(16, 16)
-		selection := image.WholeImageSelection()
-		red := pixiq.RGBA(255, 0, 0, 255)
-		selection.SetColor(4, 4, red)
+	opengl.Run(func(acceleratedImages pixiq.AcceleratedImages, systemWindows pixiq.SystemWindows) {
+		images := pixiq.NewImages(acceleratedImages)
+		windows := pixiq.NewWindows(images, systemWindows)
+		windows.New(16, 16).Loop(func(frame *pixiq.Frame) {
+			selection := frame.Image().WholeImageSelection()
+			red := pixiq.RGBA(255, 0, 0, 255)
+			selection.SetColor(4, 4, red)
+		})
 	})
 }
