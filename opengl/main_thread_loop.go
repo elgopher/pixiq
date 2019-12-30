@@ -14,9 +14,9 @@ func StartMainThreadLoop(runInDifferentGoroutine func(*MainThreadLoop)) {
 		panic("opengl.StartMainThreadLoop must be executed from main goroutine")
 	}
 	runtime.LockOSThread()
-	mainThread := &MainThreadLoop{jobs: make(chan func())}
-	go runInDifferentGoroutine(mainThread)
-	mainThread.run()
+	loop := &MainThreadLoop{jobs: make(chan func())}
+	go runInDifferentGoroutine(loop)
+	loop.run()
 }
 
 func isMainGoroutine() bool {

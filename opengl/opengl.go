@@ -7,8 +7,8 @@ import (
 )
 
 // New creates OpenGL instance. MainThreadLoop is needed because some GLFW functions has to be called from main thread.
-func New(mainThreadLoop *MainThreadLoop) *OpenGL {
-	mainThreadLoop.Execute(func() {
+func New(loop *MainThreadLoop) *OpenGL {
+	loop.Execute(func() {
 		err := glfw.Init()
 		if err != nil {
 			panic(err)
