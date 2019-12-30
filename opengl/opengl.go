@@ -1,25 +1,48 @@
 package opengl
 
-import "github.com/jacekolszak/pixiq"
+import (
+	"github.com/go-gl/glfw/v3.3/glfw"
 
-// Run should be executed in main goroutine.
-// It takes control over executing goroutine until runInDifferentGoroutine finishes.
-func Run(runInDifferentGoroutine func(gl *OpenGL)) {
-	runInDifferentGoroutine(&OpenGL{})
+	"github.com/jacekolszak/pixiq"
+)
+
+// New creates OpenGL instance. MainThreadLoop is needed because some GLFW functions has to be called from main thread.
+func New(mainThreadLoop *MainThreadLoop) *OpenGL {
+	mainThreadLoop.Execute(func() {
+		err := glfw.Init()
+		if err != nil {
+			panic(err)
+		}
+		glfw.WindowHint(glfw.ContextVersionMajor, 3)
+		glfw.WindowHint(glfw.ContextVersionMinor, 3)
+		glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
+		glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
+		glfw.WindowHint(glfw.Resizable, glfw.False)
+		glfw.WindowHint(glfw.Visible, glfw.False)
+		window, err := glfw.CreateWindow(640, 360, "dummy window needed for making the GL context", nil, nil)
+		if err != nil {
+			panic(err)
+		}
+		defer window.ShouldClose() // TODO
+		window.MakeContextCurrent()
+	})
+	return &OpenGL{textures: &textures{}, glfwWindows: &glfwWindows{}}
 }
 
 // OpenGL provides opengl implementations of pixiq.AcceleratedImages and pixiq.SystemWindows
 type OpenGL struct {
+	textures    *textures
+	glfwWindows *glfwWindows
 }
 
 // AcceleratedImages returns opengl implementation of pixiq.AcceleratedImages
 func (g OpenGL) AcceleratedImages() pixiq.AcceleratedImages {
-	return &textures{}
+	return g.textures
 }
 
 // SystemWindows returns opengl implementation of pixiq.SystemWindows
 func (g OpenGL) SystemWindows() pixiq.SystemWindows {
-	return glfwWindows{}
+	return g.glfwWindows
 }
 
 type glfwWindows struct {
