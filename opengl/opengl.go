@@ -2,9 +2,24 @@ package opengl
 
 import "github.com/jacekolszak/pixiq"
 
-// Run should be executed in main thread. It passes opengl implementations of AcceleratedImages and SystemWindows.
-func Run(runInDifferentGoroutine func(acceleratedImages pixiq.AcceleratedImages, systemWindows pixiq.SystemWindows)) {
-	runInDifferentGoroutine(&textures{}, &glfwWindows{})
+// Run should be executed in main goroutine.
+// It takes control over executing goroutine until runInDifferentGoroutine finishes.
+func Run(runInDifferentGoroutine func(gl *OpenGL)) {
+	runInDifferentGoroutine(&OpenGL{})
+}
+
+// OpenGL provides opengl implementations of pixiq.AcceleratedImages and pixiq.SystemWindows
+type OpenGL struct {
+}
+
+// AcceleratedImages returns opengl implementation of pixiq.AcceleratedImages
+func (g OpenGL) AcceleratedImages() pixiq.AcceleratedImages {
+	return &textures{}
+}
+
+// SystemWindows returns opengl implementation of pixiq.SystemWindows
+func (g OpenGL) SystemWindows() pixiq.SystemWindows {
+	return glfwWindows{}
 }
 
 type glfwWindows struct {
