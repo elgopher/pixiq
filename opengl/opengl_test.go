@@ -21,7 +21,7 @@ func TestMain(m *testing.M) {
 	})
 }
 
-func TestRun(t *testing.T) {
+func TestNew(t *testing.T) {
 	t.Run("should create OpenGL using supplied MainThreadLoop", func(t *testing.T) {
 		var images pixiq.AcceleratedImages
 		var windows pixiq.SystemWindows
