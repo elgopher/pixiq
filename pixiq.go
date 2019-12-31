@@ -18,6 +18,8 @@ type AcceleratedImages interface {
 type AcceleratedImage interface {
 	// Upload send pixels colors sorted by coordinates. First all pixels are sent for y=0, from left to right.
 	Upload(pixels []Color)
+	// Downloads pixels by filling output Color slice
+	Download(output []Color)
 }
 
 // Images is a factory of images used to create new images.

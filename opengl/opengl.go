@@ -6,7 +6,8 @@ import (
 	"github.com/jacekolszak/pixiq"
 )
 
-// New creates OpenGL instance. MainThreadLoop is needed because some GLFW functions has to be called from main thread.
+// New creates OpenGL instance providing implementations of both AcceleratedImages and SystemWindows.
+// MainThreadLoop is needed because some GLFW functions has to be called from main thread.
 func New(loop *MainThreadLoop) *OpenGL {
 	loop.Execute(func() {
 		err := glfw.Init()
@@ -19,7 +20,7 @@ func New(loop *MainThreadLoop) *OpenGL {
 		glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
 		glfw.WindowHint(glfw.Resizable, glfw.False)
 		glfw.WindowHint(glfw.Visible, glfw.False)
-		window, err := glfw.CreateWindow(640, 360, "dummy window needed for making the GL context", nil, nil)
+		window, err := glfw.CreateWindow(1, 1, "dummy window needed for making the GL context", nil, nil)
 		if err != nil {
 			panic(err)
 		}
@@ -28,18 +29,18 @@ func New(loop *MainThreadLoop) *OpenGL {
 	return &OpenGL{textures: &textures{}, glfwWindows: &glfwWindows{}}
 }
 
-// OpenGL provides opengl implementations of pixiq.AcceleratedImages and pixiq.SystemWindows
+// OpenGL provides opengl implementations of AcceleratedImages and SystemWindows
 type OpenGL struct {
 	textures    *textures
 	glfwWindows *glfwWindows
 }
 
-// AcceleratedImages returns opengl implementation of pixiq.AcceleratedImages
+// AcceleratedImages returns opengl implementation of AcceleratedImages
 func (g OpenGL) AcceleratedImages() pixiq.AcceleratedImages {
 	return g.textures
 }
 
-// SystemWindows returns opengl implementation of pixiq.SystemWindows
+// SystemWindows returns opengl implementation of SystemWindows
 func (g OpenGL) SystemWindows() pixiq.SystemWindows {
 	return g.glfwWindows
 }
@@ -75,6 +76,7 @@ type GLTexture interface {
 }
 
 type texture struct {
+	pixels []pixiq.Color
 }
 
 func (t *texture) TextureID() uint32 {
@@ -82,5 +84,10 @@ func (t *texture) TextureID() uint32 {
 }
 
 func (t *texture) Upload(pixels []pixiq.Color) {
-	panic("implement me")
+	t.pixels = pixels
+}
+func (t *texture) Download(output []pixiq.Color) {
+	for i := 0; i < len(output); i++ {
+		output[i] = t.pixels[i]
+	}
 }
