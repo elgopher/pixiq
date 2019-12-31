@@ -14,8 +14,12 @@ func StartMainThreadLoop(runInDifferentGoroutine func(*MainThreadLoop)) {
 		panic("opengl.StartMainThreadLoop must be executed from main goroutine")
 	}
 	runtime.LockOSThread()
-	loop := &MainThreadLoop{jobs: make(chan func())}
-	go runInDifferentGoroutine(loop)
+	jobs := make(chan func())
+	loop := &MainThreadLoop{jobs: jobs}
+	go func() {
+		runInDifferentGoroutine(loop)
+		close(jobs)
+	}()
 	loop.run()
 }
 
@@ -41,11 +45,6 @@ func (g *MainThreadLoop) run() {
 		}
 		job()
 	}
-}
-
-// StopEventually will stop MainThreadLoop when currently executing job will finish
-func (g *MainThreadLoop) StopEventually() {
-	close(g.jobs)
 }
 
 // Execute runs job blocking the current goroutine

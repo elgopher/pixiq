@@ -13,12 +13,12 @@ import (
 var mainThreadLoop *opengl.MainThreadLoop
 
 func TestMain(m *testing.M) {
+	var exit int
 	opengl.StartMainThreadLoop(func(main *opengl.MainThreadLoop) {
 		mainThreadLoop = main
-		exit := m.Run()
-		mainThreadLoop.StopEventually()
-		os.Exit(exit)
+		exit = m.Run()
 	})
+	os.Exit(exit)
 }
 
 func TestNew(t *testing.T) {
