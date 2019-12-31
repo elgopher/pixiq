@@ -14,10 +14,11 @@ func New(loop *MainThreadLoop) *OpenGL {
 		if err != nil {
 			panic(err)
 		}
+		glfw.WindowHint(glfw.ContextCreationAPI, glfw.OSMesaContextAPI)
 		glfw.WindowHint(glfw.ContextVersionMajor, 3)
 		glfw.WindowHint(glfw.ContextVersionMinor, 3)
 		glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
-		glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
+		//glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
 		glfw.WindowHint(glfw.Resizable, glfw.False)
 		glfw.WindowHint(glfw.Visible, glfw.False)
 		window, err := glfw.CreateWindow(1, 1, "dummy window needed for making the GL context", nil, nil)
