@@ -34,7 +34,6 @@ func TestNew(t *testing.T) {
 }
 
 func TestTextures_New(t *testing.T) {
-	t.Skip()
 	t.Run("should create AcceleratedImage", func(t *testing.T) {
 		gl := opengl.New(mainThreadLoop)
 		images := gl.AcceleratedImages()
@@ -46,7 +45,6 @@ func TestTextures_New(t *testing.T) {
 }
 
 func TestTexture_Upload(t *testing.T) {
-	t.Skip()
 	t.Run("should upload pixels", func(t *testing.T) {
 		gl := opengl.New(mainThreadLoop)
 		images := gl.AcceleratedImages()
@@ -63,7 +61,6 @@ func TestTexture_Upload(t *testing.T) {
 }
 
 func TestGlfwWindows_Open(t *testing.T) {
-	t.Skip()
 	t.Run("should open window", func(t *testing.T) {
 		gl := opengl.New(mainThreadLoop)
 		windows := gl.SystemWindows()
@@ -75,7 +72,6 @@ func TestGlfwWindows_Open(t *testing.T) {
 }
 
 func TestGlfwWindow_Draw(t *testing.T) {
-	t.Skip()
 	t.Run("should draw image inside window", func(t *testing.T) {
 		gl := opengl.New(mainThreadLoop)
 		windows := gl.SystemWindows()
