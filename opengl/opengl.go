@@ -14,11 +14,11 @@ func New(loop *MainThreadLoop) *OpenGL {
 		if err != nil {
 			panic(err)
 		}
-		glfw.WindowHint(glfw.ContextCreationAPI, glfw.OSMesaContextAPI)
+		//glfw.WindowHint(glfw.ContextCreationAPI, glfw.OSMesaContextAPI)
 		glfw.WindowHint(glfw.ContextVersionMajor, 3)
 		glfw.WindowHint(glfw.ContextVersionMinor, 3)
 		glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
-		//glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
+		glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
 		glfw.WindowHint(glfw.Resizable, glfw.False)
 		glfw.WindowHint(glfw.Visible, glfw.False)
 		window, err := glfw.CreateWindow(1, 1, "dummy window needed for making the GL context", nil, nil)
@@ -27,13 +27,14 @@ func New(loop *MainThreadLoop) *OpenGL {
 		}
 		window.MakeContextCurrent()
 	})
-	return &OpenGL{textures: &textures{}, glfwWindows: &glfwWindows{}}
+	return &OpenGL{textures: &textures{}, glfwWindows: &glfwWindows{}, mainThreadLoop: loop}
 }
 
 // OpenGL provides opengl implementations of AcceleratedImages and SystemWindows
 type OpenGL struct {
-	textures    *textures
-	glfwWindows *glfwWindows
+	textures       *textures
+	glfwWindows    *glfwWindows
+	mainThreadLoop *MainThreadLoop
 }
 
 // AcceleratedImages returns opengl implementation of AcceleratedImages
@@ -44,6 +45,13 @@ func (g OpenGL) AcceleratedImages() pixiq.AcceleratedImages {
 // SystemWindows returns opengl implementation of SystemWindows
 func (g OpenGL) SystemWindows() pixiq.SystemWindows {
 	return g.glfwWindows
+}
+
+// Terminate closes all windows and frees resources
+func (g OpenGL) Terminate() {
+	g.mainThreadLoop.Execute(func() {
+		glfw.Terminate()
+	})
 }
 
 type glfwWindows struct {
