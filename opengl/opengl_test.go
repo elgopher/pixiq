@@ -4,6 +4,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/jacekolszak/pixiq"
@@ -24,9 +25,9 @@ func TestMain(m *testing.M) {
 func TestNew(t *testing.T) {
 	t.Run("should create OpenGL using supplied MainThreadLoop", func(t *testing.T) {
 		// when
-		gl := opengl.New(mainThreadLoop)
-		images := gl.AcceleratedImages()
-		windows := gl.SystemWindows()
+		openGL := opengl.New(mainThreadLoop)
+		images := openGL.AcceleratedImages()
+		windows := openGL.SystemWindows()
 		// then
 		assert.NotNil(t, images)
 		assert.NotNil(t, windows)
@@ -35,8 +36,8 @@ func TestNew(t *testing.T) {
 
 func TestTextures_New(t *testing.T) {
 	t.Run("should create AcceleratedImage", func(t *testing.T) {
-		gl := opengl.New(mainThreadLoop)
-		images := gl.AcceleratedImages()
+		openGL := opengl.New(mainThreadLoop)
+		images := openGL.AcceleratedImages()
 		// when
 		image := images.New(0, 0)
 		// then
@@ -46,8 +47,8 @@ func TestTextures_New(t *testing.T) {
 
 func TestTexture_Upload(t *testing.T) {
 	t.Run("should upload pixels", func(t *testing.T) {
-		gl := opengl.New(mainThreadLoop)
-		images := gl.AcceleratedImages()
+		openGL := opengl.New(mainThreadLoop)
+		images := openGL.AcceleratedImages()
 		image := images.New(1, 1)
 		color := pixiq.RGBA(10, 20, 30, 40)
 		input := []pixiq.Color{color}
@@ -62,8 +63,8 @@ func TestTexture_Upload(t *testing.T) {
 
 func TestGlfwWindows_Open(t *testing.T) {
 	t.Run("should open window", func(t *testing.T) {
-		gl := opengl.New(mainThreadLoop)
-		windows := gl.SystemWindows()
+		openGL := opengl.New(mainThreadLoop)
+		windows := openGL.SystemWindows()
 		// when
 		window := windows.Open(640, 360)
 		// then
@@ -73,16 +74,55 @@ func TestGlfwWindows_Open(t *testing.T) {
 
 func TestGlfwWindow_Draw(t *testing.T) {
 	t.Run("should draw image inside window", func(t *testing.T) {
-		gl := opengl.New(mainThreadLoop)
-		windows := gl.SystemWindows()
-		window := windows.Open(1, 1)
-		images := pixiq.NewImages(gl.AcceleratedImages())
-		image := images.New(1, 1)
-		color := pixiq.RGBA(10, 20, 30, 40)
-		image.WholeImageSelection().SetColor(0, 0, color)
-		// when
-		window.Draw(image)
-		// then
-		// TODO verify framebuffer 0 - use readPixels or something similar
+		color1 := pixiq.RGBA(10, 20, 30, 40)
+		color2 := pixiq.RGBA(50, 60, 70, 80)
+
+		t.Run("1x1", func(t *testing.T) {
+			openGL := opengl.New(mainThreadLoop)
+			windows := openGL.SystemWindows()
+			window := windows.Open(1, 1)
+			images := pixiq.NewImages(openGL.AcceleratedImages())
+			image := images.New(1, 1)
+			image.WholeImageSelection().SetColor(0, 0, color1)
+			// when
+			window.Draw(image)
+			// then
+			assert.Equal(t, []pixiq.Color{color1}, framebufferPixels(0, 0, 1, 1))
+		})
+		t.Run("1x2", func(t *testing.T) {
+			openGL := opengl.New(mainThreadLoop)
+			windows := openGL.SystemWindows()
+			window := windows.Open(1, 2)
+			images := pixiq.NewImages(openGL.AcceleratedImages())
+			image := images.New(1, 2)
+			image.WholeImageSelection().SetColor(0, 0, color1)
+			image.WholeImageSelection().SetColor(0, 1, color2)
+			// when
+			window.Draw(image)
+			// then
+			assert.Equal(t, []pixiq.Color{color2, color1}, framebufferPixels(0, 0, 1, 2))
+		})
+		t.Run("2x1", func(t *testing.T) {
+			openGL := opengl.New(mainThreadLoop)
+			windows := openGL.SystemWindows()
+			window := windows.Open(2, 1)
+			images := pixiq.NewImages(openGL.AcceleratedImages())
+			image := images.New(2, 1)
+			image.WholeImageSelection().SetColor(0, 0, color1)
+			image.WholeImageSelection().SetColor(1, 0, color2)
+			// when
+			window.Draw(image)
+			// then
+			assert.Equal(t, []pixiq.Color{color1, color2}, framebufferPixels(0, 0, 2, 1))
+		})
 	})
+}
+
+func framebufferPixels(x, y, width, height int32) []pixiq.Color {
+	size := (height - y) * (width - x)
+	frameBuffer := make([]pixiq.Color, size)
+	mainThreadLoop.Execute(func() {
+		gl.ReadPixels(x, y, width, height, gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(frameBuffer))
+	})
+	return frameBuffer
 }

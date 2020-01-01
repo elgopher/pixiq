@@ -31,19 +31,19 @@ func (w *Windows) New(width, height int) *Window {
 		height = 0
 	}
 	return &Window{
-		width:  width,
-		height: height,
-		image:  w.images.New(width, height),
-		window: w.systemWindows.Open(width, height),
+		width:         width,
+		height:        height,
+		image:         w.images.New(width, height),
+		systemWindows: w.systemWindows,
 	}
 }
 
 // Window is area where image will be drawn
 type Window struct {
-	width  int
-	height int
-	image  *Image
-	window SystemWindow
+	width         int
+	height        int
+	image         *Image
+	systemWindows SystemWindows
 }
 
 // Width returns width of the window in pixels
@@ -59,11 +59,12 @@ func (w *Window) Height() int {
 // Loop starts the main loop. It will execute onEachFrame function for each frame, as soon as window is closed. This
 // function blocks the current goroutine.
 func (w *Window) Loop(onEachFrame func(frame *Frame)) {
+	window := w.systemWindows.Open(w.width, w.height)
 	frame := &Frame{}
 	frame.image = w.image
 	for !frame.closeWindow {
 		onEachFrame(frame)
-		w.window.Draw(w.image)
+		window.Draw(w.image)
 	}
 }
 

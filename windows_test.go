@@ -34,6 +34,14 @@ func TestWindow_New(t *testing.T) {
 		assert.Equal(t, 1, win.Width())
 		assert.Equal(t, 2, win.Height())
 	})
+	t.Run("New should not open the system window", func(t *testing.T) {
+		systemWindows := &systemWindowsMock{}
+		windows := pixiq.NewWindows(pixiq.NewImages(&fakeAcceleratedImages{}), systemWindows)
+		// when
+		windows.New(0, 0)
+		// then
+		assert.Empty(t, systemWindows.openWindows)
+	})
 }
 
 func TestWindow_Loop(t *testing.T) {
@@ -185,6 +193,20 @@ func TestWindow_Loop(t *testing.T) {
 			assert.Equal(t, color1, win.imagesDrawn[0].WholeImageSelection().Color(0, 0))
 			assert.Equal(t, color2, win.imagesDrawn[1].WholeImageSelection().Color(0, 0))
 		})
+	})
+
+	t.Run("should open window with given dimensions", func(t *testing.T) {
+		images := pixiq.NewImages(&fakeAcceleratedImages{})
+		systemWindows := &systemWindowsMock{}
+		windows := pixiq.NewWindows(images, systemWindows)
+		window := windows.New(1, 2)
+		// when
+		window.Loop(func(frame *pixiq.Frame) {
+			frame.CloseWindowEventually()
+		})
+		// then
+		assert.Equal(t, 1, systemWindows.openWindows[0].width)
+		assert.Equal(t, 2, systemWindows.openWindows[0].height)
 	})
 
 }
