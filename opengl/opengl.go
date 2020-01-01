@@ -70,8 +70,10 @@ type glfwWindows struct {
 
 func (g glfwWindows) Open(width, height int) pixiq.SystemWindow {
 	frameImagePolygon := newFrameImagePolygon(g.mainThreadLoop)
-	g.window.SetSize(width, height)
-	g.window.Show()
+	g.mainThreadLoop.Execute(func() {
+		g.window.SetSize(width, height)
+		g.window.Show()
+	})
 	return &glfwWindow{window: g.window, program: g.program, mainThreadLoop: g.mainThreadLoop, frameImagePolygon: frameImagePolygon}
 }
 
