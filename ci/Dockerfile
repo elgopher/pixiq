@@ -42,5 +42,8 @@ RUN wget https://dl.google.com/go/go1.13.5.linux-amd64.tar.gz && \
     rm go1.13.5.linux-amd64.tar.gz
 ENV GOPATH=/opt/go/ PATH=$PATH:/usr/local/go/bin:/opt/go/bin
 
+# Install make
+RUN apt-get install -y make
+
 # Install golint
 RUN go get -u golang.org/x/lint/golint
