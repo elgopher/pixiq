@@ -159,7 +159,14 @@ func (t *texture) Upload(pixels []pixiq.Color) {
 	t.pixels = pixels
 }
 func (t *texture) Download(output []pixiq.Color) {
-	for i := 0; i < len(output); i++ {
-		output[i] = t.pixels[i]
-	}
+	t.mainThreadLoop.Execute(func() {
+		gl.BindTexture(gl.TEXTURE_2D, t.id)
+		gl.GetTexImage(
+			gl.TEXTURE_2D,
+			0,
+			gl.RGBA,
+			gl.UNSIGNED_BYTE,
+			gl.Ptr(output),
+		)
+	})
 }

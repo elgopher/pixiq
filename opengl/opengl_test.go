@@ -47,17 +47,49 @@ func TestTextures_New(t *testing.T) {
 
 func TestTexture_Upload(t *testing.T) {
 	t.Run("should upload pixels", func(t *testing.T) {
-		openGL := opengl.New(mainThreadLoop)
-		images := openGL.AcceleratedImages()
-		image := images.New(1, 1)
-		color := pixiq.RGBA(10, 20, 30, 40)
-		input := []pixiq.Color{color}
-		// when
-		image.Upload(input)
-		// then
-		output := make([]pixiq.Color, 1)
-		image.Download(output)
-		assert.Equal(t, input, output)
+		color1 := pixiq.RGBA(10, 20, 30, 40)
+		color2 := pixiq.RGBA(50, 60, 70, 80)
+		color3 := pixiq.RGBA(90, 100, 110, 120)
+		color4 := pixiq.RGBA(130, 140, 150, 160)
+
+		tests := map[string]struct {
+			width, height int
+			inputColors   []pixiq.Color
+		}{
+			"1x1": {
+				width:       1,
+				height:      1,
+				inputColors: []pixiq.Color{color1},
+			},
+			"2x1": {
+				width:       2,
+				height:      1,
+				inputColors: []pixiq.Color{color1, color2},
+			},
+			"1x2": {
+				width:       1,
+				height:      2,
+				inputColors: []pixiq.Color{color1, color2},
+			},
+			"2x2": {
+				width:       2,
+				height:      2,
+				inputColors: []pixiq.Color{color1, color2, color3, color4},
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				openGL := opengl.New(mainThreadLoop)
+				images := openGL.AcceleratedImages()
+				image := images.New(test.width, test.height)
+				// when
+				image.Upload(test.inputColors)
+				// then
+				output := make([]pixiq.Color, len(test.inputColors))
+				image.Download(output)
+				assert.Equal(t, test.inputColors, output)
+			})
+		}
 	})
 }
 
