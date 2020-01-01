@@ -21,7 +21,7 @@ RUN apt-get update && \
     make install && \
     cd ../.. && \
     rm mesa-18.2.4 -Rf && \
-    apt-get remove --auto-remove -y libtool-bin autoconf python-pip pkg-config
+    apt-get remove --auto-remove -y libtool-bin autoconf python-pip
 
 # Setup our environment variables.
 ENV XVFB_WHD="1920x1080x24"\

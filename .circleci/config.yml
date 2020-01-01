@@ -5,7 +5,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: hakyer/opengl-go-glfw:18.2.4.5
+      - image: hakyer/opengl-go-glfw:18.2.4.6
     steps:
       - checkout
       - run: make lint
