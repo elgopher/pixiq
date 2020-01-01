@@ -108,6 +108,8 @@ func TestGlfwWindow_Draw(t *testing.T) {
 	t.Run("should draw image inside window", func(t *testing.T) {
 		color1 := pixiq.RGBA(10, 20, 30, 40)
 		color2 := pixiq.RGBA(50, 60, 70, 80)
+		color3 := pixiq.RGBA(90, 100, 110, 120)
+		color4 := pixiq.RGBA(130, 140, 150, 160)
 
 		t.Run("1x1", func(t *testing.T) {
 			openGL := opengl.New(mainThreadLoop)
@@ -146,6 +148,21 @@ func TestGlfwWindow_Draw(t *testing.T) {
 			window.Draw(image)
 			// then
 			assert.Equal(t, []pixiq.Color{color1, color2}, framebufferPixels(0, 0, 2, 1))
+		})
+		t.Run("2x2", func(t *testing.T) {
+			openGL := opengl.New(mainThreadLoop)
+			windows := openGL.SystemWindows()
+			window := windows.Open(2, 2)
+			images := pixiq.NewImages(openGL.AcceleratedImages())
+			image := images.New(2, 2)
+			image.WholeImageSelection().SetColor(0, 0, color1)
+			image.WholeImageSelection().SetColor(1, 0, color2)
+			image.WholeImageSelection().SetColor(0, 1, color3)
+			image.WholeImageSelection().SetColor(1, 1, color4)
+			// when
+			window.Draw(image)
+			// then
+			assert.Equal(t, []pixiq.Color{color3, color4, color1, color2}, framebufferPixels(0, 0, 2, 2))
 		})
 	})
 }
