@@ -1,15 +1,14 @@
 FROM ubuntu:bionic
 
-RUN apt-get update && apt-get install -y libtool-bin autoconf python-pip libx11-dev libxext-dev x11proto-core-dev x11proto-gl-dev libglew-dev freeglut3-dev bison flex xvfb
-
 # Build Mesa
-RUN apt-get install -y wget pkg-config zlib1g-dev llvm-dev
-RUN wget https://mesa.freedesktop.org/archive/mesa-18.2.4.tar.xz
-RUN tar xf mesa-18.2.4.tar.xz
-RUN mkdir mesa-18.2.4/build
-WORKDIR mesa-18.2.4/build
-
-RUN ../configure --disable-dri \
+RUN apt-get update && \
+    apt-get install -y libtool-bin autoconf python-pip libx11-dev libxext-dev x11proto-core-dev x11proto-gl-dev libglew-dev freeglut3-dev bison flex xvfb wget pkg-config zlib1g-dev llvm-dev && \
+    wget https://mesa.freedesktop.org/archive/mesa-18.2.4.tar.xz && \
+    tar xf mesa-18.2.4.tar.xz && \
+    rm mesa-18.2.4.tar.xz && \
+    mkdir mesa-18.2.4/build && \
+    cd mesa-18.2.4/build && \
+    ../configure --disable-dri \
                --disable-egl \
                --disable-gbm \
                --with-gallium-drivers=swrast,swr \
@@ -17,16 +16,18 @@ RUN ../configure --disable-dri \
                --prefix=/usr/local/ \
                --enable-gallium-osmesa \
                --disable-xvmc --disable-vdpau --disable-va \
-               --with-swr-archs=avx
-
-#RUN make -j `numprocs` && make install
-RUN make && make install
+               --with-swr-archs=avx && \
+    make && \
+    make install && \
+    cd ../.. && \
+    rm mesa-18.2.4 -Rf
 
 # Setup our environment variables.
 ENV XVFB_WHD="1920x1080x24"\
     DISPLAY=":99" \
     LIBGL_ALWAYS_SOFTWARE="1" \
-    GALLIUM_DRIVER="softpipe"
+    GALLIUM_DRIVER="softpipe" \
+    MESA_DEBUG="incomplete_tex,incomplete_fbo"
 
 # Install git
 RUN apt-get install -y git
