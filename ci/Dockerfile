@@ -2,7 +2,7 @@ FROM ubuntu:bionic
 
 # Build Mesa
 RUN apt-get update && \
-    apt-get install -y libtool-bin autoconf python-pip libx11-dev libxext-dev x11proto-core-dev x11proto-gl-dev libglew-dev freeglut3-dev bison flex xvfb wget pkg-config zlib1g-dev llvm-dev && \
+    apt-get install -y libtool-bin autoconf python-pip libx11-dev libxext-dev x11proto-core-dev x11proto-gl-dev libglew-dev bison flex xvfb wget pkg-config zlib1g-dev llvm-dev && \
     wget https://mesa.freedesktop.org/archive/mesa-18.2.4.tar.xz && \
     tar xf mesa-18.2.4.tar.xz && \
     rm mesa-18.2.4.tar.xz && \
@@ -20,7 +20,8 @@ RUN apt-get update && \
     make && \
     make install && \
     cd ../.. && \
-    rm mesa-18.2.4 -Rf
+    rm mesa-18.2.4 -Rf && \
+    apt-get remove --auto-remove -y libtool-bin autoconf python-pip pkg-config
 
 # Setup our environment variables.
 ENV XVFB_WHD="1920x1080x24"\
