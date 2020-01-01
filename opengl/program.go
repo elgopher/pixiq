@@ -36,22 +36,22 @@ func (p *program) use() {
 }
 
 func linkProgram(shaders ...*shader) (*program, error) {
-	programId := gl.CreateProgram()
+	programID := gl.CreateProgram()
 	for _, shader := range shaders {
-		gl.AttachShader(programId, shader.id)
+		gl.AttachShader(programID, shader.id)
 	}
-	gl.LinkProgram(programId)
+	gl.LinkProgram(programID)
 	var success int32
-	gl.GetProgramiv(programId, gl.LINK_STATUS, &success)
+	gl.GetProgramiv(programID, gl.LINK_STATUS, &success)
 	if success == gl.FALSE {
 		var logLen int32
-		gl.GetProgramiv(programId, gl.INFO_LOG_LENGTH, &logLen)
+		gl.GetProgramiv(programID, gl.INFO_LOG_LENGTH, &logLen)
 
 		infoLog := make([]byte, logLen)
-		gl.GetProgramInfoLog(programId, logLen, nil, &infoLog[0])
+		gl.GetProgramInfoLog(programID, logLen, nil, &infoLog[0])
 		return nil, fmt.Errorf("error linking shader program: %s", string(infoLog))
 	}
-	return &program{id: programId}, nil
+	return &program{id: programID}, nil
 }
 
 type shader struct {
@@ -67,25 +67,25 @@ func compileFragmentShader(src string) (*shader, error) {
 }
 
 func compileShader(xtype uint32, src string) (*shader, error) {
-	shaderId := gl.CreateShader(xtype)
+	shaderID := gl.CreateShader(xtype)
 	srcXString, free := gl.Strs(src)
 	defer free()
 	length := int32(len(src))
-	gl.ShaderSource(shaderId, 1, srcXString, &length)
-	gl.CompileShader(shaderId)
+	gl.ShaderSource(shaderID, 1, srcXString, &length)
+	gl.CompileShader(shaderID)
 	var success int32
-	gl.GetShaderiv(shaderId, gl.COMPILE_STATUS, &success)
+	gl.GetShaderiv(shaderID, gl.COMPILE_STATUS, &success)
 	if success == gl.FALSE {
 		var logLen int32
-		gl.GetShaderiv(shaderId, gl.INFO_LOG_LENGTH, &logLen)
+		gl.GetShaderiv(shaderID, gl.INFO_LOG_LENGTH, &logLen)
 
 		infoLog := make([]byte, logLen)
 		if logLen > 0 {
-			gl.GetShaderInfoLog(shaderId, logLen, nil, &infoLog[0])
+			gl.GetShaderInfoLog(shaderID, logLen, nil, &infoLog[0])
 		}
 		return nil, fmt.Errorf("error compiling shader: %s", string(infoLog))
 	}
-	return &shader{id: shaderId}, nil
+	return &shader{id: shaderID}, nil
 }
 
 func (s *shader) delete() {

@@ -5,13 +5,13 @@ import (
 )
 
 func newFrameImagePolygon(loop *MainThreadLoop) *frameImagePolygon {
-	var vertexArrayId uint32
-	var vertexBufferId uint32
+	var vertexArrayID uint32
+	var vertexBufferID uint32
 	loop.Execute(func() {
-		gl.GenVertexArrays(1, &vertexArrayId)
-		gl.BindVertexArray(vertexArrayId)
-		gl.GenBuffers(1, &vertexBufferId)
-		gl.BindBuffer(gl.ARRAY_BUFFER, vertexBufferId)
+		gl.GenVertexArrays(1, &vertexArrayID)
+		gl.BindVertexArray(vertexArrayID)
+		gl.GenBuffers(1, &vertexBufferID)
+		gl.BindBuffer(gl.ARRAY_BUFFER, vertexBufferID)
 		data := []float32{
 			-1, -1, 0, 1, // (x,y) -> (u,v), that is: vertexPosition -> texturePosition
 			1, -1, 1, 1,
@@ -45,16 +45,16 @@ func newFrameImagePolygon(loop *MainThreadLoop) *frameImagePolygon {
 		)
 		gl.EnableVertexAttribArray(1)
 	})
-	return &frameImagePolygon{vertexArrayId: vertexArrayId, vertexBufferId: vertexBufferId}
+	return &frameImagePolygon{vertexArrayID: vertexArrayID, vertexBufferID: vertexBufferID}
 }
 
 type frameImagePolygon struct {
-	vertexArrayId  uint32
-	vertexBufferId uint32
+	vertexArrayID  uint32
+	vertexBufferID uint32
 }
 
 func (p *frameImagePolygon) draw() {
-	gl.BindBuffer(gl.ARRAY_BUFFER, p.vertexBufferId)
-	gl.BindVertexArray(p.vertexArrayId)
+	gl.BindBuffer(gl.ARRAY_BUFFER, p.vertexBufferID)
+	gl.BindVertexArray(p.vertexArrayID)
 	gl.DrawArrays(gl.TRIANGLES, 0, 6)
 }
