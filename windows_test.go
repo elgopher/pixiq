@@ -252,6 +252,7 @@ func TestWindow_Loop(t *testing.T) {
 			if frameNumber == 2 {
 				frame.CloseWindowEventually()
 			} else {
+				// then
 				require.Len(t, systemWindows.openWindows, 1)
 				assert.False(t, systemWindows.openWindows[0].closed)
 				frameNumber += 1
