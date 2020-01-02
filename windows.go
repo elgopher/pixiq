@@ -13,7 +13,10 @@ type SystemWindows interface {
 
 // SystemWindow is an operating system window
 type SystemWindow interface {
+	// Draw draws image spanning the whole window. If double buffering is used it may draw to the invisible buffer.
 	Draw(image *Image)
+	// SwapImages makes last drawn image visible (if double buffering was used, otherwise it may be a no-op)
+	SwapImages()
 }
 
 // Windows is a factory of Window objects
@@ -65,6 +68,7 @@ func (w *Window) Loop(onEachFrame func(frame *Frame)) {
 	for !frame.closeWindow {
 		onEachFrame(frame)
 		window.Draw(w.image)
+		window.SwapImages()
 	}
 }
 

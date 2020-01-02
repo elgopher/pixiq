@@ -94,10 +94,13 @@ func (g *glfwWindow) Draw(image *pixiq.Image) {
 		w, h := g.window.GetFramebufferSize()
 		gl.Viewport(0, 0, int32(w), int32(h))
 		gl.BindTexture(gl.TEXTURE_2D, texture.TextureID())
-		g.window.SwapBuffers()
 		g.frameImagePolygon.draw()
-		glfw.PollEvents()
 	})
+}
+
+func (g *glfwWindow) SwapImages() {
+	g.window.SwapBuffers()
+	glfw.PollEvents()
 }
 
 type textures struct {

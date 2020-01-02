@@ -209,6 +209,41 @@ func TestWindow_Loop(t *testing.T) {
 		assert.Equal(t, 2, systemWindows.openWindows[0].height)
 	})
 
+	t.Run("should swap images", func(t *testing.T) {
+		t.Run("after first frame", func(t *testing.T) {
+			images := pixiq.NewImages(&fakeAcceleratedImages{})
+			systemWindows := &systemWindowsMock{}
+			windows := pixiq.NewWindows(images, systemWindows)
+			window := windows.New(0, 0)
+			// when
+			window.Loop(func(frame *pixiq.Frame) {
+				frame.CloseWindowEventually()
+			})
+			// then
+			openWindow := systemWindows.openWindows[0]
+			require.Len(t, openWindow.imagesDrawn, 1)
+			assert.Same(t, openWindow.imagesDrawn[0], openWindow.visibleImage)
+		})
+		t.Run("after second frame", func(t *testing.T) {
+			images := pixiq.NewImages(&fakeAcceleratedImages{})
+			systemWindows := &systemWindowsMock{}
+			windows := pixiq.NewWindows(images, systemWindows)
+			window := windows.New(0, 0)
+			frameNumber := 0
+			// when
+			window.Loop(func(frame *pixiq.Frame) {
+				frameNumber += 1
+				if frameNumber == 2 {
+					frame.CloseWindowEventually()
+				}
+			})
+			// then
+			openWindow := systemWindows.openWindows[0]
+			require.Len(t, openWindow.imagesDrawn, 2)
+			assert.Same(t, openWindow.imagesDrawn[1], openWindow.visibleImage)
+		})
+	})
+
 }
 
 type systemWindowsMock struct {
@@ -222,13 +257,18 @@ func (s *systemWindowsMock) Open(width, height int) pixiq.SystemWindow {
 }
 
 type systemWindowMock struct {
-	imagesDrawn []*pixiq.Image
-	width       int
-	height      int
+	imagesDrawn  []*pixiq.Image
+	width        int
+	height       int
+	visibleImage *pixiq.Image
 }
 
 func (f *systemWindowMock) Draw(image *pixiq.Image) {
 	f.imagesDrawn = append(f.imagesDrawn, clone(image))
+}
+
+func (f *systemWindowMock) SwapImages() {
+	f.visibleImage = f.imagesDrawn[len(f.imagesDrawn)-1]
 }
 
 func clone(original *pixiq.Image) *pixiq.Image {
