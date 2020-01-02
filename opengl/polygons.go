@@ -4,7 +4,7 @@ import (
 	"github.com/go-gl/gl/v3.3-core/gl"
 )
 
-func newFrameImagePolygon(loop *MainThreadLoop) *frameImagePolygon {
+func newFrameImagePolygon(loop *MainThreadLoop, vertexPositionLocation int32, texturePositionLocation int32) *frameImagePolygon {
 	var vertexArrayID uint32
 	var vertexBufferID uint32
 	loop.Execute(func() {
@@ -21,11 +21,10 @@ func newFrameImagePolygon(loop *MainThreadLoop) *frameImagePolygon {
 			-1, 1, 0, 0,
 		}
 		gl.BufferData(gl.ARRAY_BUFFER, len(data)*4, gl.Ptr(data), gl.STATIC_DRAW)
-		// vertexPosition (attribute 0)
 		const stride int32 = 4 * 4
 		const vec2size int32 = 2
 		gl.VertexAttribPointer(
-			0,
+			uint32(vertexPositionLocation),
 			vec2size,
 			gl.FLOAT,
 			false,
@@ -33,9 +32,8 @@ func newFrameImagePolygon(loop *MainThreadLoop) *frameImagePolygon {
 			gl.PtrOffset(0),
 		)
 		gl.EnableVertexAttribArray(0)
-		// texturePosition (attribute 1)
 		gl.VertexAttribPointer(
-			1,
+			uint32(texturePositionLocation),
 			vec2size,
 			gl.FLOAT,
 			false,
