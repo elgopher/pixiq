@@ -30,3 +30,9 @@ func (a *fakeAcceleratedImage) Upload(pixels []pixiq.Color) {
 		a.pixels[i] = pixel
 	}
 }
+
+func (a *fakeAcceleratedImage) Download(output []pixiq.Color) {
+	for i := 0; i < len(output); i++ {
+		output[i] = a.pixels[i]
+	}
+}
