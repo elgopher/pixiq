@@ -44,12 +44,13 @@ func linkProgram(shaders ...*shader) (*program, error) {
 	var success int32
 	gl.GetProgramiv(programID, gl.LINK_STATUS, &success)
 	if success == gl.FALSE {
-		var logLen int32
-		gl.GetProgramiv(programID, gl.INFO_LOG_LENGTH, &logLen)
-
-		infoLog := make([]byte, logLen)
-		gl.GetProgramInfoLog(programID, logLen, nil, &infoLog[0])
-		return nil, fmt.Errorf("error linking shader program: %s", string(infoLog))
+		var infoLogLen int32
+		gl.GetProgramiv(programID, gl.INFO_LOG_LENGTH, &infoLogLen)
+		infoLog := make([]byte, infoLogLen)
+		if infoLogLen > 0 {
+			gl.GetProgramInfoLog(programID, infoLogLen, nil, &infoLog[0])
+		}
+		return nil, fmt.Errorf("error linking program: %s", string(infoLog))
 	}
 	return &program{id: programID}, nil
 }
@@ -78,7 +79,6 @@ func compileShader(xtype uint32, src string) (*shader, error) {
 	if success == gl.FALSE {
 		var logLen int32
 		gl.GetShaderiv(shaderID, gl.INFO_LOG_LENGTH, &logLen)
-
 		infoLog := make([]byte, logLen)
 		if logLen > 0 {
 			gl.GetShaderInfoLog(shaderID, logLen, nil, &infoLog[0])

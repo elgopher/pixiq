@@ -17,6 +17,8 @@ type SystemWindow interface {
 	Draw(image *Image)
 	// SwapImages makes last drawn image visible (if double buffering was used, otherwise it may be a no-op)
 	SwapImages()
+	// Close closes the window and cleans resources
+	Close()
 }
 
 // Windows is a factory of Window objects
@@ -70,6 +72,7 @@ func (w *Window) Loop(onEachFrame func(frame *Frame)) {
 		window.Draw(w.image)
 		window.SwapImages()
 	}
+	window.Close()
 }
 
 // Frame provides the whole window image which will be drawn on a screen after making modifications
