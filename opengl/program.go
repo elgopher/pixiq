@@ -28,7 +28,9 @@ func compileProgram() (*program, error) {
 }
 
 type program struct {
-	id uint32
+	id                      uint32
+	vertexPositionLocation  int32
+	texturePositionLocation int32
 }
 
 func (p *program) use() {
@@ -52,7 +54,11 @@ func linkProgram(shaders ...*shader) (*program, error) {
 		}
 		return nil, fmt.Errorf("error linking program: %s", string(infoLog))
 	}
-	return &program{id: programID}, nil
+	return &program{
+		id:                      programID,
+		vertexPositionLocation:  gl.GetAttribLocation(programID, gl.Str("vertexPosition\x00")),
+		texturePositionLocation: gl.GetAttribLocation(programID, gl.Str("texturePosition\x00")),
+	}, nil
 }
 
 type shader struct {
