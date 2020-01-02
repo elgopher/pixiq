@@ -115,16 +115,14 @@ func TestWindow_Loop(t *testing.T) {
 		systemWindows := &systemWindowsMock{}
 		windows := pixiq.NewWindows(images, systemWindows)
 		window := windows.New(0, 0)
-		frameNumber := 1
+		firstFrame := true
 		var recordedImages []*pixiq.Image
 		// when
 		window.Loop(func(frame *pixiq.Frame) {
-			switch frameNumber {
-			case 1:
-				frameNumber += 1
-			case 2:
+			if !firstFrame {
 				frame.CloseWindowEventually()
 			}
+			firstFrame = false
 			recordedImages = append(recordedImages, frame.Image())
 		})
 		// then
@@ -173,15 +171,14 @@ func TestWindow_Loop(t *testing.T) {
 			systemWindows := &systemWindowsMock{}
 			windows := pixiq.NewWindows(images, systemWindows)
 			window := windows.New(1, 1)
-			frameNumber := 1
+			firstFrame := true
 			// when
 			window.Loop(func(frame *pixiq.Frame) {
 				selection := frame.Image().WholeImageSelection()
-				switch frameNumber {
-				case 1:
+				if firstFrame {
 					selection.SetColor(0, 0, color1)
-					frameNumber += 1
-				case 2:
+					firstFrame = false
+				} else {
 					selection.SetColor(0, 0, color2)
 					frame.CloseWindowEventually()
 				}
@@ -229,19 +226,40 @@ func TestWindow_Loop(t *testing.T) {
 			systemWindows := &systemWindowsMock{}
 			windows := pixiq.NewWindows(images, systemWindows)
 			window := windows.New(0, 0)
-			frameNumber := 0
+			firstFrame := true
 			// when
 			window.Loop(func(frame *pixiq.Frame) {
-				frameNumber += 1
-				if frameNumber == 2 {
+				if !firstFrame {
 					frame.CloseWindowEventually()
 				}
+				firstFrame = false
 			})
 			// then
 			openWindow := systemWindows.openWindows[0]
 			require.Len(t, openWindow.imagesDrawn, 2)
 			assert.Same(t, openWindow.imagesDrawn[1], openWindow.visibleImage)
 		})
+	})
+
+	t.Run("should close the window after loop is finished", func(t *testing.T) {
+		images := pixiq.NewImages(&fakeAcceleratedImages{})
+		systemWindows := &systemWindowsMock{}
+		windows := pixiq.NewWindows(images, systemWindows)
+		window := windows.New(0, 0)
+		frameNumber := 0
+		// when
+		window.Loop(func(frame *pixiq.Frame) {
+			if frameNumber == 2 {
+				frame.CloseWindowEventually()
+			} else {
+				require.Len(t, systemWindows.openWindows, 1)
+				assert.False(t, systemWindows.openWindows[0].closed)
+				frameNumber += 1
+			}
+		})
+		// then
+		require.Len(t, systemWindows.openWindows, 1)
+		assert.True(t, systemWindows.openWindows[0].closed)
 	})
 
 }
@@ -261,6 +279,7 @@ type systemWindowMock struct {
 	width        int
 	height       int
 	visibleImage *pixiq.Image
+	closed       bool
 }
 
 func (f *systemWindowMock) Draw(image *pixiq.Image) {
@@ -269,6 +288,10 @@ func (f *systemWindowMock) Draw(image *pixiq.Image) {
 
 func (f *systemWindowMock) SwapImages() {
 	f.visibleImage = f.imagesDrawn[len(f.imagesDrawn)-1]
+}
+
+func (f *systemWindowMock) Close() {
+	f.closed = true
 }
 
 func clone(original *pixiq.Image) *pixiq.Image {

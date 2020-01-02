@@ -99,8 +99,16 @@ func (g *glfwWindow) Draw(image *pixiq.Image) {
 }
 
 func (g *glfwWindow) SwapImages() {
-	g.window.SwapBuffers()
-	glfw.PollEvents()
+	g.mainThreadLoop.Execute(func() {
+		g.window.SwapBuffers()
+		glfw.PollEvents()
+	})
+}
+
+func (g *glfwWindow) Close() {
+	g.mainThreadLoop.Execute(func() {
+		g.window.Destroy()
+	})
 }
 
 type textures struct {

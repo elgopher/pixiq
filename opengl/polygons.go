@@ -16,7 +16,6 @@ func newFrameImagePolygon(loop *MainThreadLoop) *frameImagePolygon {
 			-1, -1, 0, 1, // (x,y) -> (u,v), that is: vertexPosition -> texturePosition
 			1, -1, 1, 1,
 			1, 1, 1, 0,
-			//
 			-1, -1, 0, 1,
 			1, 1, 1, 0,
 			-1, 1, 0, 0,
