@@ -68,13 +68,29 @@ type glfwWindows struct {
 	window         *glfw.Window
 }
 
-func (g glfwWindows) Open(width, height int) pixiq.SystemWindow {
+func (g glfwWindows) Open(width, height int, hints ...pixiq.WindowHint) pixiq.SystemWindow {
 	frameImagePolygon := newFrameImagePolygon(g.mainThreadLoop, g.program.vertexPositionLocation, g.program.texturePositionLocation)
 	g.mainThreadLoop.Execute(func() {
+		for _, hint := range hints {
+			glHint, ok := hint.(openglWindowHint)
+			if ok {
+				glHint.apply(g.window)
+			}
+		}
 		g.window.SetSize(width, height)
 		g.window.Show()
 	})
 	return &glfwWindow{window: g.window, program: g.program, mainThreadLoop: g.mainThreadLoop, frameImagePolygon: frameImagePolygon}
+}
+
+type openglWindowHint interface {
+	apply(window *glfw.Window)
+}
+
+type NoDecorated struct{}
+
+func (NoDecorated) apply(window *glfw.Window) {
+	window.SetAttrib(glfw.Decorated, glfw.False)
 }
 
 type glfwWindow struct {

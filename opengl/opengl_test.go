@@ -114,7 +114,7 @@ func TestGlfwWindow_Draw(t *testing.T) {
 		t.Run("1x1", func(t *testing.T) {
 			openGL := opengl.New(mainThreadLoop)
 			windows := openGL.SystemWindows()
-			window := windows.Open(1, 1)
+			window := windows.Open(1, 1, opengl.NoDecorated{})
 			images := pixiq.NewImages(openGL.AcceleratedImages())
 			image := images.New(1, 1)
 			image.WholeImageSelection().SetColor(0, 0, color1)
@@ -126,7 +126,7 @@ func TestGlfwWindow_Draw(t *testing.T) {
 		t.Run("1x2", func(t *testing.T) {
 			openGL := opengl.New(mainThreadLoop)
 			windows := openGL.SystemWindows()
-			window := windows.Open(1, 2)
+			window := windows.Open(1, 2, opengl.NoDecorated{})
 			images := pixiq.NewImages(openGL.AcceleratedImages())
 			image := images.New(1, 2)
 			image.WholeImageSelection().SetColor(0, 0, color1)
@@ -139,7 +139,7 @@ func TestGlfwWindow_Draw(t *testing.T) {
 		t.Run("2x1", func(t *testing.T) {
 			openGL := opengl.New(mainThreadLoop)
 			windows := openGL.SystemWindows()
-			window := windows.Open(2, 1)
+			window := windows.Open(2, 1, opengl.NoDecorated{})
 			images := pixiq.NewImages(openGL.AcceleratedImages())
 			image := images.New(2, 1)
 			image.WholeImageSelection().SetColor(0, 0, color1)
@@ -152,7 +152,7 @@ func TestGlfwWindow_Draw(t *testing.T) {
 		t.Run("2x2", func(t *testing.T) {
 			openGL := opengl.New(mainThreadLoop)
 			windows := openGL.SystemWindows()
-			window := windows.Open(2, 2)
+			window := windows.Open(2, 2, opengl.NoDecorated{})
 			images := pixiq.NewImages(openGL.AcceleratedImages())
 			image := images.New(2, 2)
 			image.WholeImageSelection().SetColor(0, 0, color1)
