@@ -111,7 +111,7 @@ type window struct {
 func (g *window) Draw(image *pixiq.Image) {
 	texture, isGL := image.Upload().(GLTexture)
 	if !isGL {
-		panic("opengl Windows implementation can only draw images accelerated with opengl.GLTexture")
+		panic("opengl Window implementation can only draw images accelerated with opengl.GLTexture")
 	}
 	g.mainThreadLoop.Execute(func() {
 		g.program.use()
