@@ -1,6 +1,7 @@
 package opengl_test
 
 import (
+	"github.com/stretchr/testify/require"
 	"os"
 	"testing"
 
@@ -27,7 +28,7 @@ func TestNew(t *testing.T) {
 		// when
 		openGL := opengl.New(mainThreadLoop)
 		images := openGL.AcceleratedImages()
-		windows := openGL.SystemWindows()
+		windows := openGL.Windows()
 		// then
 		assert.NotNil(t, images)
 		assert.NotNil(t, windows)
@@ -94,13 +95,30 @@ func TestTexture_Upload(t *testing.T) {
 }
 
 func TestGlfwWindows_Open(t *testing.T) {
+	t.Run("should clamp width to 1 if negative", func(t *testing.T) {
+		openGL := opengl.New(mainThreadLoop)
+		windows := openGL.Windows()
+		// when
+		win := windows.Open(-1, 0)
+		require.NotNil(t, win)
+		assert.Equal(t, 1, win.Width())
+	})
+	t.Run("should clamp height to 1 if negative", func(t *testing.T) {
+		openGL := opengl.New(mainThreadLoop)
+		windows := openGL.Windows()
+		// when
+		win := windows.Open(0, -1)
+		require.NotNil(t, win)
+		assert.Equal(t, 1, win.Height())
+	})
 	t.Run("should open window", func(t *testing.T) {
 		openGL := opengl.New(mainThreadLoop)
-		windows := openGL.SystemWindows()
+		windows := openGL.Windows()
 		// when
-		window := windows.Open(640, 360)
-		// then
-		assert.NotNil(t, window)
+		win := windows.Open(1, 2)
+		require.NotNil(t, win)
+		assert.Equal(t, 1, win.Width())
+		assert.Equal(t, 2, win.Height())
 	})
 }
 
@@ -113,7 +131,7 @@ func TestGlfwWindow_Draw(t *testing.T) {
 
 		t.Run("1x1", func(t *testing.T) {
 			openGL := opengl.New(mainThreadLoop)
-			windows := openGL.SystemWindows()
+			windows := openGL.Windows()
 			window := windows.Open(1, 1, opengl.NoDecorated{})
 			images := pixiq.NewImages(openGL.AcceleratedImages())
 			image := images.New(1, 1)
@@ -125,7 +143,7 @@ func TestGlfwWindow_Draw(t *testing.T) {
 		})
 		t.Run("1x2", func(t *testing.T) {
 			openGL := opengl.New(mainThreadLoop)
-			windows := openGL.SystemWindows()
+			windows := openGL.Windows()
 			window := windows.Open(1, 2, opengl.NoDecorated{})
 			images := pixiq.NewImages(openGL.AcceleratedImages())
 			image := images.New(1, 2)
@@ -138,7 +156,7 @@ func TestGlfwWindow_Draw(t *testing.T) {
 		})
 		t.Run("2x1", func(t *testing.T) {
 			openGL := opengl.New(mainThreadLoop)
-			windows := openGL.SystemWindows()
+			windows := openGL.Windows()
 			window := windows.Open(2, 1, opengl.NoDecorated{})
 			images := pixiq.NewImages(openGL.AcceleratedImages())
 			image := images.New(2, 1)
@@ -151,7 +169,7 @@ func TestGlfwWindow_Draw(t *testing.T) {
 		})
 		t.Run("2x2", func(t *testing.T) {
 			openGL := opengl.New(mainThreadLoop)
-			windows := openGL.SystemWindows()
+			windows := openGL.Windows()
 			window := windows.Open(2, 2, opengl.NoDecorated{})
 			images := pixiq.NewImages(openGL.AcceleratedImages())
 			image := images.New(2, 2)

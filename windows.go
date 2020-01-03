@@ -1,81 +1,37 @@
 package pixiq
 
-// NewWindows returns a factory of Window objects.
-func NewWindows(images *Images, windows SystemWindows) *Windows {
-	return &Windows{images: images, systemWindows: windows}
+// NewWindows returns a new instance of Windows
+func NewWindows(images *Images) *Windows {
+	return &Windows{images: images}
 }
 
-// SystemWindows is an API for creating system windows
-type SystemWindows interface {
-	// Open creates and show system window
-	Open(width, height int, hints ...WindowHint) SystemWindow
+// Windows is an abstraction for interaction with windows in a platform-agnostic way
+type Windows struct {
+	images *Images
 }
 
-// SystemWindow is an operating system window
-type SystemWindow interface {
+// Window is a window where images can be drawn
+type Window interface {
 	// Draw draws image spanning the whole window. If double buffering is used it may draw to the invisible buffer.
 	Draw(image *Image)
 	// SwapImages makes last drawn image visible (if double buffering was used, otherwise it may be a no-op)
 	SwapImages()
 	// Close closes the window and cleans resources
 	Close()
-}
-
-// Windows is a factory of Window objects
-type Windows struct {
-	images        *Images
-	systemWindows SystemWindows
-}
-
-// WindowHint is a window's hint which may (or may not) by applied to window depending on the operating system
-type WindowHint interface {
-}
-
-// New creates a new window with width and height given in pixels.
-func (w *Windows) New(width, height int, hints ...WindowHint) *Window {
-	if width < 0 {
-		width = 0
-	}
-	if height < 0 {
-		height = 0
-	}
-	return &Window{
-		width:         width,
-		height:        height,
-		image:         w.images.New(width, height),
-		systemWindows: w.systemWindows,
-		hints:         hints,
-	}
-}
-
-// Window is area where image will be drawn
-type Window struct {
-	width         int
-	height        int
-	image         *Image
-	systemWindows SystemWindows
-	hints         []WindowHint
-}
-
-// Width returns width of the window in pixels
-func (w *Window) Width() int {
-	return w.width
-}
-
-// Height returns height of the window in pixels
-func (w *Window) Height() int {
-	return w.height
+	// Width returns the width of the window in pixels. If zooming is used the width is not multiplied by zoom.
+	Width() int
+	// Height returns the height of the window in pixels. If zooming is used the height is not multiplied by zoom.
+	Height() int
 }
 
 // Loop starts the main loop. It will execute onEachFrame function for each frame, as soon as window is closed. This
 // function blocks the current goroutine.
-func (w *Window) Loop(onEachFrame func(frame *Frame)) {
-	window := w.systemWindows.Open(w.width, w.height, w.hints...)
+func (w *Windows) Loop(window Window, onEachFrame func(frame *Frame)) {
 	frame := &Frame{}
-	frame.image = w.image
+	frame.image = w.images.New(window.Width(), window.Height())
 	for !frame.closeWindow {
 		onEachFrame(frame)
-		window.Draw(w.image)
+		window.Draw(frame.image)
 		window.SwapImages()
 	}
 	window.Close()

@@ -7,7 +7,8 @@ import (
 	"github.com/jacekolszak/pixiq"
 )
 
-// New creates OpenGL instance providing implementations of both AcceleratedImages and SystemWindows.
+// New creates OpenGL instance providing implementation of AcceleratedImages and Windows for opening system windows.
+// Under the hood it is using OpenGL API and GLFW for manipulating windows and handling user input.
 // MainThreadLoop is needed because some GLFW functions has to be called from main thread.
 func New(loop *MainThreadLoop) *OpenGL {
 	var program *program
@@ -38,7 +39,7 @@ func New(loop *MainThreadLoop) *OpenGL {
 	})
 	return &OpenGL{
 		textures: &textures{mainThreadLoop: loop},
-		glfwWindows: &glfwWindows{
+		windows: &Windows{
 			window:         window,
 			program:        program,
 			mainThreadLoop: loop,
@@ -46,10 +47,10 @@ func New(loop *MainThreadLoop) *OpenGL {
 	}
 }
 
-// OpenGL provides opengl implementations of AcceleratedImages and SystemWindows
+// OpenGL provides opengl implementations of AcceleratedImages. It also provides Windows for opening system windows
 type OpenGL struct {
-	textures    *textures
-	glfwWindows *glfwWindows
+	textures *textures
+	windows  *Windows
 }
 
 // AcceleratedImages returns opengl implementation of AcceleratedImages
@@ -57,54 +58,60 @@ func (g OpenGL) AcceleratedImages() pixiq.AcceleratedImages {
 	return g.textures
 }
 
-// SystemWindows returns opengl implementation of SystemWindows
-func (g OpenGL) SystemWindows() pixiq.SystemWindows {
-	return g.glfwWindows
+// Windows returns object for opening system windows
+func (g OpenGL) Windows() *Windows {
+	return g.windows
 }
 
-type glfwWindows struct {
+// Windows is for opening system windows
+type Windows struct {
 	program        *program
 	mainThreadLoop *MainThreadLoop
 	window         *glfw.Window
 }
 
-func (g glfwWindows) Open(width, height int, hints ...pixiq.WindowHint) pixiq.SystemWindow {
+// Open creates and show window
+func (g Windows) Open(width, height int, hints ...WindowHint) pixiq.Window {
+	if width < 1 {
+		width = 1
+	}
+	if height < 1 {
+		height = 1
+	}
 	frameImagePolygon := newFrameImagePolygon(g.mainThreadLoop, g.program.vertexPositionLocation, g.program.texturePositionLocation)
 	g.mainThreadLoop.Execute(func() {
 		for _, hint := range hints {
-			glHint, ok := hint.(openglWindowHint)
-			if ok {
-				glHint.apply(g.window)
-			}
+			hint.apply(g.window)
 		}
 		g.window.SetSize(width, height)
 		g.window.Show()
 	})
-	return &glfwWindow{window: g.window, program: g.program, mainThreadLoop: g.mainThreadLoop, frameImagePolygon: frameImagePolygon}
+	return &window{window: g.window, program: g.program, mainThreadLoop: g.mainThreadLoop, frameImagePolygon: frameImagePolygon}
 }
 
-type openglWindowHint interface {
+// WindowHint is a hint which may (or may not) be applied to window (depending on operating system and other factors).
+type WindowHint interface {
 	apply(window *glfw.Window)
 }
 
-// NoDecorated is window hint hiding the window's titlebar
+// NoDecorated is window hint hiding the window's title bar
 type NoDecorated struct{}
 
 func (NoDecorated) apply(window *glfw.Window) {
 	window.SetAttrib(glfw.Decorated, glfw.False)
 }
 
-type glfwWindow struct {
+type window struct {
 	window            *glfw.Window
 	program           *program
 	mainThreadLoop    *MainThreadLoop
 	frameImagePolygon *frameImagePolygon
 }
 
-func (g *glfwWindow) Draw(image *pixiq.Image) {
+func (g *window) Draw(image *pixiq.Image) {
 	texture, isGL := image.Upload().(GLTexture)
 	if !isGL {
-		panic("opengl SystemWindows implementation can only draw images accelerated with opengl.GLTexture")
+		panic("opengl Window implementation can only draw images accelerated with opengl.GLTexture")
 	}
 	g.mainThreadLoop.Execute(func() {
 		g.program.use()
@@ -115,17 +122,27 @@ func (g *glfwWindow) Draw(image *pixiq.Image) {
 	})
 }
 
-func (g *glfwWindow) SwapImages() {
+func (g *window) SwapImages() {
 	g.mainThreadLoop.Execute(func() {
 		g.window.SwapBuffers()
 		glfw.PollEvents()
 	})
 }
 
-func (g *glfwWindow) Close() {
+func (g *window) Close() {
 	g.mainThreadLoop.Execute(func() {
 		g.window.Destroy()
 	})
+}
+
+func (g *window) Width() int {
+	w, _ := g.window.GetSize()
+	return w
+}
+
+func (g *window) Height() int {
+	_, h := g.window.GetSize()
+	return h
 }
 
 type textures struct {
