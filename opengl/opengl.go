@@ -102,6 +102,7 @@ func (NoDecoration) apply(window *glfw.Window) {
 	window.SetAttrib(glfw.Decorated, glfw.False)
 }
 
+// Window is an implementation of pixiq.Window
 type Window struct {
 	window            *glfw.Window
 	program           *program
@@ -109,6 +110,7 @@ type Window struct {
 	frameImagePolygon *frameImagePolygon
 }
 
+// Draw draws image spanning the whole window to the invisible buffer.
 func (g *Window) Draw(image *pixiq.Image) {
 	texture, isGL := image.Upload().(GLTexture)
 	if !isGL {
@@ -123,6 +125,7 @@ func (g *Window) Draw(image *pixiq.Image) {
 	})
 }
 
+// SwapImages makes last drawn image visible
 func (g *Window) SwapImages() {
 	g.mainThreadLoop.Execute(func() {
 		g.window.SwapBuffers()
@@ -130,17 +133,20 @@ func (g *Window) SwapImages() {
 	})
 }
 
+// Close closes the window and cleans resources
 func (g *Window) Close() {
 	g.mainThreadLoop.Execute(func() {
 		g.window.Destroy()
 	})
 }
 
+// Width returns the width of the window in pixels. If zooming is used the width is not multiplied by zoom.
 func (g *Window) Width() int {
 	w, _ := g.window.GetSize()
 	return w
 }
 
+// Height returns the height of the window in pixels. If zooming is used the height is not multiplied by zoom.
 func (g *Window) Height() int {
 	_, h := g.window.GetSize()
 	return h
