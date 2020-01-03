@@ -72,11 +72,11 @@ type Windows struct {
 
 // Open creates and show window
 func (g Windows) Open(width, height int, hints ...WindowHint) pixiq.Window {
-	if width < 0 {
-		width = 0
+	if width < 1 {
+		width = 1
 	}
-	if height < 0 {
-		height = 0
+	if height < 1 {
+		height = 1
 	}
 	frameImagePolygon := newFrameImagePolygon(g.mainThreadLoop, g.program.vertexPositionLocation, g.program.texturePositionLocation)
 	g.mainThreadLoop.Execute(func() {

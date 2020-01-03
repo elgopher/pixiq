@@ -95,21 +95,21 @@ func TestTexture_Upload(t *testing.T) {
 }
 
 func TestGlfwWindows_Open(t *testing.T) {
-	t.Run("should clamp width to 0 if negative", func(t *testing.T) {
+	t.Run("should clamp width to 1 if negative", func(t *testing.T) {
 		openGL := opengl.New(mainThreadLoop)
 		windows := openGL.Windows()
 		// when
 		win := windows.Open(-1, 0)
 		require.NotNil(t, win)
-		assert.Equal(t, 0, win.Width())
+		assert.Equal(t, 1, win.Width())
 	})
-	t.Run("should clamp height to 0 if negative", func(t *testing.T) {
+	t.Run("should clamp height to 1 if negative", func(t *testing.T) {
 		openGL := opengl.New(mainThreadLoop)
 		windows := openGL.Windows()
 		// when
 		win := windows.Open(0, -1)
 		require.NotNil(t, win)
-		assert.Equal(t, 0, win.Height())
+		assert.Equal(t, 1, win.Height())
 	})
 	t.Run("should open window", func(t *testing.T) {
 		openGL := opengl.New(mainThreadLoop)
