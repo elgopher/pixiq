@@ -9,8 +9,8 @@ func main() {
 	opengl.StartMainThreadLoop(func(loop *opengl.MainThreadLoop) {
 		gl := opengl.New(loop)
 		images := pixiq.NewImages(gl.AcceleratedImages())
-		windows := pixiq.NewWindows(images, gl.SystemWindows())
-		windows.New(320, 16).Loop(func(frame *pixiq.Frame) {
+		window := gl.Windows().Open(320, 16)
+		pixiq.NewWindows(images).Loop(window, func(frame *pixiq.Frame) {
 			screen := frame.Image().WholeImageSelection()
 			red := pixiq.RGBA(255, 0, 0, 255)
 			screen.SetColor(4, 4, red)
