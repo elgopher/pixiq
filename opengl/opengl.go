@@ -7,7 +7,7 @@ import (
 	"github.com/jacekolszak/pixiq"
 )
 
-// New creates OpenGL instance providing implementation of AcceleratedImages and Windows for opening system windows.
+// New creates OpenGL instance providing implementation of both pixiq.AcceleratedImages and pixiq.Window.
 // Under the hood it is using OpenGL API and GLFW for manipulating windows and handling user input.
 // MainThreadLoop is needed because some GLFW functions has to be called from main thread.
 func New(loop *MainThreadLoop) *OpenGL {
@@ -47,31 +47,32 @@ func New(loop *MainThreadLoop) *OpenGL {
 	}
 }
 
-// OpenGL provides opengl implementations of AcceleratedImages. It also provides Windows for opening system windows
+// OpenGL provides opengl implementations of pixiq.AcceleratedImages and pixiq.Window. It provides Windows object
+// for opening system windows.
 type OpenGL struct {
 	textures *textures
 	windows  *Windows
 }
 
-// AcceleratedImages returns opengl implementation of AcceleratedImages
+// AcceleratedImages returns opengl implementation of pixiq.AcceleratedImages.
 func (g OpenGL) AcceleratedImages() pixiq.AcceleratedImages {
 	return g.textures
 }
 
-// Windows returns object for opening system windows
+// Windows returns object for opening system windows. Each open window is a pixiq.Window implementation.
 func (g OpenGL) Windows() *Windows {
 	return g.windows
 }
 
-// Windows is for opening system windows
+// Windows is used for opening system windows.
 type Windows struct {
 	program        *program
 	mainThreadLoop *MainThreadLoop
 	window         *glfw.Window
 }
 
-// Open creates and show window
-func (g Windows) Open(width, height int, hints ...WindowHint) pixiq.Window {
+// Open creates and show window.
+func (g Windows) Open(width, height int, hints ...WindowHint) *window {
 	if width < 1 {
 		width = 1
 	}
@@ -94,10 +95,10 @@ type WindowHint interface {
 	apply(window *glfw.Window)
 }
 
-// NoDecorated is window hint hiding the window's title bar
-type NoDecorated struct{}
+// NoDecoration is window hint hiding the border, close widget, etc.
+type NoDecoration struct{}
 
-func (NoDecorated) apply(window *glfw.Window) {
+func (NoDecoration) apply(window *glfw.Window) {
 	window.SetAttrib(glfw.Decorated, glfw.False)
 }
 
