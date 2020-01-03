@@ -27,6 +27,7 @@ type Windows struct {
 	systemWindows SystemWindows
 }
 
+// WindowHint is a window's hint which may (or may not) by applied to window depending on the operating system
 type WindowHint interface {
 }
 
