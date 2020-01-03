@@ -19,6 +19,7 @@ type Window interface {
 	Height() int
 }
 
+// Windows is an abstraction for interaction with windows in a platform-agnostic way
 type Windows struct {
 	images *Images
 }
