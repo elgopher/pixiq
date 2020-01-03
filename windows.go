@@ -1,8 +1,13 @@
 package pixiq
 
-// NewWindows returns a factory of Window objects.
+// NewWindows returns a new instance of Windows
 func NewWindows(images *Images) *Windows {
 	return &Windows{images: images}
+}
+
+// Windows is an abstraction for interaction with windows in a platform-agnostic way
+type Windows struct {
+	images *Images
 }
 
 // Window is a window where images can be drawn
@@ -17,11 +22,6 @@ type Window interface {
 	Width() int
 	// Height returns the height of the window in pixels. If zooming is used the height is not multiplied by zoom.
 	Height() int
-}
-
-// Windows is an abstraction for interaction with windows in a platform-agnostic way
-type Windows struct {
-	images *Images
 }
 
 // Loop starts the main loop. It will execute onEachFrame function for each frame, as soon as window is closed. This
