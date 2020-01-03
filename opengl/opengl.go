@@ -59,7 +59,7 @@ func (g OpenGL) AcceleratedImages() pixiq.AcceleratedImages {
 	return g.textures
 }
 
-// Windows returns object for opening system windows. Each open OpenGLWindow is a pixiq.Window implementation.
+// Windows returns object for opening system windows. Each open Window is a pixiq.Window implementation.
 func (g OpenGL) Windows() *Windows {
 	return g.windows
 }
@@ -71,8 +71,8 @@ type Windows struct {
 	window         *glfw.Window
 }
 
-// Open creates and show OpenGLWindow.
-func (g Windows) Open(width, height int, hints ...WindowHint) *OpenGLWindow {
+// Open creates and show Window.
+func (g Windows) Open(width, height int, hints ...WindowHint) *Window {
 	if width < 1 {
 		width = 1
 	}
@@ -87,29 +87,29 @@ func (g Windows) Open(width, height int, hints ...WindowHint) *OpenGLWindow {
 		g.window.SetSize(width, height)
 		g.window.Show()
 	})
-	return &OpenGLWindow{window: g.window, program: g.program, mainThreadLoop: g.mainThreadLoop, frameImagePolygon: frameImagePolygon}
+	return &Window{window: g.window, program: g.program, mainThreadLoop: g.mainThreadLoop, frameImagePolygon: frameImagePolygon}
 }
 
-// WindowHint is a hint which may (or may not) be applied to OpenGLWindow (depending on operating system and other factors).
+// WindowHint is a hint which may (or may not) be applied to Window (depending on operating system and other factors).
 type WindowHint interface {
 	apply(window *glfw.Window)
 }
 
-// NoDecoration is OpenGLWindow hint hiding the border, close widget, etc.
+// NoDecoration is Window hint hiding the border, close widget, etc.
 type NoDecoration struct{}
 
 func (NoDecoration) apply(window *glfw.Window) {
 	window.SetAttrib(glfw.Decorated, glfw.False)
 }
 
-type OpenGLWindow struct {
+type Window struct {
 	window            *glfw.Window
 	program           *program
 	mainThreadLoop    *MainThreadLoop
 	frameImagePolygon *frameImagePolygon
 }
 
-func (g *OpenGLWindow) Draw(image *pixiq.Image) {
+func (g *Window) Draw(image *pixiq.Image) {
 	texture, isGL := image.Upload().(GLTexture)
 	if !isGL {
 		panic("opengl Window implementation can only draw images accelerated with opengl.GLTexture")
@@ -123,25 +123,25 @@ func (g *OpenGLWindow) Draw(image *pixiq.Image) {
 	})
 }
 
-func (g *OpenGLWindow) SwapImages() {
+func (g *Window) SwapImages() {
 	g.mainThreadLoop.Execute(func() {
 		g.window.SwapBuffers()
 		glfw.PollEvents()
 	})
 }
 
-func (g *OpenGLWindow) Close() {
+func (g *Window) Close() {
 	g.mainThreadLoop.Execute(func() {
 		g.window.Destroy()
 	})
 }
 
-func (g *OpenGLWindow) Width() int {
+func (g *Window) Width() int {
 	w, _ := g.window.GetSize()
 	return w
 }
 
-func (g *OpenGLWindow) Height() int {
+func (g *Window) Height() int {
 	_, h := g.window.GetSize()
 	return h
 }

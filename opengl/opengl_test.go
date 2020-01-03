@@ -111,7 +111,7 @@ func TestGlfwWindows_Open(t *testing.T) {
 		require.NotNil(t, win)
 		assert.Equal(t, 1, win.Height())
 	})
-	t.Run("should open OpenGLWindow", func(t *testing.T) {
+	t.Run("should open Window", func(t *testing.T) {
 		openGL := opengl.New(mainThreadLoop)
 		windows := openGL.Windows()
 		// when
@@ -123,7 +123,7 @@ func TestGlfwWindows_Open(t *testing.T) {
 }
 
 func TestGlfwWindow_Draw(t *testing.T) {
-	t.Run("should draw image inside OpenGLWindow", func(t *testing.T) {
+	t.Run("should draw image inside Window", func(t *testing.T) {
 		color1 := pixiq.RGBA(10, 20, 30, 40)
 		color2 := pixiq.RGBA(50, 60, 70, 80)
 		color3 := pixiq.RGBA(90, 100, 110, 120)
