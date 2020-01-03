@@ -87,6 +87,7 @@ type openglWindowHint interface {
 	apply(window *glfw.Window)
 }
 
+// NoDecorated is window hint hiding the window's titlebar
 type NoDecorated struct{}
 
 func (NoDecorated) apply(window *glfw.Window) {
