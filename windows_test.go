@@ -42,6 +42,38 @@ func TestWindow_New(t *testing.T) {
 		// then
 		assert.Empty(t, systemWindows.openWindows)
 	})
+	t.Run("should pass hints to system window", func(t *testing.T) {
+		t.Run("one hint", func(t *testing.T) {
+			systemWindows := &systemWindowsMock{}
+			windows := pixiq.NewWindows(pixiq.NewImages(&fakeAcceleratedImages{}), systemWindows)
+			hint := &fakeHint{}
+			// when
+			windows.New(0, 0, hint).Loop(func(frame *pixiq.Frame) {
+				frame.CloseWindowEventually()
+			})
+			// then
+			require.Len(t, systemWindows.openWindows[0].hints, 1)
+			assert.Same(t, hint, systemWindows.openWindows[0].hints[0].(*fakeHint))
+		})
+		t.Run("two hints", func(t *testing.T) {
+			systemWindows := &systemWindowsMock{}
+			windows := pixiq.NewWindows(pixiq.NewImages(&fakeAcceleratedImages{}), systemWindows)
+			hint1 := &fakeHint{}
+			hint2 := &fakeHint{}
+			// when
+			windows.New(0, 0, hint1, hint2).Loop(func(frame *pixiq.Frame) {
+				frame.CloseWindowEventually()
+			})
+			// then
+			window := systemWindows.openWindows[0]
+			require.Len(t, window.hints, 2)
+			assert.Same(t, hint1, window.hints[0].(*fakeHint))
+			assert.Same(t, hint2, window.hints[1].(*fakeHint))
+		})
+	})
+}
+
+type fakeHint struct {
 }
 
 func TestWindow_Loop(t *testing.T) {
@@ -269,8 +301,8 @@ type systemWindowsMock struct {
 	openWindows []*systemWindowMock
 }
 
-func (s *systemWindowsMock) Open(width, height int) pixiq.SystemWindow {
-	win := &systemWindowMock{width: width, height: height}
+func (s *systemWindowsMock) Open(width, height int, hints ...pixiq.WindowHint) pixiq.SystemWindow {
+	win := &systemWindowMock{width: width, height: height, hints: hints}
 	s.openWindows = append(s.openWindows, win)
 	return win
 }
@@ -281,6 +313,7 @@ type systemWindowMock struct {
 	height       int
 	visibleImage *pixiq.Image
 	closed       bool
+	hints        []pixiq.WindowHint
 }
 
 func (f *systemWindowMock) Draw(image *pixiq.Image) {

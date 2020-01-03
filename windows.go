@@ -8,7 +8,7 @@ func NewWindows(images *Images, windows SystemWindows) *Windows {
 // SystemWindows is an API for creating system windows
 type SystemWindows interface {
 	// Open creates and show system window
-	Open(width, height int) SystemWindow
+	Open(width, height int, hints ...WindowHint) SystemWindow
 }
 
 // SystemWindow is an operating system window
@@ -27,8 +27,12 @@ type Windows struct {
 	systemWindows SystemWindows
 }
 
+// WindowHint is a window's hint which may (or may not) by applied to window depending on the operating system
+type WindowHint interface {
+}
+
 // New creates a new window with width and height given in pixels.
-func (w *Windows) New(width, height int) *Window {
+func (w *Windows) New(width, height int, hints ...WindowHint) *Window {
 	if width < 0 {
 		width = 0
 	}
@@ -40,6 +44,7 @@ func (w *Windows) New(width, height int) *Window {
 		height:        height,
 		image:         w.images.New(width, height),
 		systemWindows: w.systemWindows,
+		hints:         hints,
 	}
 }
 
@@ -49,6 +54,7 @@ type Window struct {
 	height        int
 	image         *Image
 	systemWindows SystemWindows
+	hints         []WindowHint
 }
 
 // Width returns width of the window in pixels
@@ -64,7 +70,7 @@ func (w *Window) Height() int {
 // Loop starts the main loop. It will execute onEachFrame function for each frame, as soon as window is closed. This
 // function blocks the current goroutine.
 func (w *Window) Loop(onEachFrame func(frame *Frame)) {
-	window := w.systemWindows.Open(w.width, w.height)
+	window := w.systemWindows.Open(w.width, w.height, w.hints...)
 	frame := &Frame{}
 	frame.image = w.image
 	for !frame.closeWindow {
