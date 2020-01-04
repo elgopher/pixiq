@@ -152,6 +152,16 @@ func (g *Window) Close() {
 	})
 }
 
+// ShouldClose reports the value of the close flag of the window. The flag is set to true when user clicks Close button
+// or hits ALT+F4.
+func (g *Window) ShouldClose() bool {
+	var shouldClose bool
+	g.mainThreadLoop.Execute(func() {
+		shouldClose = g.window.ShouldClose()
+	})
+	return shouldClose
+}
+
 // Width returns the width of the window in pixels. If zooming is used the width is not multiplied by zoom.
 func (g *Window) Width() int {
 	w, _ := g.window.GetSize()
