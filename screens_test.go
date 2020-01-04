@@ -9,23 +9,23 @@ import (
 	"github.com/jacekolszak/pixiq"
 )
 
-func TestNewWindows(t *testing.T) {
-	t.Run("should return Windows object", func(t *testing.T) {
-		windows := pixiq.NewWindows(pixiq.NewImages(&fakeAcceleratedImages{}))
-		assert.NotNil(t, windows)
+func TestNewScreens(t *testing.T) {
+	t.Run("should return Screens object", func(t *testing.T) {
+		screens := pixiq.NewScreens(pixiq.NewImages(&fakeAcceleratedImages{}))
+		assert.NotNil(t, screens)
 	})
 }
 
-func TestWindow_Loop(t *testing.T) {
+func TestScreens_Loop(t *testing.T) {
 
-	t.Run("should run callback function until window is closed", func(t *testing.T) {
+	t.Run("should run callback function until loop is stopped", func(t *testing.T) {
 		images := pixiq.NewImages(&fakeAcceleratedImages{})
-		windows := pixiq.NewWindows(images)
+		screens := pixiq.NewScreens(images)
 		frameNumber := 0
 		// when
-		windows.Loop(&windowMock{}, func(frame *pixiq.Frame) {
+		screens.Loop(&screenMock{}, func(frame *pixiq.Frame) {
 			if frameNumber == 2 {
-				frame.CloseWindowEventually()
+				frame.StopLoopEventually()
 			} else {
 				frameNumber += 1
 			}
@@ -34,9 +34,9 @@ func TestWindow_Loop(t *testing.T) {
 		assert.Equal(t, 2, frameNumber)
 	})
 
-	t.Run("frame should provide window's screen", func(t *testing.T) {
+	t.Run("frame should provide screen", func(t *testing.T) {
 		images := pixiq.NewImages(&fakeAcceleratedImages{})
-		windows := pixiq.NewWindows(images)
+		screens := pixiq.NewScreens(images)
 		tests := map[string]struct {
 			width, height int
 		}{
@@ -52,11 +52,10 @@ func TestWindow_Loop(t *testing.T) {
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
 				var screen pixiq.Selection
-				win := &windowMock{width: test.width, height: test.height}
 				// when
-				windows.Loop(win, func(frame *pixiq.Frame) {
+				screens.Loop(&screenMock{width: test.width, height: test.height}, func(frame *pixiq.Frame) {
 					screen = frame.Screen()
-					frame.CloseWindowEventually()
+					frame.StopLoopEventually()
 				})
 				// then
 				assert.Equal(t, test.width, screen.Width())
@@ -72,152 +71,127 @@ func TestWindow_Loop(t *testing.T) {
 
 	t.Run("should draw image for each frame", func(t *testing.T) {
 		images := pixiq.NewImages(&fakeAcceleratedImages{})
-		win := &windowMock{}
-		windows := pixiq.NewWindows(images)
+		screen := &screenMock{}
+		screens := pixiq.NewScreens(images)
 		firstFrame := true
 		var recordedImages []*pixiq.Image
 		// when
-		windows.Loop(win, func(frame *pixiq.Frame) {
+		screens.Loop(screen, func(frame *pixiq.Frame) {
 			if !firstFrame {
-				frame.CloseWindowEventually()
+				frame.StopLoopEventually()
 			}
 			firstFrame = false
 			recordedImages = append(recordedImages, frame.Screen().Image())
 		})
 		// then
-		assert.Equal(t, recordedImages, win.imagesDrawn)
+		assert.Equal(t, recordedImages, screen.imagesDrawn)
 	})
 
 	t.Run("initial screen is transparent", func(t *testing.T) {
 		images := pixiq.NewImages(&fakeAcceleratedImages{})
-		windows := pixiq.NewWindows(images)
-		win := &windowMock{width: 1, height: 1}
+		screens := pixiq.NewScreens(images)
 		var screen pixiq.Selection
 		// when
-		windows.Loop(win, func(frame *pixiq.Frame) {
+		screens.Loop(&screenMock{width: 1, height: 1}, func(frame *pixiq.Frame) {
 			screen = frame.Screen()
-			frame.CloseWindowEventually()
+			frame.StopLoopEventually()
 		})
 		// then
 		assert.Equal(t, transparent, screen.Color(0, 0))
 	})
 
-	t.Run("should draw modified window image", func(t *testing.T) {
+	t.Run("should draw modified screen", func(t *testing.T) {
 		t.Run("after first frame", func(t *testing.T) {
 			color := pixiq.RGBA(10, 20, 30, 40)
 			images := pixiq.NewImages(&fakeAcceleratedImages{})
-			win := &windowMock{width: 1, height: 1}
-			windows := pixiq.NewWindows(images)
+			screen := &screenMock{width: 1, height: 1}
+			screens := pixiq.NewScreens(images)
 			// when
-			windows.Loop(win, func(frame *pixiq.Frame) {
+			screens.Loop(screen, func(frame *pixiq.Frame) {
 				frame.Screen().SetColor(0, 0, color)
-				frame.CloseWindowEventually()
+				frame.StopLoopEventually()
 			})
 			// then
-			require.Len(t, win.imagesDrawn, 1)
-			assert.Equal(t, color, win.imagesDrawn[0].WholeImageSelection().Color(0, 0))
+			require.Len(t, screen.imagesDrawn, 1)
+			assert.Equal(t, color, screen.imagesDrawn[0].WholeImageSelection().Color(0, 0))
 		})
 		t.Run("after second frame", func(t *testing.T) {
 			color1 := pixiq.RGBA(10, 20, 30, 40)
 			color2 := pixiq.RGBA(10, 20, 30, 40)
 			images := pixiq.NewImages(&fakeAcceleratedImages{})
-			win := &windowMock{width: 1, height: 1}
-			windows := pixiq.NewWindows(images)
+			screen := &screenMock{width: 1, height: 1}
+			screens := pixiq.NewScreens(images)
 			firstFrame := true
 			// when
-			windows.Loop(win, func(frame *pixiq.Frame) {
+			screens.Loop(screen, func(frame *pixiq.Frame) {
 				if firstFrame {
 					frame.Screen().SetColor(0, 0, color1)
 					firstFrame = false
 				} else {
 					frame.Screen().SetColor(0, 0, color2)
-					frame.CloseWindowEventually()
+					frame.StopLoopEventually()
 				}
 			})
 			// then
-			require.Len(t, win.imagesDrawn, 2)
-			assert.Equal(t, color1, win.imagesDrawn[0].WholeImageSelection().Color(0, 0))
-			assert.Equal(t, color2, win.imagesDrawn[1].WholeImageSelection().Color(0, 0))
+			require.Len(t, screen.imagesDrawn, 2)
+			assert.Equal(t, color1, screen.imagesDrawn[0].WholeImageSelection().Color(0, 0))
+			assert.Equal(t, color2, screen.imagesDrawn[1].WholeImageSelection().Color(0, 0))
 		})
 	})
 
 	t.Run("should swap images", func(t *testing.T) {
 		t.Run("after first frame", func(t *testing.T) {
 			images := pixiq.NewImages(&fakeAcceleratedImages{})
-			openWindow := &windowMock{}
-			windows := pixiq.NewWindows(images)
+			screen := &screenMock{}
+			screens := pixiq.NewScreens(images)
 			// when
-			windows.Loop(openWindow, func(frame *pixiq.Frame) {
-				frame.CloseWindowEventually()
+			screens.Loop(screen, func(frame *pixiq.Frame) {
+				frame.StopLoopEventually()
 			})
 			// then
-			require.Len(t, openWindow.imagesDrawn, 1)
-			assert.Same(t, openWindow.imagesDrawn[0], openWindow.visibleImage)
+			require.Len(t, screen.imagesDrawn, 1)
+			assert.Same(t, screen.imagesDrawn[0], screen.visibleImage)
 		})
 		t.Run("after second frame", func(t *testing.T) {
 			images := pixiq.NewImages(&fakeAcceleratedImages{})
-			openWindow := &windowMock{}
-			windows := pixiq.NewWindows(images)
+			screen := &screenMock{}
+			screens := pixiq.NewScreens(images)
 			firstFrame := true
 			// when
-			windows.Loop(openWindow, func(frame *pixiq.Frame) {
+			screens.Loop(screen, func(frame *pixiq.Frame) {
 				if !firstFrame {
-					frame.CloseWindowEventually()
+					frame.StopLoopEventually()
 				}
 				firstFrame = false
 			})
 			// then
-			require.Len(t, openWindow.imagesDrawn, 2)
-			assert.Same(t, openWindow.imagesDrawn[1], openWindow.visibleImage)
+			require.Len(t, screen.imagesDrawn, 2)
+			assert.Same(t, screen.imagesDrawn[1], screen.visibleImage)
 		})
-	})
-
-	t.Run("should close the window after loop is finished", func(t *testing.T) {
-		images := pixiq.NewImages(&fakeAcceleratedImages{})
-		win := &windowMock{}
-		windows := pixiq.NewWindows(images)
-		frameNumber := 0
-		// when
-		windows.Loop(win, func(frame *pixiq.Frame) {
-			if frameNumber == 2 {
-				frame.CloseWindowEventually()
-			} else {
-				// then
-				assert.False(t, win.closed)
-				frameNumber += 1
-			}
-		})
-		// then
-		assert.True(t, win.closed)
 	})
 
 }
 
-type windowMock struct {
+type screenMock struct {
 	imagesDrawn  []*pixiq.Image
 	width        int
 	height       int
 	visibleImage *pixiq.Image
-	closed       bool
 }
 
-func (f *windowMock) Draw(image *pixiq.Image) {
+func (f *screenMock) Draw(image *pixiq.Image) {
 	f.imagesDrawn = append(f.imagesDrawn, clone(image))
 }
 
-func (f *windowMock) SwapImages() {
+func (f *screenMock) SwapImages() {
 	f.visibleImage = f.imagesDrawn[len(f.imagesDrawn)-1]
 }
 
-func (f *windowMock) Close() {
-	f.closed = true
-}
-
-func (f *windowMock) Width() int {
+func (f *screenMock) Width() int {
 	return f.width
 }
 
-func (f *windowMock) Height() int {
+func (f *screenMock) Height() int {
 	return f.height
 }
 
