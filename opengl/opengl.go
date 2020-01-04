@@ -7,7 +7,7 @@ import (
 	"github.com/jacekolszak/pixiq"
 )
 
-// New creates OpenGL instance providing implementation of both pixiq.AcceleratedImages and pixiq.Window.
+// New creates OpenGL instance providing implementation of both pixiq.AcceleratedImages and pixiq.Screen.
 // Under the hood it is using OpenGL API and GLFW for manipulating windows and handling user input.
 // MainThreadLoop is needed because some GLFW functions has to be called from main thread.
 func New(loop *MainThreadLoop) *OpenGL {
@@ -48,7 +48,7 @@ func New(loop *MainThreadLoop) *OpenGL {
 	}
 }
 
-// OpenGL provides opengl implementations of pixiq.AcceleratedImages and pixiq.Window. It provides Windows object
+// OpenGL provides opengl implementations of pixiq.AcceleratedImages and pixiq.Screen. It provides Windows object
 // for opening system windows.
 type OpenGL struct {
 	textures *textures
@@ -60,7 +60,7 @@ func (g OpenGL) AcceleratedImages() pixiq.AcceleratedImages {
 	return g.textures
 }
 
-// Windows returns object for opening system windows. Each open Window is a pixiq.Window implementation.
+// Windows returns object for opening system windows. Each open Window is a pixiq.Screen implementation.
 func (g OpenGL) Windows() *Windows {
 	return g.windows
 }
@@ -103,7 +103,7 @@ func (NoDecoration) apply(window *glfw.Window) {
 	window.SetAttrib(glfw.Decorated, glfw.False)
 }
 
-// Window is an implementation of pixiq.Window
+// Window is an implementation of pixiq.Screen
 type Window struct {
 	window         *glfw.Window
 	program        *program
@@ -115,7 +115,7 @@ type Window struct {
 func (g *Window) Draw(image *pixiq.Image) {
 	texture, isGL := image.Upload().(GLTexture)
 	if !isGL {
-		panic("opengl Window implementation can only draw images accelerated with opengl.GLTexture")
+		panic("opengl Window can only draw images accelerated with opengl.GLTexture")
 	}
 	g.mainThreadLoop.Execute(func() {
 		g.program.use()
