@@ -4,7 +4,7 @@ import (
 	"github.com/go-gl/gl/v3.3-core/gl"
 )
 
-func newFrameImagePolygon(loop *MainThreadLoop, vertexPositionLocation int32, texturePositionLocation int32) *frameImagePolygon {
+func newScreenPolygon(loop *MainThreadLoop, vertexPositionLocation int32, texturePositionLocation int32) *screenPolygon {
 	var vertexArrayID uint32
 	var vertexBufferID uint32
 	loop.Execute(func() {
@@ -42,15 +42,15 @@ func newFrameImagePolygon(loop *MainThreadLoop, vertexPositionLocation int32, te
 		)
 		gl.EnableVertexAttribArray(1)
 	})
-	return &frameImagePolygon{vertexArrayID: vertexArrayID, vertexBufferID: vertexBufferID}
+	return &screenPolygon{vertexArrayID: vertexArrayID, vertexBufferID: vertexBufferID}
 }
 
-type frameImagePolygon struct {
+type screenPolygon struct {
 	vertexArrayID  uint32
 	vertexBufferID uint32
 }
 
-func (p *frameImagePolygon) draw() {
+func (p *screenPolygon) draw() {
 	gl.BindBuffer(gl.ARRAY_BUFFER, p.vertexBufferID)
 	gl.BindVertexArray(p.vertexArrayID)
 	gl.DrawArrays(gl.TRIANGLES, 0, 6)
