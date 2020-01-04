@@ -1,9 +1,10 @@
 package opengl_test
 
 import (
-	"github.com/stretchr/testify/require"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/stretchr/testify/assert"
@@ -120,10 +121,35 @@ func TestGlfwWindows_Open(t *testing.T) {
 		assert.Equal(t, 640, win.Width())
 		assert.Equal(t, 360, win.Height())
 	})
+	t.Run("should open two windows at the same time", func(t *testing.T) {
+		openGL := opengl.New(mainThreadLoop)
+		windows := openGL.Windows()
+		// when
+		win1 := windows.Open(640, 360)
+		win2 := windows.Open(320, 180)
+		// then
+		require.NotNil(t, win1)
+		assert.Equal(t, 640, win1.Width())
+		assert.Equal(t, 360, win1.Height())
+		require.NotNil(t, win2)
+		assert.Equal(t, 320, win2.Width())
+		assert.Equal(t, 180, win2.Height())
+	})
+	t.Run("should open another Window after first one was closed", func(t *testing.T) {
+		openGL := opengl.New(mainThreadLoop)
+		windows := openGL.Windows()
+		win1 := windows.Open(640, 360)
+		win1.Close()
+		// when
+		win2 := windows.Open(320, 180)
+		require.NotNil(t, win2)
+		assert.Equal(t, 320, win2.Width())
+		assert.Equal(t, 180, win2.Height())
+	})
 }
 
 func TestGlfwWindow_Draw(t *testing.T) {
-	t.Run("should draw image inside Window", func(t *testing.T) {
+	t.Run("should draw screen image", func(t *testing.T) {
 		color1 := pixiq.RGBA(10, 20, 30, 40)
 		color2 := pixiq.RGBA(50, 60, 70, 80)
 		color3 := pixiq.RGBA(90, 100, 110, 120)

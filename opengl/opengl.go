@@ -11,41 +11,40 @@ import (
 // Under the hood it is using OpenGL API and GLFW for manipulating windows and handling user input.
 // MainThreadLoop is needed because some GLFW functions has to be called from main thread.
 func New(loop *MainThreadLoop) *OpenGL {
-	var program *program
-	var window *glfw.Window
+	var mainWindow *glfw.Window
 	loop.Execute(func() {
 		err := glfw.Init()
 		if err != nil {
 			panic(err)
 		}
-		glfw.WindowHint(glfw.ContextVersionMajor, 3)
-		glfw.WindowHint(glfw.ContextVersionMinor, 3)
-		glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
-		glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
-		glfw.WindowHint(glfw.Resizable, glfw.False)
-		glfw.WindowHint(glfw.Visible, glfw.False)
-		glfw.WindowHint(glfw.CocoaRetinaFramebuffer, glfw.False)
-		window, err = glfw.CreateWindow(1, 1, "OpenGL Pixiq Window", nil, nil)
-		if err != nil {
-			panic(err)
-		}
-		window.MakeContextCurrent()
-		if err := gl.Init(); err != nil {
-			panic(err)
-		}
-		program, err = compileProgram()
-		if err != nil {
-			panic(err)
-		}
+		mainWindow = createWindow(nil)
 	})
 	return &OpenGL{
 		textures: &textures{mainThreadLoop: loop},
 		windows: &Windows{
-			window:         window,
-			program:        program,
+			mainWindow:     mainWindow,
 			mainThreadLoop: loop,
 		},
 	}
+}
+
+func createWindow(share *glfw.Window) *glfw.Window {
+	glfw.WindowHint(glfw.ContextVersionMajor, 3)
+	glfw.WindowHint(glfw.ContextVersionMinor, 3)
+	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
+	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
+	glfw.WindowHint(glfw.Resizable, glfw.False)
+	glfw.WindowHint(glfw.Visible, glfw.False)
+	glfw.WindowHint(glfw.CocoaRetinaFramebuffer, glfw.False)
+	window, err := glfw.CreateWindow(1, 1, "OpenGL Pixiq Window", nil, share)
+	if err != nil {
+		panic(err)
+	}
+	window.MakeContextCurrent()
+	if err := gl.Init(); err != nil {
+		panic(err)
+	}
+	return window
 }
 
 // OpenGL provides opengl implementations of pixiq.AcceleratedImages and pixiq.Screen. It provides Windows object
@@ -67,12 +66,12 @@ func (g OpenGL) Windows() *Windows {
 
 // Windows is used for opening system windows.
 type Windows struct {
-	program        *program
 	mainThreadLoop *MainThreadLoop
-	window         *glfw.Window
+	// mainWindow contains textures and user programs
+	mainWindow *glfw.Window
 }
 
-// Open creates and show Window.
+// Open creates and shows Window.
 func (g Windows) Open(width, height int, hints ...WindowHint) *Window {
 	if width < 1 {
 		width = 1
@@ -80,15 +79,26 @@ func (g Windows) Open(width, height int, hints ...WindowHint) *Window {
 	if height < 1 {
 		height = 1
 	}
-	screenPolygon := newScreenPolygon(g.mainThreadLoop, g.program.vertexPositionLocation, g.program.texturePositionLocation)
+	var (
+		program       *program
+		screenPolygon *screenPolygon
+		window        *glfw.Window
+		err           error
+	)
 	g.mainThreadLoop.Execute(func() {
-		for _, hint := range hints {
-			hint.apply(g.window)
+		window = createWindow(g.mainWindow)
+		program, err = compileProgram()
+		if err != nil {
+			panic(err)
 		}
-		g.window.SetSize(width, height)
-		g.window.Show()
+		screenPolygon = newScreenPolygon(program.vertexPositionLocation, program.texturePositionLocation)
+		for _, hint := range hints {
+			hint.apply(window)
+		}
+		window.SetSize(width, height)
+		window.Show()
 	})
-	return &Window{window: g.window, program: g.program, mainThreadLoop: g.mainThreadLoop, screenPolygon: screenPolygon}
+	return &Window{window: window, program: program, mainThreadLoop: g.mainThreadLoop, screenPolygon: screenPolygon}
 }
 
 // WindowHint is a hint which may (or may not) be applied to Window (depending on operating system and other factors).
@@ -118,6 +128,7 @@ func (g *Window) Draw(image *pixiq.Image) {
 		panic("opengl Window can only draw images accelerated with opengl.GLTexture")
 	}
 	g.mainThreadLoop.Execute(func() {
+		g.window.MakeContextCurrent()
 		g.program.use()
 		w, h := g.window.GetFramebufferSize()
 		gl.Viewport(0, 0, int32(w), int32(h))
