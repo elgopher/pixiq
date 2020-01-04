@@ -24,6 +24,7 @@ func New(loop *MainThreadLoop) *OpenGL {
 		glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
 		glfw.WindowHint(glfw.Resizable, glfw.False)
 		glfw.WindowHint(glfw.Visible, glfw.False)
+		glfw.WindowHint(glfw.CocoaRetinaFramebuffer, glfw.False)
 		window, err = glfw.CreateWindow(1, 1, "OpenGL Pixiq Window", nil, nil)
 		if err != nil {
 			panic(err)
