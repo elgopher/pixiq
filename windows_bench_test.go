@@ -7,9 +7,11 @@ import (
 )
 
 func BenchmarkWindows_Loop(b *testing.B) {
+	b.StopTimer()
 	images := pixiq.NewImages(&fakeAcceleratedImages{})
 	windows := pixiq.NewWindows(images)
 	win := &noopWindow{}
+	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		frameNumber := 0
 		windows.Loop(win, func(frame *pixiq.Frame) {
