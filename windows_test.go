@@ -34,7 +34,7 @@ func TestWindow_Loop(t *testing.T) {
 		assert.Equal(t, 2, frameNumber)
 	})
 
-	t.Run("frame should provide Image for the whole window", func(t *testing.T) {
+	t.Run("frame should provide window's screen", func(t *testing.T) {
 		images := pixiq.NewImages(&fakeAcceleratedImages{})
 		windows := pixiq.NewWindows(images)
 		tests := map[string]struct {
@@ -51,16 +51,21 @@ func TestWindow_Loop(t *testing.T) {
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
-				var image *pixiq.Image
+				var screen pixiq.Selection
 				win := &windowMock{width: test.width, height: test.height}
 				// when
 				windows.Loop(win, func(frame *pixiq.Frame) {
-					image = frame.Image()
+					screen = frame.Screen()
 					frame.CloseWindowEventually()
 				})
 				// then
-				assert.Equal(t, test.width, image.Width())
-				assert.Equal(t, test.height, image.Height())
+				assert.Equal(t, test.width, screen.Width())
+				assert.Equal(t, test.height, screen.Height())
+				assert.Equal(t, 0, screen.ImageX())
+				assert.Equal(t, 0, screen.ImageY())
+				assert.NotNil(t, screen.Image())
+				assert.Equal(t, test.width, screen.Image().Width())
+				assert.Equal(t, test.height, screen.Image().Height())
 			})
 		}
 	})
@@ -77,24 +82,24 @@ func TestWindow_Loop(t *testing.T) {
 				frame.CloseWindowEventually()
 			}
 			firstFrame = false
-			recordedImages = append(recordedImages, frame.Image())
+			recordedImages = append(recordedImages, frame.Screen().Image())
 		})
 		// then
 		assert.Equal(t, recordedImages, win.imagesDrawn)
 	})
 
-	t.Run("initial window image is transparent", func(t *testing.T) {
+	t.Run("initial screen is transparent", func(t *testing.T) {
 		images := pixiq.NewImages(&fakeAcceleratedImages{})
 		windows := pixiq.NewWindows(images)
 		win := &windowMock{width: 1, height: 1}
-		var image *pixiq.Image
+		var screen pixiq.Selection
 		// when
 		windows.Loop(win, func(frame *pixiq.Frame) {
-			image = frame.Image()
+			screen = frame.Screen()
 			frame.CloseWindowEventually()
 		})
 		// then
-		assert.Equal(t, transparent, image.WholeImageSelection().Color(0, 0))
+		assert.Equal(t, transparent, screen.Color(0, 0))
 	})
 
 	t.Run("should draw modified window image", func(t *testing.T) {
@@ -105,8 +110,7 @@ func TestWindow_Loop(t *testing.T) {
 			windows := pixiq.NewWindows(images)
 			// when
 			windows.Loop(win, func(frame *pixiq.Frame) {
-				selection := frame.Image().Selection(0, 0)
-				selection.SetColor(0, 0, color)
+				frame.Screen().SetColor(0, 0, color)
 				frame.CloseWindowEventually()
 			})
 			// then
@@ -122,12 +126,11 @@ func TestWindow_Loop(t *testing.T) {
 			firstFrame := true
 			// when
 			windows.Loop(win, func(frame *pixiq.Frame) {
-				selection := frame.Image().WholeImageSelection()
 				if firstFrame {
-					selection.SetColor(0, 0, color1)
+					frame.Screen().SetColor(0, 0, color1)
 					firstFrame = false
 				} else {
-					selection.SetColor(0, 0, color2)
+					frame.Screen().SetColor(0, 0, color2)
 					frame.CloseWindowEventually()
 				}
 			})
