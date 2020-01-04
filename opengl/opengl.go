@@ -80,7 +80,7 @@ func (g Windows) Open(width, height int, hints ...WindowHint) *Window {
 	if height < 1 {
 		height = 1
 	}
-	frameImagePolygon := newFrameImagePolygon(g.mainThreadLoop, g.program.vertexPositionLocation, g.program.texturePositionLocation)
+	screenPolygon := newScreenPolygon(g.mainThreadLoop, g.program.vertexPositionLocation, g.program.texturePositionLocation)
 	g.mainThreadLoop.Execute(func() {
 		for _, hint := range hints {
 			hint.apply(g.window)
@@ -88,7 +88,7 @@ func (g Windows) Open(width, height int, hints ...WindowHint) *Window {
 		g.window.SetSize(width, height)
 		g.window.Show()
 	})
-	return &Window{window: g.window, program: g.program, mainThreadLoop: g.mainThreadLoop, frameImagePolygon: frameImagePolygon}
+	return &Window{window: g.window, program: g.program, mainThreadLoop: g.mainThreadLoop, screenPolygon: screenPolygon}
 }
 
 // WindowHint is a hint which may (or may not) be applied to Window (depending on operating system and other factors).
@@ -105,10 +105,10 @@ func (NoDecoration) apply(window *glfw.Window) {
 
 // Window is an implementation of pixiq.Window
 type Window struct {
-	window            *glfw.Window
-	program           *program
-	mainThreadLoop    *MainThreadLoop
-	frameImagePolygon *frameImagePolygon
+	window         *glfw.Window
+	program        *program
+	mainThreadLoop *MainThreadLoop
+	screenPolygon  *screenPolygon
 }
 
 // Draw draws image spanning the whole window to the invisible buffer.
@@ -122,7 +122,7 @@ func (g *Window) Draw(image *pixiq.Image) {
 		w, h := g.window.GetFramebufferSize()
 		gl.Viewport(0, 0, int32(w), int32(h))
 		gl.BindTexture(gl.TEXTURE_2D, texture.TextureID())
-		g.frameImagePolygon.draw()
+		g.screenPolygon.draw()
 	})
 }
 
