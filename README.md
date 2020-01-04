@@ -17,6 +17,15 @@ Create Pixel Art games in Golang with fun and ease.
 + no automatic anti-aliasing, no filters, blur and other fancy tools
 + more information can be found in [The Pixel Art Tutorial](http://pixeljoint.com/forum/forum_posts.asp?TID=11299)
 
+## Installation
+
++ [Go 1.13](https://golang.org/dl/)
++ Install dependencies:
+    + Ubuntu/Debian: `sudo apt-get install libgl1-mesa-dev xorg-dev`
+    + CentOS/Fedora: `sudo yum install libX11-devel libXcursor-devel libXrandr-devel libXinerama-devel mesa-libGL-devel libXi-devel`
+    + MacOS: `xcode-select --install`
++ `go get -u github.com/jacekolszak/pixiq`
+
 ## Project status
 
 At the moment I have a vision how the API should look like and how it should be programmed.
