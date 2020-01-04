@@ -14,11 +14,11 @@ func main() {
 	opengl.StartMainThreadLoop(func(loop *opengl.MainThreadLoop) {
 		openGL := opengl.New(loop)
 		windows := openGL.Windows()
-		window1 := windows.Open(320, 180)
-		window2 := windows.Open(250, 90)
+		redWindow := windows.Open(320, 180)
+		blueWindow := windows.Open(250, 90)
 		screens := pixiq.NewScreens(pixiq.NewImages(openGL.AcceleratedImages()))
-		go screens.Loop(window1, fillWith(red))
-		screens.Loop(window2, fillWith(blue))
+		go screens.Loop(redWindow, fillWith(red))
+		screens.Loop(blueWindow, fillWith(blue))
 	})
 }
 
