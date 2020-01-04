@@ -164,14 +164,20 @@ func (g *Window) ShouldClose() bool {
 
 // Width returns the width of the window in pixels. If zooming is used the width is not multiplied by zoom.
 func (g *Window) Width() int {
-	w, _ := g.window.GetSize()
-	return w
+	var width int
+	g.mainThreadLoop.Execute(func() {
+		width, _ = g.window.GetSize()
+	})
+	return width
 }
 
 // Height returns the height of the window in pixels. If zooming is used the height is not multiplied by zoom.
 func (g *Window) Height() int {
-	_, h := g.window.GetSize()
-	return h
+	var height int
+	g.mainThreadLoop.Execute(func() {
+		_, height = g.window.GetSize()
+	})
+	return height
 }
 
 type textures struct {
