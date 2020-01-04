@@ -49,7 +49,7 @@ func (f *Frame) CloseWindowEventually() {
 	f.closeWindow = true
 }
 
-// Screens returns the whole window Image, which can be modified
+// Screen returns the whole window Image, which can be modified
 func (f *Frame) Screen() Selection {
 	return f.screen
 }
