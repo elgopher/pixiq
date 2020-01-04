@@ -28,27 +28,28 @@ type Window interface {
 // function blocks the current goroutine.
 func (w *Windows) Loop(window Window, onEachFrame func(frame *Frame)) {
 	frame := &Frame{}
-	frame.image = w.images.New(window.Width(), window.Height())
+	image := w.images.New(window.Width(), window.Height())
+	frame.screen = image.WholeImageSelection()
 	for !frame.closeWindow {
 		onEachFrame(frame)
-		window.Draw(frame.image)
+		window.Draw(image)
 		window.SwapImages()
 	}
 	window.Close()
 }
 
-// Frame provides the whole window image which will be drawn on a screen after making modifications
+// Frame contains information about the current screen which will be drawn inside window after making modifications
 type Frame struct {
 	closeWindow bool
-	image       *Image
+	screen      Selection
 }
 
 // CloseWindowEventually closes the window as soon as onEachFrame function is finished
-func (w *Frame) CloseWindowEventually() {
-	w.closeWindow = true
+func (f *Frame) CloseWindowEventually() {
+	f.closeWindow = true
 }
 
-// Image returns the whole window Image, which can be modified
-func (w *Frame) Image() *Image {
-	return w.image
+// Screens returns the whole window Image, which can be modified
+func (f *Frame) Screen() Selection {
+	return f.screen
 }
