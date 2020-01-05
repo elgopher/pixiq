@@ -1,3 +1,6 @@
+// Package opengl makes it possible to use Pixiq on PCs with Linux, Windows or Mac operating system.
+// It provides implementation of both pixiq.AcceleratedImages and pixiq.Screen.
+// Under the hood it is using OpenGL API and GLFW for manipulating windows and handling user input.
 package opengl
 
 import (
@@ -7,9 +10,7 @@ import (
 	"github.com/jacekolszak/pixiq"
 )
 
-// New creates OpenGL instance providing implementation of both pixiq.AcceleratedImages and pixiq.Screen.
-// Under the hood it is using OpenGL API and GLFW for manipulating windows and handling user input.
-// MainThreadLoop is needed because some GLFW functions has to be called from main thread.
+// New creates OpenGL instance. MainThreadLoop is needed because some GLFW functions has to be called from main thread.
 func New(loop *MainThreadLoop) *OpenGL {
 	var mainWindow *glfw.Window
 	loop.Execute(func() {
@@ -26,6 +27,17 @@ func New(loop *MainThreadLoop) *OpenGL {
 			mainThreadLoop: loop,
 		},
 	}
+}
+
+// Run is a shorthand method for creating pixiq objects with OpenGL acceleration and windows. It runs the given callback
+// function and blocks. It was created mainly for educational purposes to save a few keystrokes.
+func Run(main func(gl *OpenGL, images *pixiq.Images, screens *pixiq.Screens)) {
+	StartMainThreadLoop(func(loop *MainThreadLoop) {
+		openGL := New(loop)
+		images := pixiq.NewImages(openGL.AcceleratedImages())
+		screens := pixiq.NewScreens(images)
+		main(openGL, images, screens)
+	})
 }
 
 func createWindow(share *glfw.Window) *glfw.Window {
