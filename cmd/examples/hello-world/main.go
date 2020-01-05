@@ -5,27 +5,17 @@ import (
 	"github.com/jacekolszak/pixiq/opengl"
 )
 
-var red = pixiq.RGBA(255, 0, 0, 255)
+var white = pixiq.RGBA(255, 255, 255, 255)
 
 func main() {
+	// Use OpenGL on PCs with Linux, Windows and MacOS. This package can open windows and draw images on them.
 	opengl.Run(func(gl *opengl.OpenGL, images *pixiq.Images, screens *pixiq.Screens) {
 		window := gl.Windows().Open(320, 16)
+		// Create a main loop for a screen. OpenGL's Window is a Screen (some day in the future Pixiq may support
+		// different platforms such as mobile or browser, therefore we need a Screen abstraction).
+		// Each iteration of the loop is a Frame.
 		screens.Loop(window, func(frame *pixiq.Frame) {
-			screen := frame.Screen()
-			screen.SetColor(4, 4, red)
-			screen.SetColor(5, 4, red)
-			screen.SetColor(6, 4, red)
-			screen.SetColor(7, 5, red)
-			screen.SetColor(7, 6, red)
-			screen.SetColor(7, 7, red)
-			screen.SetColor(6, 8, red)
-			screen.SetColor(5, 8, red)
-			screen.SetColor(4, 5, red)
-			screen.SetColor(4, 6, red)
-			screen.SetColor(4, 7, red)
-			screen.SetColor(4, 8, red)
-			screen.SetColor(4, 9, red)
-			screen.SetColor(4, 10, red)
+			frame.Screen().SetColor(160, 8, white)
 		})
 	})
 }

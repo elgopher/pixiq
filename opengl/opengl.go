@@ -165,7 +165,7 @@ func (g *Window) Close() {
 }
 
 // ShouldClose reports the value of the close flag of the window. The flag is set to true when user clicks Close button
-// or hits ALT+F4.
+// or hits ALT+F4/CMD+Q
 func (g *Window) ShouldClose() bool {
 	var shouldClose bool
 	g.mainThreadLoop.Execute(func() {
