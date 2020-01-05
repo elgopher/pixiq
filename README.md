@@ -26,6 +26,29 @@ Create Pixel Art games in Golang with fun and ease.
     + MacOS: `xcode-select --install`
 + `go get -u github.com/jacekolszak/pixiq`
 
+## Hello world!
+
+```go
+package main
+
+import (
+	"github.com/jacekolszak/pixiq"
+	"github.com/jacekolszak/pixiq/opengl"
+)
+
+var white = pixiq.RGBA(255, 255, 255, 255)
+
+func main() {
+	opengl.Run(func(gl *opengl.OpenGL, images *pixiq.Images, screens *pixiq.Screens) {
+		window := gl.Windows().Open(320, 16)
+		screens.Loop(window, func(frame *pixiq.Frame) {
+			frame.Screen().SetColor(160, 8, white)
+		})
+	})
+}
+
+```
+
 ## Project status
 
 At the moment I have a vision how the API should look like and how it should be programmed.
