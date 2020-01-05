@@ -30,7 +30,7 @@ func New(loop *MainThreadLoop) *OpenGL {
 }
 
 // Run is a shorthand method for creating pixiq objects with OpenGL acceleration and windows. It runs the given callback
-// function and blocks.
+// function and blocks. It was created mainly for educational purposes to save a few keystrokes.
 func Run(main func(gl *OpenGL, images *pixiq.Images, screens *pixiq.Screens)) {
 	StartMainThreadLoop(func(loop *MainThreadLoop) {
 		openGL := New(loop)
