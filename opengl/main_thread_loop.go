@@ -6,9 +6,11 @@ import (
 	"strconv"
 )
 
-// StartMainThreadLoop starts a loop assigned to main thread. It has to be executed from main goroutine or will panic.
-// This function takes control over current goroutine by blocking it until runInDifferentGoroutine finishes.
-// It provides Execute() method which can be used to execute given piece of code inside the main thread.
+// StartMainThreadLoop starts a loop assigned to main thread. It has to be
+// executed from main goroutine or will panic. This function takes control over
+// current goroutine by blocking it until runInDifferentGoroutine finishes.
+// It provides Execute() method which can be used to execute given piece of code
+// inside the main thread.
 func StartMainThreadLoop(runInDifferentGoroutine func(*MainThreadLoop)) {
 	if !isMainGoroutine() {
 		panic("opengl.StartMainThreadLoop must be executed from main goroutine")
