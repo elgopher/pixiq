@@ -6,12 +6,8 @@ import (
 )
 
 func main() {
-	opengl.StartMainThreadLoop(func(loop *opengl.MainThreadLoop) {
-		openGL := opengl.New(loop)
-		windows := openGL.Windows()
-		window := windows.Open(320, 180)
-		images := pixiq.NewImages(openGL.AcceleratedImages())
-		screens := pixiq.NewScreens(images)
+	opengl.Run(func(gl *opengl.OpenGL, images *pixiq.Images, screens *pixiq.Screens) {
+		window := gl.Windows().Open(320, 180)
 		screens.Loop(window, func(frame *pixiq.Frame) {
 			if window.ShouldClose() {
 				frame.StopLoopEventually()

@@ -28,6 +28,16 @@ func New(loop *MainThreadLoop) *OpenGL {
 	}
 }
 
+// Run is a shorthand method for creating pixiq objects with OpenGL acceleration and windows.
+func Run(main func(gl *OpenGL, images *pixiq.Images, screens *pixiq.Screens)) {
+	StartMainThreadLoop(func(loop *MainThreadLoop) {
+		openGL := New(loop)
+		images := pixiq.NewImages(openGL.AcceleratedImages())
+		screens := pixiq.NewScreens(images)
+		main(openGL, images, screens)
+	})
+}
+
 func createWindow(share *glfw.Window) *glfw.Window {
 	glfw.WindowHint(glfw.ContextVersionMajor, 3)
 	glfw.WindowHint(glfw.ContextVersionMinor, 3)

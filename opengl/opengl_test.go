@@ -219,3 +219,33 @@ func framebufferPixels(x, y, width, height int32) []pixiq.Color {
 	})
 	return frameBuffer
 }
+
+func TestRun(t *testing.T) {
+	t.Run("should run provided callback", func(t *testing.T) {
+		var callbackExecuted bool
+		mainThreadLoop.Execute(func() {
+			opengl.Run(func(gl *opengl.OpenGL, images *pixiq.Images, screens *pixiq.Screens) {
+				callbackExecuted = true
+			})
+		})
+		assert.True(t, callbackExecuted)
+	})
+	t.Run("should create pixiq objects using OpenGL acceleration and windows", func(t *testing.T) {
+		var (
+			actualGL      *opengl.OpenGL
+			actualImages  *pixiq.Images
+			actualScreens *pixiq.Screens
+		)
+		mainThreadLoop.Execute(func() {
+			opengl.Run(func(gl *opengl.OpenGL, images *pixiq.Images, screens *pixiq.Screens) {
+				actualGL = gl
+				actualImages = images
+				actualScreens = screens
+			})
+		})
+		assert.NotNil(t, actualGL)
+		assert.NotNil(t, actualImages)
+		assert.NotNil(t, actualScreens)
+	})
+
+}

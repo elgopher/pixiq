@@ -5,14 +5,13 @@ import (
 	"github.com/jacekolszak/pixiq/opengl"
 )
 
+var red = pixiq.RGBA(255, 0, 0, 255)
+
 func main() {
-	opengl.StartMainThreadLoop(func(loop *opengl.MainThreadLoop) {
-		gl := opengl.New(loop)
-		images := pixiq.NewImages(gl.AcceleratedImages())
+	opengl.Run(func(gl *opengl.OpenGL, images *pixiq.Images, screens *pixiq.Screens) {
 		window := gl.Windows().Open(320, 16)
-		pixiq.NewScreens(images).Loop(window, func(frame *pixiq.Frame) {
+		screens.Loop(window, func(frame *pixiq.Frame) {
 			screen := frame.Screen()
-			red := pixiq.RGBA(255, 0, 0, 255)
 			screen.SetColor(4, 4, red)
 			screen.SetColor(5, 4, red)
 			screen.SetColor(6, 4, red)
