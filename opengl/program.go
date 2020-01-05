@@ -54,10 +54,12 @@ func linkProgram(shaders ...*shader) (*program, error) {
 		}
 		return nil, fmt.Errorf("error linking program: %s", string(infoLog))
 	}
+	vertePositionLocation := gl.GetAttribLocation(programID, gl.Str("vertexPosition\x00"))
+	texturePositionLocation := gl.GetAttribLocation(programID, gl.Str("texturePosition\x00"))
 	return &program{
 		id:                      programID,
-		vertexPositionLocation:  gl.GetAttribLocation(programID, gl.Str("vertexPosition\x00")),
-		texturePositionLocation: gl.GetAttribLocation(programID, gl.Str("texturePosition\x00")),
+		vertexPositionLocation:  vertePositionLocation,
+		texturePositionLocation: texturePositionLocation,
 	}, nil
 }
 

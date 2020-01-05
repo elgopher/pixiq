@@ -165,7 +165,8 @@ func TestGlfwWindow_Draw(t *testing.T) {
 			// when
 			window.Draw(image)
 			// then
-			assert.Equal(t, []pixiq.Color{color1}, framebufferPixels(0, 0, 1, 1))
+			expected := []pixiq.Color{color1}
+			assert.Equal(t, expected, framebufferPixels(0, 0, 1, 1))
 		})
 		t.Run("1x2", func(t *testing.T) {
 			openGL := opengl.New(mainThreadLoop)
@@ -178,7 +179,8 @@ func TestGlfwWindow_Draw(t *testing.T) {
 			// when
 			window.Draw(image)
 			// then
-			assert.Equal(t, []pixiq.Color{color2, color1}, framebufferPixels(0, 0, 1, 2))
+			expected := []pixiq.Color{color2, color1}
+			assert.Equal(t, expected, framebufferPixels(0, 0, 1, 2))
 		})
 		t.Run("2x1", func(t *testing.T) {
 			openGL := opengl.New(mainThreadLoop)
@@ -191,7 +193,8 @@ func TestGlfwWindow_Draw(t *testing.T) {
 			// when
 			window.Draw(image)
 			// then
-			assert.Equal(t, []pixiq.Color{color1, color2}, framebufferPixels(0, 0, 2, 1))
+			expected := []pixiq.Color{color1, color2}
+			assert.Equal(t, expected, framebufferPixels(0, 0, 2, 1))
 		})
 		t.Run("2x2", func(t *testing.T) {
 			openGL := opengl.New(mainThreadLoop)
@@ -206,7 +209,8 @@ func TestGlfwWindow_Draw(t *testing.T) {
 			// when
 			window.Draw(image)
 			// then
-			assert.Equal(t, []pixiq.Color{color3, color4, color1, color2}, framebufferPixels(0, 0, 2, 2))
+			expected := []pixiq.Color{color3, color4, color1, color2}
+			assert.Equal(t, expected, framebufferPixels(0, 0, 2, 2))
 		})
 	})
 }

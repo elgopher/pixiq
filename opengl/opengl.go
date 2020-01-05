@@ -1,6 +1,7 @@
-// Package opengl makes it possible to use Pixiq on PCs with Linux, Windows or Mac operating system.
+// Package opengl makes it possible to use Pixiq on PCs with Linux, Windows or MacOS.
 // It provides implementation of both pixiq.AcceleratedImages and pixiq.Screen.
-// Under the hood it is using OpenGL API and GLFW for manipulating windows and handling user input.
+// Under the hood it is using OpenGL API and GLFW for manipulating windows
+// and handling user input.
 package opengl
 
 import (
@@ -10,7 +11,9 @@ import (
 	"github.com/jacekolszak/pixiq"
 )
 
-// New creates OpenGL instance. MainThreadLoop is needed because some GLFW functions has to be called from main thread.
+// New creates OpenGL instance.
+// MainThreadLoop is needed because some GLFW functions has to be called
+// from the main thread.
 func New(loop *MainThreadLoop) *OpenGL {
 	var mainWindow *glfw.Window
 	loop.Execute(func() {
@@ -29,8 +32,9 @@ func New(loop *MainThreadLoop) *OpenGL {
 	}
 }
 
-// Run is a shorthand method for creating Pixiq objects with OpenGL acceleration and windows. It runs the given callback
-// function and blocks. It was created mainly for educational purposes to save a few keystrokes.
+// Run is a shorthand method for creating Pixiq objects with OpenGL acceleration
+// and Windows. It runs the given callback function and blocks. It was created
+// mainly for educational purposes to save a few keystrokes.
 func Run(main func(gl *OpenGL, images *pixiq.Images, loops *pixiq.ScreenLoops)) {
 	StartMainThreadLoop(func(loop *MainThreadLoop) {
 		openGL := New(loop)
@@ -48,19 +52,19 @@ func createWindow(share *glfw.Window) *glfw.Window {
 	glfw.WindowHint(glfw.Resizable, glfw.False)
 	glfw.WindowHint(glfw.Visible, glfw.False)
 	glfw.WindowHint(glfw.CocoaRetinaFramebuffer, glfw.False)
-	window, err := glfw.CreateWindow(1, 1, "OpenGL Pixiq Window", nil, share)
+	win, err := glfw.CreateWindow(1, 1, "OpenGL Pixiq Window", nil, share)
 	if err != nil {
 		panic(err)
 	}
-	window.MakeContextCurrent()
+	win.MakeContextCurrent()
 	if err := gl.Init(); err != nil {
 		panic(err)
 	}
-	return window
+	return win
 }
 
-// OpenGL provides opengl implementations of pixiq.AcceleratedImages and pixiq.Screen. It provides Windows object
-// for opening system windows.
+// OpenGL provides opengl implementations of pixiq.AcceleratedImages
+// and pixiq.Screen. It provides Windows object for opening system windows.
 type OpenGL struct {
 	textures *textures
 	windows  *Windows
@@ -71,7 +75,8 @@ func (g OpenGL) AcceleratedImages() pixiq.AcceleratedImages {
 	return g.textures
 }
 
-// Windows returns object for opening system windows. Each open Window is a pixiq.Screen implementation.
+// Windows returns object for opening system windows. Each open Window
+// is a pixiq.Screen implementation.
 func (g OpenGL) Windows() *Windows {
 	return g.windows
 }
@@ -103,17 +108,25 @@ func (g Windows) Open(width, height int, hints ...WindowHint) *Window {
 		if err != nil {
 			panic(err)
 		}
-		screenPolygon = newScreenPolygon(program.vertexPositionLocation, program.texturePositionLocation)
+		screenPolygon = newScreenPolygon(
+			program.vertexPositionLocation,
+			program.texturePositionLocation)
 		for _, hint := range hints {
 			hint.apply(window)
 		}
 		window.SetSize(width, height)
 		window.Show()
 	})
-	return &Window{window: window, program: program, mainThreadLoop: g.mainThreadLoop, screenPolygon: screenPolygon}
+	return &Window{
+		window:         window,
+		program:        program,
+		mainThreadLoop: g.mainThreadLoop,
+		screenPolygon:  screenPolygon,
+	}
 }
 
-// WindowHint is a hint which may (or may not) be applied to Window (depending on operating system and other factors).
+// WindowHint is a hint which may (or may not) be applied to Window
+// (depending on operating system and other factors).
 type WindowHint interface {
 	apply(window *glfw.Window)
 }
@@ -164,8 +177,8 @@ func (g *Window) Close() {
 	})
 }
 
-// ShouldClose reports the value of the close flag of the window. The flag is set to true when user clicks Close button
-// or hits ALT+F4/CMD+Q
+// ShouldClose reports the value of the close flag of the window.
+// The flag is set to true when user clicks Close button or hits ALT+F4/CMD+Q.
 func (g *Window) ShouldClose() bool {
 	var shouldClose bool
 	g.mainThreadLoop.Execute(func() {
@@ -174,7 +187,8 @@ func (g *Window) ShouldClose() bool {
 	return shouldClose
 }
 
-// Width returns the width of the window in pixels. If zooming is used the width is not multiplied by zoom.
+// Width returns the width of the window in pixels.
+// If zooming is used the width is not multiplied by zoom.
 func (g *Window) Width() int {
 	var width int
 	g.mainThreadLoop.Execute(func() {
@@ -183,7 +197,8 @@ func (g *Window) Width() int {
 	return width
 }
 
-// Height returns the height of the window in pixels. If zooming is used the height is not multiplied by zoom.
+// Height returns the height of the window in pixels.
+// If zooming is used the height is not multiplied by zoom.
 func (g *Window) Height() int {
 	var height int
 	g.mainThreadLoop.Execute(func() {
@@ -215,7 +230,12 @@ func (g *textures) New(width, height int) pixiq.AcceleratedImage {
 		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
 		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
 	})
-	return &texture{id: id, width: width, height: height, mainThreadLoop: g.mainThreadLoop}
+	return &texture{
+		id:             id,
+		width:          width,
+		height:         height,
+		mainThreadLoop: g.mainThreadLoop,
+	}
 }
 
 // GLTexture is an OpenGL texture which can be sampled to create rectangles on screen
