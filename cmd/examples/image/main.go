@@ -35,12 +35,25 @@ func main() {
 		wholeSelection.SetColor(0, 1, white)
 		// Get the pixel color.
 		color := wholeSelection.Color(0, 1)
-		fmt.Printf("The pixel color at (0,1) is %v\n", color)
+		// The pixel color at (0,1) is {255 255 255 255}.
+		fmt.Printf("The pixel color at (0,1) is %v.\n", color)
+
 		// Create Selection starting at x=1, y=1
 		selection := image.Selection(1, 1).WithSize(1, 1)
-		// Use Selection local coordinates (0,0) to access Image at (1,1)
+		// Use Selection local coordinates (0,0) to access Image at (1,1).
 		selection.SetColor(0, 0, white)
 		color = wholeSelection.Color(1, 1)
-		fmt.Printf("The pixel color at (1,1) is %v\n", color)
+		// The pixel color at (1,1) is {255 255 255 255}.
+		fmt.Printf("The pixel color at (1,1) is %v.\n", color)
+
+		// Access Image outside the Selection.
+		color = selection.Color(-1, 0)
+		// The pixel color at (0,1) is {255 255 255 255}.
+		fmt.Printf("The pixel color at (0,1) is %v.\n", color)
+
+		// Access pixels outside the Image always return transparent color.
+		color = wholeSelection.Color(-1, 0)
+		// The pixel color at (-1,0) is {0 0 0 0}.
+		fmt.Printf("The pixel color at (-1,0) is %v.\n", color)
 	})
 }
