@@ -30,11 +30,17 @@ func main() {
 		// Image can be modified via Selection. Here we create a selection
 		// spanning the whole Image. The Selection starts at (0,0) and have
 		// a size of the Image - width=2 and height=2
-		selection := image.WholeImageSelection()
+		wholeSelection := image.WholeImageSelection()
 		// Set the pixel color to white at x=0, y=0. X is always before Y.
-		selection.SetColor(0, 1, white)
+		wholeSelection.SetColor(0, 1, white)
 		// Get the pixel color.
-		color := selection.Color(0, 1)
-		fmt.Printf("The pixel color at (0,1) is %v", color)
+		color := wholeSelection.Color(0, 1)
+		fmt.Printf("The pixel color at (0,1) is %v\n", color)
+		// Create Selection starting at x=1, y=1
+		selection := image.Selection(1, 1).WithSize(1, 1)
+		// Use Selection local coordinates (0,0) to access Image at (1,1)
+		selection.SetColor(0, 0, white)
+		color = wholeSelection.Color(1, 1)
+		fmt.Printf("The pixel color at (1,1) is %v\n", color)
 	})
 }
