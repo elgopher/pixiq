@@ -15,9 +15,9 @@ func main() {
 	// OpenGL object is needed for implementation of AcceleratedImages.
 	// Unfortunately some functions used by opengl package must be executed
 	// from the main thread. This program is executed in the main thread,
-	// so we can  pass it to the opengl by executing StartMainThreadLoop.
-	// The function will block and will execute our callback
-	// in a different thread.
+	// so we can pass it to the opengl by executing StartMainThreadLoop.
+	// The function will block and will execute our callback in a different
+	// thread.
 	opengl.StartMainThreadLoop(func(loop *opengl.MainThreadLoop) {
 		// Create OpenGL object.
 		gl := opengl.New(loop)
@@ -28,12 +28,12 @@ func main() {
 		// All given in pixels.
 		image := images.New(2, 2)
 		// Image can be modified via Selection. Here we create a selection
-		// spanning the whole Image. The Selection starts at (0,0) and
-		// have a size of the Image - width=2 and height=2
+		// spanning the whole Image. The Selection starts at (0,0) and have
+		// a size of the Image - width=2 and height=2
 		selection := image.WholeImageSelection()
 		// Set the pixel color to white at x=0, y=0. X is always before Y.
 		selection.SetColor(0, 1, white)
-		// Get the pixel color
+		// Get the pixel color.
 		color := selection.Color(0, 1)
 		fmt.Printf("The pixel color at (0,1) is %v", color)
 	})

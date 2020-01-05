@@ -4,8 +4,8 @@ package pixiq
 var Transparent = RGBA(0, 0, 0, 0)
 
 // Color represents pixel color using 4 components: Red, Green, Black and Alpha.
-// Red, Green and Blue components are not premultiplied by alpha (aka straight alpha), that is RGB and alpha are
-// independent. You can change one without affecting the other.
+// Red, Green and Blue components are not premultiplied by alpha (aka straight alpha),
+// that is RGB and alpha are independent. You can change one without affecting the other.
 //
 // Color is immutable struct. Changing the color means creating a new instance.
 type Color struct {
@@ -42,7 +42,8 @@ func RGBA(r, g, b, a byte) Color {
 	}
 }
 
-// RGBAi creates Color using components given as integer values. All values are clamped to [0-255] range.
+// RGBAi creates Color using components given as integer values.
+// All values are clamped to [0-255] range.
 func RGBAi(r, g, b, a int) Color {
 	if r < 0 {
 		r = 0
