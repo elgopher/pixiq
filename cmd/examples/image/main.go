@@ -21,16 +21,20 @@ func main() {
 	opengl.StartMainThreadLoop(func(loop *opengl.MainThreadLoop) {
 		// Create OpenGL object.
 		gl := opengl.New(loop)
+
 		// Create pixiq.Images which is basically a factory of images.
 		// Inject OpenGL's implementation of pixiq.AcceleratedImages.
 		images := pixiq.NewImages(gl.AcceleratedImages())
+
 		// Create 2x2 image. Width parameter (as always) is before Height.
 		// All given in pixels.
 		image := images.New(2, 2)
+
 		// Image can be modified via Selection. Here we create a selection
 		// spanning the whole Image. The Selection starts at (0,0) and have
 		// a size of the Image - width=2 and height=2
 		wholeSelection := image.WholeImageSelection()
+
 		// Set the pixel color to white at x=0, y=0. X is always before Y.
 		wholeSelection.SetColor(0, 1, white)
 		// Get the pixel color.
