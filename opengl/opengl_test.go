@@ -244,6 +244,8 @@ func TestRun(t *testing.T) {
 			})
 		})
 		assert.NotNil(t, actualGL)
+		assert.NotNil(t, actualGL.Windows())
+		assert.NotNil(t, actualGL.AcceleratedImages())
 		assert.NotNil(t, actualImages)
 		assert.NotNil(t, actualScreens)
 	})
