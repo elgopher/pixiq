@@ -41,9 +41,11 @@ var white = pixiq.RGBA(255, 255, 255, 255)
 
 func main() {
 	opengl.Run(func(gl *opengl.OpenGL, images *pixiq.Images, loops *pixiq.ScreenLoops) {
-		window := gl.Windows().Open(320, 16)
+		windows := gl.Windows()
+		window := windows.Open(320, 16)
 		loops.Loop(window, func(frame *pixiq.Frame) {
-			frame.Screen().SetColor(160, 8, white)
+			screen := frame.Screen()
+			screen.SetColor(160, 8, white)
 		})
 	})
 }
