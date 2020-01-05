@@ -224,7 +224,7 @@ func TestRun(t *testing.T) {
 	t.Run("should run provided callback", func(t *testing.T) {
 		var callbackExecuted bool
 		mainThreadLoop.Execute(func() {
-			opengl.Run(func(gl *opengl.OpenGL, images *pixiq.Images, screens *pixiq.Screens) {
+			opengl.Run(func(gl *opengl.OpenGL, images *pixiq.Images, loops *pixiq.ScreenLoops) {
 				callbackExecuted = true
 			})
 		})
@@ -232,22 +232,22 @@ func TestRun(t *testing.T) {
 	})
 	t.Run("should create pixiq objects using OpenGL acceleration and windows", func(t *testing.T) {
 		var (
-			actualGL      *opengl.OpenGL
-			actualImages  *pixiq.Images
-			actualScreens *pixiq.Screens
+			actualGL     *opengl.OpenGL
+			actualImages *pixiq.Images
+			actualLoops  *pixiq.ScreenLoops
 		)
 		mainThreadLoop.Execute(func() {
-			opengl.Run(func(gl *opengl.OpenGL, images *pixiq.Images, screens *pixiq.Screens) {
+			opengl.Run(func(gl *opengl.OpenGL, images *pixiq.Images, loops *pixiq.ScreenLoops) {
 				actualGL = gl
 				actualImages = images
-				actualScreens = screens
+				actualLoops = loops
 			})
 		})
 		assert.NotNil(t, actualGL)
 		assert.NotNil(t, actualGL.Windows())
 		assert.NotNil(t, actualGL.AcceleratedImages())
 		assert.NotNil(t, actualImages)
-		assert.NotNil(t, actualScreens)
+		assert.NotNil(t, actualLoops)
 	})
 
 }

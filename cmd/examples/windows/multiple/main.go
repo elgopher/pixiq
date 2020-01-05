@@ -11,12 +11,12 @@ var (
 )
 
 func main() {
-	opengl.Run(func(gl *opengl.OpenGL, images *pixiq.Images, screens *pixiq.Screens) {
+	opengl.Run(func(gl *opengl.OpenGL, images *pixiq.Images, loops *pixiq.ScreenLoops) {
 		windows := gl.Windows()
 		redWindow := windows.Open(320, 180)
 		blueWindow := windows.Open(250, 90)
-		go screens.Loop(redWindow, fillWith(red))
-		screens.Loop(blueWindow, fillWith(blue))
+		go loops.Loop(redWindow, fillWith(red))
+		loops.Loop(blueWindow, fillWith(blue))
 	})
 }
 
