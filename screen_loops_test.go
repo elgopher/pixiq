@@ -9,21 +9,21 @@ import (
 	"github.com/jacekolszak/pixiq"
 )
 
-func TestNewScreens(t *testing.T) {
-	t.Run("should return Screens object", func(t *testing.T) {
-		screens := pixiq.NewScreens(pixiq.NewImages(&fakeAcceleratedImages{}))
-		assert.NotNil(t, screens)
+func TestNewScreenLoops(t *testing.T) {
+	t.Run("should return ScreenLoops object", func(t *testing.T) {
+		loops := pixiq.NewScreenLoops(pixiq.NewImages(&fakeAcceleratedImages{}))
+		assert.NotNil(t, loops)
 	})
 }
 
-func TestScreens_Loop(t *testing.T) {
+func TestScreenLoops_Loop(t *testing.T) {
 
 	t.Run("should run callback function until loop is stopped", func(t *testing.T) {
 		images := pixiq.NewImages(&fakeAcceleratedImages{})
-		screens := pixiq.NewScreens(images)
+		loops := pixiq.NewScreenLoops(images)
 		frameNumber := 0
 		// when
-		screens.Loop(&screenMock{}, func(frame *pixiq.Frame) {
+		loops.Loop(&screenMock{}, func(frame *pixiq.Frame) {
 			if frameNumber == 2 {
 				frame.StopLoopEventually()
 			} else {
@@ -36,7 +36,7 @@ func TestScreens_Loop(t *testing.T) {
 
 	t.Run("frame should provide screen", func(t *testing.T) {
 		images := pixiq.NewImages(&fakeAcceleratedImages{})
-		screens := pixiq.NewScreens(images)
+		loops := pixiq.NewScreenLoops(images)
 		tests := map[string]struct {
 			width, height int
 		}{
@@ -53,7 +53,7 @@ func TestScreens_Loop(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				var screen pixiq.Selection
 				// when
-				screens.Loop(&screenMock{width: test.width, height: test.height}, func(frame *pixiq.Frame) {
+				loops.Loop(&screenMock{width: test.width, height: test.height}, func(frame *pixiq.Frame) {
 					screen = frame.Screen()
 					frame.StopLoopEventually()
 				})
@@ -72,11 +72,11 @@ func TestScreens_Loop(t *testing.T) {
 	t.Run("should draw image for each frame", func(t *testing.T) {
 		images := pixiq.NewImages(&fakeAcceleratedImages{})
 		screen := &screenMock{}
-		screens := pixiq.NewScreens(images)
+		loops := pixiq.NewScreenLoops(images)
 		firstFrame := true
 		var recordedImages []*pixiq.Image
 		// when
-		screens.Loop(screen, func(frame *pixiq.Frame) {
+		loops.Loop(screen, func(frame *pixiq.Frame) {
 			if !firstFrame {
 				frame.StopLoopEventually()
 			}
@@ -89,10 +89,10 @@ func TestScreens_Loop(t *testing.T) {
 
 	t.Run("initial screen is transparent", func(t *testing.T) {
 		images := pixiq.NewImages(&fakeAcceleratedImages{})
-		screens := pixiq.NewScreens(images)
+		loops := pixiq.NewScreenLoops(images)
 		var screen pixiq.Selection
 		// when
-		screens.Loop(&screenMock{width: 1, height: 1}, func(frame *pixiq.Frame) {
+		loops.Loop(&screenMock{width: 1, height: 1}, func(frame *pixiq.Frame) {
 			screen = frame.Screen()
 			frame.StopLoopEventually()
 		})
@@ -105,9 +105,9 @@ func TestScreens_Loop(t *testing.T) {
 			color := pixiq.RGBA(10, 20, 30, 40)
 			images := pixiq.NewImages(&fakeAcceleratedImages{})
 			screen := &screenMock{width: 1, height: 1}
-			screens := pixiq.NewScreens(images)
+			loops := pixiq.NewScreenLoops(images)
 			// when
-			screens.Loop(screen, func(frame *pixiq.Frame) {
+			loops.Loop(screen, func(frame *pixiq.Frame) {
 				frame.Screen().SetColor(0, 0, color)
 				frame.StopLoopEventually()
 			})
@@ -120,10 +120,10 @@ func TestScreens_Loop(t *testing.T) {
 			color2 := pixiq.RGBA(10, 20, 30, 40)
 			images := pixiq.NewImages(&fakeAcceleratedImages{})
 			screen := &screenMock{width: 1, height: 1}
-			screens := pixiq.NewScreens(images)
+			loops := pixiq.NewScreenLoops(images)
 			firstFrame := true
 			// when
-			screens.Loop(screen, func(frame *pixiq.Frame) {
+			loops.Loop(screen, func(frame *pixiq.Frame) {
 				if firstFrame {
 					frame.Screen().SetColor(0, 0, color1)
 					firstFrame = false
@@ -143,9 +143,9 @@ func TestScreens_Loop(t *testing.T) {
 		t.Run("after first frame", func(t *testing.T) {
 			images := pixiq.NewImages(&fakeAcceleratedImages{})
 			screen := &screenMock{}
-			screens := pixiq.NewScreens(images)
+			loops := pixiq.NewScreenLoops(images)
 			// when
-			screens.Loop(screen, func(frame *pixiq.Frame) {
+			loops.Loop(screen, func(frame *pixiq.Frame) {
 				frame.StopLoopEventually()
 			})
 			// then
@@ -155,10 +155,10 @@ func TestScreens_Loop(t *testing.T) {
 		t.Run("after second frame", func(t *testing.T) {
 			images := pixiq.NewImages(&fakeAcceleratedImages{})
 			screen := &screenMock{}
-			screens := pixiq.NewScreens(images)
+			loops := pixiq.NewScreenLoops(images)
 			firstFrame := true
 			// when
-			screens.Loop(screen, func(frame *pixiq.Frame) {
+			loops.Loop(screen, func(frame *pixiq.Frame) {
 				if !firstFrame {
 					frame.StopLoopEventually()
 				}

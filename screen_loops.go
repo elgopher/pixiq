@@ -1,12 +1,12 @@
 package pixiq
 
-// NewScreens returns a new instance of Screens
-func NewScreens(images *Images) *Screens {
-	return &Screens{images: images}
+// NewScreenLoops returns a new instance of ScreenLoops
+func NewScreenLoops(images *Images) *ScreenLoops {
+	return &ScreenLoops{images: images}
 }
 
-// Screens is an abstraction for interaction with screens in a platform-agnostic way
-type Screens struct {
+// ScreenLoops is an abstraction for interaction with screens in a platform-agnostic way
+type ScreenLoops struct {
 	images *Images
 }
 
@@ -24,7 +24,7 @@ type Screen interface {
 
 // Loop starts the main loop. It will execute onEachFrame function for each frame, as soon as loop is stopped. This
 // function blocks the current goroutine.
-func (w *Screens) Loop(screen Screen, onEachFrame func(frame *Frame)) {
+func (w *ScreenLoops) Loop(screen Screen, onEachFrame func(frame *Frame)) {
 	frame := &Frame{}
 	image := w.images.New(screen.Width(), screen.Height())
 	frame.screen = image.WholeImageSelection()
