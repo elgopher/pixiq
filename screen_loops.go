@@ -22,7 +22,7 @@ type Screen interface {
 	Height() int
 }
 
-// Loop starts the main loop. It will execute onEachFrame function for each frame, as soon as loop is stopped. This
+// Loop starts the screen loop. It will execute onEachFrame function for each frame, as soon as loop is stopped. This
 // function blocks the current goroutine.
 func (w *ScreenLoops) Loop(screen Screen, onEachFrame func(frame *Frame)) {
 	frame := &Frame{}
