@@ -43,6 +43,17 @@ func RGBA(r, g, b, a byte) Color {
 	}
 }
 
+// RGB creates Color using three components: red, green and blue.
+// The color will be fully opaque (alpha=255)
+func RGB(r, g, b byte) Color {
+	return Color{
+		r: r,
+		g: g,
+		b: b,
+		a: 255,
+	}
+}
+
 // RGBAi creates Color using components given as integer values.
 // All values are clamped to [0-255] range.
 func RGBAi(r, g, b, a int) Color {

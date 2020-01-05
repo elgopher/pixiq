@@ -4,10 +4,9 @@ import (
 	"fmt"
 
 	"github.com/jacekolszak/pixiq"
+	"github.com/jacekolszak/pixiq/colornames"
 	"github.com/jacekolszak/pixiq/opengl"
 )
-
-var white = pixiq.RGBA(255, 255, 255, 255)
 
 // This program shows how to create an Image and manipulate its pixels.
 // It does not open any windows.
@@ -36,7 +35,7 @@ func main() {
 		wholeSelection := image.WholeImageSelection()
 
 		// Set the pixel color to white at x=0, y=0. X is always before Y.
-		wholeSelection.SetColor(0, 1, white)
+		wholeSelection.SetColor(0, 1, colornames.White)
 		// Get the pixel color.
 		color := wholeSelection.Color(0, 1)
 		// The pixel color at (0,1) is {255 255 255 255}.
@@ -45,7 +44,7 @@ func main() {
 		// Create Selection starting at x=1, y=1
 		selection := image.Selection(1, 1).WithSize(1, 1)
 		// Use Selection local coordinates (0,0) to access Image at (1,1).
-		selection.SetColor(0, 0, white)
+		selection.SetColor(0, 0, colornames.White)
 		color = wholeSelection.Color(1, 1)
 		// The pixel color at (1,1) is {255 255 255 255}.
 		fmt.Printf("The pixel color at (1,1) is %v.\n", color)

@@ -9,7 +9,6 @@ import (
 )
 
 func TestRGBA(t *testing.T) {
-
 	t.Run("should create colors using 4 components", func(t *testing.T) {
 		color := pixiq.RGBA(10, 20, 30, 40)
 		assert.Equal(t, byte(10), color.R())
@@ -17,9 +16,17 @@ func TestRGBA(t *testing.T) {
 		assert.Equal(t, byte(30), color.B())
 		assert.Equal(t, byte(40), color.A())
 	})
-
 }
 
+func TestRGB(t *testing.T) {
+	t.Run("should create colors using 3 components", func(t *testing.T) {
+		color := pixiq.RGB(10, 20, 30)
+		assert.Equal(t, byte(10), color.R())
+		assert.Equal(t, byte(20), color.G())
+		assert.Equal(t, byte(30), color.B())
+		assert.Equal(t, byte(255), color.A())
+	})
+}
 func TestRGBAi(t *testing.T) {
 
 	t.Run("RGBAi should clamp components to [0-255] range", func(t *testing.T) {

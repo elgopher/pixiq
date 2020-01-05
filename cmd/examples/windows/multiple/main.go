@@ -2,12 +2,8 @@ package main
 
 import (
 	"github.com/jacekolszak/pixiq"
+	"github.com/jacekolszak/pixiq/colornames"
 	"github.com/jacekolszak/pixiq/opengl"
-)
-
-var (
-	red  = pixiq.RGBA(255, 0, 0, 255)
-	blue = pixiq.RGBA(0, 0, 255, 255)
 )
 
 // This example shows how to open two windows at the same time.
@@ -18,9 +14,9 @@ func main() {
 		blueWindow := windows.Open(250, 90, opengl.Title("blue"))
 		// Start the loop in the background, because Loop method blocks
 		// the current goroutine.
-		go loops.Loop(redWindow, fillWith(red))
+		go loops.Loop(redWindow, fillWith(colornames.Red))
 		// Start another one.
-		loops.Loop(blueWindow, fillWith(blue))
+		loops.Loop(blueWindow, fillWith(colornames.Blue))
 	})
 }
 
