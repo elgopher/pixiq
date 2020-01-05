@@ -1,6 +1,7 @@
 # Pixiq
 
 [![CircleCI](https://circleci.com/gh/jacekolszak/pixiq.svg?style=svg)](https://circleci.com/gh/jacekolszak/pixiq)
+[![GoDoc](https://godoc.org/github.com/jacekolszak/pixiq?status.svg)](http://godoc.org/github.com/jacekolszak/pixiq)
 [![Go Report Card](https://goreportcard.com/badge/github.com/jacekolszak/pixiq)](https://goreportcard.com/report/github.com/jacekolszak/pixiq)
 
 Create Pixel Art games in Golang with fun and ease.
