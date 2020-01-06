@@ -115,7 +115,7 @@ type Keyboard struct {
 // Update updates the state of the keyboard by polling events queued since last
 // time the function was executed.
 func (k *Keyboard) Update() {
-	k.source.Poll(k.events)
+	k.source.Poll(k.events) // TODO Handle cases when k.events is too small
 	for _, event := range k.events {
 		if event.typ == pressed {
 			if event.key.IsUnknown() {
