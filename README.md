@@ -50,6 +50,8 @@ func main() {
 }
 ```
 
+More examples you can find in [examples](examples) directory.
+
 ## Project status
 
 At the moment I have a vision how the API should look like and how it should be programmed.
