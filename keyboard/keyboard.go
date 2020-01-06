@@ -10,7 +10,7 @@ type EventsSource interface {
 }
 
 // NewKey returns new instance of immutable Key. This construct may be used for
-// creating keys after deserialization.
+// creating keys after deserialization. Otherwise package variables should be used.
 func NewKey(token Token) Key {
 	if token < 65 || token > 66 {
 		panic(fmt.Sprintf("invalid token %v", token))
@@ -20,6 +20,7 @@ func NewKey(token Token) Key {
 	}
 }
 
+// NewUnknownKey creates key with platform-specific scanCode.
 func NewUnknownKey(scanCode int) Key {
 	return Key{
 		scanCode: scanCode,
