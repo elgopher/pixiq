@@ -34,10 +34,9 @@ package main
 
 import (
 	"github.com/jacekolszak/pixiq"
+	"github.com/jacekolszak/pixiq/colornames"
 	"github.com/jacekolszak/pixiq/opengl"
 )
-
-var white = pixiq.RGBA(255, 255, 255, 255)
 
 func main() {
 	opengl.Run(func(gl *opengl.OpenGL, images *pixiq.Images, loops *pixiq.ScreenLoops) {
@@ -45,7 +44,7 @@ func main() {
 		window := windows.Open(320, 16)
 		loops.Loop(window, func(frame *pixiq.Frame) {
 			screen := frame.Screen()
-			screen.SetColor(160, 8, white)
+			screen.SetColor(160, 8, colornames.White)
 		})
 	})
 }
