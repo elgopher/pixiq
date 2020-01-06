@@ -19,18 +19,12 @@ func NewKey(token Token, scanCode int) Key {
 
 // NewReleasedEvent returns new instance of Event when key was released
 func NewReleasedEvent(key Key) Event {
-	return Event{
-		typ: released,
-		key: key,
-	}
+	return Event{}
 }
 
-// NewReleasedEvent returns new instance of Event when key was pressed
+// NewPressedEvent returns new instance of Event when key was pressed
 func NewPressedEvent(key Key) Event {
-	return Event{
-		typ: pressed,
-		key: key,
-	}
+	return Event{}
 }
 
 // Event describes what happened with the key. Whether it was pressed or released.
