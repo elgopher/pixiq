@@ -8,8 +8,10 @@ type EventsSource interface {
 
 // Event describes what happened with the key. Whether it was pressed or released.
 type Event struct {
+	// Type is the type of event
 	Type EventType
-	Key  Key
+	// Key is a key for which the event was created
+	Key Key
 }
 
 // EventType describes the type of event
