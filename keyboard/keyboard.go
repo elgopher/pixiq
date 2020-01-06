@@ -17,12 +17,12 @@ func NewKey(token Token, scanCode int) Key {
 	return Key{}
 }
 
-// NewReleasedEvent returns new instance of Event when key was released
+// NewReleasedEvent returns new instance of Event when key was released.
 func NewReleasedEvent(key Key) Event {
 	return Event{}
 }
 
-// NewPressedEvent returns new instance of Event when key was pressed
+// NewPressedEvent returns new instance of Event when key was pressed.
 func NewPressedEvent(key Key) Event {
 	return Event{}
 }
@@ -58,7 +58,7 @@ const (
 
 // New creates Keyboard instance.
 func New(source EventsSource) *Keyboard {
-	return &Keyboard{}
+	return nil
 }
 
 // Keyboard provides a read-only information about the current state of the
