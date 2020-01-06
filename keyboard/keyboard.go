@@ -56,7 +56,7 @@ const (
 	released eventType = 2
 )
 
-// Key identifies the pressed or release key.
+// Key identifies the pressed or released key.
 type Key struct {
 	token    Token
 	scanCode int
@@ -73,7 +73,7 @@ func (k Key) ScanCode() int {
 	return k.scanCode
 }
 
-// Token return platform-independent mapping
+// Token return platform-independent mapping.
 func (k Key) Token() Token {
 	return k.token
 }
