@@ -55,6 +55,16 @@ func TestNewKey(t *testing.T) {
 			})
 		}
 	})
+	t.Run("two keys with token should be equal", func(t *testing.T) {
+		key1 := keyboard.NewKey(65)
+		key2 := keyboard.NewKey(65)
+		assert.Equal(t, key1, key2)
+	})
+	t.Run("two keys with scanCode should be equal", func(t *testing.T) {
+		key1 := keyboard.NewUnknownKey(0)
+		key2 := keyboard.NewUnknownKey(0)
+		assert.Equal(t, key1, key2)
+	})
 }
 
 func TestNewUnknownKey(t *testing.T) {
