@@ -16,13 +16,16 @@ type Event struct {
 type EventType int
 
 const (
-	PRESSED  EventType = 1
-	RELEASED EventType = 2
+	// Pressed
+	Pressed EventType = 1
+	// Released
+	Released EventType = 2
 )
 
-// Key tells what token has a given key. It may be UNKNOWN, then ScanCode should
-// be used instead.
+// Key contains numbers identifying the key.
 type Key struct {
+	// Token is platform-independent number identifying the key. It may be
+	// Unknown, then ScanCode should be used instead.
 	Token Token
 	// Scancode is platform-specific but consistent over time, so keys will
 	// have different scancodes depending on the platform but they are safe
@@ -30,15 +33,18 @@ type Key struct {
 	ScanCode int
 }
 
-// Token is platform-independent number identifying a key
+// Token is platform-independent number identifying a key.
 type Token int
 
 const (
-	UNKNOWN Token = 0
-	A       Token = 65
+	// Unknown means that key cannot be mapped to well known Token.
+	Unknown Token = 0
+	// A is 65
+	A Token = 65
 )
 
-func New(poller EventsSource) *Keyboard {
+// New creates Keyboard instance.
+func New(source EventsSource) *Keyboard {
 	return &Keyboard{}
 }
 
@@ -53,7 +59,7 @@ func (k *Keyboard) Update() {
 
 }
 
-// Pressed returns true if given key is currently pressed
+// Pressed returns true if given key is currently pressed.
 func (k Keyboard) Pressed(keyToken Token) bool {
 	return false
 }
