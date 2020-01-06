@@ -1,8 +1,3 @@
-// Package colornames provides named colors as defined in the SVG 1.1 spec.
-// The package is inspired by golang.org/x/image/colornames
-//
-// See http://www.w3.org/TR/SVG/types.html#ColorKeywords
-// See https://github.com/golang/image/tree/master/colornames
 package colornames
 
 import (
