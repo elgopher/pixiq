@@ -33,6 +33,9 @@ type Event struct {
 	key Key
 }
 
+// eventType is used because using polymorphism means heap allocation and we don't
+// want to generate garbage (really? StarCraft e-sport players can perform up to 300 APM,
+// which means 600 event objects per minute - maybe it is not that much).
 type eventType byte
 
 const (
