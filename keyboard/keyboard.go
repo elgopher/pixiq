@@ -10,12 +10,17 @@ type EventsSource interface {
 }
 
 // NewKey returns new instance of immutable Key.
-func NewKey(token Token, scanCode int) Key {
-	if token > 0 && (token < A || token > B) {
+func NewKey(token Token) Key {
+	if token < TokenA || token > TokenB {
 		panic(fmt.Sprintf("invalid token %v", token))
 	}
 	return Key{
-		token:    token,
+		token: token,
+	}
+}
+
+func NewUnknownKey(scanCode int) Key {
+	return Key{
 		scanCode: scanCode,
 	}
 }
@@ -49,10 +54,16 @@ const (
 	released eventType = 2
 )
 
-// Key contains numbers identifying the key.
+// Key identifies the pressed or release key.
 type Key struct {
 	token    Token
 	scanCode int
+}
+
+// IsUnknown returns true if mapping has not been found. ScanCode should be used
+// instead.
+func (k Key) IsUnknown() bool {
+	return k.token == unknown
 }
 
 // ScanCode returns the platform-specific code.
@@ -70,12 +81,18 @@ func (k Key) Token() Token {
 type Token uint
 
 const (
-	// Unknown means that there is no known mapping for given key
-	Unknown Token = 0
+	unknown Token = 0
 	// A token
-	A Token = 65
+	TokenA Token = 65
 	// B token
-	B Token = 66
+	TokenB Token = 66
+)
+
+var (
+	// A key
+	A = NewKey(TokenA)
+	// B key
+	B = NewKey(TokenB)
 )
 
 // New creates Keyboard instance.
@@ -84,18 +101,20 @@ func New(source EventsSource) *Keyboard {
 		panic("nil EventsSource")
 	}
 	return &Keyboard{
-		source:      source,
-		events:      make([]Event, 32), // TODO magic number
-		keysPressed: make(map[Token]bool),
+		source:                source,
+		events:                make([]Event, 32), // TODO magic number
+		keysPressedByToken:    make(map[Token]bool),
+		keysPressedByScanCode: make(map[int]bool),
 	}
 }
 
 // Keyboard provides a read-only information about the current state of the
 // keyboard, such as what keys are currently pressed.
 type Keyboard struct {
-	source      EventsSource
-	events      []Event
-	keysPressed map[Token]bool
+	source                EventsSource
+	events                []Event
+	keysPressedByToken    map[Token]bool
+	keysPressedByScanCode map[int]bool
 }
 
 // Update updates the state of the keyboard by polling events queued since last
@@ -104,12 +123,19 @@ func (k *Keyboard) Update() {
 	k.source.Poll(k.events)
 	for _, event := range k.events {
 		if event.typ == pressed {
-			k.keysPressed[event.key.token] = true
+			if event.key.IsUnknown() {
+				k.keysPressedByScanCode[event.key.scanCode] = true
+			} else {
+				k.keysPressedByToken[event.key.token] = true
+			}
 		}
 	}
 }
 
 // Pressed returns true if given key is currently pressed.
-func (k *Keyboard) Pressed(keyToken Token) bool {
-	return k.keysPressed[keyToken]
+func (k *Keyboard) Pressed(key Key) bool {
+	if key.IsUnknown() {
+		return k.keysPressedByScanCode[key.scanCode]
+	}
+	return k.keysPressedByToken[key.token]
 }

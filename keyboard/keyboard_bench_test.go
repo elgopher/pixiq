@@ -7,8 +7,7 @@ import (
 )
 
 func BenchmarkKeyboard_Update(b *testing.B) {
-	key := keyboard.NewKey(keyboard.A, 1)
-	event := keyboard.NewPressedEvent(key)
+	event := keyboard.NewPressedEvent(keyboard.A)
 	source := &fixedEventsSource{events: []keyboard.Event{event}}
 	keys := keyboard.New(source)
 	for i := 0; i < b.N; i++ {
