@@ -9,9 +9,10 @@ type EventsSource interface {
 	Poll(output []Event) int
 }
 
-// NewKey returns new instance of immutable Key.
+// NewKey returns new instance of immutable Key. This construct may be used for
+// creating keys after deserialization.
 func NewKey(token Token) Key {
-	if token < TokenA || token > TokenB {
+	if token < 65 || token > 66 {
 		panic(fmt.Sprintf("invalid token %v", token))
 	}
 	return Key{
@@ -80,19 +81,13 @@ func (k Key) Token() Token {
 // Unknown, then ScanCode should be used instead.
 type Token uint
 
-const (
-	unknown Token = 0
-	// A token
-	TokenA Token = 65
-	// B token
-	TokenB Token = 66
-)
+const unknown Token = 0
 
 var (
 	// A key
-	A = NewKey(TokenA)
+	A = NewKey(65)
 	// B key
-	B = NewKey(TokenB)
+	B = NewKey(66)
 )
 
 // New creates Keyboard instance.
