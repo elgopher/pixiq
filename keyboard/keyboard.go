@@ -7,7 +7,7 @@ type EventsSource interface {
 }
 
 // UnknownKey returns instance of unknown Key.
-// Scancode is platform-specific but consistent over time.
+// ScanCode is platform-specific code.
 func UnknownKey(scanCode int) Key {
 	return Key{}
 }
@@ -51,8 +51,7 @@ type Key struct {
 type Token int
 
 const (
-	// Unknown means that key cannot be mapped to well known Token.
-	Unknown Token = 0
+	unknown Token = 0
 	// A is 65
 	A Token = 65
 )
