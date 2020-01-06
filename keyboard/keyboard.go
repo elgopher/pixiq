@@ -36,7 +36,7 @@ type Key struct {
 // IsUnknown returns true if mapping has not been found. ScanCode should be used
 // instead.
 func (k Key) IsUnknown() bool {
-	return k.token == unknown
+	return k.token == 0
 }
 
 // ScanCode returns the platform-specific code.
@@ -52,8 +52,6 @@ func (k Key) Token() Token {
 // Token is platform-independent mapping identifying the key. It may be
 // Unknown, then ScanCode should be used instead.
 type Token uint
-
-const unknown Token = 0
 
 var (
 	// A key
