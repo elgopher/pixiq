@@ -89,58 +89,47 @@ type Windows struct {
 }
 
 // Open creates and shows Window.
-func (g Windows) Open(width, height int, hints ...WindowHint) *Window {
+func (g Windows) Open(width, height int, options ...WindowOption) *Window {
 	if width < 1 {
 		width = 1
 	}
 	if height < 1 {
 		height = 1
 	}
-	var (
-		program       *program
-		screenPolygon *screenPolygon
-		window        *glfw.Window
-		err           error
-	)
+	var err error
+	win := &Window{mainThreadLoop: g.mainThreadLoop}
 	g.mainThreadLoop.Execute(func() {
-		window = createWindow(g.mainWindow)
-		program, err = compileProgram()
+		win.glfwWindow = createWindow(g.mainWindow)
+		win.program, err = compileProgram()
 		if err != nil {
 			panic(err)
 		}
-		screenPolygon = newScreenPolygon(
-			program.vertexPositionLocation,
-			program.texturePositionLocation)
-		for _, hint := range hints {
-			hint.apply(window)
+		win.screenPolygon = newScreenPolygon(
+			win.program.vertexPositionLocation,
+			win.program.texturePositionLocation)
+		win.glfwWindow.SetSize(width, height)
+		for _, option := range options {
+			option(win)
 		}
-		window.SetSize(width, height)
-		window.Show()
+		win.glfwWindow.Show()
 	})
-	return &Window{
-		window:         window,
-		program:        program,
-		mainThreadLoop: g.mainThreadLoop,
-		screenPolygon:  screenPolygon,
+	return win
+}
+
+// WindowOption is an option used when opening the window
+type WindowOption func(window *Window)
+
+// NoDecorationHint is Window hint hiding the border, close widget, etc.
+// Exact behaviour depends on the platform.
+func NoDecorationHint() WindowOption {
+	return func(win *Window) {
+		win.glfwWindow.SetAttrib(glfw.Decorated, glfw.False)
 	}
-}
-
-// WindowHint is a hint which may (or may not) be applied to Window
-// (depending on operating system and other factors).
-type WindowHint interface {
-	apply(window *glfw.Window)
-}
-
-// NoDecoration is Window hint hiding the border, close widget, etc.
-type NoDecoration struct{}
-
-func (NoDecoration) apply(window *glfw.Window) {
-	window.SetAttrib(glfw.Decorated, glfw.False)
 }
 
 // Window is an implementation of pixiq.Screen
 type Window struct {
-	window         *glfw.Window
+	glfwWindow     *glfw.Window
 	program        *program
 	mainThreadLoop *MainThreadLoop
 	screenPolygon  *screenPolygon
@@ -153,9 +142,9 @@ func (g *Window) Draw(image *pixiq.Image) {
 		panic("opengl Window can only draw images accelerated with opengl.GLTexture")
 	}
 	g.mainThreadLoop.Execute(func() {
-		g.window.MakeContextCurrent()
+		g.glfwWindow.MakeContextCurrent()
 		g.program.use()
-		w, h := g.window.GetFramebufferSize()
+		w, h := g.glfwWindow.GetFramebufferSize()
 		gl.Viewport(0, 0, int32(w), int32(h))
 		gl.BindTexture(gl.TEXTURE_2D, texture.TextureID())
 		g.screenPolygon.draw()
@@ -165,7 +154,7 @@ func (g *Window) Draw(image *pixiq.Image) {
 // SwapImages makes last drawn image visible
 func (g *Window) SwapImages() {
 	g.mainThreadLoop.Execute(func() {
-		g.window.SwapBuffers()
+		g.glfwWindow.SwapBuffers()
 		glfw.PollEvents()
 	})
 }
@@ -173,7 +162,7 @@ func (g *Window) SwapImages() {
 // Close closes the window and cleans resources
 func (g *Window) Close() {
 	g.mainThreadLoop.Execute(func() {
-		g.window.Destroy()
+		g.glfwWindow.Destroy()
 	})
 }
 
@@ -182,7 +171,7 @@ func (g *Window) Close() {
 func (g *Window) ShouldClose() bool {
 	var shouldClose bool
 	g.mainThreadLoop.Execute(func() {
-		shouldClose = g.window.ShouldClose()
+		shouldClose = g.glfwWindow.ShouldClose()
 	})
 	return shouldClose
 }
@@ -192,7 +181,7 @@ func (g *Window) ShouldClose() bool {
 func (g *Window) Width() int {
 	var width int
 	g.mainThreadLoop.Execute(func() {
-		width, _ = g.window.GetSize()
+		width, _ = g.glfwWindow.GetSize()
 	})
 	return width
 }
@@ -202,7 +191,7 @@ func (g *Window) Width() int {
 func (g *Window) Height() int {
 	var height int
 	g.mainThreadLoop.Execute(func() {
-		_, height = g.window.GetSize()
+		_, height = g.glfwWindow.GetSize()
 	})
 	return height
 }
