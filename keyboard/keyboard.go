@@ -6,36 +6,54 @@ type EventsSource interface {
 	Poll(output []Event) int
 }
 
-// Event describes what happened with the key. Whether it was pressed or released.
-type Event struct {
-	// Type is the type of event
-	Type EventType
-	// Key is a key for which the event was created
-	Key Key
+// UnknownKey returns instance of unknown Key.
+// Scancode is platform-specific but consistent over time.
+func UnknownKey(scanCode int) Key {
+	return Key{}
 }
 
-// EventType describes the type of event
-type EventType int
+// NewKey returns new instance of immutable Key.
+func NewKey(token Token, scanCode int) Key {
+	return Key{}
+}
+
+// NewReleasedEvent returns new instance of Event when key was released
+func NewReleasedEvent(key Key) Event {
+	return Event{
+		typ: released,
+		key: key,
+	}
+}
+
+// NewReleasedEvent returns new instance of Event when key was pressed
+func NewPressedEvent(key Key) Event {
+	return Event{
+		typ: pressed,
+		key: key,
+	}
+}
+
+// Event describes what happened with the key. Whether it was pressed or released.
+type Event struct {
+	typ eventType
+	key Key
+}
+
+type eventType byte
 
 const (
-	// Pressed means that key was pressed
-	Pressed EventType = 1
-	// Released means that the key was released
-	Released EventType = 2
+	pressed  eventType = 1
+	released eventType = 2
 )
 
 // Key contains numbers identifying the key.
 type Key struct {
-	// Token is platform-independent number identifying the key. It may be
-	// Unknown, then ScanCode should be used instead.
-	Token Token
-	// Scancode is platform-specific but consistent over time, so keys will
-	// have different scancodes depending on the platform but they are safe
-	// to save to disk
-	ScanCode int
+	token    Token
+	scanCode int
 }
 
-// Token is platform-independent number identifying a key.
+// Token is platform-independent number identifying the key. It may be
+// Unknown, then ScanCode should be used instead.
 type Token int
 
 const (
