@@ -18,9 +18,9 @@ type Event struct {
 type EventType int
 
 const (
-	// Pressed
+	// Pressed means that key was pressed
 	Pressed EventType = 1
-	// Released
+	// Released means that the key was released
 	Released EventType = 2
 )
 
