@@ -20,7 +20,7 @@ type fixedEventsSource struct {
 	events []keyboard.Event
 }
 
-func (n fixedEventsSource) Poll(output []keyboard.Event) int {
+func (n *fixedEventsSource) Poll(output []keyboard.Event) int {
 	for i, event := range n.events {
 		output[i] = event
 	}
