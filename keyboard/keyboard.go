@@ -27,35 +27,6 @@ func NewUnknownKey(scanCode int) Key {
 	}
 }
 
-// NewReleasedEvent returns new instance of Event when key was released.
-func NewReleasedEvent(key Key) Event {
-	return Event{}
-}
-
-// NewPressedEvent returns new instance of Event when key was pressed.
-func NewPressedEvent(key Key) Event {
-	return Event{
-		typ: pressed,
-		key: key,
-	}
-}
-
-// Event describes what happened with the key. Whether it was pressed or released.
-type Event struct {
-	typ eventType
-	key Key
-}
-
-// eventType is used because using polymorphism means heap allocation and we don't
-// want to generate garbage (really? StarCraft e-sport players can perform up to
-// 300 APM, which means 600 event objects per minute - maybe it is not that much).
-type eventType byte
-
-const (
-	pressed  eventType = 1
-	released eventType = 2
-)
-
 // Key identifies the pressed or released key.
 type Key struct {
 	token    Token
@@ -89,6 +60,35 @@ var (
 	A = NewKey(65)
 	// B key
 	B = NewKey(66)
+)
+
+// NewReleasedEvent returns new instance of Event when key was released.
+func NewReleasedEvent(key Key) Event {
+	return Event{}
+}
+
+// NewPressedEvent returns new instance of Event when key was pressed.
+func NewPressedEvent(key Key) Event {
+	return Event{
+		typ: pressed,
+		key: key,
+	}
+}
+
+// Event describes what happened with the key. Whether it was pressed or released.
+type Event struct {
+	typ eventType
+	key Key
+}
+
+// eventType is used because using polymorphism means heap allocation and we don't
+// want to generate garbage (really? StarCraft e-sport players can perform up to
+// 300 APM, which means 600 event objects per minute - maybe it is not that much).
+type eventType byte
+
+const (
+	pressed  eventType = 1
+	released eventType = 2
 )
 
 // New creates Keyboard instance.
