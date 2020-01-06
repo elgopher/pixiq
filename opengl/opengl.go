@@ -127,6 +127,13 @@ func NoDecorationHint() WindowOption {
 	}
 }
 
+// Title sets the window title
+func Title(title string) WindowOption {
+	return func(window *Window) {
+		window.glfwWindow.SetTitle(title)
+	}
+}
+
 // Window is an implementation of pixiq.Screen
 type Window struct {
 	glfwWindow     *glfw.Window

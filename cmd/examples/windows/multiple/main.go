@@ -14,8 +14,8 @@ var (
 func main() {
 	opengl.Run(func(gl *opengl.OpenGL, images *pixiq.Images, loops *pixiq.ScreenLoops) {
 		windows := gl.Windows()
-		redWindow := windows.Open(320, 180)
-		blueWindow := windows.Open(250, 90)
+		redWindow := windows.Open(320, 180, opengl.Title("red"))
+		blueWindow := windows.Open(250, 90, opengl.Title("blue"))
 		// Start the loop in the background, because Loop method blocks
 		// the current goroutine.
 		go loops.Loop(redWindow, fillWith(red))
