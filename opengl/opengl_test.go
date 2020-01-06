@@ -25,6 +25,11 @@ func TestMain(m *testing.M) {
 }
 
 func TestNew(t *testing.T) {
+	t.Run("should panic when MainThreadLoop is nil", func(t *testing.T) {
+		assert.Panics(t, func() {
+			opengl.New(nil)
+		})
+	})
 	t.Run("should create OpenGL using supplied MainThreadLoop", func(t *testing.T) {
 		// when
 		openGL := opengl.New(mainThreadLoop)
@@ -95,7 +100,7 @@ func TestTexture_Upload(t *testing.T) {
 	})
 }
 
-func TestGlfwWindows_Open(t *testing.T) {
+func TestWindows_Open(t *testing.T) {
 	t.Run("should clamp width to platform-specific minimum if negative", func(t *testing.T) {
 		openGL := opengl.New(mainThreadLoop)
 		windows := openGL.Windows()
@@ -146,9 +151,17 @@ func TestGlfwWindows_Open(t *testing.T) {
 		assert.Equal(t, 320, win2.Width())
 		assert.Equal(t, 180, win2.Height())
 	})
+	t.Run("should panic for nil option", func(t *testing.T) {
+		openGL := opengl.New(mainThreadLoop)
+		windows := openGL.Windows()
+		// when
+		assert.Panics(t, func() {
+			windows.Open(0, 0, nil)
+		})
+	})
 }
 
-func TestGlfwWindow_Draw(t *testing.T) {
+func TestWindow_Draw(t *testing.T) {
 	t.Run("should draw screen image", func(t *testing.T) {
 		color1 := pixiq.RGBA(10, 20, 30, 40)
 		color2 := pixiq.RGBA(50, 60, 70, 80)

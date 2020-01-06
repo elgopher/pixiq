@@ -5,6 +5,8 @@
 package opengl
 
 import (
+	"errors"
+
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
 
@@ -15,6 +17,9 @@ import (
 // MainThreadLoop is needed because some GLFW functions has to be called
 // from the main thread.
 func New(loop *MainThreadLoop) *OpenGL {
+	if loop == nil {
+		panic("nil MainThreadLoop")
+	}
 	var mainWindow *glfw.Window
 	loop.Execute(func() {
 		err := glfw.Init()
@@ -102,17 +107,24 @@ func (g Windows) Open(width, height int, options ...WindowOption) *Window {
 		win.glfwWindow = createWindow(g.mainWindow)
 		win.program, err = compileProgram()
 		if err != nil {
-			panic(err)
+			return
 		}
 		win.screenPolygon = newScreenPolygon(
 			win.program.vertexPositionLocation,
 			win.program.texturePositionLocation)
 		win.glfwWindow.SetSize(width, height)
 		for _, option := range options {
+			if option == nil {
+				err = errors.New("nil option")
+				return
+			}
 			option(win)
 		}
 		win.glfwWindow.Show()
 	})
+	if err != nil {
+		panic(err)
+	}
 	return win
 }
 
