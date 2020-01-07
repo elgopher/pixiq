@@ -53,6 +53,7 @@ func (k Key) Token() Token {
 // Unknown, then ScanCode should be used instead.
 type Token uint
 
+// Rune return the character assigned to key (capital letter)
 func (t Token) Rune() rune {
 	return rune(t)
 }
