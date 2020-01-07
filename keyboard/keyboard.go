@@ -4,7 +4,7 @@ import "fmt"
 
 // EventSource is a source of keyboard Events.
 type EventSource interface {
-	// Polls retrieves and removes next keyboard Event. If there are no more
+	// Poll retrieves and removes next keyboard Event. If there are no more
 	// events false is returned.
 	Poll() (Event, bool)
 }
