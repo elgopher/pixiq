@@ -46,10 +46,10 @@ func TestNewKey(t *testing.T) {
 			token keyboard.Token
 		}{
 			"A": {
-				token: 65,
+				token: keyboard.A.Token(),
 			},
 			"B": {
-				token: 66,
+				token: keyboard.B.Token(),
 			},
 		}
 		for name, test := range tests {
