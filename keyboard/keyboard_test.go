@@ -88,7 +88,8 @@ func TestKeyboard_Pressed(t *testing.T) {
 		for _, key := range tests {
 			testName := fmt.Sprintf("for key: %v", key)
 			t.Run(testName, func(t *testing.T) {
-				source := newFakeEventSourceWithPressedEvents(keyboard.A)
+				event := keyboard.NewPressedEvent(keyboard.A)
+				source := newFakeEventSource(event)
 				keys := keyboard.New(source)
 				// when
 				pressed := keys.Pressed(key)
@@ -98,33 +99,62 @@ func TestKeyboard_Pressed(t *testing.T) {
 		}
 	})
 	t.Run("after Update was called", func(t *testing.T) {
+		var (
+			aPressed         = keyboard.NewPressedEvent(keyboard.A)
+			aReleased        = keyboard.NewReleasedEvent(keyboard.A)
+			bPressed         = keyboard.NewPressedEvent(keyboard.B)
+			bReleased        = keyboard.NewReleasedEvent(keyboard.B)
+			unknown0         = keyboard.NewUnknownKey(0)
+			unknown1         = keyboard.NewUnknownKey(1)
+			unknown0Pressed  = keyboard.NewPressedEvent(unknown0)
+			unknown0Released = keyboard.NewReleasedEvent(unknown0)
+			unknown1Released = keyboard.NewReleasedEvent(unknown1)
+		)
 		tests := map[string]struct {
 			source             keyboard.EventSource
 			expectedPressed    []keyboard.Key
 			expectedNotPressed []keyboard.Key
 		}{
-			"one event": {
-				source:             newFakeEventSourceWithPressedEvents(keyboard.A),
+			"one PressedEvent for A": {
+				source:             newFakeEventSource(aPressed),
 				expectedPressed:    []keyboard.Key{keyboard.A},
 				expectedNotPressed: []keyboard.Key{keyboard.B},
 			},
-			"two events for keys B and A": {
-				source:          newFakeEventSourceWithPressedEvents(keyboard.B, keyboard.A),
+			"two PressedEvents for B and A": {
+				source:          newFakeEventSource(bPressed, aPressed),
 				expectedPressed: []keyboard.Key{keyboard.A, keyboard.B},
 			},
-			"two events for keys A and B": {
-				source:          newFakeEventSourceWithPressedEvents(keyboard.A, keyboard.B),
+			"two PressedEvents for A and B": {
+				source:          newFakeEventSource(aPressed, bPressed),
 				expectedPressed: []keyboard.Key{keyboard.A, keyboard.B},
 			},
-			"one event for unknown key": {
-				source:             newFakeEventSourceWithPressedEvents(keyboard.NewUnknownKey(0)),
-				expectedPressed:    []keyboard.Key{keyboard.NewUnknownKey(0)},
-				expectedNotPressed: []keyboard.Key{keyboard.NewUnknownKey(1)},
+			"one PressedEvent for unknown key": {
+				source:             newFakeEventSource(unknown0Pressed),
+				expectedPressed:    []keyboard.Key{unknown0},
+				expectedNotPressed: []keyboard.Key{unknown1},
 			},
-			"two events: unknown key and A": {
-				source:             newFakeEventSourceWithPressedEvents(keyboard.NewUnknownKey(0), keyboard.A),
-				expectedPressed:    []keyboard.Key{keyboard.NewUnknownKey(0), keyboard.A},
-				expectedNotPressed: []keyboard.Key{keyboard.NewUnknownKey(1)},
+			"two PressedEvents: unknown key and A": {
+				source:             newFakeEventSource(unknown0Pressed, aPressed),
+				expectedPressed:    []keyboard.Key{unknown0, keyboard.A},
+				expectedNotPressed: []keyboard.Key{unknown1},
+			},
+			"one PressedEvent; one ReleasedEvent for A": {
+				source:             newFakeEventSource(aPressed, aReleased),
+				expectedNotPressed: []keyboard.Key{keyboard.A},
+			},
+			"one PressedEvent; one ReleasedEvent for unknown key": {
+				source:             newFakeEventSource(unknown0Pressed, unknown0Released),
+				expectedNotPressed: []keyboard.Key{unknown0},
+			},
+			"one PressedEvent for A; one ReleasedEvent for B": {
+				source:             newFakeEventSource(aPressed, bReleased),
+				expectedPressed:    []keyboard.Key{keyboard.A},
+				expectedNotPressed: []keyboard.Key{keyboard.B},
+			},
+			"one PressedEvent for unknown 0; one ReleasedEvent for unknown 1": {
+				source:             newFakeEventSource(unknown0Pressed, unknown1Released),
+				expectedPressed:    []keyboard.Key{unknown0},
+				expectedNotPressed: []keyboard.Key{unknown1},
 			},
 		}
 		for name, test := range tests {
@@ -144,11 +174,10 @@ func TestKeyboard_Pressed(t *testing.T) {
 	})
 }
 
-func newFakeEventSourceWithPressedEvents(keys ...keyboard.Key) *fakeEventSource {
+func newFakeEventSource(events ...keyboard.Event) *fakeEventSource {
 	source := &fakeEventSource{}
 	source.events = []keyboard.Event{}
-	for _, key := range keys {
-		event := keyboard.NewPressedEvent(key)
+	for _, event := range events {
 		source.events = append(source.events, event)
 	}
 	return source

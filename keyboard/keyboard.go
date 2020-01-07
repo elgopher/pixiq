@@ -68,15 +68,18 @@ var (
 	EmptyEvent = Event{}
 )
 
-// NewReleasedEvent returns new instance of Event when key was released.
-func NewReleasedEvent(key Key) Event {
-	return Event{}
-}
-
 // NewPressedEvent returns new instance of Event when key was pressed.
 func NewPressedEvent(key Key) Event {
 	return Event{
 		typ: pressed,
+		key: key,
+	}
+}
+
+// NewReleasedEvent returns new instance of Event when key was released.
+func NewReleasedEvent(key Key) Event {
+	return Event{
+		typ: released,
 		key: key,
 	}
 }
@@ -125,11 +128,18 @@ func (k *Keyboard) Update() {
 		if !ok {
 			return
 		}
-		if event.typ == pressed {
+		switch event.typ {
+		case pressed:
 			if event.key.IsUnknown() {
 				k.keysPressedByScanCode[event.key.scanCode] = true
 			} else {
 				k.keysPressedByToken[event.key.token] = true
+			}
+		case released:
+			if event.key.IsUnknown() {
+				k.keysPressedByScanCode[event.key.scanCode] = false
+			} else {
+				k.keysPressedByToken[event.key.token] = false
 			}
 		}
 	}
