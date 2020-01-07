@@ -82,13 +82,6 @@ func TestNewUnknownKey(t *testing.T) {
 	})
 }
 
-func TestNewPressedEvent(t *testing.T) {
-	t.Run("should create PressedEvent", func(t *testing.T) {
-		// when
-		keyboard.NewPressedEvent(keyboard.A)
-	})
-}
-
 func TestKeyboard_Pressed(t *testing.T) {
 	t.Run("before Update was called, Pressed returns false for all keys", func(t *testing.T) {
 		tests := []keyboard.Key{keyboard.A, keyboard.B}
@@ -171,5 +164,5 @@ func (f *fakeEventSource) Poll() (keyboard.Event, bool) {
 		f.events = f.events[1:]
 		return event, true
 	}
-	return keyboard.Event{}, false // TODO Maybe we need an EmptyEvent?
+	return keyboard.EmptyEvent, false
 }

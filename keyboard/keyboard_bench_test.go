@@ -25,5 +25,5 @@ func (f *cyclicEventsSoure) Poll() (keyboard.Event, bool) {
 	if f.hasEvent {
 		return f.event, true
 	}
-	return keyboard.Event{}, false
+	return keyboard.EmptyEvent, false
 }

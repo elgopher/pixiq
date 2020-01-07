@@ -63,6 +63,9 @@ var (
 	A = NewKey(65)
 	// B key
 	B = NewKey(66)
+
+	// EmptyEvent should be returned by EventSource when it does not have more events
+	EmptyEvent = Event{}
 )
 
 // NewReleasedEvent returns new instance of Event when key was released.
