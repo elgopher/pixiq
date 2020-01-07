@@ -2,11 +2,11 @@ package keyboard
 
 import "fmt"
 
-// EventsSource is a source of keyboard Events.
-type EventsSource interface {
-	// Fills output slice with events and returns number of events.
-	// This function read new events and removes them from source.
-	Poll(output []Event) int
+// EventSource is a source of keyboard Events.
+type EventSource interface {
+	// Polls retrieves and removes next keyboard Event. If there are no more
+	// events false is returned.
+	Poll() (Event, bool)
 }
 
 // NewKey returns new instance of immutable Key. This construct may be used for
@@ -95,13 +95,12 @@ const (
 )
 
 // New creates Keyboard instance.
-func New(source EventsSource) *Keyboard {
+func New(source EventSource) *Keyboard {
 	if source == nil {
-		panic("nil EventsSource")
+		panic("nil EventSource")
 	}
 	return &Keyboard{
 		source:                source,
-		events:                make([]Event, 32), // TODO magic number
 		keysPressedByToken:    make(map[Token]bool),
 		keysPressedByScanCode: make(map[int]bool),
 	}
@@ -110,8 +109,7 @@ func New(source EventsSource) *Keyboard {
 // Keyboard provides a read-only information about the current state of the
 // keyboard, such as what keys are currently pressed.
 type Keyboard struct {
-	source                EventsSource
-	events                []Event
+	source                EventSource
 	keysPressedByToken    map[Token]bool
 	keysPressedByScanCode map[int]bool
 }
@@ -119,8 +117,11 @@ type Keyboard struct {
 // Update updates the state of the keyboard by polling events queued since last
 // time the function was executed.
 func (k *Keyboard) Update() {
-	k.source.Poll(k.events) // TODO Handle cases when k.events is too small
-	for _, event := range k.events {
+	for {
+		event, ok := k.source.Poll()
+		if !ok {
+			return
+		}
 		if event.typ == pressed {
 			if event.key.IsUnknown() {
 				k.keysPressedByScanCode[event.key.scanCode] = true

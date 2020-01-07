@@ -8,20 +8,22 @@ import (
 
 func BenchmarkKeyboard_Update(b *testing.B) {
 	event := keyboard.NewPressedEvent(keyboard.A)
-	source := &fixedEventsSource{events: []keyboard.Event{event}}
+	source := &cyclicEventsSoure{event: event}
 	keys := keyboard.New(source)
 	for i := 0; i < b.N; i++ {
 		keys.Update() // should be 0 allocs/op
 	}
 }
 
-type fixedEventsSource struct {
-	events []keyboard.Event
+type cyclicEventsSoure struct {
+	hasEvent bool
+	event    keyboard.Event
 }
 
-func (n *fixedEventsSource) Poll(output []keyboard.Event) int {
-	for i, event := range n.events {
-		output[i] = event
+func (f *cyclicEventsSoure) Poll() (keyboard.Event, bool) {
+	f.hasEvent = !f.hasEvent
+	if f.hasEvent {
+		return f.event, true
 	}
-	return len(n.events)
+	return keyboard.Event{}, false
 }

@@ -16,7 +16,7 @@ func TestNew(t *testing.T) {
 		})
 	})
 	t.Run("should create a keyboard instance", func(t *testing.T) {
-		source := &fakeEventsSource{}
+		source := &fakeEventSource{}
 		// when
 		keys := keyboard.New(source)
 		// then
@@ -106,7 +106,7 @@ func TestKeyboard_Pressed(t *testing.T) {
 	})
 	t.Run("after Update was called", func(t *testing.T) {
 		tests := map[string]struct {
-			source             keyboard.EventsSource
+			source             keyboard.EventSource
 			expectedPressed    []keyboard.Key
 			expectedNotPressed []keyboard.Key
 		}{
@@ -151,8 +151,8 @@ func TestKeyboard_Pressed(t *testing.T) {
 	})
 }
 
-func newFakeEventSourceWithPressedEvents(keys ...keyboard.Key) *fakeEventsSource {
-	source := &fakeEventsSource{}
+func newFakeEventSourceWithPressedEvents(keys ...keyboard.Key) *fakeEventSource {
+	source := &fakeEventSource{}
 	source.events = []keyboard.Event{}
 	for _, key := range keys {
 		event := keyboard.NewPressedEvent(key)
@@ -161,19 +161,15 @@ func newFakeEventSourceWithPressedEvents(keys ...keyboard.Key) *fakeEventsSource
 	return source
 }
 
-type fakeEventsSource struct {
+type fakeEventSource struct {
 	events []keyboard.Event
 }
 
-func (f *fakeEventsSource) Poll(output []keyboard.Event) int {
-	to := len(f.events)
-	if len(output) < to {
-		to = len(output)
+func (f *fakeEventSource) Poll() (keyboard.Event, bool) {
+	if len(f.events) > 0 {
+		event := f.events[0]
+		f.events = f.events[1:]
+		return event, true
 	}
-	slice := f.events[:to]
-	for i, event := range slice {
-		output[i] = event
-	}
-	f.events = []keyboard.Event{}
-	return to
+	return keyboard.Event{}, false // TODO Maybe we need an EmptyEvent?
 }
