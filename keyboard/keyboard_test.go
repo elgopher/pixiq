@@ -36,7 +36,12 @@ func TestNewKey(t *testing.T) {
 			})
 		}
 	})
-	t.Run("should create new key", func(t *testing.T) {
+	t.Run("should create key using package variable", func(t *testing.T) {
+		key := keyboard.A
+		assert.False(t, key.IsUnknown())
+		assert.Equal(t, 'A', key.Token().Rune())
+	})
+	t.Run("should create new key using token", func(t *testing.T) {
 		tests := map[string]struct {
 			token keyboard.Token
 		}{

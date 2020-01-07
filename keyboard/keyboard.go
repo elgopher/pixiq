@@ -53,6 +53,10 @@ func (k Key) Token() Token {
 // Unknown, then ScanCode should be used instead.
 type Token uint
 
+func (t Token) Rune() rune {
+	return rune(t)
+}
+
 var (
 	// A key
 	A = NewKey(65)
