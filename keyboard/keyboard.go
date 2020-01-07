@@ -49,6 +49,21 @@ func (k Key) Token() Token {
 	return k.token
 }
 
+func (k Key) setPressed(keyboard *Keyboard, value bool) {
+	if k.IsUnknown() {
+		keyboard.keysPressedByScanCode[k.scanCode] = value
+	} else {
+		keyboard.keysPressedByToken[k.token] = value
+	}
+}
+
+func (k Key) pressed(keyboard *Keyboard) bool {
+	if k.IsUnknown() {
+		return keyboard.keysPressedByScanCode[k.scanCode]
+	}
+	return keyboard.keysPressedByToken[k.token]
+}
+
 // Token is platform-independent mapping identifying the key. It may be
 // Unknown, then ScanCode should be used instead.
 type Token uint
@@ -129,25 +144,14 @@ func (k *Keyboard) Update() {
 		}
 		switch event.typ {
 		case pressed:
-			if event.key.IsUnknown() {
-				k.keysPressedByScanCode[event.key.scanCode] = true
-			} else {
-				k.keysPressedByToken[event.key.token] = true
-			}
+			event.key.setPressed(k, true)
 		case released:
-			if event.key.IsUnknown() {
-				k.keysPressedByScanCode[event.key.scanCode] = false
-			} else {
-				k.keysPressedByToken[event.key.token] = false
-			}
+			event.key.setPressed(k, false)
 		}
 	}
 }
 
 // Pressed returns true if given key is currently pressed.
 func (k *Keyboard) Pressed(key Key) bool {
-	if key.IsUnknown() {
-		return k.keysPressedByScanCode[key.scanCode]
-	}
-	return k.keysPressedByToken[key.token]
+	return key.pressed(k)
 }
