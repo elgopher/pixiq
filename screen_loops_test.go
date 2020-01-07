@@ -19,9 +19,11 @@ func TestNewScreenLoops(t *testing.T) {
 func TestScreenLoops_Loop(t *testing.T) {
 
 	t.Run("should run callback function until loop is stopped", func(t *testing.T) {
-		images := pixiq.NewImages(&fakeAcceleratedImages{})
-		loops := pixiq.NewScreenLoops(images)
-		frameNumber := 0
+		var (
+			images      = pixiq.NewImages(&fakeAcceleratedImages{})
+			loops       = pixiq.NewScreenLoops(images)
+			frameNumber = 0
+		)
 		// when
 		loops.Loop(&screenMock{}, func(frame *pixiq.Frame) {
 			if frameNumber == 2 {
@@ -70,11 +72,13 @@ func TestScreenLoops_Loop(t *testing.T) {
 	})
 
 	t.Run("should draw image for each frame", func(t *testing.T) {
-		images := pixiq.NewImages(&fakeAcceleratedImages{})
-		screen := &screenMock{}
-		loops := pixiq.NewScreenLoops(images)
-		firstFrame := true
-		var recordedImages []*pixiq.Image
+		var (
+			images         = pixiq.NewImages(&fakeAcceleratedImages{})
+			screen         = &screenMock{}
+			loops          = pixiq.NewScreenLoops(images)
+			firstFrame     = true
+			recordedImages []*pixiq.Image
+		)
 		// when
 		loops.Loop(screen, func(frame *pixiq.Frame) {
 			if !firstFrame {
@@ -102,10 +106,12 @@ func TestScreenLoops_Loop(t *testing.T) {
 
 	t.Run("should draw modified screen", func(t *testing.T) {
 		t.Run("after first frame", func(t *testing.T) {
-			color := pixiq.RGBA(10, 20, 30, 40)
-			images := pixiq.NewImages(&fakeAcceleratedImages{})
-			screen := &screenMock{width: 1, height: 1}
-			loops := pixiq.NewScreenLoops(images)
+			var (
+				color  = pixiq.RGBA(10, 20, 30, 40)
+				images = pixiq.NewImages(&fakeAcceleratedImages{})
+				screen = &screenMock{width: 1, height: 1}
+				loops  = pixiq.NewScreenLoops(images)
+			)
 			// when
 			loops.Loop(screen, func(frame *pixiq.Frame) {
 				frame.Screen().SetColor(0, 0, color)
@@ -116,12 +122,14 @@ func TestScreenLoops_Loop(t *testing.T) {
 			assert.Equal(t, color, screen.imagesDrawn[0].WholeImageSelection().Color(0, 0))
 		})
 		t.Run("after second frame", func(t *testing.T) {
-			color1 := pixiq.RGBA(10, 20, 30, 40)
-			color2 := pixiq.RGBA(10, 20, 30, 40)
-			images := pixiq.NewImages(&fakeAcceleratedImages{})
-			screen := &screenMock{width: 1, height: 1}
-			loops := pixiq.NewScreenLoops(images)
-			firstFrame := true
+			var (
+				color1     = pixiq.RGBA(10, 20, 30, 40)
+				color2     = pixiq.RGBA(10, 20, 30, 40)
+				images     = pixiq.NewImages(&fakeAcceleratedImages{})
+				screen     = &screenMock{width: 1, height: 1}
+				loops      = pixiq.NewScreenLoops(images)
+				firstFrame = true
+			)
 			// when
 			loops.Loop(screen, func(frame *pixiq.Frame) {
 				if firstFrame {
@@ -153,10 +161,12 @@ func TestScreenLoops_Loop(t *testing.T) {
 			assert.Same(t, screen.imagesDrawn[0], screen.visibleImage)
 		})
 		t.Run("after second frame", func(t *testing.T) {
-			images := pixiq.NewImages(&fakeAcceleratedImages{})
-			screen := &screenMock{}
-			loops := pixiq.NewScreenLoops(images)
-			firstFrame := true
+			var (
+				images     = pixiq.NewImages(&fakeAcceleratedImages{})
+				screen     = &screenMock{}
+				loops      = pixiq.NewScreenLoops(images)
+				firstFrame = true
+			)
 			// when
 			loops.Loop(screen, func(frame *pixiq.Frame) {
 				if !firstFrame {
@@ -196,10 +206,12 @@ func (f *screenMock) Height() int {
 }
 
 func clone(original *pixiq.Image) *pixiq.Image {
-	images := pixiq.NewImages(&fakeAcceleratedImages{})
-	clone := images.New(original.Width(), original.Height())
-	originalSelection := original.WholeImageSelection()
-	cloneSelection := clone.WholeImageSelection()
+	var (
+		images            = pixiq.NewImages(&fakeAcceleratedImages{})
+		clone             = images.New(original.Width(), original.Height())
+		originalSelection = original.WholeImageSelection()
+		cloneSelection    = clone.WholeImageSelection()
+	)
 	for y := 0; y < originalSelection.Height(); y++ {
 		for x := 0; x < originalSelection.Width(); x++ {
 			cloneSelection.SetColor(x, y, originalSelection.Color(x, y))

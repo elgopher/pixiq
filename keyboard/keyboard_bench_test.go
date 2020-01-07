@@ -7,9 +7,11 @@ import (
 )
 
 func BenchmarkKeyboard_Update(b *testing.B) {
-	event := keyboard.NewPressedEvent(keyboard.A)
-	source := &cyclicEventsSoure{event: event}
-	keys := keyboard.New(source)
+	var (
+		event  = keyboard.NewPressedEvent(keyboard.A)
+		source = &cyclicEventsSoure{event: event}
+		keys   = keyboard.New(source)
+	)
 	for i := 0; i < b.N; i++ {
 		keys.Update() // should be 0 allocs/op
 	}

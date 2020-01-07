@@ -88,9 +88,11 @@ func TestKeyboard_Pressed(t *testing.T) {
 		for _, key := range tests {
 			testName := fmt.Sprintf("for key: %v", key)
 			t.Run(testName, func(t *testing.T) {
-				event := keyboard.NewPressedEvent(keyboard.A)
-				source := newFakeEventSource(event)
-				keys := keyboard.New(source)
+				var (
+					event  = keyboard.NewPressedEvent(keyboard.A)
+					source = newFakeEventSource(event)
+					keys   = keyboard.New(source)
+				)
 				// when
 				pressed := keys.Pressed(key)
 				// then
