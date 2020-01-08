@@ -66,3 +66,20 @@ future versions may introduce incompatible API changes.
 + Create Go API which is just fun to use. It will provide tools known from Pixel Art software.
 + Create Development Tools similar to Chrome Developer Tools to support the development process
 + Make it fast - image manipulation requires a lot of computation, therefore Pixiq should be well optimized
+
+## RoadMap (big picture)
+
++ [X] Add basic abstractions - Image, Selection and Screen Loops
++ [X] Open Windows and draw images on them
++ [ ] Add input support
+    + [ ] keyboard (under construction)
+    + [ ] gamepad
+    + [ ] mouse
++ [ ] Add image manipulation functions
+    + [ ] Blend images
+    + [ ] Clear, Fill etc.
++ [ ] Add Developer tools
++ [ ] Add hardware acceleration
+    + [ ] Compile and run shaders
+    + [ ] Shaders for blending
+    + [ ] Shaders for clear, fill etc.
