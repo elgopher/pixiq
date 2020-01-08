@@ -10,9 +10,10 @@ import (
 func main() {
 	opengl.Run(func(gl *opengl.OpenGL, images *pixiq.Images, loops *pixiq.ScreenLoops) {
 		windows := gl.Windows()
-		window := windows.Open(320, 16)
+		window := windows.Open(320, 160)
 		keys := keyboard.New(window)
-		var x = 160
+		x := 160
+		y := 80
 		loops.Loop(window, func(frame *pixiq.Frame) {
 			keys.Update()
 			if keys.Pressed(keyboard.A) {
@@ -21,8 +22,14 @@ func main() {
 			if keys.Pressed(keyboard.D) {
 				x += 1
 			}
+			if keys.Pressed(keyboard.W) {
+				y -= 1
+			}
+			if keys.Pressed(keyboard.S) {
+				y += 1
+			}
 			screen := frame.Screen()
-			screen.SetColor(x, 8, colornames.White)
+			screen.SetColor(x, y, colornames.White)
 		})
 	})
 }

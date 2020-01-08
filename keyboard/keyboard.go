@@ -1,7 +1,5 @@
 package keyboard
 
-import "fmt"
-
 // EventSource is a source of keyboard Events.
 type EventSource interface {
 	// Poll retrieves and removes next keyboard Event. If there are no more
@@ -9,15 +7,9 @@ type EventSource interface {
 	Poll() (Event, bool)
 }
 
-// NewKey returns new instance of immutable Key. This construct may be used for
-// creating keys after deserialization. Otherwise package variables should be used.
-func NewKey(token Token) Key {
-	if token < 'A' || token > 'D' {
-		panic(fmt.Sprintf("invalid token %v", token))
-	}
-	return Key{
-		token: token,
-	}
+// TODO Add serialization deserialization of key
+func newKey(token Token) Key {
+	return Key{token: token}
 }
 
 // NewUnknownKey creates key with platform-specific scanCode.
@@ -74,14 +66,102 @@ func (t Token) Rune() rune {
 }
 
 var (
+	// SPACE Key
+	Space = newKey(' ')
+	// Apostrophe Key
+	Apostrophe = newKey('\'')
+	// Comma Key
+	Comma = newKey(',')
+	// Minus Key
+	Minus = newKey('-')
+	// Period Key
+	Period = newKey('.')
+	// Slash Key
+	Slash = newKey('/')
+	// Zero Key
+	Zero = newKey('0')
+	// One Key
+	One = newKey('1')
+	// Two Key
+	Two = newKey('2')
+	// Three Key
+	Three = newKey('3')
+	// Four Key
+	Four = newKey('4')
+	// Five Key
+	Five = newKey('5')
+	// Six Key
+	Six = newKey('6')
+	// Seven Key
+	Seven = newKey('7')
+	// Eight Key
+	Eight = newKey('8')
+	// Nine Key
+	Nine = newKey('9')
+	// Semicolon Key
+	Semicolon = newKey(';')
+	// Equal Key
+	Equal = newKey('=')
 	// A key
-	A = NewKey('A')
+	A = newKey('A')
 	// B key
-	B = NewKey('B')
+	B = newKey('B')
 	// C Key
-	C = NewKey('C')
+	C = newKey('C')
 	// D Key
-	D = NewKey('D')
+	D = newKey('D')
+	// E Key
+	E = newKey('E')
+	// F Key
+	F = newKey('F')
+	// G Key
+	G = newKey('G')
+	// H Key
+	H = newKey('H')
+	// I Key
+	I = newKey('I')
+	// J Key
+	J = newKey('J')
+	// K Key
+	K = newKey('K')
+	// L Key
+	L = newKey('L')
+	// M Key
+	M = newKey('M')
+	// N Key
+	N = newKey('N')
+	// O Key
+	O = newKey('O')
+	// P Key
+	P = newKey('P')
+	// Q Key
+	Q = newKey('Q')
+	// R Key
+	R = newKey('R')
+	// S Key
+	S = newKey('S')
+	// T Key
+	T = newKey('T')
+	// U Key
+	U = newKey('U')
+	// V Key
+	V = newKey('V')
+	// W Key
+	W = newKey('W')
+	// X Key
+	X = newKey('X')
+	// Y Key
+	Y = newKey('Y')
+	// Z Key
+	Z = newKey('Z')
+	// LeftBracket Key
+	LeftBracket = newKey('[')
+	// Backslash Key
+	Backslash = newKey('\\')
+	// RightBracket Key
+	RightBracket = newKey(']')
+	// GraveAccent Key
+	GraveAccent = newKey('`')
 
 	// EmptyEvent should be returned by EventSource when it does not have more events
 	EmptyEvent = Event{}

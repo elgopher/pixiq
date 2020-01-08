@@ -24,45 +24,15 @@ func TestNew(t *testing.T) {
 	})
 }
 
-func TestNewKey(t *testing.T) {
-	t.Run("should panic for invalid tokens", func(t *testing.T) {
-		tests := []keyboard.Token{0, 64, 69}
-		for _, token := range tests {
-			testName := fmt.Sprintf("for %v", token)
-			t.Run(testName, func(t *testing.T) {
-				assert.Panics(t, func() {
-					keyboard.NewKey(token)
-				})
-			})
-		}
-	})
+func Test(t *testing.T) {
 	t.Run("should create key using package variable", func(t *testing.T) {
 		key := keyboard.A
 		assert.False(t, key.IsUnknown())
 		assert.Equal(t, 'A', key.Token().Rune())
 	})
-	t.Run("should create new key using token", func(t *testing.T) {
-		tests := map[string]struct {
-			token keyboard.Token
-		}{
-			"A": {
-				token: keyboard.A.Token(),
-			},
-			"B": {
-				token: keyboard.B.Token(),
-			},
-		}
-		for name, test := range tests {
-			t.Run(name, func(t *testing.T) {
-				key := keyboard.NewKey(test.token)
-				assert.Equal(t, test.token, key.Token())
-				assert.False(t, key.IsUnknown())
-			})
-		}
-	})
-	t.Run("two keys with token should be equal", func(t *testing.T) {
-		key1 := keyboard.NewKey(65)
-		key2 := keyboard.NewKey(65)
+	t.Run("two keys with same token should be equal", func(t *testing.T) {
+		key1 := keyboard.A
+		key2 := keyboard.A
 		assert.Equal(t, key1, key2)
 	})
 	t.Run("two keys with scanCode should be equal", func(t *testing.T) {

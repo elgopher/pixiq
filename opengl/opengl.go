@@ -227,20 +227,66 @@ func (w *Window) Poll() (keyboard.Event, bool) {
 	return keyboard.EmptyEvent, false
 }
 
+var keyMapping = map[glfw.Key]keyboard.Key{
+	glfw.KeySpace:        keyboard.Space,
+	glfw.KeyApostrophe:   keyboard.Apostrophe,
+	glfw.KeyComma:        keyboard.Comma,
+	glfw.KeyMinus:        keyboard.Minus,
+	glfw.KeyPeriod:       keyboard.Period,
+	glfw.KeySlash:        keyboard.Slash,
+	glfw.Key0:            keyboard.Zero,
+	glfw.Key1:            keyboard.One,
+	glfw.Key2:            keyboard.Two,
+	glfw.Key3:            keyboard.Three,
+	glfw.Key4:            keyboard.Four,
+	glfw.Key5:            keyboard.Five,
+	glfw.Key6:            keyboard.Six,
+	glfw.Key7:            keyboard.Seven,
+	glfw.Key8:            keyboard.Eight,
+	glfw.Key9:            keyboard.Nine,
+	glfw.KeySemicolon:    keyboard.Semicolon,
+	glfw.KeyEqual:        keyboard.Equal,
+	glfw.KeyA:            keyboard.A,
+	glfw.KeyB:            keyboard.B,
+	glfw.KeyC:            keyboard.C,
+	glfw.KeyD:            keyboard.D,
+	glfw.KeyE:            keyboard.E,
+	glfw.KeyF:            keyboard.F,
+	glfw.KeyG:            keyboard.G,
+	glfw.KeyH:            keyboard.H,
+	glfw.KeyI:            keyboard.I,
+	glfw.KeyJ:            keyboard.J,
+	glfw.KeyK:            keyboard.K,
+	glfw.KeyL:            keyboard.L,
+	glfw.KeyM:            keyboard.M,
+	glfw.KeyN:            keyboard.N,
+	glfw.KeyO:            keyboard.O,
+	glfw.KeyP:            keyboard.P,
+	glfw.KeyQ:            keyboard.Q,
+	glfw.KeyR:            keyboard.R,
+	glfw.KeyS:            keyboard.S,
+	glfw.KeyT:            keyboard.T,
+	glfw.KeyU:            keyboard.U,
+	glfw.KeyV:            keyboard.V,
+	glfw.KeyW:            keyboard.W,
+	glfw.KeyX:            keyboard.X,
+	glfw.KeyY:            keyboard.Y,
+	glfw.KeyZ:            keyboard.Z,
+	glfw.KeyLeftBracket:  keyboard.LeftBracket,
+	glfw.KeyBackslash:    keyboard.Backslash,
+	glfw.KeyRightBracket: keyboard.RightBracket,
+	glfw.KeyGraveAccent:  keyboard.GraveAccent,
+}
+
 func (w *Window) onKeyCallback(_ *glfw.Window, glfwKey glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) { // TODO mods
 	var key keyboard.Key
 	if glfwKey == glfw.KeyUnknown {
 		key = keyboard.NewUnknownKey(scancode)
 	} else {
-		switch glfwKey {
-		case glfw.KeyA:
-			key = keyboard.A
-		case glfw.KeyB:
-			key = keyboard.B
-		case glfw.KeyC:
-			key = keyboard.C
-		case glfw.KeyD:
-			key = keyboard.D
+		var ok bool
+		key, ok = keyMapping[glfwKey]
+		if !ok {
+			key = keyboard.NewUnknownKey(scancode)
 		}
 	}
 	var event keyboard.Event
