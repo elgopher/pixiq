@@ -220,7 +220,54 @@ var (
 	F11 = newKey("F11")
 	// F12 Key
 	F12 = newKey("F12")
+	// F13 Key
+	F13 = newKey("F13")
+	// F14 Key
+	F14 = newKey("F14")
+	// F15 Key
+	F15 = newKey("F15")
+	// F16 Key
+	F16 = newKey("F16")
+	// F17 Key
+	F17 = newKey("F17")
+	// F18 Key
+	F18 = newKey("F18")
+	// F19 Key
+	F19 = newKey("F19")
+	// F20 Key
+	F20 = newKey("F20")
+	// F21 Key
+	F21 = newKey("F21")
+	// F22 Key
+	F22 = newKey("F22")
+	// F23 Key
+	F23 = newKey("F23")
+	// F24 Key
+	F24 = newKey("F24")
+	// F25 Key
+	F25 = newKey("F25")
+	// Keypad0 Key
+	Keypad0 = newKey("Keypad 0")
+	// Keypad1 Key
+	Keypad1 = newKey("Keypad 1")
+	// Keypad2 Key
+	Keypad2 = newKey("Keypad 2")
+	// Keypad3 Key
+	Keypad3 = newKey("Keypad 3")
+	// Keypad4 Key
+	Keypad4 = newKey("Keypad 4")
+	// Keypad5 Key
+	Keypad5 = newKey("Keypad 5")
+	// Keypad6 Key
+	Keypad6 = newKey("Keypad 6")
+	// Keypad7 Key
+	Keypad7 = newKey("Keypad 7")
+	// Keypad8 Key
+	Keypad8 = newKey("Keypad 8")
+	// Keypad9 Key
+	Keypad9 = newKey("Keypad 9")
 	// TODO
+
 	// EmptyEvent should be returned by EventSource when it does not have more events
 	EmptyEvent = Event{}
 )
