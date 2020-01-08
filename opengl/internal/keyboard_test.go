@@ -92,9 +92,7 @@ func TestKeyboardEvents_Poll(t *testing.T) {
 				require.True(t, ok)
 				assert.Equal(t, test.expectedEvent, event)
 				// and
-				event, ok = events.Poll()
-				require.False(t, ok)
-				assert.Equal(t, keyboard.EmptyEvent, event)
+				assertNoMoreEvents(t, events)
 			})
 		}
 	})
@@ -113,9 +111,7 @@ func TestKeyboardEvents_Poll(t *testing.T) {
 		require.True(t, ok)
 		assert.Equal(t, keyboard.NewReleasedEvent(keyboard.B), event)
 		// and
-		event, ok = events.Poll()
-		require.False(t, ok)
-		assert.Equal(t, keyboard.EmptyEvent, event)
+		assertNoMoreEvents(t, events)
 	})
 
 }
@@ -135,8 +131,13 @@ func TestKeyboardEvents_OnKeyCallback(t *testing.T) {
 		require.True(t, ok)
 		assert.Equal(t, keyboard.NewPressedEvent(keyboard.B), event)
 		// and
-		event, ok = events.Poll()
-		require.False(t, ok)
-		assert.Equal(t, keyboard.EmptyEvent, event)
+		assertNoMoreEvents(t, events)
 	})
+}
+
+
+func assertNoMoreEvents(t *testing.T, events *internal.KeyboardEvents) {
+	event, ok := events.Poll()
+	require.False(t, ok)
+	assert.Equal(t, keyboard.EmptyEvent, event)
 }
