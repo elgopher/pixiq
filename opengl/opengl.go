@@ -11,6 +11,7 @@ import (
 	"github.com/go-gl/glfw/v3.3/glfw"
 
 	"github.com/jacekolszak/pixiq"
+	"github.com/jacekolszak/pixiq/keyboard"
 )
 
 // New creates OpenGL instance.
@@ -94,7 +95,7 @@ type Windows struct {
 }
 
 // Open creates and shows Window.
-func (g Windows) Open(width, height int, options ...WindowOption) *Window {
+func (w Windows) Open(width, height int, options ...WindowOption) *Window {
 	if width < 1 {
 		width = 1
 	}
@@ -102,9 +103,10 @@ func (g Windows) Open(width, height int, options ...WindowOption) *Window {
 		height = 1
 	}
 	var err error
-	win := &Window{mainThreadLoop: g.mainThreadLoop}
-	g.mainThreadLoop.Execute(func() {
-		win.glfwWindow = createWindow(g.mainWindow)
+	win := &Window{mainThreadLoop: w.mainThreadLoop}
+	w.mainThreadLoop.Execute(func() {
+		win.glfwWindow = createWindow(w.mainWindow)
+		win.glfwWindow.SetKeyCallback(win.onKeyCallback)
 		win.program, err = compileProgram()
 		if err != nil {
 			return
@@ -152,76 +154,112 @@ type Window struct {
 	program        *program
 	mainThreadLoop *MainThreadLoop
 	screenPolygon  *screenPolygon
+	keyboardEvents []keyboard.Event
 }
 
 // Draw draws image spanning the whole window to the invisible buffer.
-func (g *Window) Draw(image *pixiq.Image) {
+func (w *Window) Draw(image *pixiq.Image) {
 	texture, isGL := image.Upload().(GLTexture)
 	if !isGL {
 		panic("opengl Window can only draw images accelerated with opengl.GLTexture")
 	}
-	g.mainThreadLoop.Execute(func() {
-		g.glfwWindow.MakeContextCurrent()
-		g.program.use()
-		w, h := g.glfwWindow.GetFramebufferSize()
-		gl.Viewport(0, 0, int32(w), int32(h))
+	w.mainThreadLoop.Execute(func() {
+		w.glfwWindow.MakeContextCurrent()
+		w.program.use()
+		width, height := w.glfwWindow.GetFramebufferSize()
+		gl.Viewport(0, 0, int32(width), int32(height))
 		gl.BindTexture(gl.TEXTURE_2D, texture.TextureID())
-		g.screenPolygon.draw()
+		w.screenPolygon.draw()
 	})
 }
 
 // SwapImages makes last drawn image visible
-func (g *Window) SwapImages() {
-	g.mainThreadLoop.Execute(func() {
-		g.glfwWindow.SwapBuffers()
+func (w *Window) SwapImages() {
+	w.mainThreadLoop.Execute(func() {
+		w.glfwWindow.SwapBuffers()
 		glfw.PollEvents()
 	})
 }
 
 // Close closes the window and cleans resources
-func (g *Window) Close() {
-	g.mainThreadLoop.Execute(func() {
-		g.glfwWindow.Destroy()
+func (w *Window) Close() {
+	w.mainThreadLoop.Execute(func() {
+		w.glfwWindow.Destroy()
 	})
 }
 
 // ShouldClose reports the value of the close flag of the window.
 // The flag is set to true when user clicks Close button or hits ALT+F4/CMD+Q.
-func (g *Window) ShouldClose() bool {
+func (w *Window) ShouldClose() bool {
 	var shouldClose bool
-	g.mainThreadLoop.Execute(func() {
-		shouldClose = g.glfwWindow.ShouldClose()
+	w.mainThreadLoop.Execute(func() {
+		shouldClose = w.glfwWindow.ShouldClose()
 	})
 	return shouldClose
 }
 
 // Width returns the width of the window in pixels.
 // If zooming is used the width is not multiplied by zoom.
-func (g *Window) Width() int {
+func (w *Window) Width() int {
 	var width int
-	g.mainThreadLoop.Execute(func() {
-		width, _ = g.glfwWindow.GetSize()
+	w.mainThreadLoop.Execute(func() {
+		width, _ = w.glfwWindow.GetSize()
 	})
 	return width
 }
 
 // Height returns the height of the window in pixels.
 // If zooming is used the height is not multiplied by zoom.
-func (g *Window) Height() int {
+func (w *Window) Height() int {
 	var height int
-	g.mainThreadLoop.Execute(func() {
-		_, height = g.glfwWindow.GetSize()
+	w.mainThreadLoop.Execute(func() {
+		_, height = w.glfwWindow.GetSize()
 	})
 	return height
+}
+
+func (w *Window) Poll() (keyboard.Event, bool) {
+	if len(w.keyboardEvents) > 0 {
+		e := w.keyboardEvents[0]
+		w.keyboardEvents = w.keyboardEvents[1:]
+		return e, true
+	}
+	return keyboard.EmptyEvent, false
+}
+
+func (w *Window) onKeyCallback(_ *glfw.Window, glfwKey glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) { // TODO mods
+	var key keyboard.Key
+	if glfwKey == glfw.KeyUnknown {
+		key = keyboard.NewUnknownKey(scancode)
+	} else {
+		switch glfwKey {
+		case glfw.KeyA:
+			key = keyboard.A
+		case glfw.KeyB:
+			key = keyboard.B
+		case glfw.KeyC:
+			key = keyboard.C
+		case glfw.KeyD:
+			key = keyboard.D
+		}
+	}
+	var event keyboard.Event
+	if action == glfw.Press {
+		event = keyboard.NewPressedEvent(key)
+	}
+	if action == glfw.Release {
+		event = keyboard.NewReleasedEvent(key)
+	}
+	w.keyboardEvents = append(w.keyboardEvents, event)
 }
 
 type textures struct {
 	mainThreadLoop *MainThreadLoop
 }
 
-func (g *textures) New(width, height int) pixiq.AcceleratedImage {
+func (t *textures) New(width, height int) pixiq.AcceleratedImage {
 	var id uint32
-	g.mainThreadLoop.Execute(func() {
+	t.mainThreadLoop.Execute(func() {
 		gl.GenTextures(1, &id)
 		gl.BindTexture(gl.TEXTURE_2D, id)
 		gl.TexImage2D(
@@ -242,7 +280,7 @@ func (g *textures) New(width, height int) pixiq.AcceleratedImage {
 		id:             id,
 		width:          width,
 		height:         height,
-		mainThreadLoop: g.mainThreadLoop,
+		mainThreadLoop: t.mainThreadLoop,
 	}
 }
 

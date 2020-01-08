@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/jacekolszak/pixiq"
+	"github.com/jacekolszak/pixiq/keyboard"
 	"github.com/jacekolszak/pixiq/opengl"
 )
 
@@ -267,4 +268,18 @@ func TestRun(t *testing.T) {
 		assert.NotNil(t, actualLoops)
 	})
 
+}
+
+func TestWindow_Poll(t *testing.T) {
+	t.Run("should return EmptyEvent and false when there is no keyboard events", func(t *testing.T) {
+		openGL := opengl.New(mainThreadLoop)
+		win := openGL.Windows().Open(1, 1)
+		// when
+		event, ok := win.Poll()
+		// then
+		assert.Equal(t, keyboard.EmptyEvent, event)
+		assert.False(t, ok)
+		// cleanup
+		win.Close()
+	})
 }

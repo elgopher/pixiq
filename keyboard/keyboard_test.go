@@ -26,7 +26,7 @@ func TestNew(t *testing.T) {
 
 func TestNewKey(t *testing.T) {
 	t.Run("should panic for invalid tokens", func(t *testing.T) {
-		tests := []keyboard.Token{0, 64, 67}
+		tests := []keyboard.Token{0, 64, 69}
 		for _, token := range tests {
 			testName := fmt.Sprintf("for %v", token)
 			t.Run(testName, func(t *testing.T) {

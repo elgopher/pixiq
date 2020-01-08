@@ -12,7 +12,7 @@ type EventSource interface {
 // NewKey returns new instance of immutable Key. This construct may be used for
 // creating keys after deserialization. Otherwise package variables should be used.
 func NewKey(token Token) Key {
-	if token < 65 || token > 66 {
+	if token < 'A' || token > 'D' {
 		panic(fmt.Sprintf("invalid token %v", token))
 	}
 	return Key{
@@ -75,9 +75,13 @@ func (t Token) Rune() rune {
 
 var (
 	// A key
-	A = NewKey(65)
+	A = NewKey('A')
 	// B key
-	B = NewKey(66)
+	B = NewKey('B')
+	// C Key
+	C = NewKey('C')
+	// D Key
+	D = NewKey('D')
 
 	// EmptyEvent should be returned by EventSource when it does not have more events
 	EmptyEvent = Event{}
