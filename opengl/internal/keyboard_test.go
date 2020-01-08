@@ -20,6 +20,15 @@ func TestKeyboardEvents_Poll(t *testing.T) {
 		require.False(t, ok)
 		assert.Equal(t, keyboard.EmptyEvent, event)
 	})
+	t.Run("should return EmptyEvent for Repeat action", func(t *testing.T) {
+		events := internal.KeyboardEvents{}
+		events.OnKeyCallback(nil, glfw.KeyA, 0, glfw.Repeat, 0)
+		// when
+		event, ok := events.Poll()
+		// then
+		require.False(t, ok)
+		assert.Equal(t, keyboard.EmptyEvent, event)
+	})
 	t.Run("should return mapped event", func(t *testing.T) {
 		tests := map[string]struct {
 			glfwKey       glfw.Key

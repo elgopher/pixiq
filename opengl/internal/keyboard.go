@@ -12,21 +12,21 @@ type KeyboardEvents struct {
 	events []keyboard.Event
 }
 
+// OnKeyCallback passes GLFW key event
 func (e *KeyboardEvents) OnKeyCallback(_ *glfw.Window, glfwKey glfw.Key, scanCode int, action glfw.Action, mods glfw.ModifierKey) {
 	key, ok := keymap[glfwKey]
 	if !ok {
 		key = keyboard.NewUnknownKey(scanCode)
 	}
-	var event keyboard.Event
-	if action == glfw.Press {
-		event = keyboard.NewPressedEvent(key)
+	switch action {
+	case glfw.Press:
+		e.events = append(e.events, keyboard.NewPressedEvent(key))
+	case glfw.Release:
+		e.events = append(e.events, keyboard.NewReleasedEvent(key))
 	}
-	if action == glfw.Release {
-		event = keyboard.NewReleasedEvent(key)
-	}
-	e.events = append(e.events, event)
 }
 
+// Poll return next mapped event
 func (e *KeyboardEvents) Poll() (keyboard.Event, bool) {
 	if len(e.events) > 0 {
 		event := e.events[0]
