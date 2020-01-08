@@ -41,7 +41,8 @@ func (e *KeyboardEvents) OnKeyCallback(_ *glfw.Window, glfwKey glfw.Key, scanCod
 }
 
 func (e *KeyboardEvents) append(event keyboard.Event) {
-	if len(e.events) == e.writeIndex {
+	noSpace := len(e.events) == e.writeIndex
+	if noSpace {
 		e.expand()
 	}
 	e.events[e.writeIndex] = event
@@ -56,7 +57,8 @@ func (e *KeyboardEvents) expand() {
 
 // Poll return next mapped event
 func (e *KeyboardEvents) Poll() (keyboard.Event, bool) {
-	if len(e.events) > 0 && e.writeIndex > e.readIndex {
+	somethingToRead := e.writeIndex > e.readIndex
+	if somethingToRead {
 		event := e.events[e.readIndex]
 		e.readIndex++
 		return event, true
