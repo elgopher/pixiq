@@ -164,7 +164,6 @@ func TestPressed(t *testing.T) {
 		pressed := keys.PressedKeys()
 		// then
 		assert.Empty(t, pressed)
-		assert.NotNil(t, pressed)
 	})
 	t.Run("after Update", func(t *testing.T) {
 		tests := map[string]struct {
