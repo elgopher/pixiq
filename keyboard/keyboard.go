@@ -5,7 +5,7 @@
 //     window := windows.Open(...)
 //     keys := keyboard.New(window)
 //     loops.Loop(window, func(frame *pixiq.Frame) {
-//     keys.Update()
+//         keys.Update() // This is needed each frame to update the state of keys
 //         if keys.Pressed(keyboard.A) {
 //             ...
 //         }
@@ -78,7 +78,7 @@ func (k Key) pressed(keyboard *Keyboard) bool {
 	return keyboard.keysPressedByToken[k.token]
 }
 
-// Serialize marshals the key to string which can be used for saving action keymap
+// Serialize marshals the key to string which can be used for saving action keymap.
 func (k Key) Serialize() string {
 	if k.IsUnknown() {
 		return fmt.Sprintf("?%d", k.scanCode)
@@ -86,7 +86,7 @@ func (k Key) Serialize() string {
 	return string(k.Token())
 }
 
-// Deserialize unmarshals the key from string which can be used for loading action keymap
+// Deserialize unmarshalls the key from string which can be used for loading action keymap.
 func Deserialize(s string) (Key, error) {
 	if strings.HasPrefix(s, "?") && len(s) > 1 {
 		scanCode, err := strconv.Atoi(s[1:])
@@ -108,7 +108,7 @@ func Deserialize(s string) (Key, error) {
 	return newKey(Token(s)), nil
 }
 
-// EmptyEvent should be returned by EventSource when it does not have more events
+// EmptyEvent should be returned by EventSource when it does not have more events.
 var EmptyEvent = Event{}
 
 // NewPressedEvent returns new instance of Event when key was pressed.
@@ -155,7 +155,9 @@ func New(source EventSource) *Keyboard {
 }
 
 // Keyboard provides a read-only information about the current state of the
-// keyboard, such as what keys are currently pressed.
+// keyboard, such as what keys are currently pressed. Please note that
+// updating the Keyboard state retrieves and removes events from EventSource.
+// Therefore only Keyboard instance can be created for one EventSource.
 type Keyboard struct {
 	source                EventSource
 	keysPressedByToken    map[Token]bool

@@ -130,7 +130,7 @@ func (w Windows) Open(width, height int, options ...WindowOption) *Window {
 	return win
 }
 
-// WindowOption is an option used when opening the window
+// WindowOption is an option used when opening the window.
 type WindowOption func(window *Window)
 
 // NoDecorationHint is Window hint hiding the border, close widget, etc.
@@ -141,14 +141,14 @@ func NoDecorationHint() WindowOption {
 	}
 }
 
-// Title sets the window title
+// Title sets the window title.
 func Title(title string) WindowOption {
 	return func(window *Window) {
 		window.glfwWindow.SetTitle(title)
 	}
 }
 
-// Window is an implementation of pixiq.Screen
+// Window is an implementation of pixiq.Screen.
 type Window struct {
 	glfwWindow     *glfw.Window
 	program        *program
@@ -173,7 +173,7 @@ func (w *Window) Draw(image *pixiq.Image) {
 	})
 }
 
-// SwapImages makes last drawn image visible
+// SwapImages makes last drawn image visible.
 func (w *Window) SwapImages() {
 	w.mainThreadLoop.Execute(func() {
 		w.glfwWindow.SwapBuffers()
@@ -181,7 +181,7 @@ func (w *Window) SwapImages() {
 	})
 }
 
-// Close closes the window and cleans resources
+// Close closes the window and cleans resources.
 func (w *Window) Close() {
 	w.mainThreadLoop.Execute(func() {
 		w.glfwWindow.Destroy()
@@ -281,7 +281,7 @@ func (t *textures) New(width, height int) pixiq.AcceleratedImage {
 	}
 }
 
-// GLTexture is an OpenGL texture which can be sampled to create rectangles on screen
+// GLTexture is an OpenGL texture which can be sampled to create rectangles on screen.
 type GLTexture interface {
 	pixiq.AcceleratedImage
 	TextureID() uint32
