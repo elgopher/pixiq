@@ -55,7 +55,7 @@ var keymap = map[glfw.Key]keyboard.Key{
 	glfw.KeyBackslash:    keyboard.Backslash,
 	glfw.KeyRightBracket: keyboard.RightBracket,
 	glfw.KeyGraveAccent:  keyboard.GraveAccent,
-	glfw.KeyEscape:       keyboard.Escape,
+	glfw.KeyEscape:       keyboard.Esc,
 	glfw.KeyEnter:        keyboard.Enter,
 	glfw.KeyTab:          keyboard.Tab,
 	glfw.KeyBackspace:    keyboard.Backspace,

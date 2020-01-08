@@ -28,7 +28,7 @@ type Key struct {
 // IsUnknown returns true if mapping has not been found. ScanCode should be used
 // instead.
 func (k Key) IsUnknown() bool {
-	return k.token == 0
+	return k.token == ""
 }
 
 // ScanCode returns the platform-specific code.
@@ -36,7 +36,7 @@ func (k Key) ScanCode() int {
 	return k.scanCode
 }
 
-// Token return platform-independent mapping.
+// Token returns platform-independent token.
 func (k Key) Token() Token {
 	return k.token
 }
@@ -56,175 +56,170 @@ func (k Key) pressed(keyboard *Keyboard) bool {
 	return keyboard.keysPressedByToken[k.token]
 }
 
-// Token is platform-independent mapping identifying the key. It may be
-// Unknown, then ScanCode should be used instead.
-type Token uint
-
-// Rune return the character assigned to key (capital letter)
-func (t Token) Rune() rune {
-	return rune(t)
-}
+// Token is a string representation of the key. It the key is
+// unknown then token is empty.
+type Token string
 
 var (
-	// Space Key
-	Space = newKey(' ')
-	// Apostrophe Key
-	Apostrophe = newKey('\'')
-	// Comma Key
-	Comma = newKey(',')
-	// Minus Key
-	Minus = newKey('-')
-	// Period Key
-	Period = newKey('.')
-	// Slash Key
-	Slash = newKey('/')
-	// Zero Key
-	Zero = newKey('0')
-	// One Key
-	One = newKey('1')
-	// Two Key
-	Two = newKey('2')
-	// Three Key
-	Three = newKey('3')
-	// Four Key
-	Four = newKey('4')
-	// Five Key
-	Five = newKey('5')
-	// Six Key
-	Six = newKey('6')
-	// Seven Key
-	Seven = newKey('7')
-	// Eight Key
-	Eight = newKey('8')
-	// Nine Key
-	Nine = newKey('9')
-	// Semicolon Key
-	Semicolon = newKey(';')
-	// Equal Key
-	Equal = newKey('=')
+	// Space Key " "
+	Space = newKey(" ")
+	// Apostrophe Key "'"
+	Apostrophe = newKey("'")
+	// Comma Key ","
+	Comma = newKey(",")
+	// Minus Key "-"
+	Minus = newKey("-")
+	// Period Key "."
+	Period = newKey(".")
+	// Slash Key "/"
+	Slash = newKey("/")
+	// Zero Key "0"
+	Zero = newKey("0")
+	// One Key "1"
+	One = newKey("1")
+	// Two Key "2"
+	Two = newKey("2")
+	// Three Key "3"
+	Three = newKey("3")
+	// Four Key "4"
+	Four = newKey("4")
+	// Five Key "5"
+	Five = newKey("5")
+	// Six Key "6"
+	Six = newKey("6")
+	// Seven Key "7"
+	Seven = newKey("7")
+	// Eight Key "8"
+	Eight = newKey("8")
+	// Nine Key "9"
+	Nine = newKey("9")
+	// Semicolon Key ";"
+	Semicolon = newKey(";")
+	// Equal Key "="
+	Equal = newKey("=")
 	// A key
-	A = newKey('A')
+	A = newKey("A")
 	// B key
-	B = newKey('B')
+	B = newKey("B")
 	// C Key
-	C = newKey('C')
+	C = newKey("C")
 	// D Key
-	D = newKey('D')
+	D = newKey("D")
 	// E Key
-	E = newKey('E')
+	E = newKey("E")
 	// F Key
-	F = newKey('F')
+	F = newKey("F")
 	// G Key
-	G = newKey('G')
+	G = newKey("G")
 	// H Key
-	H = newKey('H')
+	H = newKey("H")
 	// I Key
-	I = newKey('I')
+	I = newKey("I")
 	// J Key
-	J = newKey('J')
+	J = newKey("J")
 	// K Key
-	K = newKey('K')
+	K = newKey("K")
 	// L Key
-	L = newKey('L')
+	L = newKey("L")
 	// M Key
-	M = newKey('M')
+	M = newKey("M")
 	// N Key
-	N = newKey('N')
+	N = newKey("N")
 	// O Key
-	O = newKey('O')
+	O = newKey("O")
 	// P Key
-	P = newKey('P')
+	P = newKey("P")
 	// Q Key
-	Q = newKey('Q')
+	Q = newKey("Q")
 	// R Key
-	R = newKey('R')
+	R = newKey("R")
 	// S Key
-	S = newKey('S')
+	S = newKey("S")
 	// T Key
-	T = newKey('T')
+	T = newKey("T")
 	// U Key
-	U = newKey('U')
+	U = newKey("U")
 	// V Key
-	V = newKey('V')
+	V = newKey("V")
 	// W Key
-	W = newKey('W')
+	W = newKey("W")
 	// X Key
-	X = newKey('X')
+	X = newKey("X")
 	// Y Key
-	Y = newKey('Y')
+	Y = newKey("Y")
 	// Z Key
-	Z = newKey('Z')
-	// LeftBracket Key
-	LeftBracket = newKey('[')
-	// Backslash Key
-	Backslash = newKey('\\')
-	// RightBracket Key
-	RightBracket = newKey(']')
-	// GraveAccent Key
-	GraveAccent = newKey('`')
+	Z = newKey("Z")
+	// LeftBracket Key "["
+	LeftBracket = newKey("[")
+	// Backslash Key "\"
+	Backslash = newKey("\\")
+	// RightBracket Key "]"
+	RightBracket = newKey("]")
+	// GraveAccent Key "`"
+	GraveAccent = newKey("`")
 	// TODO keyworld 1 and 2? I think they should not be added.
-	// Escape Key
-	Escape = newKey(256)
+	// Esc Key
+	Esc = newKey("Esc")
 	// Enter Key
-	Enter = newKey(257)
+	Enter = newKey("Enter")
 	// Tab Key
-	Tab = newKey(258)
+	Tab = newKey("Tab")
 	// Backspace Key
-	Backspace = newKey(259)
+	Backspace = newKey("Backspace")
 	// Insert Key
-	Insert = newKey(260)
+	Insert = newKey("Insert")
 	// Delete Key
-	Delete = newKey(261)
+	Delete = newKey("Delete")
 	// Right Key
-	Right = newKey(262)
+	Right = newKey("Right")
 	// Left Key
-	Left = newKey(263)
+	Left = newKey("Left")
 	// Down Key
-	Down = newKey(264)
+	Down = newKey("Down")
 	// Up Key
-	Up = newKey(265)
+	Up = newKey("Up")
 	// PageUp Key
-	PageUp = newKey(266)
+	PageUp = newKey("PageUp")
 	// PageDown Key
-	PageDown = newKey(267)
+	PageDown = newKey("PageDown")
 	// Home Key
-	Home = newKey(268)
+	Home = newKey("Home")
 	// End Key
-	End = newKey(269)
+	End = newKey("End")
 	// CapsLock Key
-	CapsLock = newKey(280)
+	CapsLock = newKey("CapsLock")
 	// ScrollLock Key
-	ScrollLock = newKey(281)
+	ScrollLock = newKey("ScrollLock")
 	// NumLock Key
-	NumLock = newKey(282)
+	NumLock = newKey("NumLock")
 	// PrintScreen Key
-	PrintScreen = newKey(283) // TODO I think it does not work on Linux
+	PrintScreen = newKey("PrintScreen")
 	// Pause Key
-	Pause = newKey(284)
+	Pause = newKey("Pause")
 	// F1 Key
-	F1 = newKey(290)
+	F1 = newKey("F1")
 	// F2 Key
-	F2 = newKey(291)
+	F2 = newKey("F2")
 	// F3 Key
-	F3 = newKey(292)
+	F3 = newKey("F3")
 	// F4 Key
-	F4 = newKey(293)
+	F4 = newKey("F4")
 	// F5 Key
-	F5 = newKey(294)
+	F5 = newKey("F5")
 	// F6 Key
-	F6 = newKey(295)
+	F6 = newKey("F6")
 	// F7 Key
-	F7 = newKey(296)
+	F7 = newKey("F7")
 	// F8 Key
-	F8 = newKey(297)
+	F8 = newKey("F8")
 	// F9 Key
-	F9 = newKey(298)
+	F9 = newKey("F9")
 	// F10 Key
-	F10 = newKey(299)
+	F10 = newKey("F10")
 	// F11 Key
-	F11 = newKey(300)
+	F11 = newKey("F11")
 	// F12 Key
-	F12 = newKey(301)
+	F12 = newKey("F12")
 	// TODO
 	// EmptyEvent should be returned by EventSource when it does not have more events
 	EmptyEvent = Event{}
