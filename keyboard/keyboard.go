@@ -14,7 +14,6 @@ type EventSource interface {
 	Poll() (Event, bool)
 }
 
-// TODO Add serialization deserialization of key
 func newKey(token Token) Key {
 	return Key{token: token}
 }
