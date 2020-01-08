@@ -15,6 +15,8 @@ type KeyboardEvents struct {
 	writeIndex int
 }
 
+// NewKeyboardEvents returns KeyboardEvents of given initial size. It will
+// be expanded if necessary. Will panic if initial size smaller than 1.
 func NewKeyboardEvents(initialSize int) *KeyboardEvents {
 	if initialSize < 1 {
 		panic("initial size was too small")
