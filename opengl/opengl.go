@@ -5,16 +5,23 @@
 package opengl
 
 import (
+	"errors"
+
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
 
 	"github.com/jacekolszak/pixiq"
+	"github.com/jacekolszak/pixiq/keyboard"
+	"github.com/jacekolszak/pixiq/opengl/internal"
 )
 
 // New creates OpenGL instance.
 // MainThreadLoop is needed because some GLFW functions has to be called
 // from the main thread.
 func New(loop *MainThreadLoop) *OpenGL {
+	if loop == nil {
+		panic("nil MainThreadLoop")
+	}
 	var mainWindow *glfw.Window
 	loop.Execute(func() {
 		err := glfw.Init()
@@ -89,7 +96,7 @@ type Windows struct {
 }
 
 // Open creates and shows Window.
-func (g Windows) Open(width, height int, options ...WindowOption) *Window {
+func (w Windows) Open(width, height int, options ...WindowOption) *Window {
 	if width < 1 {
 		width = 1
 	}
@@ -97,26 +104,37 @@ func (g Windows) Open(width, height int, options ...WindowOption) *Window {
 		height = 1
 	}
 	var err error
-	win := &Window{mainThreadLoop: g.mainThreadLoop}
-	g.mainThreadLoop.Execute(func() {
-		win.glfwWindow = createWindow(g.mainWindow)
+	win := &Window{
+		mainThreadLoop: w.mainThreadLoop,
+		keyboardEvents: internal.NewKeyboardEvents(16),
+	}
+	w.mainThreadLoop.Execute(func() {
+		win.glfwWindow = createWindow(w.mainWindow)
+		win.glfwWindow.SetKeyCallback(win.keyboardEvents.OnKeyCallback)
 		win.program, err = compileProgram()
 		if err != nil {
-			panic(err)
+			return
 		}
 		win.screenPolygon = newScreenPolygon(
 			win.program.vertexPositionLocation,
 			win.program.texturePositionLocation)
 		win.glfwWindow.SetSize(width, height)
 		for _, option := range options {
+			if option == nil {
+				err = errors.New("nil option")
+				return
+			}
 			option(win)
 		}
 		win.glfwWindow.Show()
 	})
+	if err != nil {
+		panic(err)
+	}
 	return win
 }
 
-// WindowOption is an option used when opening the window
+// WindowOption is an option used when opening the window.
 type WindowOption func(window *Window)
 
 // NoDecorationHint is Window hint hiding the border, close widget, etc.
@@ -127,89 +145,96 @@ func NoDecorationHint() WindowOption {
 	}
 }
 
-// Title sets the window title
+// Title sets the window title.
 func Title(title string) WindowOption {
 	return func(window *Window) {
 		window.glfwWindow.SetTitle(title)
 	}
 }
 
-// Window is an implementation of pixiq.Screen
+// Window is an implementation of pixiq.Screen.
 type Window struct {
 	glfwWindow     *glfw.Window
 	program        *program
 	mainThreadLoop *MainThreadLoop
 	screenPolygon  *screenPolygon
+	keyboardEvents *internal.KeyboardEvents
 }
 
 // Draw draws image spanning the whole window to the invisible buffer.
-func (g *Window) Draw(image *pixiq.Image) {
+func (w *Window) Draw(image *pixiq.Image) {
 	texture, isGL := image.Upload().(GLTexture)
 	if !isGL {
 		panic("opengl Window can only draw images accelerated with opengl.GLTexture")
 	}
-	g.mainThreadLoop.Execute(func() {
-		g.glfwWindow.MakeContextCurrent()
-		g.program.use()
-		w, h := g.glfwWindow.GetFramebufferSize()
-		gl.Viewport(0, 0, int32(w), int32(h))
+	w.mainThreadLoop.Execute(func() {
+		w.glfwWindow.MakeContextCurrent()
+		w.program.use()
+		width, height := w.glfwWindow.GetFramebufferSize()
+		gl.Viewport(0, 0, int32(width), int32(height))
 		gl.BindTexture(gl.TEXTURE_2D, texture.TextureID())
-		g.screenPolygon.draw()
+		w.screenPolygon.draw()
 	})
 }
 
-// SwapImages makes last drawn image visible
-func (g *Window) SwapImages() {
-	g.mainThreadLoop.Execute(func() {
-		g.glfwWindow.SwapBuffers()
+// SwapImages makes last drawn image visible.
+func (w *Window) SwapImages() {
+	w.mainThreadLoop.Execute(func() {
+		w.glfwWindow.SwapBuffers()
 		glfw.PollEvents()
 	})
 }
 
-// Close closes the window and cleans resources
-func (g *Window) Close() {
-	g.mainThreadLoop.Execute(func() {
-		g.glfwWindow.Destroy()
+// Close closes the window and cleans resources.
+func (w *Window) Close() {
+	w.mainThreadLoop.Execute(func() {
+		w.glfwWindow.Destroy()
 	})
 }
 
 // ShouldClose reports the value of the close flag of the window.
 // The flag is set to true when user clicks Close button or hits ALT+F4/CMD+Q.
-func (g *Window) ShouldClose() bool {
+func (w *Window) ShouldClose() bool {
 	var shouldClose bool
-	g.mainThreadLoop.Execute(func() {
-		shouldClose = g.glfwWindow.ShouldClose()
+	w.mainThreadLoop.Execute(func() {
+		shouldClose = w.glfwWindow.ShouldClose()
 	})
 	return shouldClose
 }
 
 // Width returns the width of the window in pixels.
 // If zooming is used the width is not multiplied by zoom.
-func (g *Window) Width() int {
+func (w *Window) Width() int {
 	var width int
-	g.mainThreadLoop.Execute(func() {
-		width, _ = g.glfwWindow.GetSize()
+	w.mainThreadLoop.Execute(func() {
+		width, _ = w.glfwWindow.GetSize()
 	})
 	return width
 }
 
 // Height returns the height of the window in pixels.
 // If zooming is used the height is not multiplied by zoom.
-func (g *Window) Height() int {
+func (w *Window) Height() int {
 	var height int
-	g.mainThreadLoop.Execute(func() {
-		_, height = g.glfwWindow.GetSize()
+	w.mainThreadLoop.Execute(func() {
+		_, height = w.glfwWindow.GetSize()
 	})
 	return height
+}
+
+// Poll retrieves and removes next keyboard Event. If there are no more
+// events false is returned. It implements keyboard.EventSource method.
+func (w *Window) Poll() (keyboard.Event, bool) {
+	return w.keyboardEvents.Poll()
 }
 
 type textures struct {
 	mainThreadLoop *MainThreadLoop
 }
 
-func (g *textures) New(width, height int) pixiq.AcceleratedImage {
+func (t *textures) New(width, height int) pixiq.AcceleratedImage {
 	var id uint32
-	g.mainThreadLoop.Execute(func() {
+	t.mainThreadLoop.Execute(func() {
 		gl.GenTextures(1, &id)
 		gl.BindTexture(gl.TEXTURE_2D, id)
 		gl.TexImage2D(
@@ -230,11 +255,11 @@ func (g *textures) New(width, height int) pixiq.AcceleratedImage {
 		id:             id,
 		width:          width,
 		height:         height,
-		mainThreadLoop: g.mainThreadLoop,
+		mainThreadLoop: t.mainThreadLoop,
 	}
 }
 
-// GLTexture is an OpenGL texture which can be sampled to create rectangles on screen
+// GLTexture is an OpenGL texture which can be sampled to create rectangles on screen.
 type GLTexture interface {
 	pixiq.AcceleratedImage
 	TextureID() uint32

@@ -8,9 +8,11 @@ import (
 
 func BenchmarkScreenLoops_Loop(b *testing.B) {
 	b.StopTimer()
-	images := pixiq.NewImages(&fakeAcceleratedImages{})
-	screenLoops := pixiq.NewScreenLoops(images)
-	screen := &noopScreen{}
+	var (
+		images      = pixiq.NewImages(&fakeAcceleratedImages{})
+		screenLoops = pixiq.NewScreenLoops(images)
+		screen      = &noopScreen{}
+	)
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		frameNumber := 0

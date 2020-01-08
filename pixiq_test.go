@@ -12,6 +12,11 @@ import (
 var transparent = pixiq.RGBA(0, 0, 0, 0)
 
 func TestNewImages(t *testing.T) {
+	t.Run("should panic when accelerated images is null", func(t *testing.T) {
+		assert.Panics(t, func() {
+			pixiq.NewImages(nil)
+		})
+	})
 	t.Run("should create image factory", func(t *testing.T) {
 		images := pixiq.NewImages(&fakeAcceleratedImages{})
 		assert.NotNil(t, images)

@@ -34,7 +34,7 @@ func isMainGoroutine() bool {
 	return n == 1
 }
 
-// MainThreadLoop is a loop for executing jobs in main thread
+// MainThreadLoop is a loop for executing jobs in main thread.
 type MainThreadLoop struct {
 	jobs chan func()
 }
@@ -49,7 +49,7 @@ func (g *MainThreadLoop) run() {
 	}
 }
 
-// Execute runs job blocking the current goroutine
+// Execute runs job blocking the current goroutine.
 func (g *MainThreadLoop) Execute(job func()) {
 	done := make(chan struct{})
 	g.jobs <- func() {
