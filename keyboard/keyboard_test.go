@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	"github.com/jacekolszak/pixiq/keyboard"
 )
@@ -168,64 +167,45 @@ func TestPressed(t *testing.T) {
 		assert.NotNil(t, pressed)
 	})
 	t.Run("after Update", func(t *testing.T) {
-		t.Run("one PressedEvent for A", func(t *testing.T) {
-			source := newFakeEventSource(aPressed)
-			keys := keyboard.New(source)
-			keys.Update()
-			// when
-			pressed := keys.PressedKeys()
-			// then
-			require.Len(t, pressed, 1)
-			assert.Equal(t, pressed[0], keyboard.A)
-		})
-		t.Run("one PressedEvent for B", func(t *testing.T) {
-			source := newFakeEventSource(bPressed)
-			keys := keyboard.New(source)
-			keys.Update()
-			// when
-			pressed := keys.PressedKeys()
-			// then
-			require.Len(t, pressed, 1)
-			assert.Equal(t, pressed[0], keyboard.B)
-		})
-		t.Run("one PressedEvent for A, one ReleaseEvent for A", func(t *testing.T) {
-			source := newFakeEventSource(aPressed, aReleased)
-			keys := keyboard.New(source)
-			keys.Update()
-			// when
-			pressed := keys.PressedKeys()
-			// then
-			assert.Len(t, pressed, 0)
-		})
-		t.Run("one PressedEvent for unknown 0", func(t *testing.T) {
-			source := newFakeEventSource(unknown0Pressed)
-			keys := keyboard.New(source)
-			keys.Update()
-			// when
-			pressed := keys.PressedKeys()
-			// then
-			require.Len(t, pressed, 1)
-			assert.Equal(t, pressed[0], unknown0)
-		})
-		t.Run("one PressedEvent for unknown 1", func(t *testing.T) {
-			source := newFakeEventSource(unknown1Pressed)
-			keys := keyboard.New(source)
-			keys.Update()
-			// when
-			pressed := keys.PressedKeys()
-			// then
-			require.Len(t, pressed, 1)
-			assert.Equal(t, pressed[0], unknown1)
-		})
-		t.Run("one PressedEvent for unknown 0, one ReleaseEvent for unknown 0", func(t *testing.T) {
-			source := newFakeEventSource(unknown0Pressed, unknown0Released)
-			keys := keyboard.New(source)
-			keys.Update()
-			// when
-			pressed := keys.PressedKeys()
-			// then
-			assert.Len(t, pressed, 0)
-		})
+		tests := map[string]struct {
+			source          keyboard.EventSource
+			expectedPressed []keyboard.Key
+		}{
+			"one PressedEvent for A": {
+				source:          newFakeEventSource(aPressed),
+				expectedPressed: []keyboard.Key{keyboard.A},
+			},
+			"one PressedEvent for B": {
+				source:          newFakeEventSource(bPressed),
+				expectedPressed: []keyboard.Key{keyboard.B},
+			},
+			"one PressedEvent for A, one ReleaseEvent for A": {
+				source:          newFakeEventSource(aPressed, aReleased),
+				expectedPressed: nil,
+			},
+			"one PressedEvent for unknown 0": {
+				source:          newFakeEventSource(unknown0Pressed),
+				expectedPressed: []keyboard.Key{unknown0},
+			},
+			"one PressedEvent for unknown 1": {
+				source:          newFakeEventSource(unknown1Pressed),
+				expectedPressed: []keyboard.Key{unknown1},
+			},
+			"one PressedEvent for unknown 0, one ReleaseEvent for unknown 0": {
+				source:          newFakeEventSource(unknown0Pressed, unknown0Released),
+				expectedPressed: nil,
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				keys := keyboard.New(test.source)
+				keys.Update()
+				// when
+				pressed := keys.PressedKeys()
+				// then
+				assert.Equal(t, test.expectedPressed, pressed)
+			})
+		}
 	})
 }
 
