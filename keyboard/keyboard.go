@@ -137,9 +137,21 @@ func (k *Keyboard) Pressed(key Key) bool {
 	return key.pressed(k)
 }
 
+// PressedKeys returns a slice of all currently pressed keys. For instance this
+// function can be used to get a key mapping for a given action in the game.
+// Please note though that calling this method too many times (like 10+ times
+// per frame) may be expensive (TODO verify this claim)
 func (k *Keyboard) PressedKeys() []Key {
-	if len(k.keysPressedByToken) == 0 {
-		return nil
+	pressedKeys := []Key{}
+	for token, pressed := range k.keysPressedByToken {
+		if pressed {
+			pressedKeys = append(pressedKeys, newKey(token))
+		}
 	}
-	return []Key{A}
+	for scanCode, pressed := range k.keysPressedByScanCode {
+		if pressed {
+			pressedKeys = append(pressedKeys, NewUnknownKey(scanCode))
+		}
+	}
+	return pressedKeys
 }

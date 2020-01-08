@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/jacekolszak/pixiq/keyboard"
 )
@@ -148,7 +149,14 @@ func TestKeyboard_Pressed(t *testing.T) {
 
 func TestPressed(t *testing.T) {
 	var (
-		aPressed = keyboard.NewPressedEvent(keyboard.A)
+		aPressed         = keyboard.NewPressedEvent(keyboard.A)
+		aReleased        = keyboard.NewReleasedEvent(keyboard.A)
+		bPressed         = keyboard.NewPressedEvent(keyboard.B)
+		unknown0         = keyboard.NewUnknownKey(0)
+		unknown1         = keyboard.NewUnknownKey(0)
+		unknown0Pressed  = keyboard.NewPressedEvent(unknown0)
+		unknown0Released = keyboard.NewReleasedEvent(unknown0)
+		unknown1Pressed  = keyboard.NewPressedEvent(unknown1)
 	)
 	t.Run("before Update pressed keys are empty", func(t *testing.T) {
 		source := newFakeEventSource(aPressed)
@@ -157,6 +165,7 @@ func TestPressed(t *testing.T) {
 		pressed := keys.PressedKeys()
 		// then
 		assert.Empty(t, pressed)
+		assert.NotNil(t, pressed)
 	})
 	t.Run("after Update", func(t *testing.T) {
 		t.Run("one PressedEvent for A", func(t *testing.T) {
@@ -166,8 +175,56 @@ func TestPressed(t *testing.T) {
 			// when
 			pressed := keys.PressedKeys()
 			// then
-			assert.Len(t, pressed, 1)
+			require.Len(t, pressed, 1)
 			assert.Equal(t, pressed[0], keyboard.A)
+		})
+		t.Run("one PressedEvent for B", func(t *testing.T) {
+			source := newFakeEventSource(bPressed)
+			keys := keyboard.New(source)
+			keys.Update()
+			// when
+			pressed := keys.PressedKeys()
+			// then
+			require.Len(t, pressed, 1)
+			assert.Equal(t, pressed[0], keyboard.B)
+		})
+		t.Run("one PressedEvent for A, one ReleaseEvent for A", func(t *testing.T) {
+			source := newFakeEventSource(aPressed, aReleased)
+			keys := keyboard.New(source)
+			keys.Update()
+			// when
+			pressed := keys.PressedKeys()
+			// then
+			assert.Len(t, pressed, 0)
+		})
+		t.Run("one PressedEvent for unknown 0", func(t *testing.T) {
+			source := newFakeEventSource(unknown0Pressed)
+			keys := keyboard.New(source)
+			keys.Update()
+			// when
+			pressed := keys.PressedKeys()
+			// then
+			require.Len(t, pressed, 1)
+			assert.Equal(t, pressed[0], unknown0)
+		})
+		t.Run("one PressedEvent for unknown 1", func(t *testing.T) {
+			source := newFakeEventSource(unknown1Pressed)
+			keys := keyboard.New(source)
+			keys.Update()
+			// when
+			pressed := keys.PressedKeys()
+			// then
+			require.Len(t, pressed, 1)
+			assert.Equal(t, pressed[0], unknown1)
+		})
+		t.Run("one PressedEvent for unknown 0, one ReleaseEvent for unknown 0", func(t *testing.T) {
+			source := newFakeEventSource(unknown0Pressed, unknown0Released)
+			keys := keyboard.New(source)
+			keys.Update()
+			// when
+			pressed := keys.PressedKeys()
+			// then
+			assert.Len(t, pressed, 0)
 		})
 	})
 }
