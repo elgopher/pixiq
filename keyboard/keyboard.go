@@ -1,6 +1,12 @@
 // Package keyboard adds support for keyboard input.
 package keyboard
 
+import (
+	"fmt"
+	"strconv"
+	"strings"
+)
+
 // EventSource is a source of keyboard Events.
 type EventSource interface {
 	// Poll retrieves and removes next keyboard Event. If there are no more
@@ -41,7 +47,7 @@ func (k Key) ScanCode() int {
 	return k.scanCode
 }
 
-// Token returns platform-independent token.
+// Token returns a platform-independent unique token.
 func (k Key) Token() Token {
 	return k.token
 }
@@ -59,6 +65,36 @@ func (k Key) pressed(keyboard *Keyboard) bool {
 		return keyboard.keysPressedByScanCode[k.scanCode]
 	}
 	return keyboard.keysPressedByToken[k.token]
+}
+
+// Serialize marshals the key to string which can be used for saving action keymap
+func (k Key) Serialize() string {
+	if k.IsUnknown() {
+		return fmt.Sprintf("?%d", k.scanCode)
+	}
+	return string(k.Token())
+}
+
+// Deserialize unmarshals the key from string which can be used for loading action keymap
+func Deserialize(s string) (Key, error) {
+	if strings.HasPrefix(s, "?") && len(s) > 1 {
+		scanCode, err := strconv.Atoi(s[1:])
+		if err != nil {
+			return Key{}, fmt.Errorf("unserializable key string %s: %s", s, err)
+		}
+		return NewUnknownKey(scanCode), nil
+	}
+	var found bool
+	for _, key := range allKeys {
+		if string(key.token) == s {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return Key{}, fmt.Errorf("unserializable key string %s", s)
+	}
+	return newKey(Token(s)), nil
 }
 
 // EmptyEvent should be returned by EventSource when it does not have more events

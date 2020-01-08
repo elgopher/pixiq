@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/jacekolszak/pixiq/keyboard"
 )
@@ -203,6 +204,107 @@ func TestPressed(t *testing.T) {
 				pressed := keys.PressedKeys()
 				// then
 				assert.Equal(t, test.expectedPressed, pressed)
+			})
+		}
+	})
+}
+
+func TestKey_Serialize(t *testing.T) {
+	t.Run("should serialize key", func(t *testing.T) {
+		tests := map[string]struct {
+			key                      keyboard.Key
+			expectedSerializedString string
+		}{
+			"A": {
+				key:                      keyboard.A,
+				expectedSerializedString: "A",
+			},
+			"B": {
+				key:                      keyboard.B,
+				expectedSerializedString: "B",
+			},
+			"Home": {
+				key:                      keyboard.Home,
+				expectedSerializedString: "Home",
+			},
+			"KeypadAdd": {
+				key:                      keyboard.KeypadAdd,
+				expectedSerializedString: "Keypad +",
+			},
+			"Unknown 0": {
+				key:                      keyboard.NewUnknownKey(0),
+				expectedSerializedString: "?0",
+			},
+			"Unknown 1": {
+				key:                      keyboard.NewUnknownKey(1),
+				expectedSerializedString: "?1",
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				// when
+				serialized := test.key.Serialize()
+				// then
+				assert.Equal(t, test.expectedSerializedString, serialized)
+			})
+		}
+	})
+}
+
+func TestKey_Deserialize(t *testing.T) {
+	t.Run("should return error", func(t *testing.T) {
+		tests := map[string]string{
+			"<empty>": "",
+			"!":       "!",
+			"#":       "#",
+			"$":       "$",
+			"?":       "?",
+			"?A":      "?A",
+		}
+		for name, serializedString := range tests {
+			t.Run(name, func(t *testing.T) {
+				_, err := keyboard.Deserialize(serializedString)
+				assert.Error(t, err)
+			})
+		}
+	})
+	t.Run("should deserialize key", func(t *testing.T) {
+		tests := map[string]struct {
+			serializedString string
+			expectedKey      keyboard.Key
+		}{
+			"A": {
+				serializedString: "A",
+				expectedKey:      keyboard.A,
+			},
+			"B": {
+				serializedString: "B",
+				expectedKey:      keyboard.B,
+			},
+			"Home": {
+				serializedString: "Home",
+				expectedKey:      keyboard.Home,
+			},
+			"KeypadAdd": {
+				serializedString: "Keypad +",
+				expectedKey:      keyboard.KeypadAdd,
+			},
+			"?0": {
+				serializedString: "?0",
+				expectedKey:      keyboard.NewUnknownKey(0),
+			},
+			"?1": {
+				serializedString: "?1",
+				expectedKey:      keyboard.NewUnknownKey(1),
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				// when
+				key, err := keyboard.Deserialize(test.serializedString)
+				// then
+				require.NoError(t, err)
+				assert.Equal(t, test.expectedKey, key)
 			})
 		}
 	})
