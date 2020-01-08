@@ -218,6 +218,8 @@ func (w *Window) Height() int {
 	return height
 }
 
+// Poll retrieves and removes next keyboard Event. If there are no more
+// events false is returned. It implements keyboard.EventSource method.
 func (w *Window) Poll() (keyboard.Event, bool) {
 	if len(w.keyboardEvents) > 0 {
 		e := w.keyboardEvents[0]

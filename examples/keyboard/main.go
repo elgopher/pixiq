@@ -17,16 +17,16 @@ func main() {
 		loops.Loop(window, func(frame *pixiq.Frame) {
 			keys.Update()
 			if keys.Pressed(keyboard.A) {
-				x -= 1
+				x--
 			}
 			if keys.Pressed(keyboard.D) {
-				x += 1
+				x++
 			}
 			if keys.Pressed(keyboard.W) {
-				y -= 1
+				y--
 			}
 			if keys.Pressed(keyboard.S) {
-				y += 1
+				y++
 			}
 			screen := frame.Screen()
 			screen.SetColor(x, y, colornames.White)
