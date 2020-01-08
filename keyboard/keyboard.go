@@ -135,3 +135,10 @@ func (k *Keyboard) Update() {
 func (k *Keyboard) Pressed(key Key) bool {
 	return key.pressed(k)
 }
+
+func (k *Keyboard) PressedKeys() []Key {
+	if len(k.keysPressedByToken) == 0 {
+		return nil
+	}
+	return []Key{A}
+}

@@ -146,6 +146,32 @@ func TestKeyboard_Pressed(t *testing.T) {
 	})
 }
 
+func TestPressed(t *testing.T) {
+	var (
+		aPressed = keyboard.NewPressedEvent(keyboard.A)
+	)
+	t.Run("before Update pressed keys are empty", func(t *testing.T) {
+		source := newFakeEventSource(aPressed)
+		keys := keyboard.New(source)
+		// when
+		pressed := keys.PressedKeys()
+		// then
+		assert.Empty(t, pressed)
+	})
+	t.Run("after Update", func(t *testing.T) {
+		t.Run("one PressedEvent for A", func(t *testing.T) {
+			source := newFakeEventSource(aPressed)
+			keys := keyboard.New(source)
+			keys.Update()
+			// when
+			pressed := keys.PressedKeys()
+			// then
+			assert.Len(t, pressed, 1)
+			assert.Equal(t, pressed[0], keyboard.A)
+		})
+	})
+}
+
 func newFakeEventSource(events ...keyboard.Event) *fakeEventSource {
 	source := &fakeEventSource{}
 	source.events = []keyboard.Event{}
