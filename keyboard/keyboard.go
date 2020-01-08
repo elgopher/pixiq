@@ -66,7 +66,7 @@ func (t Token) Rune() rune {
 }
 
 var (
-	// SPACE Key
+	// Space Key
 	Space = newKey(' ')
 	// Apostrophe Key
 	Apostrophe = newKey('\'')
@@ -162,7 +162,70 @@ var (
 	RightBracket = newKey(']')
 	// GraveAccent Key
 	GraveAccent = newKey('`')
-
+	// TODO keyworld 1 and 2? I think they should not be added.
+	// Escape Key
+	Escape = newKey(256)
+	// Enter Key
+	Enter = newKey(257)
+	// Tab Key
+	Tab = newKey(258)
+	// Backspace Key
+	Backspace = newKey(259)
+	// Insert Key
+	Insert = newKey(260)
+	// Delete Key
+	Delete = newKey(261)
+	// Right Key
+	Right = newKey(262)
+	// Left Key
+	Left = newKey(263)
+	// Down Key
+	Down = newKey(264)
+	// Up Key
+	Up = newKey(265)
+	// PageUp Key
+	PageUp = newKey(266)
+	// PageDown Key
+	PageDown = newKey(267)
+	// Home Key
+	Home = newKey(268)
+	// End Key
+	End = newKey(269)
+	// CapsLock Key
+	CapsLock = newKey(280)
+	// ScrollLock Key
+	ScrollLock = newKey(281)
+	// NumLock Key
+	NumLock = newKey(282)
+	// PrintScreen Key
+	PrintScreen = newKey(283) // TODO I think it does not work on Linux
+	// Pause Key
+	Pause = newKey(284)
+	// F1 Key
+	F1 = newKey(290)
+	// F2 Key
+	F2 = newKey(291)
+	// F3 Key
+	F3 = newKey(292)
+	// F4 Key
+	F4 = newKey(293)
+	// F5 Key
+	F5 = newKey(294)
+	// F6 Key
+	F6 = newKey(295)
+	// F7 Key
+	F7 = newKey(296)
+	// F8 Key
+	F8 = newKey(297)
+	// F9 Key
+	F9 = newKey(298)
+	// F10 Key
+	F10 = newKey(299)
+	// F11 Key
+	F11 = newKey(300)
+	// F12 Key
+	F12 = newKey(301)
+	// TODO
 	// EmptyEvent should be returned by EventSource when it does not have more events
 	EmptyEvent = Event{}
 )
