@@ -127,5 +127,4 @@ var keymap = map[glfw.Key]keyboard.Key{
 	glfw.KeyRightAlt:     keyboard.RightAlt,
 	glfw.KeyRightSuper:   keyboard.RightSuper,
 	glfw.KeyMenu:         keyboard.Menu,
-	glfw.KeyLast:         keyboard.Last,
 }
