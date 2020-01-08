@@ -12,6 +12,7 @@ import (
 
 	"github.com/jacekolszak/pixiq"
 	"github.com/jacekolszak/pixiq/keyboard"
+	"github.com/jacekolszak/pixiq/opengl/internal"
 )
 
 // New creates OpenGL instance.
@@ -103,10 +104,13 @@ func (w Windows) Open(width, height int, options ...WindowOption) *Window {
 		height = 1
 	}
 	var err error
-	win := &Window{mainThreadLoop: w.mainThreadLoop}
+	win := &Window{
+		mainThreadLoop: w.mainThreadLoop,
+		keyboardEvents: internal.KeyboardEvents{},
+	}
 	w.mainThreadLoop.Execute(func() {
 		win.glfwWindow = createWindow(w.mainWindow)
-		win.glfwWindow.SetKeyCallback(win.onKeyCallback)
+		win.glfwWindow.SetKeyCallback(win.keyboardEvents.OnKeyCallback)
 		win.program, err = compileProgram()
 		if err != nil {
 			return
@@ -154,7 +158,7 @@ type Window struct {
 	program        *program
 	mainThreadLoop *MainThreadLoop
 	screenPolygon  *screenPolygon
-	keyboardEvents []keyboard.Event
+	keyboardEvents internal.KeyboardEvents
 }
 
 // Draw draws image spanning the whole window to the invisible buffer.
@@ -221,33 +225,7 @@ func (w *Window) Height() int {
 // Poll retrieves and removes next keyboard Event. If there are no more
 // events false is returned. It implements keyboard.EventSource method.
 func (w *Window) Poll() (keyboard.Event, bool) {
-	if len(w.keyboardEvents) > 0 {
-		e := w.keyboardEvents[0]
-		w.keyboardEvents = w.keyboardEvents[1:]
-		return e, true
-	}
-	return keyboard.EmptyEvent, false
-}
-
-func (w *Window) onKeyCallback(_ *glfw.Window, glfwKey glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) { // TODO mods
-	var key keyboard.Key
-	if glfwKey == glfw.KeyUnknown {
-		key = keyboard.NewUnknownKey(scancode)
-	} else {
-		var ok bool
-		key, ok = keymap[glfwKey]
-		if !ok {
-			key = keyboard.NewUnknownKey(scancode)
-		}
-	}
-	var event keyboard.Event
-	if action == glfw.Press {
-		event = keyboard.NewPressedEvent(key)
-	}
-	if action == glfw.Release {
-		event = keyboard.NewReleasedEvent(key)
-	}
-	w.keyboardEvents = append(w.keyboardEvents, event)
+	return w.keyboardEvents.Poll()
 }
 
 type textures struct {
