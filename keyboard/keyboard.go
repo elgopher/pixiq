@@ -1,3 +1,4 @@
+// Package keyboard adds support for keyboard input.
 package keyboard
 
 // EventSource is a source of keyboard Events.
