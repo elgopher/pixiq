@@ -106,7 +106,7 @@ func (w Windows) Open(width, height int, options ...WindowOption) *Window {
 	var err error
 	win := &Window{
 		mainThreadLoop: w.mainThreadLoop,
-		keyboardEvents: internal.KeyboardEvents{},
+		keyboardEvents: internal.NewKeyboardEvents(16),
 	}
 	w.mainThreadLoop.Execute(func() {
 		win.glfwWindow = createWindow(w.mainWindow)
@@ -158,7 +158,7 @@ type Window struct {
 	program        *program
 	mainThreadLoop *MainThreadLoop
 	screenPolygon  *screenPolygon
-	keyboardEvents internal.KeyboardEvents
+	keyboardEvents *internal.KeyboardEvents
 }
 
 // Draw draws image spanning the whole window to the invisible buffer.

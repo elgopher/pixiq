@@ -11,9 +11,22 @@ import (
 	"github.com/jacekolszak/pixiq/opengl/internal"
 )
 
+func TestNewKeyboardEvents(t *testing.T) {
+	t.Run("should panic for initial size -1", func(t *testing.T) {
+		assert.Panics(t, func() {
+			internal.NewKeyboardEvents(-1)
+		})
+	})
+	t.Run("should panic for initial size 0", func(t *testing.T) {
+		assert.Panics(t, func() {
+			internal.NewKeyboardEvents(0)
+		})
+	})
+}
+
 func TestKeyboardEvents_Poll(t *testing.T) {
 	t.Run("should return EmptyEvent when there are no events", func(t *testing.T) {
-		events := internal.KeyboardEvents{}
+		events := internal.NewKeyboardEvents(16)
 		// when
 		event, ok := events.Poll()
 		// then
@@ -21,7 +34,7 @@ func TestKeyboardEvents_Poll(t *testing.T) {
 		assert.Equal(t, keyboard.EmptyEvent, event)
 	})
 	t.Run("should return EmptyEvent for Repeat action", func(t *testing.T) {
-		events := internal.KeyboardEvents{}
+		events := internal.NewKeyboardEvents(16)
 		events.OnKeyCallback(nil, glfw.KeyA, 0, glfw.Repeat, 0)
 		// when
 		event, ok := events.Poll()
@@ -71,7 +84,7 @@ func TestKeyboardEvents_Poll(t *testing.T) {
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
-				events := internal.KeyboardEvents{}
+				events := internal.NewKeyboardEvents(16)
 				events.OnKeyCallback(nil, test.glfwKey, test.scanCode, test.action, 0)
 				// when
 				event, ok := events.Poll()
@@ -84,10 +97,10 @@ func TestKeyboardEvents_Poll(t *testing.T) {
 				assert.Equal(t, keyboard.EmptyEvent, event)
 			})
 		}
-
 	})
+
 	t.Run("should return two mapped events", func(t *testing.T) {
-		events := internal.KeyboardEvents{}
+		events := internal.NewKeyboardEvents(16)
 		events.OnKeyCallback(nil, glfw.KeyA, 0, glfw.Press, 0)
 		events.OnKeyCallback(nil, glfw.KeyB, 0, glfw.Release, 0)
 		// when
@@ -99,6 +112,28 @@ func TestKeyboardEvents_Poll(t *testing.T) {
 		event, ok = events.Poll()
 		require.True(t, ok)
 		assert.Equal(t, keyboard.NewReleasedEvent(keyboard.B), event)
+		// and
+		event, ok = events.Poll()
+		require.False(t, ok)
+		assert.Equal(t, keyboard.EmptyEvent, event)
+	})
+
+}
+
+func TestKeyboardEvents_OnKeyCallback(t *testing.T) {
+	t.Run("should expand buffer when too many events", func(t *testing.T) {
+		events := internal.NewKeyboardEvents(1)
+		// when
+		events.OnKeyCallback(nil, glfw.KeyA, 0, glfw.Press, 0)
+		events.OnKeyCallback(nil, glfw.KeyB, 0, glfw.Press, 0)
+		// then
+		event, ok := events.Poll()
+		require.True(t, ok)
+		assert.Equal(t, keyboard.NewPressedEvent(keyboard.A), event)
+		// and
+		event, ok = events.Poll()
+		require.True(t, ok)
+		assert.Equal(t, keyboard.NewPressedEvent(keyboard.B), event)
 		// and
 		event, ok = events.Poll()
 		require.False(t, ok)
