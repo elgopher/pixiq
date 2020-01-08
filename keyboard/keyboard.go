@@ -157,7 +157,10 @@ var (
 	RightBracket = newKey("]")
 	// GraveAccent Key "`"
 	GraveAccent = newKey("`")
-	// TODO keyworld 1 and 2? I think they should not be added.
+	// World1 Key
+	World1 = newKey("World 1")
+	// World2 Key
+	World2 = newKey("World 2")
 	// Esc Key
 	Esc = newKey("Esc")
 	// Enter Key
@@ -266,7 +269,40 @@ var (
 	Keypad8 = newKey("Keypad 8")
 	// Keypad9 Key
 	Keypad9 = newKey("Keypad 9")
-	// TODO
+	// KeypadDecimal Key
+	KeypadDecimal = newKey("Keypad .")
+	// KeypadDivide Key
+	KeypadDivide = newKey("Keypad /")
+	// KeypadMultiply Key
+	KeypadMultiply = newKey("Keypad *")
+	// KeypadSubtract Key
+	KeypadSubtract = newKey("Keypad -")
+	// KeypadAdd Key
+	KeypadAdd = newKey("Keypad +")
+	// KeypadEnter Key
+	KeypadEnter = newKey("Keypad Enter")
+	// KeypadEqual Key
+	KeypadEqual = newKey("Keypad =")
+	// LeftShift Key
+	LeftShift = newKey("Left Shift")
+	// LeftControl Key
+	LeftControl = newKey("Left Control")
+	// LeftAlt Key
+	LeftAlt = newKey("Left Alt")
+	// LeftSuper Key
+	LeftSuper = newKey("Left Super")
+	// RightShift Key
+	RightShift = newKey("Right Shift")
+	// RightControl Key
+	RightControl = newKey("Right Control")
+	// RightAlt Key
+	RightAlt = newKey("Right Alt")
+	// RightSuper Key
+	RightSuper = newKey("Right Super")
+	// Menu Key
+	Menu = newKey("Menu")
+	// Last Key
+	Last = newKey("Last")
 
 	// EmptyEvent should be returned by EventSource when it does not have more events
 	EmptyEvent = Event{}
