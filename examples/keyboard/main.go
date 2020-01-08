@@ -28,6 +28,9 @@ func main() {
 			if keys.Pressed(keyboard.S) {
 				y++
 			}
+			if keys.Pressed(keyboard.Esc) {
+				frame.StopLoopEventually()
+			}
 			screen := frame.Screen()
 			screen.SetColor(x, y, colornames.White)
 		})

@@ -13,7 +13,7 @@ func newKey(token Token) Key {
 	return Key{token: token}
 }
 
-// Token is a string representation of the key. It the key is
+// Token is a unique string representation of the key. It the key is
 // unknown then token is empty.
 type Token string
 
