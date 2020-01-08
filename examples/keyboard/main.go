@@ -10,7 +10,7 @@ import (
 func main() {
 	opengl.Run(func(gl *opengl.OpenGL, images *pixiq.Images, loops *pixiq.ScreenLoops) {
 		windows := gl.Windows()
-		window := windows.Open(320, 160)
+		window := windows.Open(320, 160, opengl.Title("Use WSAD and ESC to close window"))
 		keys := keyboard.New(window)
 		x := 160
 		y := 80
