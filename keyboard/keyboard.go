@@ -1,4 +1,16 @@
 // Package keyboard adds support for keyboard input.
+//
+// You can start using using keyboard by creating Keyboard instance:
+//
+//     window := windows.Open(...)
+//     keys := keyboard.New(window)
+//     loops.Loop(window, func(frame *pixiq.Frame) {
+//     keys.Update()
+//         if keys.Pressed(keyboard.A) {
+//             ...
+//         }
+//     })
+//
 package keyboard
 
 import (
