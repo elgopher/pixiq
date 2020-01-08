@@ -135,7 +135,6 @@ func TestKeyboardEvents_OnKeyCallback(t *testing.T) {
 	})
 }
 
-
 func assertNoMoreEvents(t *testing.T, events *internal.KeyboardEvents) {
 	event, ok := events.Poll()
 	require.False(t, ok)
