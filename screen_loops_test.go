@@ -29,7 +29,7 @@ func TestScreenLoops_Loop(t *testing.T) {
 			if frameNumber == 2 {
 				frame.StopLoopEventually()
 			} else {
-				frameNumber += 1
+				frameNumber++
 			}
 		})
 		// then
