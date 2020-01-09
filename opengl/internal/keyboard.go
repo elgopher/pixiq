@@ -67,7 +67,7 @@ func (e *KeyboardEvents) Poll() (keyboard.Event, bool) {
 	return keyboard.EmptyEvent, false
 }
 
-// Clear effectively clear all collected events
+// Clear effectively clears all collected events
 func (e *KeyboardEvents) Clear() {
 	e.readIndex = 0
 	e.writeIndex = 0
