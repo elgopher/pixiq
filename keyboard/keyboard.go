@@ -166,8 +166,8 @@ func (k *Keyboard) Update() {
 			k.pressed[event.key] = struct{}{}
 			k.justPressed[event.key] = true
 		case released:
-			k.justReleased[event.key] = true
 			delete(k.pressed, event.key)
+			k.justReleased[event.key] = true
 		}
 	}
 }
