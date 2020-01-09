@@ -135,6 +135,28 @@ func TestKeyboardEvents_OnKeyCallback(t *testing.T) {
 	})
 }
 
+func TestKeyboardEvents_Clear(t *testing.T) {
+	t.Run("should clear events", func(t *testing.T) {
+		tests := map[string]int{
+			"no events":  0,
+			"one event":  1,
+			"two events": 2,
+		}
+		for name, numberOfEents := range tests {
+			t.Run(name, func(t *testing.T) {
+				events := internal.NewKeyboardEvents(1)
+				for i := 0; i < numberOfEents; i++ {
+					events.OnKeyCallback(nil, glfw.KeyA, 0, glfw.Press, 0)
+				}
+				// when
+				events.Clear()
+				// then
+				assertNoMoreEvents(t, events)
+			})
+		}
+	})
+}
+
 func assertNoMoreEvents(t *testing.T, events *internal.KeyboardEvents) {
 	event, ok := events.Poll()
 	require.False(t, ok)
