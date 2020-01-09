@@ -151,6 +151,7 @@ func New(source EventSource) *Keyboard {
 		source:                source,
 		keysPressedByToken:    make(map[Token]bool),
 		keysPressedByScanCode: make(map[int]bool),
+		justPressed:           make(map[Key]bool),
 	}
 }
 
@@ -162,11 +163,13 @@ type Keyboard struct {
 	source                EventSource
 	keysPressedByToken    map[Token]bool
 	keysPressedByScanCode map[int]bool
+	justPressed           map[Key]bool
 }
 
 // Update updates the state of the keyboard by polling events queued since last
 // time the function was executed.
 func (k *Keyboard) Update() {
+	k.clearJustPressed()
 	for {
 		event, ok := k.source.Poll()
 		if !ok {
@@ -175,9 +178,16 @@ func (k *Keyboard) Update() {
 		switch event.typ {
 		case pressed:
 			event.key.setPressed(k, true)
+			k.justPressed[event.key] = true
 		case released:
 			event.key.setPressed(k, false)
 		}
+	}
+}
+
+func (k *Keyboard) clearJustPressed() {
+	for key := range k.justPressed {
+		delete(k.justPressed, key)
 	}
 }
 
@@ -202,4 +212,9 @@ func (k *Keyboard) PressedKeys() []Key {
 		}
 	}
 	return pressedKeys
+}
+
+// Pressed returns true if given key has been pressed in the last update.
+func (k *Keyboard) JustPressed(key Key) bool {
+	return k.justPressed[key]
 }

@@ -14,6 +14,7 @@ func main() {
 		keys := keyboard.New(win)
 		loops.Loop(win, func(frame *pixiq.Frame) {
 			keys.Update()
+			// PressedKeys will return all currently pressed keys
 			pressedKeys := keys.PressedKeys()
 			if len(pressedKeys) > 0 {
 				fmt.Println(pressedKeys)

@@ -147,7 +147,7 @@ func TestKeyboard_Pressed(t *testing.T) {
 	})
 }
 
-func TestPressed(t *testing.T) {
+func TestPressedKeys(t *testing.T) {
 	var (
 		aPressed         = keyboard.NewPressedEvent(keyboard.A)
 		aReleased        = keyboard.NewReleasedEvent(keyboard.A)
@@ -206,6 +206,84 @@ func TestPressed(t *testing.T) {
 				assert.Equal(t, test.expectedPressed, pressed)
 			})
 		}
+	})
+}
+
+func TestJustPressed(t *testing.T) {
+	var (
+		aPressed        = keyboard.NewPressedEvent(keyboard.A)
+		bPressed        = keyboard.NewPressedEvent(keyboard.B)
+		unknown0Pressed = keyboard.NewPressedEvent(keyboard.NewUnknownKey(0))
+	)
+
+	t.Run("before update", func(t *testing.T) {
+		tests := map[string]struct {
+			source              keyboard.EventSource
+			expectedJustPressed bool
+		}{
+			"for no events": {
+				source:              newFakeEventSource(),
+				expectedJustPressed: false,
+			},
+			"when A has been pressed": {
+				source:              newFakeEventSource(aPressed),
+				expectedJustPressed: false,
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				keys := keyboard.New(test.source)
+				// when
+				justPressed := keys.JustPressed(keyboard.A)
+				// then
+				assert.Equal(t, test.expectedJustPressed, justPressed)
+			})
+		}
+	})
+
+	t.Run("after first update", func(t *testing.T) {
+		tests := map[string]struct {
+			source              keyboard.EventSource
+			expectedJustPressed bool
+		}{
+			"for no events": {
+				source:              newFakeEventSource(),
+				expectedJustPressed: false,
+			},
+			"when A has been pressed": {
+				source:              newFakeEventSource(aPressed),
+				expectedJustPressed: true,
+			},
+			"when B has been pressed": {
+				source:              newFakeEventSource(bPressed),
+				expectedJustPressed: false,
+			},
+			"when Unknown 0 has been pressed": {
+				source:              newFakeEventSource(unknown0Pressed),
+				expectedJustPressed: false,
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				keys := keyboard.New(test.source)
+				keys.Update()
+				// when
+				justPressed := keys.JustPressed(keyboard.A)
+				// then
+				assert.Equal(t, test.expectedJustPressed, justPressed)
+			})
+		}
+	})
+
+	t.Run("should return false after second update", func(t *testing.T) {
+		source := newFakeEventSource(aPressed)
+		keys := keyboard.New(source)
+		keys.Update()
+		keys.Update()
+		// when
+		pressed := keys.JustPressed(keyboard.A)
+		// then
+		assert.False(t, pressed)
 	})
 }
 
