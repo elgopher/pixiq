@@ -181,6 +181,7 @@ func (w *Window) Draw(image *pixiq.Image) {
 func (w *Window) SwapImages() {
 	w.mainThreadLoop.Execute(func() {
 		w.glfwWindow.SwapBuffers()
+		w.keyboardEvents.Clear()
 		glfw.PollEvents()
 	})
 }
