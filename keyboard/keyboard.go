@@ -214,7 +214,7 @@ func (k *Keyboard) PressedKeys() []Key {
 	return pressedKeys
 }
 
-// Pressed returns true if given key has been pressed in the last update.
+// JustPressed returns true if given key has been pressed in the last update.
 func (k *Keyboard) JustPressed(key Key) bool {
 	return k.justPressed[key]
 }
