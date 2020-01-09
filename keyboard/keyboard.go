@@ -63,21 +63,6 @@ func (k Key) Token() Token {
 	return k.token
 }
 
-func (k Key) setPressed(keyboard *Keyboard, value bool) {
-	if k.IsUnknown() {
-		keyboard.keysPressedByScanCode[k.scanCode] = value
-	} else {
-		keyboard.keysPressedByToken[k.token] = value
-	}
-}
-
-func (k Key) pressed(keyboard *Keyboard) bool {
-	if k.IsUnknown() {
-		return keyboard.keysPressedByScanCode[k.scanCode]
-	}
-	return keyboard.keysPressedByToken[k.token]
-}
-
 // Serialize marshals the key to string which can be used for saving action keymap.
 func (k Key) Serialize() string {
 	if k.IsUnknown() {
@@ -148,9 +133,10 @@ func New(source EventSource) *Keyboard {
 		panic("nil EventSource")
 	}
 	return &Keyboard{
-		source:                source,
-		keysPressedByToken:    make(map[Token]bool),
-		keysPressedByScanCode: make(map[int]bool),
+		source:       source,
+		pressed:      make(map[Key]struct{}),
+		justPressed:  make(map[Key]bool),
+		justReleased: make(map[Key]bool),
 	}
 }
 
@@ -159,14 +145,17 @@ func New(source EventSource) *Keyboard {
 // updating the Keyboard state retrieves and removes events from EventSource.
 // Therefore only Keyboard instance can be created for one EventSource.
 type Keyboard struct {
-	source                EventSource
-	keysPressedByToken    map[Token]bool
-	keysPressedByScanCode map[int]bool
+	source       EventSource
+	pressed      map[Key]struct{}
+	justPressed  map[Key]bool
+	justReleased map[Key]bool
 }
 
 // Update updates the state of the keyboard by polling events queued since last
 // time the function was executed.
 func (k *Keyboard) Update() {
+	k.clearJustPressed()
+	k.clearJustReleased()
 	for {
 		event, ok := k.source.Poll()
 		if !ok {
@@ -174,32 +163,58 @@ func (k *Keyboard) Update() {
 		}
 		switch event.typ {
 		case pressed:
-			event.key.setPressed(k, true)
+			k.pressed[event.key] = struct{}{}
+			k.justPressed[event.key] = true
 		case released:
-			event.key.setPressed(k, false)
+			delete(k.pressed, event.key)
+			k.justReleased[event.key] = true
 		}
 	}
 }
 
+func (k *Keyboard) clearJustPressed() {
+	for key := range k.justPressed {
+		delete(k.justPressed, key)
+	}
+}
+
+func (k *Keyboard) clearJustReleased() {
+	for key := range k.justReleased {
+		delete(k.justReleased, key)
+	}
+}
+
 // Pressed returns true if given key is currently pressed.
+// If between two last keyboard.Update calls the key was pressed and released
+// then the this method returns false.
 func (k *Keyboard) Pressed(key Key) bool {
-	return key.pressed(k)
+	_, found := k.pressed[key]
+	return found
 }
 
 // PressedKeys returns a slice of all currently pressed keys. It may be empty
 // aka nil. This function can be used to get a key mapping for a given action
 // in the game.
+// If between two last keyboard.Update calls the key was pressed and released
+// then the key is not returned.
 func (k *Keyboard) PressedKeys() []Key {
 	var pressedKeys []Key
-	for token, pressed := range k.keysPressedByToken {
-		if pressed {
-			pressedKeys = append(pressedKeys, newKey(token))
-		}
-	}
-	for scanCode, pressed := range k.keysPressedByScanCode {
-		if pressed {
-			pressedKeys = append(pressedKeys, NewUnknownKey(scanCode))
-		}
+	for key := range k.pressed {
+		pressedKeys = append(pressedKeys, key)
 	}
 	return pressedKeys
+}
+
+// JustPressed returns true if the key was pressed between two last keyboard.Update
+// calls. If it was pressed and released at the same time between these calls
+// this method return true.
+func (k *Keyboard) JustPressed(key Key) bool {
+	return k.justPressed[key]
+}
+
+// JustReleased returns true if the key was released between two last keyboard.Update
+// calls. If it was released and pressed at the same time between these calls
+// this method return true.
+func (k *Keyboard) JustReleased(key Key) bool {
+	return k.justReleased[key]
 }
