@@ -175,6 +175,8 @@ func (k *Keyboard) clearJustPressed() {
 }
 
 // Pressed returns true if given key is currently pressed.
+// If during two last keyboard.Update calls the key was pressed and released
+// then the this method returns false.
 func (k *Keyboard) Pressed(key Key) bool {
 	_, found := k.pressed[key]
 	return found
@@ -183,6 +185,8 @@ func (k *Keyboard) Pressed(key Key) bool {
 // PressedKeys returns a slice of all currently pressed keys. It may be empty
 // aka nil. This function can be used to get a key mapping for a given action
 // in the game.
+// If during two last keyboard.Update calls the key was pressed and released
+// then the key is not returned.
 func (k *Keyboard) PressedKeys() []Key {
 	var pressedKeys []Key
 	for key := range k.pressed {
@@ -191,7 +195,9 @@ func (k *Keyboard) PressedKeys() []Key {
 	return pressedKeys
 }
 
-// JustPressed returns true if given key has been pressed in the last update.
+// JustPressed returns true if the key was pressed between two last keyboard.Update
+// calls. If it was pressed and released at the same time between these calls
+// this method return true.
 func (k *Keyboard) JustPressed(key Key) bool {
 	return k.justPressed[key]
 }

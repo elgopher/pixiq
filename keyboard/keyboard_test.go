@@ -195,6 +195,10 @@ func TestPressedKeys(t *testing.T) {
 				source:          newFakeEventSource(unknown0Pressed, unknown0Released),
 				expectedPressed: nil,
 			},
+			"A pressed, then released and pressed again": {
+				source:          newFakeEventSource(aPressed, aReleased, aPressed),
+				expectedPressed: []keyboard.Key{keyboard.A},
+			},
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
@@ -207,27 +211,48 @@ func TestPressedKeys(t *testing.T) {
 			})
 		}
 	})
+	t.Run("after second update", func(t *testing.T) {
+		t.Run("when A was pressed before first update", func(t *testing.T) {
+			source := newFakeEventSource(aPressed)
+			keys := keyboard.New(source)
+			keys.Update()
+			keys.Update()
+			// when
+			pressed := keys.PressedKeys()
+			// then
+			assert.Equal(t, []keyboard.Key{keyboard.A}, pressed)
+		})
+		t.Run("when A was pressed before first update, then released before second one", func(t *testing.T) {
+			source := newFakeEventSource(aPressed)
+			keys := keyboard.New(source)
+			keys.Update()
+			source.events = append(source.events, aReleased)
+			keys.Update()
+			// when
+			pressed := keys.PressedKeys()
+			// then
+			assert.Empty(t, pressed)
+		})
+	})
 }
 
 func TestJustPressed(t *testing.T) {
 	var (
 		aPressed        = keyboard.NewPressedEvent(keyboard.A)
+		aReleased       = keyboard.NewReleasedEvent(keyboard.A)
 		bPressed        = keyboard.NewPressedEvent(keyboard.B)
 		unknown0Pressed = keyboard.NewPressedEvent(keyboard.NewUnknownKey(0))
 	)
 
-	t.Run("before update", func(t *testing.T) {
+	t.Run("before update should return false", func(t *testing.T) {
 		tests := map[string]struct {
-			source              keyboard.EventSource
-			expectedJustPressed bool
+			source keyboard.EventSource
 		}{
 			"for no events": {
-				source:              newFakeEventSource(),
-				expectedJustPressed: false,
+				source: newFakeEventSource(),
 			},
 			"when A has been pressed": {
-				source:              newFakeEventSource(aPressed),
-				expectedJustPressed: false,
+				source: newFakeEventSource(aPressed),
 			},
 		}
 		for name, test := range tests {
@@ -236,7 +261,7 @@ func TestJustPressed(t *testing.T) {
 				// when
 				justPressed := keys.JustPressed(keyboard.A)
 				// then
-				assert.Equal(t, test.expectedJustPressed, justPressed)
+				assert.False(t, justPressed)
 			})
 		}
 	})
@@ -261,6 +286,18 @@ func TestJustPressed(t *testing.T) {
 			"when Unknown 0 has been pressed": {
 				source:              newFakeEventSource(unknown0Pressed),
 				expectedJustPressed: false,
+			},
+			"when A has been released": {
+				source:              newFakeEventSource(aReleased),
+				expectedJustPressed: false,
+			},
+			"when A has been pressed and released": {
+				source:              newFakeEventSource(aPressed, aReleased),
+				expectedJustPressed: true,
+			},
+			"when A has been released and pressed": {
+				source:              newFakeEventSource(aReleased, aPressed),
+				expectedJustPressed: true,
 			},
 		}
 		for name, test := range tests {
