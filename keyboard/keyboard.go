@@ -133,9 +133,10 @@ func New(source EventSource) *Keyboard {
 		panic("nil EventSource")
 	}
 	return &Keyboard{
-		source:      source,
-		pressed:     make(map[Key]struct{}),
-		justPressed: make(map[Key]bool),
+		source:       source,
+		pressed:      make(map[Key]struct{}),
+		justPressed:  make(map[Key]bool),
+		justReleased: make(map[Key]bool),
 	}
 }
 
@@ -144,15 +145,17 @@ func New(source EventSource) *Keyboard {
 // updating the Keyboard state retrieves and removes events from EventSource.
 // Therefore only Keyboard instance can be created for one EventSource.
 type Keyboard struct {
-	source      EventSource
-	pressed     map[Key]struct{}
-	justPressed map[Key]bool
+	source       EventSource
+	pressed      map[Key]struct{}
+	justPressed  map[Key]bool
+	justReleased map[Key]bool
 }
 
 // Update updates the state of the keyboard by polling events queued since last
 // time the function was executed.
 func (k *Keyboard) Update() {
 	k.clearJustPressed()
+	k.clearJustReleased()
 	for {
 		event, ok := k.source.Poll()
 		if !ok {
@@ -163,6 +166,7 @@ func (k *Keyboard) Update() {
 			k.pressed[event.key] = struct{}{}
 			k.justPressed[event.key] = true
 		case released:
+			k.justReleased[event.key] = true
 			delete(k.pressed, event.key)
 		}
 	}
@@ -171,6 +175,12 @@ func (k *Keyboard) Update() {
 func (k *Keyboard) clearJustPressed() {
 	for key := range k.justPressed {
 		delete(k.justPressed, key)
+	}
+}
+
+func (k *Keyboard) clearJustReleased() {
+	for key := range k.justReleased {
+		delete(k.justReleased, key)
 	}
 }
 
@@ -200,4 +210,11 @@ func (k *Keyboard) PressedKeys() []Key {
 // this method return true.
 func (k *Keyboard) JustPressed(key Key) bool {
 	return k.justPressed[key]
+}
+
+// JustReleased returns true if the key was released between two last keyboard.Update
+// calls. If it was released and pressed at the same time between these calls
+// this method return true.
+func (k *Keyboard) JustReleased(key Key) bool {
+	return k.justReleased[key]
 }

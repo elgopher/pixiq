@@ -251,7 +251,7 @@ func TestJustPressed(t *testing.T) {
 			"for no events": {
 				source: newFakeEventSource(),
 			},
-			"when A has been pressed": {
+			"when A was pressed": {
 				source: newFakeEventSource(aPressed),
 			},
 		}
@@ -321,6 +321,94 @@ func TestJustPressed(t *testing.T) {
 		pressed := keys.JustPressed(keyboard.A)
 		// then
 		assert.False(t, pressed)
+	})
+}
+
+func TestJustReleased(t *testing.T) {
+	var (
+		aReleased        = keyboard.NewReleasedEvent(keyboard.A)
+		aPressed         = keyboard.NewPressedEvent(keyboard.A)
+		bReleased        = keyboard.NewReleasedEvent(keyboard.B)
+		unknown0Released = keyboard.NewReleasedEvent(keyboard.NewUnknownKey(0))
+	)
+
+	t.Run("before update should return false", func(t *testing.T) {
+		tests := map[string]struct {
+			source keyboard.EventSource
+		}{
+			"for no events": {
+				source: newFakeEventSource(),
+			},
+			"when A was released": {
+				source: newFakeEventSource(aReleased),
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				keys := keyboard.New(test.source)
+				// when
+				justReleased := keys.JustReleased(keyboard.A)
+				// then
+				assert.False(t, justReleased)
+			})
+		}
+	})
+
+	t.Run("after first update", func(t *testing.T) {
+		tests := map[string]struct {
+			source               keyboard.EventSource
+			expectedJustReleased bool
+		}{
+			"for no events": {
+				source:               newFakeEventSource(),
+				expectedJustReleased: false,
+			},
+			"when A was released": {
+				source:               newFakeEventSource(aReleased),
+				expectedJustReleased: true,
+			},
+			"when B was released": {
+				source:               newFakeEventSource(bReleased),
+				expectedJustReleased: false,
+			},
+			"when Unknown 0 was pressed": {
+				source:               newFakeEventSource(unknown0Released),
+				expectedJustReleased: false,
+			},
+			"when A was pressed": {
+				source:               newFakeEventSource(aPressed),
+				expectedJustReleased: false,
+			},
+			"when A was released and pressed": {
+				source:               newFakeEventSource(aReleased, aPressed),
+				expectedJustReleased: true,
+			},
+			"when A was pressed and released": {
+				source:               newFakeEventSource(aPressed, aReleased),
+				expectedJustReleased: true,
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				keys := keyboard.New(test.source)
+				keys.Update()
+				// when
+				justReleased := keys.JustReleased(keyboard.A)
+				// then
+				assert.Equal(t, test.expectedJustReleased, justReleased)
+			})
+		}
+	})
+
+	t.Run("should return false after second update", func(t *testing.T) {
+		source := newFakeEventSource(aReleased)
+		keys := keyboard.New(source)
+		keys.Update()
+		keys.Update()
+		// when
+		released := keys.JustReleased(keyboard.A)
+		// then
+		assert.False(t, released)
 	})
 }
 
