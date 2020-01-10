@@ -105,8 +105,11 @@ func (w Windows) Open(width, height int, options ...WindowOption) *Window {
 	}
 	var err error
 	win := &Window{
-		mainThreadLoop: w.mainThreadLoop,
-		keyboardEvents: internal.NewKeyboardEvents(16),
+		mainThreadLoop:  w.mainThreadLoop,
+		keyboardEvents:  internal.NewKeyboardEvents(16),
+		requestedWidth:  width,
+		requestedHeight: height,
+		zoom:            1,
 	}
 	w.mainThreadLoop.Execute(func() {
 		win.glfwWindow = createWindow(w.mainWindow)
@@ -118,7 +121,6 @@ func (w Windows) Open(width, height int, options ...WindowOption) *Window {
 		win.screenPolygon = newScreenPolygon(
 			win.program.vertexPositionLocation,
 			win.program.texturePositionLocation)
-		win.glfwWindow.SetSize(width, height)
 		for _, option := range options {
 			if option == nil {
 				err = errors.New("nil option")
@@ -126,6 +128,7 @@ func (w Windows) Open(width, height int, options ...WindowOption) *Window {
 			}
 			option(win)
 		}
+		win.glfwWindow.SetSize(win.requestedWidth, win.requestedHeight)
 		win.glfwWindow.Show()
 	})
 	if err != nil {
@@ -154,16 +157,24 @@ func Title(title string) WindowOption {
 
 func Zoom(zoom int) WindowOption {
 	return func(window *Window) {
+		if zoom > 0 {
+			window.zoom = zoom
+			window.requestedWidth = window.requestedWidth * zoom
+			window.requestedHeight = window.requestedHeight * zoom
+		}
 	}
 }
 
 // Window is an implementation of pixiq.Screen.
 type Window struct {
-	glfwWindow     *glfw.Window
-	program        *program
-	mainThreadLoop *MainThreadLoop
-	screenPolygon  *screenPolygon
-	keyboardEvents *internal.KeyboardEvents
+	glfwWindow      *glfw.Window
+	program         *program
+	mainThreadLoop  *MainThreadLoop
+	screenPolygon   *screenPolygon
+	keyboardEvents  *internal.KeyboardEvents
+	requestedWidth  int
+	requestedHeight int
+	zoom            int
 }
 
 // Draw draws image spanning the whole window to the invisible buffer.
@@ -214,7 +225,7 @@ func (w *Window) Width() int {
 	w.mainThreadLoop.Execute(func() {
 		width, _ = w.glfwWindow.GetSize()
 	})
-	return width
+	return width / w.zoom
 }
 
 // Height returns the actual height of the window in pixels. It may be different
@@ -225,7 +236,7 @@ func (w *Window) Height() int {
 	w.mainThreadLoop.Execute(func() {
 		_, height = w.glfwWindow.GetSize()
 	})
-	return height
+	return height / w.zoom
 }
 
 // Poll retrieves and removes next keyboard Event. If there are no more

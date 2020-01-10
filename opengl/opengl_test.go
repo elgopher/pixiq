@@ -1,6 +1,7 @@
 package opengl_test
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -160,14 +161,19 @@ func TestWindows_Open(t *testing.T) {
 			windows.Open(0, 0, nil)
 		})
 	})
-	t.Run("should open window with zoom 1", func(t *testing.T) {
-		openGL := opengl.New(mainThreadLoop)
-		windows := openGL.Windows()
-		// when
-		win := windows.Open(640, 360, opengl.Zoom(1))
-		require.NotNil(t, win)
-		assert.Equal(t, 640, win.Width())
-		assert.Equal(t, 360, win.Height())
+	t.Run("zoom should not affect the width and height", func(t *testing.T) {
+		for zoom := -1; zoom <= 2; zoom++ {
+			name := fmt.Sprintf("zoom=%d", zoom)
+			t.Run(name, func(t *testing.T) {
+				openGL := opengl.New(mainThreadLoop)
+				windows := openGL.Windows()
+				// when
+				win := windows.Open(640, 360, opengl.Zoom(zoom))
+				require.NotNil(t, win)
+				assert.Equal(t, 640, win.Width())
+				assert.Equal(t, 360, win.Height())
+			})
+		}
 	})
 }
 
@@ -237,7 +243,26 @@ func TestWindow_Draw(t *testing.T) {
 			assert.Equal(t, expected, framebufferPixels(0, 0, 2, 2))
 		})
 
-		t.Run("1x1, zoom 2", func(t *testing.T) {
+		t.Run("zoom < 1 should not change the framebuffer size", func(t *testing.T) {
+			for zoom := -1; zoom < 1; zoom++ {
+				name := fmt.Sprintf("zoom=%d", zoom)
+				t.Run(name, func(t *testing.T) {
+					openGL := opengl.New(mainThreadLoop)
+					windows := openGL.Windows()
+					window := windows.Open(1, 1, opengl.NoDecorationHint(), opengl.Zoom(zoom))
+					images := pixiq.NewImages(openGL.AcceleratedImages())
+					image := images.New(1, 1)
+					image.WholeImageSelection().SetColor(0, 0, color1)
+					// when
+					window.Draw(image)
+					// then
+					expected := []pixiq.Color{color1}
+					assert.Equal(t, expected, framebufferPixels(0, 0, 1, 1))
+				})
+			}
+		})
+
+		t.Run("zoom 2 should make framebuffer twice as big", func(t *testing.T) {
 			openGL := opengl.New(mainThreadLoop)
 			windows := openGL.Windows()
 			window := windows.Open(1, 1, opengl.NoDecorationHint(), opengl.Zoom(2))
@@ -248,7 +273,7 @@ func TestWindow_Draw(t *testing.T) {
 			window.Draw(image)
 			// then
 			expected := []pixiq.Color{color1, color1, color1, color1}
-			assert.Equal(t, expected, framebufferPixels(0, 0, 1, 1))
+			assert.Equal(t, expected, framebufferPixels(0, 0, 2, 2))
 		})
 	})
 }
@@ -305,11 +330,5 @@ func TestWindow_Poll(t *testing.T) {
 		assert.False(t, ok)
 		// cleanup
 		win.Close()
-	})
-}
-
-func TestZoom(t *testing.T) {
-	t.Run("should set zoom to 1 when zoom is < 1", func(t *testing.T) {
-		zoom := opengl.Zoom(0)
 	})
 }
