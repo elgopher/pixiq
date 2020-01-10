@@ -59,6 +59,6 @@ the window transparency. Why?
 
 > Because we haven't had time to do it yet. If something is really important
 for you then propably it is time to submit an  [Issue](https://github.com/jacekolszak/pixiq/issues) 
-or maybe event make a change by submitting a [Pull Request](https://github.com/jacekolszak/pixiq/pulls).
+or maybe even make a change by submitting a [Pull Request](https://github.com/jacekolszak/pixiq/pulls).
 The `opengl.Windows` struct does not need to implement any abstractions,
 therefore it might be extended freely.
