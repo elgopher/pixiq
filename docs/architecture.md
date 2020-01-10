@@ -34,7 +34,7 @@ Pixiq creators can fulfill those goals by:
   (such as `pixiq` or `keyboard`) will have `v1.x.x` version, unstable ones
   (such as `devtool`) will stay at `v0.x.x`. Thanks to that Pixiq developers 
   will still be able to introduce introduce incompatible changes to unstable modules.
-  This greatly improves creativity.
+  Such freedom greatly improves creativity.
 
 ### Reasoning behind design decisions (so far)
 
