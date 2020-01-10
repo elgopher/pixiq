@@ -110,14 +110,14 @@ func TestKeyboardEvents_Poll(t *testing.T) {
 }
 
 func TestKeyboardEvents_OnKeyCallback(t *testing.T) {
-	tests := map[string]int{
-		"initial size -1": -1,
-		"initial size 0":  0,
-		"initial size 1":  1,
-	}
-	for name, initialSize := range tests {
-		t.Run(name, func(t *testing.T) {
-			t.Run("should expand buffer when too many events", func(t *testing.T) {
+	t.Run("should expand buffer when too many events", func(t *testing.T) {
+		tests := map[string]int{
+			"initial size -1": -1,
+			"initial size 0":  0,
+			"initial size 1":  1,
+		}
+		for name, initialSize := range tests {
+			t.Run(name, func(t *testing.T) {
 				events := internal.NewKeyboardEvents(initialSize)
 				// when
 				events.OnKeyCallback(nil, glfw.KeyA, 0, glfw.Press, 0)
@@ -133,9 +133,8 @@ func TestKeyboardEvents_OnKeyCallback(t *testing.T) {
 				// and
 				assertNoMoreEvents(t, events)
 			})
-		})
-	}
-
+		}
+	})
 }
 
 func TestKeyboardEvents_Drained(t *testing.T) {
