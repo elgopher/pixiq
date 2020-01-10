@@ -16,7 +16,7 @@ type KeyboardEvents struct {
 }
 
 // NewKeyboardEvents returns KeyboardEvents of given initial size. It will
-// be expanded if necessary. Initial size will be clamped to 1 if smaller than 1.
+// be expanded if necessary.
 func NewKeyboardEvents(initialSize int) *KeyboardEvents {
 	if initialSize < 1 {
 		initialSize = 1
