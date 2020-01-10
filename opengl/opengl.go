@@ -152,6 +152,11 @@ func Title(title string) WindowOption {
 	}
 }
 
+func Zoom(zoom int) WindowOption {
+	return func(window *Window) {
+	}
+}
+
 // Window is an implementation of pixiq.Screen.
 type Window struct {
 	glfwWindow     *glfw.Window
@@ -201,7 +206,8 @@ func (w *Window) ShouldClose() bool {
 	return shouldClose
 }
 
-// Width returns the width of the window in pixels.
+// Width returns the actual width of the window in pixels. It may be different
+// than requested width used when window was open.
 // If zooming is used the width is not multiplied by zoom.
 func (w *Window) Width() int {
 	var width int
@@ -211,7 +217,8 @@ func (w *Window) Width() int {
 	return width
 }
 
-// Height returns the height of the window in pixels.
+// Height returns the actual height of the window in pixels. It may be different
+// than requested height used when window was open.
 // If zooming is used the height is not multiplied by zoom.
 func (w *Window) Height() int {
 	var height int

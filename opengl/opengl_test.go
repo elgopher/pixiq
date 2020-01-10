@@ -160,6 +160,15 @@ func TestWindows_Open(t *testing.T) {
 			windows.Open(0, 0, nil)
 		})
 	})
+	t.Run("should open window with zoom 1", func(t *testing.T) {
+		openGL := opengl.New(mainThreadLoop)
+		windows := openGL.Windows()
+		// when
+		win := windows.Open(640, 360, opengl.Zoom(1))
+		require.NotNil(t, win)
+		assert.Equal(t, 640, win.Width())
+		assert.Equal(t, 360, win.Height())
+	})
 }
 
 func TestWindow_Draw(t *testing.T) {
@@ -216,15 +225,30 @@ func TestWindow_Draw(t *testing.T) {
 			window := windows.Open(2, 2, opengl.NoDecorationHint())
 			images := pixiq.NewImages(openGL.AcceleratedImages())
 			image := images.New(2, 2)
-			image.WholeImageSelection().SetColor(0, 0, color1)
-			image.WholeImageSelection().SetColor(1, 0, color2)
-			image.WholeImageSelection().SetColor(0, 1, color3)
-			image.WholeImageSelection().SetColor(1, 1, color4)
+			selection := image.WholeImageSelection()
+			selection.SetColor(0, 0, color1)
+			selection.SetColor(1, 0, color2)
+			selection.SetColor(0, 1, color3)
+			selection.SetColor(1, 1, color4)
 			// when
 			window.Draw(image)
 			// then
 			expected := []pixiq.Color{color3, color4, color1, color2}
 			assert.Equal(t, expected, framebufferPixels(0, 0, 2, 2))
+		})
+
+		t.Run("1x1, zoom 2", func(t *testing.T) {
+			openGL := opengl.New(mainThreadLoop)
+			windows := openGL.Windows()
+			window := windows.Open(1, 1, opengl.NoDecorationHint(), opengl.Zoom(2))
+			images := pixiq.NewImages(openGL.AcceleratedImages())
+			image := images.New(1, 1)
+			image.WholeImageSelection().SetColor(0, 0, color1)
+			// when
+			window.Draw(image)
+			// then
+			expected := []pixiq.Color{color1, color1, color1, color1}
+			assert.Equal(t, expected, framebufferPixels(0, 0, 1, 1))
 		})
 	})
 }
@@ -281,5 +305,11 @@ func TestWindow_Poll(t *testing.T) {
 		assert.False(t, ok)
 		// cleanup
 		win.Close()
+	})
+}
+
+func TestZoom(t *testing.T) {
+	t.Run("should set zoom to 1 when zoom is < 1", func(t *testing.T) {
+		zoom := opengl.Zoom(0)
 	})
 }
