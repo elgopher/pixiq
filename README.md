@@ -10,6 +10,7 @@ Create Pixel Art games in Golang with fun and ease.
 
 + draw images on a screen in real time using your favourite [Go programming language](https://golang.org/)
 + manipulate every single pixel directly or with the use of tools
++ handle user input
 
 ## What is Pixel Art?
 
