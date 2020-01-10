@@ -181,8 +181,6 @@ func (w *Window) Draw(image *pixiq.Image) {
 func (w *Window) SwapImages() {
 	w.mainThreadLoop.Execute(func() {
 		w.glfwWindow.SwapBuffers()
-		w.keyboardEvents.Clear()
-		glfw.PollEvents()
 	})
 }
 
@@ -226,6 +224,11 @@ func (w *Window) Height() int {
 // Poll retrieves and removes next keyboard Event. If there are no more
 // events false is returned. It implements keyboard.EventSource method.
 func (w *Window) Poll() (keyboard.Event, bool) {
+	if w.keyboardEvents.Drained() {
+		w.mainThreadLoop.Execute(func() {
+			glfw.PollEvents()
+		})
+	}
 	return w.keyboardEvents.Poll()
 }
 

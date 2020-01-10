@@ -553,6 +553,37 @@ func TestKey_String(t *testing.T) {
 	})
 }
 
+func TestKeyboard_Update(t *testing.T) {
+	tests := map[string]int{
+		"1 event":     1,
+		"2 events":    2,
+		"1000 events": 1000,
+	}
+	for name, numberOfEvents := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Run("should drain EventSource", func(t *testing.T) {
+				source := newFakeEventSourceWith(numberOfEvents)
+				k := keyboard.New(source)
+				// when
+				k.Update()
+				// then
+				assert.Empty(t, source.events)
+			})
+
+			t.Run("should drain EventSource after second Update()", func(t *testing.T) {
+				source := newFakeEventSourceWith(numberOfEvents)
+				k := keyboard.New(source)
+				k.Update()
+				source.events = append(source.events)
+				// when
+				k.Update()
+				// then
+				assert.Empty(t, source.events)
+			})
+		})
+	}
+}
+
 func newFakeEventSource(events ...keyboard.Event) *fakeEventSource {
 	source := &fakeEventSource{}
 	source.events = []keyboard.Event{}
@@ -573,4 +604,12 @@ func (f *fakeEventSource) Poll() (keyboard.Event, bool) {
 		return event, true
 	}
 	return keyboard.EmptyEvent, false
+}
+
+func newFakeEventSourceWith(numberOfEvents int) *fakeEventSource {
+	source := newFakeEventSource()
+	for i := 0; i < numberOfEvents; i++ {
+		source.events = append(source.events, keyboard.NewPressedEvent(keyboard.A))
+	}
+	return source
 }

@@ -19,7 +19,9 @@ import (
 	"strings"
 )
 
-// EventSource is a source of keyboard Events.
+// EventSource is a source of keyboard Events. On each Update() Keyboard polls
+// the EventSource by executing Poll method multiple times - until Poll()
+// returns false. In other words Keyboard#Update drains the EventSource.
 type EventSource interface {
 	// Poll retrieves and removes next keyboard Event. If there are no more
 	// events false is returned.
