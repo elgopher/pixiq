@@ -63,12 +63,18 @@ func (e *KeyboardEvents) Poll() (keyboard.Event, bool) {
 		e.readIndex++
 		return event, true
 	}
-	e.Clear()
+	e.clear()
 	return keyboard.EmptyEvent, false
 }
 
-// Clear effectively clears all collected events
-func (e *KeyboardEvents) Clear() {
+// clear effectively clears all collected events
+func (e *KeyboardEvents) clear() {
 	e.readIndex = 0
 	e.writeIndex = 0
+}
+
+// Drained returns true if all events have been retrieved and last Poll operation
+// returned EmptyEvent and false
+func (e *KeyboardEvents) Drained() bool {
+	return e.writeIndex == 0
 }
