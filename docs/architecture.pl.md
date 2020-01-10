@@ -1,4 +1,4 @@
-Obok głównych celów projektu podanych w [README](README.md#project-goals) 
+Obok głównych celów projektu podanych w [README](../README.md#project-goals) 
 Pixiq ma też cele poboczne, głównie te natury architektonicznej. 
 
 Użytkownicy od tego typu bibliotek oczekują:
@@ -18,8 +18,8 @@ Twórcy Pixiq aby zrealizować te cele mogą:
   + podglądać konkurencyjne rozwiązania
   + dyskutować rozwiązania z innymi
 + tworzyć małe, możliwie **niezależne** pakiety - zobacz pakiety:
-  + [pixiq]()
-  + [pixiq.keyboard](keyboard)
+  + [pixiq](..)
+  + [pixiq.keyboard](../keyboard)
 + w większości wypadków nowe funkcje powinny się znaleźć w nowych pakietach 
 (no chyba, żę czegoś brakowało od początku ;))
 + Pixiq powinien być bardziej **biblioteką** niż frameworkiem. Oznacza to, że to
@@ -36,7 +36,7 @@ Twórcy Pixiq aby zrealizować te cele mogą:
 
 ### Uzasadnienie dotychczasowych decyzji projektowych
 
-Dlaczego obsługa klawiatury nie jest cześćią pakietu [pixiq]()?
+Dlaczego obsługa klawiatury nie jest cześćią pakietu [pixiq](..)?
 
 > Ponieważ gra może wcale nie wykorzystać klawiatury lub działać na urządzeniach 
 bez klawiatury.
@@ -48,7 +48,7 @@ różnorodność platform (PC, Mac, urządzenia mobilne a kto wie może nawet ko
 Jednak jesteśmy otwarci na propozycje. Być może można stworzyć abstrakcję
 tylko dla PC czyli Win, Mac i Linux.
 
-Pakiet [opengl](opengl) wykorzystuje [GLFW](https://www.glfw.org/), a jednak nie udostępnia wszystkich
+Pakiet [opengl](../opengl) wykorzystuje [GLFW](https://www.glfw.org/), a jednak nie udostępnia wszystkich
 funkcji tej biblioteki np. możliwości zmiany wyglądu kursora, ustawiania
 pół-przezroczystości okna itp. Czemu?
 
