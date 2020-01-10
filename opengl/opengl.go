@@ -5,7 +5,7 @@
 package opengl
 
 import (
-	"errors"
+	"log"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
@@ -121,8 +121,8 @@ func (w Windows) Open(width, height int, options ...WindowOption) *Window {
 		win.glfwWindow.SetSize(width, height)
 		for _, option := range options {
 			if option == nil {
-				err = errors.New("nil option")
-				return
+				log.Println("nil option given when opening the window")
+				continue
 			}
 			option(win)
 		}
