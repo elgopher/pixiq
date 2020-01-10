@@ -9,7 +9,7 @@ Pixiq users expect:
 
 Pixiq creators can fulfill those goals by:
 
-+ writing automated tests (przy czym jednostkowych testów powinno być 95%)
++ writing automated tests (bearing in mind that 95% of tests should be unit tests)
 + designing the API carefully
   + making proof-of-concepts
   + using Test-Driven Development
@@ -33,7 +33,8 @@ Pixiq creators can fulfill those goals by:
   pieces in order to support different versioning for each module. Stable modules
   (such as `pixiq` or `keyboard`) will have `v1.x.x` version, unstable ones
   (such as `devtool`) will stay at `v0.x.x`. Thanks to that Pixiq developers 
-  will be to introduce introduce incompatible changes to unstable modules.
+  will still be able to introduce introduce incompatible changes to unstable modules.
+  This greatly improves creativity.
 
 ### Reasoning behind design decisions (so far)
 
