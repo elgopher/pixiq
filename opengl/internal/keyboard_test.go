@@ -12,15 +12,8 @@ import (
 )
 
 func TestNewKeyboardEvents(t *testing.T) {
-	t.Run("should panic for initial size -1", func(t *testing.T) {
-		assert.Panics(t, func() {
-			internal.NewKeyboardEvents(-1)
-		})
-	})
-	t.Run("should panic for initial size 0", func(t *testing.T) {
-		assert.Panics(t, func() {
-			internal.NewKeyboardEvents(0)
-		})
+	t.Run("should create KeyboardEvents for initial size -1", func(t *testing.T) {
+		internal.NewKeyboardEvents(-1)
 	})
 }
 
@@ -118,20 +111,29 @@ func TestKeyboardEvents_Poll(t *testing.T) {
 
 func TestKeyboardEvents_OnKeyCallback(t *testing.T) {
 	t.Run("should expand buffer when too many events", func(t *testing.T) {
-		events := internal.NewKeyboardEvents(1)
-		// when
-		events.OnKeyCallback(nil, glfw.KeyA, 0, glfw.Press, 0)
-		events.OnKeyCallback(nil, glfw.KeyB, 0, glfw.Press, 0)
-		// then
-		event, ok := events.Poll()
-		require.True(t, ok)
-		assert.Equal(t, keyboard.NewPressedEvent(keyboard.A), event)
-		// and
-		event, ok = events.Poll()
-		require.True(t, ok)
-		assert.Equal(t, keyboard.NewPressedEvent(keyboard.B), event)
-		// and
-		assertNoMoreEvents(t, events)
+		tests := map[string]int{
+			"initial size -1": -1,
+			"initial size 0":  0,
+			"initial size 1":  1,
+		}
+		for name, initialSize := range tests {
+			t.Run(name, func(t *testing.T) {
+				events := internal.NewKeyboardEvents(initialSize)
+				// when
+				events.OnKeyCallback(nil, glfw.KeyA, 0, glfw.Press, 0)
+				events.OnKeyCallback(nil, glfw.KeyB, 0, glfw.Press, 0)
+				// then
+				event, ok := events.Poll()
+				require.True(t, ok)
+				assert.Equal(t, keyboard.NewPressedEvent(keyboard.A), event)
+				// and
+				event, ok = events.Poll()
+				require.True(t, ok)
+				assert.Equal(t, keyboard.NewPressedEvent(keyboard.B), event)
+				// and
+				assertNoMoreEvents(t, events)
+			})
+		}
 	})
 }
 

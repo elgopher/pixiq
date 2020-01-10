@@ -16,10 +16,10 @@ type KeyboardEvents struct {
 }
 
 // NewKeyboardEvents returns KeyboardEvents of given initial size. It will
-// be expanded if necessary. Will panic if initial size smaller than 1.
+// be expanded if necessary.
 func NewKeyboardEvents(initialSize int) *KeyboardEvents {
 	if initialSize < 1 {
-		panic("initial size was too small")
+		initialSize = 1
 	}
 	return &KeyboardEvents{
 		events: make([]keyboard.Event, initialSize),
@@ -27,7 +27,7 @@ func NewKeyboardEvents(initialSize int) *KeyboardEvents {
 }
 
 // OnKeyCallback passes GLFW key event
-func (e *KeyboardEvents) OnKeyCallback(_ *glfw.Window, glfwKey glfw.Key, scanCode int, action glfw.Action, mods glfw.ModifierKey) {
+func (e *KeyboardEvents) OnKeyCallback(_ *glfw.Window, glfwKey glfw.Key, scanCode int, action glfw.Action, _ glfw.ModifierKey) {
 	key, ok := keymap[glfwKey]
 	if !ok {
 		key = keyboard.NewUnknownKey(scanCode)
