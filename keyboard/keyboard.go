@@ -71,6 +71,15 @@ func (k Key) Serialize() string {
 	return string(k.Token())
 }
 
+// String returns the string representation of the Key for debugging purposes. Do not
+// use this method for serialization. Use Key.Serialize instead.
+func (k Key) String() string {
+	if k.IsUnknown() {
+		return fmt.Sprintf("Key with scanCode %d", k.scanCode)
+	}
+	return "Key " + string(k.token)
+}
+
 // Deserialize unmarshalls the key from string which can be used for loading action keymap.
 func Deserialize(s string) (Key, error) {
 	if strings.HasPrefix(s, "?") && len(s) > 1 {
@@ -81,7 +90,7 @@ func Deserialize(s string) (Key, error) {
 		return NewUnknownKey(scanCode), nil
 	}
 	var found bool
-	for _, key := range allKeys {
+	for _, key := range AllKeys {
 		if string(key.token) == s {
 			found = true
 			break
