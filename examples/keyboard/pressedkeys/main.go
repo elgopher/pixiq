@@ -11,8 +11,10 @@ import (
 func main() {
 	opengl.Run(func(gl *opengl.OpenGL, images *pixiq.Images, loops *pixiq.ScreenLoops) {
 		win := gl.Windows().Open(320, 10, opengl.Title("Press any key..."))
+		// Create keyboard instance for window.
 		keys := keyboard.New(win)
 		loops.Loop(win, func(frame *pixiq.Frame) {
+			// Poll keyboard events
 			keys.Update()
 			// PressedKeys will return all currently pressed keys
 			pressedKeys := keys.PressedKeys()

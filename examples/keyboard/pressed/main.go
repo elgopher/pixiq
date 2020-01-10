@@ -11,11 +11,14 @@ func main() {
 	opengl.Run(func(gl *opengl.OpenGL, images *pixiq.Images, loops *pixiq.ScreenLoops) {
 		windows := gl.Windows()
 		window := windows.Open(320, 160, opengl.Title("Use WSAD and ESC to close window"))
+		// Create keyboard instance for window.
 		keys := keyboard.New(window)
 		x := 160
 		y := 80
 		loops.Loop(window, func(frame *pixiq.Frame) {
+			// Poll keyboard events
 			keys.Update()
+			// Pressed returns true if given key is currently pressed.
 			if keys.Pressed(keyboard.A) {
 				x--
 			}
