@@ -13,7 +13,8 @@ Twórcy Pixiq aby zrealizować te cele mogą:
 + starannie projektować API 
   + tworzyć tzw. proof-of-concept
   + stosować TDD
-  + stosować wzorce architektoniczne, dobre praktyki, architekturą heksagonalną
+  + stosować wzorce architektoniczne, dobre praktyki a przede wszystkim
+    **architekturą heksagonalną**
   + podglądać konkurencyjne rozwiązania
   + dyskutować rozwiązania z innymi
 + tworzyć małe, możliwie **niezależne** pakiety - zobacz pakiety:
@@ -21,15 +22,17 @@ Twórcy Pixiq aby zrealizować te cele mogą:
   + [pixiq.keyboard](keyboard)
 + w większości wypadków nowe funkcje powinny się znaleźć w nowych pakietach 
 (no chyba, żę czegoś brakowało od początku ;))
-+ Pixiq powinien być bardziej biblioteką niż frameworkiem. Oznacza to, że to
++ Pixiq powinien być bardziej **biblioteką** niż frameworkiem. Oznacza to, że to
   programista gier decyduje jak poskładać wszystko do kupy, nie odwrotnie. 
-  Czasem wygodne jest wykorzystanie gotowców, jednak powinny to być tylko
-  dodatkowo dostępne funkcje
+  Czasem wygodne jest wykorzystanie gotowych funkcji setupujących, jednak powinny 
+  to być tylko dodatkowo dostępne funkcje
 + Jak tylko Pixiq osiągnie wersję 1.0.0 nie możliwa będzie zmiana API - zarówno
   syntaktyczna jak i sementaczna. Każda zmiana będzie wymagała stworzenia
   osobnego pakietu v2, v3 itp. 
 + Dlatego też z czasem zaistnieje potrzeba podziału projektu na mniejsze - tak, 
-  żeby każdy moduł miał swoje własne wersjonowanie.
+  żeby każdy moduł miał swoje własne wersjonowanie. Dzięki temu będzie można
+  wprowadzać niekompatybilne zmiany do niestabilnych modułów (np. devtools),
+  jednak podstawowe moduły nie będą się już zmieniać.
 
 ### Uzasadnienie dotychczasowych decyzji projektowych
 
@@ -50,5 +53,6 @@ funkcji tej biblioteki np. możliwości zmiany wyglądu kursora, ustawiania
 pół-przezroczystości okna itp. Czemu?
 
 > Ponieważ nie mieliśmy jeszcze czasu tego zrobić :) Jak tylko czegoś Ci brakuje
-zachęcamy do zgłoszenia [Issue](issues) lub nawet [PRa](pulls) :) Struktura `opengl.Windows` nie 
+zachęcamy do zgłoszenia [Issue](https://github.com/jacekolszak/pixiq/issues) 
+lub nawet [Pull Request](https://github.com/jacekolszak/pixiq/pulls) :) Struktura `opengl.Windows` nie 
 musi implementować żadnych abstrakcji, więc można ją dowolnie rozbudowywać. 
