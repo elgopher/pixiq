@@ -18,7 +18,7 @@ Twórcy Pixiq aby zrealizować te cele mogą:
   + podglądać konkurencyjne rozwiązania
   + dyskutować rozwiązania z innymi
 + tworzyć małe, możliwie **niezależne** pakiety - zobacz pakiety:
-  + [pixiq](../pixiq)
+  + [pixiq]()
   + [pixiq.keyboard](keyboard)
 + w większości wypadków nowe funkcje powinny się znaleźć w nowych pakietach 
 (no chyba, żę czegoś brakowało od początku ;))
@@ -36,7 +36,7 @@ Twórcy Pixiq aby zrealizować te cele mogą:
 
 ### Uzasadnienie dotychczasowych decyzji projektowych
 
-Dlaczego obsługa klawiatury nie jest cześćią pakietu [pixiq](../pixiq)?
+Dlaczego obsługa klawiatury nie jest cześćią pakietu [pixiq]()?
 
 > Ponieważ gra może wcale nie wykorzystać klawiatury lub działać na urządzeniach 
 bez klawiatury.
