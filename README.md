@@ -58,8 +58,9 @@ At the moment I have a vision how the API should look like and how it should be 
 I have made a quick and dirty implementation as a proof of concept. 
 Now it is time to start from scratch in order to deliver the highest possible quality.
 
-The project is using [semantic versioning](https://semver.org/). Current version is `0.X.Y` which basically means that 
-future versions may introduce incompatible API changes. 
+The project is using [semantic versioning](https://semver.org/). Current version 
+is `0.X.Y` which basically means that future versions may introduce incompatible 
+API changes. More about architecture can be found in [architecture document](docs/architecture.md).
 
 ## Project goals
 
