@@ -19,7 +19,7 @@ type KeyboardEvents struct {
 // be expanded if necessary. Will panic if initial size smaller than 1.
 func NewKeyboardEvents(initialSize int) *KeyboardEvents {
 	if initialSize < 1 {
-		panic("initial size was too small")
+		initialSize = 1
 	}
 	return &KeyboardEvents{
 		events: make([]keyboard.Event, initialSize),
