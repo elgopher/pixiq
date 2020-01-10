@@ -17,7 +17,7 @@ Twórcy Pixiq aby zrealizować te cele mogą:
   + podglądać konkurencyjne rozwiązania
   + dyskutować rozwiązania z innymi
 + tworzyć małe, możliwie **niezależne** pakiety - zobacz pakiety:
-  + [pixiq](.)
+  + [pixiq](../pixiq)
   + [pixiq.keyboard](keyboard)
 + w większości wypadków nowe funkcje powinny się znaleźć w nowych pakietach 
 (no chyba, żę czegoś brakowało od początku ;))
@@ -33,7 +33,7 @@ Twórcy Pixiq aby zrealizować te cele mogą:
 
 ### Uzasadnienie dotychczasowych decyzji projektowych
 
-Dlaczego obsługa klawiatury nie jest cześćią pakietu [pixiq](.)?
+Dlaczego obsługa klawiatury nie jest cześćią pakietu [pixiq](../pixiq)?
 
 > Ponieważ gra może wcale nie wykorzystać klawiatury lub działać na urządzeniach 
 bez klawiatury.
@@ -50,5 +50,5 @@ funkcji tej biblioteki np. możliwości zmiany wyglądu kursora, ustawiania
 pół-przezroczystości okna itp. Czemu?
 
 > Ponieważ nie mieliśmy jeszcze czasu tego zrobić :) Jak tylko czegoś Ci brakuje
-zachęcamy do zgłoszenia Issue lub nawet PRa :) Struktura `opengl.Windows` nie 
+zachęcamy do zgłoszenia [Issue](issues) lub nawet [PRa](pulls) :) Struktura `opengl.Windows` nie 
 musi implementować żadnych abstrakcji, więc można ją dowolnie rozbudowywać. 
