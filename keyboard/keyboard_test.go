@@ -513,6 +513,46 @@ func TestKey_Deserialize(t *testing.T) {
 	})
 }
 
+func TestAllKeys(t *testing.T) {
+	t.Run("all keys should be unique", func(t *testing.T) {
+		set := map[keyboard.Key]struct{}{}
+		for _, key := range keyboard.AllKeys {
+			// when
+			_, found := set[key]
+			// then
+			assert.False(t, found, "Key is not unique: %v", key)
+			set[key] = struct{}{}
+		}
+	})
+	t.Run("all keys should count 120", func(t *testing.T) {
+		assert.Len(t, keyboard.AllKeys, 120)
+	})
+}
+
+func TestKey_String(t *testing.T) {
+	t.Run("should return not empty string for predefined keys", func(t *testing.T) {
+		for _, key := range keyboard.AllKeys {
+			assert.NotEmpty(t, key.String())
+		}
+	})
+	t.Run("each predefined key should be unique", func(t *testing.T) {
+		set := map[string]struct{}{}
+		for _, key := range keyboard.AllKeys {
+			// when
+			keyString := key.String()
+			_, found := set[keyString]
+			// then
+			assert.False(t, found, "String representation of key is not unique: %s", keyString)
+			set[keyString] = struct{}{}
+		}
+	})
+	t.Run("for unknown key", func(t *testing.T) {
+		key := keyboard.NewUnknownKey(1)
+		// expect
+		assert.Equal(t, "Key with scanCode 1", key.String())
+	})
+}
+
 func newFakeEventSource(events ...keyboard.Event) *fakeEventSource {
 	source := &fakeEventSource{}
 	source.events = []keyboard.Event{}
