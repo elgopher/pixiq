@@ -1,4 +1,4 @@
-## Pixiq Architecture
+## Pixiq Architecture and design guidelines
 
 Despite the main goals listed in [README](../README.md#project-goals) 
 Pixiq has additional goals, mainly those of an architectural nature. 
