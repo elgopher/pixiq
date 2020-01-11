@@ -6,6 +6,7 @@ package opengl
 
 import (
 	"log"
+	"runtime"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
@@ -39,13 +40,15 @@ func New(loop *MainThreadLoop) *OpenGL {
 	if err != nil {
 		panic(err)
 	}
-	return &OpenGL{
+	openGL := &OpenGL{
 		textures: &textures{mainThreadLoop: loop},
 		windows: &Windows{
 			mainWindow:     mainWindow,
 			mainThreadLoop: loop,
 		},
 	}
+	runtime.SetFinalizer(openGL, (*OpenGL).destroy)
+	return openGL
 }
 
 // Run is a shorthand method for creating Pixiq objects with OpenGL acceleration
@@ -99,6 +102,12 @@ func (g OpenGL) Windows() *Windows {
 	return g.windows
 }
 
+func (g OpenGL) destroy() {
+	g.windows.mainThreadLoop.Execute(func() {
+		g.windows.mainWindow.Destroy()
+	})
+}
+
 // Windows is used for opening system windows.
 type Windows struct {
 	mainThreadLoop *MainThreadLoop
@@ -114,7 +123,6 @@ func (w Windows) Open(width, height int, options ...WindowOption) *Window {
 	if height < 1 {
 		height = 1
 	}
-	var err error
 	win := &Window{
 		mainThreadLoop:  w.mainThreadLoop,
 		keyboardEvents:  internal.NewKeyboardEvents(16),
@@ -122,6 +130,7 @@ func (w Windows) Open(width, height int, options ...WindowOption) *Window {
 		requestedHeight: height,
 		zoom:            1,
 	}
+	var err error
 	w.mainThreadLoop.Execute(func() {
 		win.glfwWindow, err = createWindow(w.mainWindow)
 		if err != nil {
@@ -190,7 +199,7 @@ type Window struct {
 	zoom            int
 }
 
-// Draw draws image spanning the whole window to the invisible buffer.
+// Draw draws an image spanning the whole window to the invisible buffer.
 func (w *Window) Draw(image *pixiq.Image) {
 	texture, isGL := image.Upload().(GLTexture)
 	if !isGL {
