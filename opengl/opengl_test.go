@@ -167,7 +167,8 @@ func TestWindows_Open(t *testing.T) {
 		openGL := opengl.New(mainThreadLoop)
 		windows := openGL.Windows()
 		// when
-		windows.Open(0, 0, nil)
+		win := windows.Open(0, 0, nil)
+		defer win.Close()
 	})
 	t.Run("zoom should not affect the width and height", func(t *testing.T) {
 		for zoom := -1; zoom <= 2; zoom++ {
