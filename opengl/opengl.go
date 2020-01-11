@@ -96,13 +96,13 @@ type OpenGL struct {
 }
 
 // AcceleratedImages returns opengl implementation of pixiq.AcceleratedImages.
-func (g OpenGL) AcceleratedImages() pixiq.AcceleratedImages {
+func (g *OpenGL) AcceleratedImages() pixiq.AcceleratedImages {
 	return g.textures
 }
 
 // Windows returns object for opening system windows. Each open Window
 // is a pixiq.Screen implementation.
-func (g OpenGL) Windows() *Windows {
+func (g *OpenGL) Windows() *Windows {
 	return g.windows
 }
 
@@ -110,7 +110,7 @@ func (g OpenGL) Windows() *Windows {
 // This method has to be called in integration tests to clean resources after
 // each test. Otherwise on some platforms you may reach the limit of active
 // OpenGL contexts.
-func (g OpenGL) Destroy() {
+func (g *OpenGL) Destroy() {
 	g.windows.mainThreadLoop.Execute(func() {
 		g.windows.mainWindow.MakeContextCurrent()
 		g.windows.mainWindow.Destroy()
@@ -125,7 +125,7 @@ type Windows struct {
 }
 
 // Open creates and shows Window.
-func (w Windows) Open(width, height int, options ...WindowOption) *Window {
+func (w *Windows) Open(width, height int, options ...WindowOption) *Window {
 	if width < 1 {
 		width = 1
 	}
