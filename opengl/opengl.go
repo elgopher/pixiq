@@ -6,7 +6,6 @@ package opengl
 
 import (
 	"log"
-	"runtime"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
@@ -47,7 +46,7 @@ func New(loop *MainThreadLoop) *OpenGL {
 			mainThreadLoop: loop,
 		},
 	}
-	runtime.SetFinalizer(openGL, (*OpenGL).destroy)
+	//runtime.SetFinalizer(openGL, (*OpenGL).Destroy)
 	return openGL
 }
 
@@ -102,7 +101,8 @@ func (g OpenGL) Windows() *Windows {
 	return g.windows
 }
 
-func (g OpenGL) destroy() {
+// Destroy destroy OpenGL context - TODO should not be public
+func (g OpenGL) Destroy() {
 	g.windows.mainThreadLoop.Execute(func() {
 		g.windows.mainWindow.MakeContextCurrent()
 		g.windows.mainWindow.Destroy()
