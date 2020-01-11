@@ -160,8 +160,8 @@ func Zoom(zoom int) WindowOption {
 	return func(window *Window) {
 		if zoom > 0 {
 			window.zoom = zoom
-			window.requestedWidth = window.requestedWidth * zoom
-			window.requestedHeight = window.requestedHeight * zoom
+			window.requestedWidth *= zoom
+			window.requestedHeight *= zoom
 		}
 	}
 }
