@@ -218,7 +218,7 @@ func (w *Window) ShouldClose() bool {
 }
 
 // Width returns the actual width of the window in pixels. It may be different
-// than requested width used when window was open.
+// than requested width used when window was open due to platform limitation.
 // If zooming is used the width is not multiplied by zoom.
 func (w *Window) Width() int {
 	var width int
@@ -229,7 +229,7 @@ func (w *Window) Width() int {
 }
 
 // Height returns the actual height of the window in pixels. It may be different
-// than requested height used when window was open.
+// than requested height used when window was open due to platform limitation.
 // If zooming is used the height is not multiplied by zoom.
 func (w *Window) Height() int {
 	var height int

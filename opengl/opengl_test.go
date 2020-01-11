@@ -262,18 +262,26 @@ func TestWindow_Draw(t *testing.T) {
 			}
 		})
 
-		t.Run("zoom 2 should make framebuffer twice as big", func(t *testing.T) {
-			openGL := opengl.New(mainThreadLoop)
-			windows := openGL.Windows()
-			window := windows.Open(1, 1, opengl.NoDecorationHint(), opengl.Zoom(2))
-			images := pixiq.NewImages(openGL.AcceleratedImages())
-			image := images.New(1, 1)
-			image.WholeImageSelection().SetColor(0, 0, color1)
-			// when
-			window.Draw(image)
-			// then
-			expected := []pixiq.Color{color1, color1, color1, color1}
-			assert.Equal(t, expected, framebufferPixels(0, 0, 2, 2))
+		t.Run("zoom > 1 should make framebuffer zoom times bigger", func(t *testing.T) {
+			for zoom := 2; zoom < 4; zoom++ {
+				name := fmt.Sprintf("zoom=%d", zoom)
+				t.Run(name, func(t *testing.T) {
+					openGL := opengl.New(mainThreadLoop)
+					windows := openGL.Windows()
+					window := windows.Open(1, 1, opengl.NoDecorationHint(), opengl.Zoom(zoom))
+					images := pixiq.NewImages(openGL.AcceleratedImages())
+					image := images.New(1, 1)
+					image.WholeImageSelection().SetColor(0, 0, color1)
+					// when
+					window.Draw(image)
+					// then
+					expected := make([]pixiq.Color, zoom*zoom)
+					for i := 0; i < len(expected); i++ {
+						expected[i] = color1
+					}
+					assert.Equal(t, expected, framebufferPixels(0, 0, int32(zoom), int32(zoom)))
+				})
+			}
 		})
 	})
 }
