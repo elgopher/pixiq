@@ -42,8 +42,8 @@ func TestNew(t *testing.T) {
 		assert.NotNil(t, images)
 		assert.NotNil(t, windows)
 	})
-	t.Run("should create 100 objects", func(t *testing.T) {
-		for i := 0; i < 100; i++ {
+	t.Run("should create 2 objects working at the same time", func(t *testing.T) {
+		for i := 0; i < 2; i++ {
 			openGL := opengl.New(mainThreadLoop)
 			defer openGL.Destroy()
 		}
