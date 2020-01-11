@@ -246,6 +246,12 @@ func (w *Window) Height() int {
 	return height / w.zoom
 }
 
+// Zoom returns the actual zoom. It is the zoom given during opening the window,
+// unless zoom < 1 was given - then the actual zoom is 1.
+func (w *Window) Zoom() int {
+	return w.zoom
+}
+
 // Poll retrieves and removes next keyboard Event. If there are no more
 // events false is returned. It implements keyboard.EventSource method.
 func (w *Window) Poll() (keyboard.Event, bool) {

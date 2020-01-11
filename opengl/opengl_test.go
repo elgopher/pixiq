@@ -355,3 +355,40 @@ func TestWindow_Poll(t *testing.T) {
 		assert.False(t, ok)
 	})
 }
+
+func TestWindow_Zoom(t *testing.T) {
+	t.Run("should return specified zoom for window", func(t *testing.T) {
+		tests := map[string]struct {
+			zoom         int
+			expectedZoom int
+		}{
+			"zoom -1": {
+				zoom:         -1,
+				expectedZoom: 1,
+			},
+			"zoom 0": {
+				zoom:         0,
+				expectedZoom: 1,
+			},
+			"zoom 1": {
+				zoom:         1,
+				expectedZoom: 1,
+			},
+			"zoom 2": {
+				zoom:         2,
+				expectedZoom: 2,
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				openGL := opengl.New(mainThreadLoop)
+				win := openGL.Windows().Open(0, 0, opengl.Zoom(test.zoom))
+				defer win.Close()
+				// when
+				zoom := win.Zoom()
+				// expect
+				assert.Equal(t, test.expectedZoom, zoom)
+			})
+		}
+	})
+}
