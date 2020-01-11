@@ -18,6 +18,10 @@ import (
 // New creates OpenGL instance.
 // MainThreadLoop is needed because some GLFW functions has to be called
 // from the main thread.
+// There is a possibility to create multiple OpenGL objects. Please note though
+// that some platforms may limit this number. In integration tests you should
+// always remember to destroy the object after test by executing Destroy method,
+// because eventually the number of objects may reach the mentioned limit.
 func New(loop *MainThreadLoop) *OpenGL {
 	if loop == nil {
 		panic("nil MainThreadLoop")
@@ -46,7 +50,6 @@ func New(loop *MainThreadLoop) *OpenGL {
 			mainThreadLoop: loop,
 		},
 	}
-	//runtime.SetFinalizer(openGL, (*OpenGL).Destroy)
 	return openGL
 }
 
@@ -103,7 +106,10 @@ func (g OpenGL) Windows() *Windows {
 	return g.windows
 }
 
-// Destroy destroy OpenGL context - TODO should not be public
+// Destroy cleans all the OpenGL resources associated with this instance.
+// This method has to be called in integration tests to clean resources after
+// each test. Otherwise on some platforms you may reach the limit of active
+// OpenGL contexts.
 func (g OpenGL) Destroy() {
 	g.windows.mainThreadLoop.Execute(func() {
 		g.windows.mainWindow.MakeContextCurrent()
