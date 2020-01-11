@@ -155,6 +155,7 @@ func Title(title string) WindowOption {
 	}
 }
 
+// Zoom makes window/pixels bigger zoom times.
 func Zoom(zoom int) WindowOption {
 	return func(window *Window) {
 		if zoom > 0 {
