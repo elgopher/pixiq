@@ -1,3 +1,0 @@
-#!/usr/bin/env sh
-
-xvfb-run go test -race -v ./...
