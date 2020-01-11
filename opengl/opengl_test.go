@@ -42,6 +42,12 @@ func TestNew(t *testing.T) {
 		assert.NotNil(t, images)
 		assert.NotNil(t, windows)
 	})
+	t.Run("should create 100 objects", func(t *testing.T) {
+		for i := 0; i < 100; i++ {
+			openGL := opengl.New(mainThreadLoop)
+			defer openGL.Destroy()
+		}
+	})
 }
 
 func TestTextures_New(t *testing.T) {
