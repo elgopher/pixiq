@@ -9,4 +9,4 @@ jobs:
     steps:
       - checkout
       - run: make lint
-      - run: make test-ci
+      - run: make xvfb-test
