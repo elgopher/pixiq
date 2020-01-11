@@ -234,7 +234,6 @@ func (w *Window) SwapImages() {
 // Close closes the window and cleans resources.
 func (w *Window) Close() {
 	w.mainThreadLoop.Execute(func() {
-		w.glfwWindow.MakeContextCurrent()
 		w.glfwWindow.Destroy()
 	})
 }
