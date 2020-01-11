@@ -25,9 +25,10 @@ Pixiq creators can fulfill those goals by:
 + in most cases new features should be added to new packages (unless something
   was missing from the beginning)
 + Pixiq should be more like a **library** not a framework. It basically means, 
-  that the library user decides how to setup an application, not the other way 
-  around. Sometimes it is easier to use a premade setup function, but these kind
-  of functions should be only available in addition to the usual means.
+  that the library user decides how to setup an application and how everything
+  should work together, not the other way around. Sometimes using a premade setup 
+  function or some fixed pipeline may save a few keystrokes, but this kind
+  of functionality should be only available in addition to the usual means.
 + when Pixiq will reach the `v1.0.0` version it won't be possible to change the API
   (both syntactically and semantically) without introducing a new major version.
   Despite having a new git tag `v2.0.0`, new package `v2` will also be created.
