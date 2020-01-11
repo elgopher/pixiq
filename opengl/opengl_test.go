@@ -108,6 +108,8 @@ func TestWindows_Open(t *testing.T) {
 		windows := openGL.Windows()
 		// when
 		win := windows.Open(-1, 0)
+		defer win.Close()
+		// then
 		require.NotNil(t, win)
 		assert.GreaterOrEqual(t, win.Width(), 0)
 	})
@@ -116,6 +118,8 @@ func TestWindows_Open(t *testing.T) {
 		windows := openGL.Windows()
 		// when
 		win := windows.Open(0, -1)
+		defer win.Close()
+		// then
 		require.NotNil(t, win)
 		assert.GreaterOrEqual(t, win.Height(), 0)
 	})
@@ -124,6 +128,8 @@ func TestWindows_Open(t *testing.T) {
 		windows := openGL.Windows()
 		// when
 		win := windows.Open(640, 360)
+		defer win.Close()
+		// then
 		require.NotNil(t, win)
 		assert.Equal(t, 640, win.Width())
 		assert.Equal(t, 360, win.Height())
@@ -133,7 +139,9 @@ func TestWindows_Open(t *testing.T) {
 		windows := openGL.Windows()
 		// when
 		win1 := windows.Open(640, 360)
+		defer win1.Close()
 		win2 := windows.Open(320, 180)
+		defer win2.Close()
 		// then
 		require.NotNil(t, win1)
 		assert.Equal(t, 640, win1.Width())
@@ -149,6 +157,8 @@ func TestWindows_Open(t *testing.T) {
 		win1.Close()
 		// when
 		win2 := windows.Open(320, 180)
+		defer win2.Close()
+		// then
 		require.NotNil(t, win2)
 		assert.Equal(t, 320, win2.Width())
 		assert.Equal(t, 180, win2.Height())
@@ -167,6 +177,8 @@ func TestWindows_Open(t *testing.T) {
 				windows := openGL.Windows()
 				// when
 				win := windows.Open(640, 360, opengl.Zoom(zoom))
+				defer win.Close()
+				// then
 				require.NotNil(t, win)
 				assert.Equal(t, 640, win.Width())
 				assert.Equal(t, 360, win.Height())
@@ -186,6 +198,7 @@ func TestWindow_Draw(t *testing.T) {
 			openGL := opengl.New(mainThreadLoop)
 			windows := openGL.Windows()
 			window := windows.Open(1, 1, opengl.NoDecorationHint())
+			defer window.Close()
 			images := pixiq.NewImages(openGL.AcceleratedImages())
 			image := images.New(1, 1)
 			image.WholeImageSelection().SetColor(0, 0, color1)
@@ -199,6 +212,7 @@ func TestWindow_Draw(t *testing.T) {
 			openGL := opengl.New(mainThreadLoop)
 			windows := openGL.Windows()
 			window := windows.Open(1, 2, opengl.NoDecorationHint())
+			defer window.Close()
 			images := pixiq.NewImages(openGL.AcceleratedImages())
 			image := images.New(1, 2)
 			image.WholeImageSelection().SetColor(0, 0, color1)
@@ -213,6 +227,7 @@ func TestWindow_Draw(t *testing.T) {
 			openGL := opengl.New(mainThreadLoop)
 			windows := openGL.Windows()
 			window := windows.Open(2, 1, opengl.NoDecorationHint())
+			defer window.Close()
 			images := pixiq.NewImages(openGL.AcceleratedImages())
 			image := images.New(2, 1)
 			image.WholeImageSelection().SetColor(0, 0, color1)
@@ -227,6 +242,7 @@ func TestWindow_Draw(t *testing.T) {
 			openGL := opengl.New(mainThreadLoop)
 			windows := openGL.Windows()
 			window := windows.Open(2, 2, opengl.NoDecorationHint())
+			defer window.Close()
 			images := pixiq.NewImages(openGL.AcceleratedImages())
 			image := images.New(2, 2)
 			selection := image.WholeImageSelection()
@@ -248,6 +264,7 @@ func TestWindow_Draw(t *testing.T) {
 					openGL := opengl.New(mainThreadLoop)
 					windows := openGL.Windows()
 					window := windows.Open(1, 1, opengl.NoDecorationHint(), opengl.Zoom(zoom))
+					defer window.Close()
 					images := pixiq.NewImages(openGL.AcceleratedImages())
 					image := images.New(1, 1)
 					image.WholeImageSelection().SetColor(0, 0, color1)
@@ -267,6 +284,7 @@ func TestWindow_Draw(t *testing.T) {
 					openGL := opengl.New(mainThreadLoop)
 					windows := openGL.Windows()
 					window := windows.Open(1, 1, opengl.NoDecorationHint(), opengl.Zoom(zoom))
+					defer window.Close()
 					images := pixiq.NewImages(openGL.AcceleratedImages())
 					image := images.New(1, 1)
 					image.WholeImageSelection().SetColor(0, 0, color1)
@@ -329,12 +347,11 @@ func TestWindow_Poll(t *testing.T) {
 	t.Run("should return EmptyEvent and false when there is no keyboard events", func(t *testing.T) {
 		openGL := opengl.New(mainThreadLoop)
 		win := openGL.Windows().Open(1, 1)
+		defer win.Close()
 		// when
 		event, ok := win.Poll()
 		// then
 		assert.Equal(t, keyboard.EmptyEvent, event)
 		assert.False(t, ok)
-		// cleanup
-		win.Close()
 	})
 }
