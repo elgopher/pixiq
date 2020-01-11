@@ -104,6 +104,7 @@ func (g OpenGL) Windows() *Windows {
 
 func (g OpenGL) destroy() {
 	g.windows.mainThreadLoop.Execute(func() {
+		g.windows.mainWindow.MakeContextCurrent()
 		g.windows.mainWindow.Destroy()
 	})
 }
@@ -225,6 +226,7 @@ func (w *Window) SwapImages() {
 // Close closes the window and cleans resources.
 func (w *Window) Close() {
 	w.mainThreadLoop.Execute(func() {
+		w.glfwWindow.MakeContextCurrent()
 		w.glfwWindow.Destroy()
 	})
 }
