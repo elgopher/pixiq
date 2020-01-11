@@ -4,5 +4,5 @@
 Xvfb :99 -ac -screen 0 "1920x1080x24" -nolisten tcp &
 
 go test -race -v ./...
-go test opengl
-go test opengl -run "TestRun"
+go test opengl -v
+go test opengl -v -run "TestRun"
