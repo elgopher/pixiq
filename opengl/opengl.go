@@ -5,7 +5,7 @@
 package opengl
 
 import (
-	"errors"
+	"log"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
@@ -28,7 +28,10 @@ func New(loop *MainThreadLoop) *OpenGL {
 		if err != nil {
 			panic(err)
 		}
-		mainWindow = createWindow(nil)
+		mainWindow, err = createWindow(nil)
+		if err != nil {
+			panic(err)
+		}
 	})
 	return &OpenGL{
 		textures: &textures{mainThreadLoop: loop},
@@ -51,7 +54,7 @@ func Run(main func(gl *OpenGL, images *pixiq.Images, loops *pixiq.ScreenLoops)) 
 	})
 }
 
-func createWindow(share *glfw.Window) *glfw.Window {
+func createWindow(share *glfw.Window) (*glfw.Window, error) {
 	glfw.WindowHint(glfw.ContextVersionMajor, 3)
 	glfw.WindowHint(glfw.ContextVersionMinor, 3)
 	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
@@ -61,13 +64,13 @@ func createWindow(share *glfw.Window) *glfw.Window {
 	glfw.WindowHint(glfw.CocoaRetinaFramebuffer, glfw.False)
 	win, err := glfw.CreateWindow(1, 1, "OpenGL Pixiq Window", nil, share)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	win.MakeContextCurrent()
 	if err := gl.Init(); err != nil {
-		panic(err)
+		return nil, err
 	}
-	return win
+	return win, nil
 }
 
 // OpenGL provides opengl implementations of pixiq.AcceleratedImages
@@ -112,7 +115,10 @@ func (w Windows) Open(width, height int, options ...WindowOption) *Window {
 		zoom:            1,
 	}
 	w.mainThreadLoop.Execute(func() {
-		win.glfwWindow = createWindow(w.mainWindow)
+		win.glfwWindow, err = createWindow(w.mainWindow)
+		if err != nil {
+			return
+		}
 		win.glfwWindow.SetKeyCallback(win.keyboardEvents.OnKeyCallback)
 		win.program, err = compileProgram()
 		if err != nil {
@@ -123,8 +129,8 @@ func (w Windows) Open(width, height int, options ...WindowOption) *Window {
 			win.program.texturePositionLocation)
 		for _, option := range options {
 			if option == nil {
-				err = errors.New("nil option")
-				return
+				log.Println("nil option given when opening the window")
+				continue
 			}
 			option(win)
 		}

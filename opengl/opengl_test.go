@@ -153,13 +153,11 @@ func TestWindows_Open(t *testing.T) {
 		assert.Equal(t, 320, win2.Width())
 		assert.Equal(t, 180, win2.Height())
 	})
-	t.Run("should panic for nil option", func(t *testing.T) {
+	t.Run("should skip nil option", func(t *testing.T) {
 		openGL := opengl.New(mainThreadLoop)
 		windows := openGL.Windows()
 		// when
-		assert.Panics(t, func() {
-			windows.Open(0, 0, nil)
-		})
+		windows.Open(0, 0, nil)
 	})
 	t.Run("zoom should not affect the width and height", func(t *testing.T) {
 		for zoom := -1; zoom <= 2; zoom++ {
