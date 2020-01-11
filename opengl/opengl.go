@@ -22,17 +22,23 @@ func New(loop *MainThreadLoop) *OpenGL {
 	if loop == nil {
 		panic("nil MainThreadLoop")
 	}
-	var mainWindow *glfw.Window
+	var (
+		mainWindow *glfw.Window
+		err        error
+	)
 	loop.Execute(func() {
-		err := glfw.Init()
+		err = glfw.Init()
 		if err != nil {
-			panic(err)
+			return
 		}
 		mainWindow, err = createWindow(nil)
 		if err != nil {
-			panic(err)
+			return
 		}
 	})
+	if err != nil {
+		panic(err)
+	}
 	return &OpenGL{
 		textures: &textures{mainThreadLoop: loop},
 		windows: &Windows{
