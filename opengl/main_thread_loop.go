@@ -2,6 +2,7 @@ package opengl
 
 import (
 	"bytes"
+	"log"
 	"runtime"
 	"strconv"
 )
@@ -40,12 +41,19 @@ type MainThreadLoop struct {
 }
 
 func (g *MainThreadLoop) run() {
+	defer logPanic()
 	for {
 		job, ok := <-g.jobs
 		if !ok {
 			return
 		}
 		job()
+	}
+}
+
+func logPanic() {
+	if p := recover(); p != nil {
+		log.Panicln("panic in main thread loop", p)
 	}
 }
 
