@@ -62,7 +62,9 @@ func createWindow(share *glfw.Window) (*glfw.Window, error) {
 	glfw.WindowHint(glfw.Resizable, glfw.False)
 	glfw.WindowHint(glfw.Visible, glfw.False)
 	glfw.WindowHint(glfw.CocoaRetinaFramebuffer, glfw.False)
-	win, err := glfw.CreateWindow(1, 1, "OpenGL Pixiq Window", nil, share)
+	// For some reason XVFB does not allow to change the window size to be bigger
+	// than the original width and height
+	win, err := glfw.CreateWindow(3, 3, "OpenGL Pixiq Window", nil, share)
 	if err != nil {
 		return nil, err
 	}
@@ -134,7 +136,7 @@ func (w Windows) Open(width, height int, options ...WindowOption) *Window {
 			}
 			option(win)
 		}
-		win.glfwWindow.SetSize(win.requestedWidth, win.requestedHeight)
+		win.glfwWindow.SetSize(win.requestedWidth*win.zoom, win.requestedHeight*win.zoom)
 		win.glfwWindow.Show()
 	})
 	if err != nil {
@@ -166,8 +168,6 @@ func Zoom(zoom int) WindowOption {
 	return func(window *Window) {
 		if zoom > 0 {
 			window.zoom = zoom
-			window.requestedWidth *= zoom
-			window.requestedHeight *= zoom
 		}
 	}
 }
