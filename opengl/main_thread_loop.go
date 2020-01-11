@@ -53,7 +53,7 @@ func (g *MainThreadLoop) run() {
 
 func logPanic() {
 	if p := recover(); p != nil {
-		log.Panicln("panic in main thread loop", p)
+		log.Panicln("panic in main thread loop: ", p)
 	}
 }
 
