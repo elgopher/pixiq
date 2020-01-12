@@ -6,6 +6,7 @@ package opengl
 
 import (
 	"log"
+	"time"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
@@ -44,12 +45,14 @@ func New(loop *MainThreadLoop) *OpenGL {
 		panic(err)
 	}
 	openGL := &OpenGL{
-		textures: &textures{mainThreadLoop: loop},
+		stopPollingEvents: make(chan struct{}),
+		textures:          &textures{mainThreadLoop: loop},
 		windows: &Windows{
 			mainWindow:     mainWindow,
 			mainThreadLoop: loop,
 		},
 	}
+	go openGL.startPollingEvents(openGL.stopPollingEvents)
 	return openGL
 }
 
@@ -59,6 +62,7 @@ func New(loop *MainThreadLoop) *OpenGL {
 func Run(main func(gl *OpenGL, images *pixiq.Images, loops *pixiq.ScreenLoops)) {
 	StartMainThreadLoop(func(loop *MainThreadLoop) {
 		openGL := New(loop)
+		defer openGL.Destroy()
 		images := pixiq.NewImages(openGL.AcceleratedImages())
 		loops := pixiq.NewScreenLoops(images)
 		main(openGL, images, loops)
@@ -91,8 +95,9 @@ func createWindow(share *glfw.Window) (*glfw.Window, error) {
 // OpenGL provides opengl implementations of pixiq.AcceleratedImages
 // and pixiq.Screen. It provides Windows object for opening system windows.
 type OpenGL struct {
-	textures *textures
-	windows  *Windows
+	textures          *textures
+	windows           *Windows
+	stopPollingEvents chan struct{}
 }
 
 // AcceleratedImages returns opengl implementation of pixiq.AcceleratedImages.
@@ -111,10 +116,25 @@ func (g *OpenGL) Windows() *Windows {
 // each test. Otherwise on some platforms you may reach the limit of active
 // OpenGL contexts.
 func (g *OpenGL) Destroy() {
+	g.stopPollingEvents <- struct{}{}
 	g.windows.mainThreadLoop.Execute(func() {
 		g.windows.mainWindow.MakeContextCurrent()
 		g.windows.mainWindow.Destroy()
 	})
+}
+
+func (g *OpenGL) startPollingEvents(stop <-chan struct{}) {
+	// fixme: make it configurable
+	ticker := time.NewTicker(4 * time.Millisecond) // 250Hz
+	for {
+		<-ticker.C
+		select {
+		case <-stop:
+			return
+		default:
+			g.windows.mainThreadLoop.Execute(glfw.PollEvents)
+		}
+	}
 }
 
 // Windows is used for opening system windows.
@@ -132,9 +152,11 @@ func (w *Windows) Open(width, height int, options ...WindowOption) *Window {
 	if height < 1 {
 		height = 1
 	}
+	// FIXME: EventBuffer size should be configurable
+	keyboardEvents := internal.NewKeyboardEvents(keyboard.NewEventBuffer(32))
 	win := &Window{
 		mainThreadLoop:  w.mainThreadLoop,
-		keyboardEvents:  internal.NewKeyboardEvents(16),
+		keyboardEvents:  keyboardEvents,
 		requestedWidth:  width,
 		requestedHeight: height,
 		zoom:            1,
@@ -226,16 +248,12 @@ func (w *Window) Draw(image *pixiq.Image) {
 
 // SwapImages makes last drawn image visible.
 func (w *Window) SwapImages() {
-	w.mainThreadLoop.Execute(func() {
-		w.glfwWindow.SwapBuffers()
-	})
+	w.mainThreadLoop.Execute(w.glfwWindow.SwapBuffers)
 }
 
 // Close closes the window and cleans resources.
 func (w *Window) Close() {
-	w.mainThreadLoop.Execute(func() {
-		w.glfwWindow.Destroy()
-	})
+	w.mainThreadLoop.Execute(w.glfwWindow.Destroy)
 }
 
 // ShouldClose reports the value of the close flag of the window.
@@ -279,12 +297,14 @@ func (w *Window) Zoom() int {
 // Poll retrieves and removes next keyboard Event. If there are no more
 // events false is returned. It implements keyboard.EventSource method.
 func (w *Window) Poll() (keyboard.Event, bool) {
-	if w.keyboardEvents.Drained() {
-		w.mainThreadLoop.Execute(func() {
-			glfw.PollEvents()
-		})
-	}
-	return w.keyboardEvents.Poll()
+	var (
+		event keyboard.Event
+		ok    bool
+	)
+	w.mainThreadLoop.Execute(func() {
+		event, ok = w.keyboardEvents.Poll()
+	})
+	return event, ok
 }
 
 type textures struct {
