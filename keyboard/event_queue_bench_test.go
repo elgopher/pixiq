@@ -10,11 +10,11 @@ import (
 func BenchmarkKeyboardEvents(b *testing.B) {
 	b.StopTimer()
 	const size = 8
-	events := keyboard.NewEventQueue(size)
+	events := keyboard.NewEventBuffer(size)
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		for i := 0; i < size*2; i++ {
-			events.Append(keyboard.NewPressedEvent(keyboard.A))
+			events.Add(keyboard.NewPressedEvent(keyboard.A))
 		}
 		for {
 			_, ok := events.Poll()

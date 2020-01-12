@@ -149,9 +149,11 @@ func (w *Windows) Open(width, height int, options ...WindowOption) *Window {
 	if height < 1 {
 		height = 1
 	}
+	// FIXME: EventBuffer size should be configurable
+	keyboardEvents := internal.NewKeyboardEvents(keyboard.NewEventBuffer(32))
 	win := &Window{
 		mainThreadLoop:  w.mainThreadLoop,
-		keyboardEvents:  internal.NewKeyboardEvents(keyboard.NewEventQueue(16)),
+		keyboardEvents:  keyboardEvents,
 		requestedWidth:  width,
 		requestedHeight: height,
 		zoom:            1,
@@ -292,7 +294,14 @@ func (w *Window) Zoom() int {
 // Poll retrieves and removes next keyboard Event. If there are no more
 // events false is returned. It implements keyboard.EventSource method.
 func (w *Window) Poll() (keyboard.Event, bool) {
-	return w.keyboardEvents.Poll()
+	var (
+		event keyboard.Event
+		ok    bool
+	)
+	w.mainThreadLoop.Execute(func() {
+		event, ok = w.keyboardEvents.Poll()
+	})
+	return event, ok
 }
 
 type textures struct {

@@ -9,15 +9,15 @@ import (
 // KeyboardEvents maps GLFW events to keyboard.Event. Mapped events can be
 // polled using keyboard.EventSource interface.
 type KeyboardEvents struct {
-	queue *keyboard.EventQueue
+	buffer *keyboard.EventBuffer
 }
 
 // NewKeyboardEventsOfSize creates *KeyboardEvents of given size.
-func NewKeyboardEvents(queue *keyboard.EventQueue) *KeyboardEvents {
-	if queue == nil {
-		panic("nil queue")
+func NewKeyboardEvents(buffer *keyboard.EventBuffer) *KeyboardEvents {
+	if buffer == nil {
+		panic("nil buffer")
 	}
-	return &KeyboardEvents{queue: queue}
+	return &KeyboardEvents{buffer: buffer}
 }
 
 // OnKeyCallback passes GLFW key event
@@ -28,13 +28,13 @@ func (e *KeyboardEvents) OnKeyCallback(_ *glfw.Window, glfwKey glfw.Key, scanCod
 	}
 	switch action {
 	case glfw.Press:
-		e.queue.Append(keyboard.NewPressedEvent(key))
+		e.buffer.Add(keyboard.NewPressedEvent(key))
 	case glfw.Release:
-		e.queue.Append(keyboard.NewReleasedEvent(key))
+		e.buffer.Add(keyboard.NewReleasedEvent(key))
 	}
 }
 
 // Poll return next mapped event
 func (e *KeyboardEvents) Poll() (keyboard.Event, bool) {
-	return e.queue.Poll()
+	return e.buffer.Poll()
 }
