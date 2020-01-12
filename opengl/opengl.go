@@ -44,9 +44,13 @@ func New(loop *MainThreadLoop) *OpenGL {
 	if err != nil {
 		panic(err)
 	}
+	textures := &textures{
+		mainThreadLoop:     loop,
+		makeContextCurrent: mainWindow.MakeContextCurrent,
+	}
 	openGL := &OpenGL{
 		stopPollingEvents: make(chan struct{}),
-		textures:          &textures{mainThreadLoop: loop},
+		textures:          textures,
 		windows: &Windows{
 			mainWindow:     mainWindow,
 			mainThreadLoop: loop,
@@ -308,12 +312,14 @@ func (w *Window) Poll() (keyboard.Event, bool) {
 }
 
 type textures struct {
-	mainThreadLoop *MainThreadLoop
+	mainThreadLoop     *MainThreadLoop
+	makeContextCurrent func()
 }
 
 func (t *textures) New(width, height int) pixiq.AcceleratedImage {
 	var id uint32
 	t.mainThreadLoop.Execute(func() {
+		t.makeContextCurrent()
 		gl.GenTextures(1, &id)
 		gl.BindTexture(gl.TEXTURE_2D, id)
 		gl.TexImage2D(
@@ -331,10 +337,11 @@ func (t *textures) New(width, height int) pixiq.AcceleratedImage {
 		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
 	})
 	return &texture{
-		id:             id,
-		width:          width,
-		height:         height,
-		mainThreadLoop: t.mainThreadLoop,
+		id:                 id,
+		width:              width,
+		height:             height,
+		mainThreadLoop:     t.mainThreadLoop,
+		makeContextCurrent: t.makeContextCurrent,
 	}
 }
 
@@ -345,10 +352,10 @@ type GLTexture interface {
 }
 
 type texture struct {
-	pixels         []pixiq.Color
-	id             uint32
-	width, height  int
-	mainThreadLoop *MainThreadLoop
+	id                 uint32
+	width, height      int
+	mainThreadLoop     *MainThreadLoop
+	makeContextCurrent func()
 }
 
 func (t *texture) TextureID() uint32 {
@@ -357,6 +364,7 @@ func (t *texture) TextureID() uint32 {
 
 func (t *texture) Upload(pixels []pixiq.Color) {
 	t.mainThreadLoop.Execute(func() {
+		t.makeContextCurrent()
 		gl.BindTexture(gl.TEXTURE_2D, t.id)
 		gl.TexSubImage2D(
 			gl.TEXTURE_2D,
@@ -370,10 +378,10 @@ func (t *texture) Upload(pixels []pixiq.Color) {
 			gl.Ptr(pixels),
 		)
 	})
-	t.pixels = pixels
 }
 func (t *texture) Download(output []pixiq.Color) {
 	t.mainThreadLoop.Execute(func() {
+		t.makeContextCurrent()
 		gl.BindTexture(gl.TEXTURE_2D, t.id)
 		gl.GetTexImage(
 			gl.TEXTURE_2D,
