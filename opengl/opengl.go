@@ -243,16 +243,12 @@ func (w *Window) Draw(image *pixiq.Image) {
 
 // SwapImages makes last drawn image visible.
 func (w *Window) SwapImages() {
-	w.mainThreadLoop.Execute(func() {
-		w.glfwWindow.SwapBuffers()
-	})
+	w.mainThreadLoop.Execute(w.glfwWindow.SwapBuffers)
 }
 
 // Close closes the window and cleans resources.
 func (w *Window) Close() {
-	w.mainThreadLoop.Execute(func() {
-		w.glfwWindow.Destroy()
-	})
+	w.mainThreadLoop.Execute(w.glfwWindow.Destroy)
 }
 
 // ShouldClose reports the value of the close flag of the window.
