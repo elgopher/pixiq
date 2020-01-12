@@ -127,13 +127,11 @@ func (g *OpenGL) startPollingEvents(stop <-chan struct{}) {
 	// fixme: make it configurable
 	ticker := time.NewTicker(4 * time.Millisecond) // 250Hz
 	for {
+		<-ticker.C
 		select {
 		case <-stop:
 			return
-		case _, ok := <-ticker.C:
-			if !ok {
-				return
-			}
+		default:
 			g.windows.mainThreadLoop.Execute(glfw.PollEvents)
 		}
 	}
