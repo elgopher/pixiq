@@ -13,7 +13,7 @@ func BenchmarkKeyboardEvents(b *testing.B) {
 	events := keyboard.NewEventBuffer(size)
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		for i := 0; i < size*2; i++ {
+		for j := 0; j < size*2; j++ {
 			events.Add(keyboard.NewPressedEvent(keyboard.A))
 		}
 		for {

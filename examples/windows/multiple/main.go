@@ -7,6 +7,9 @@ import (
 )
 
 // This example shows how to open two windows at the same time.
+//
+// Please note that this functionality is experimental and may change in the
+// near future. Such feature may be harmful for overall performance of Pixiq.
 func main() {
 	opengl.Run(func(gl *opengl.OpenGL, images *pixiq.Images, loops *pixiq.ScreenLoops) {
 		windows := gl.Windows()

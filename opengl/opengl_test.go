@@ -63,12 +63,12 @@ func TestTextures_New(t *testing.T) {
 }
 
 func TestTexture_Upload(t *testing.T) {
-	t.Run("should upload pixels", func(t *testing.T) {
-		color1 := pixiq.RGBA(10, 20, 30, 40)
-		color2 := pixiq.RGBA(50, 60, 70, 80)
-		color3 := pixiq.RGBA(90, 100, 110, 120)
-		color4 := pixiq.RGBA(130, 140, 150, 160)
+	color1 := pixiq.RGBA(10, 20, 30, 40)
+	color2 := pixiq.RGBA(50, 60, 70, 80)
+	color3 := pixiq.RGBA(90, 100, 110, 120)
+	color4 := pixiq.RGBA(130, 140, 150, 160)
 
+	t.Run("should upload pixels", func(t *testing.T) {
 		tests := map[string]struct {
 			width, height int
 			inputColors   []pixiq.Color
@@ -108,6 +108,24 @@ func TestTexture_Upload(t *testing.T) {
 				assert.Equal(t, test.inputColors, output)
 			})
 		}
+	})
+	t.Run("2 OpenGL contexts", func(t *testing.T) {
+		gl1 := opengl.New(mainThreadLoop)
+		defer gl1.Destroy()
+		gl2 := opengl.New(mainThreadLoop)
+		defer gl2.Destroy()
+		img1 := gl1.AcceleratedImages().New(1, 1)
+		img2 := gl2.AcceleratedImages().New(1, 1)
+		// when
+		img1.Upload([]pixiq.Color{color1})
+		img2.Upload([]pixiq.Color{color2})
+		// then
+		output := make([]pixiq.Color, 1)
+		img1.Download(output)
+		assert.Equal(t, []pixiq.Color{color1}, output)
+		// and
+		img2.Download(output)
+		assert.Equal(t, []pixiq.Color{color2}, output)
 	})
 }
 
