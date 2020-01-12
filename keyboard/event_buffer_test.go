@@ -107,7 +107,7 @@ func TestEventBuffer_Add(t *testing.T) {
 	})
 }
 
-func prepare(q *keyboard.EventBuffer, f func(q *keyboard.EventBuffer)) *keyboard.EventBuffer {
-	f(q)
-	return q
+func prepare(b *keyboard.EventBuffer, f func(q *keyboard.EventBuffer)) *keyboard.EventBuffer {
+	f(b)
+	return b
 }
