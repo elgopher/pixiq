@@ -13,12 +13,12 @@ import (
 // near future. Such feature may be harmful for overall performance of Pixiq.
 func main() {
 	opengl.StartMainThreadLoop(func(mainThreadLoop *opengl.MainThreadLoop) {
-		go StartOpenGL(mainThreadLoop, "Lime", colornames.Lime)
-		StartOpenGL(mainThreadLoop, "Pink", colornames.Pink)
+		go startOpenGL(mainThreadLoop, "Lime", colornames.Lime)
+		startOpenGL(mainThreadLoop, "Pink", colornames.Pink)
 	})
 }
 
-func StartOpenGL(loop *opengl.MainThreadLoop, title string, color pixiq.Color) {
+func startOpenGL(loop *opengl.MainThreadLoop, title string, color pixiq.Color) {
 	openGL := opengl.New(loop)
 	defer openGL.Destroy()
 	windows := openGL.Windows()
