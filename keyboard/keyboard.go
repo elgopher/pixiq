@@ -28,13 +28,13 @@ type EventSource interface {
 	Poll() (Event, bool)
 }
 
-func newKey(token Token) Key {
+func newKey(token token) Key {
 	return Key{token: token}
 }
 
-// Token is a unique string representation of the key. It the key is
+// token is a unique string representation of the key. It the key is
 // unknown then token is empty.
-type Token string
+type token string
 
 // NewUnknownKey creates key with platform-specific scanCode.
 func NewUnknownKey(scanCode int) Key {
@@ -45,7 +45,7 @@ func NewUnknownKey(scanCode int) Key {
 
 // Key identifies the pressed or released key.
 type Key struct {
-	token    Token
+	token    token
 	scanCode int
 }
 
@@ -60,17 +60,12 @@ func (k Key) ScanCode() int {
 	return k.scanCode
 }
 
-// Token returns a platform-independent unique token.
-func (k Key) Token() Token {
-	return k.token
-}
-
 // Serialize marshals the key to string which can be used for saving action keymap.
 func (k Key) Serialize() string {
 	if k.IsUnknown() {
 		return fmt.Sprintf("?%d", k.scanCode)
 	}
-	return string(k.Token())
+	return string(k.token)
 }
 
 // String returns the string representation of the Key for debugging purposes. Do not
@@ -101,7 +96,7 @@ func Deserialize(s string) (Key, error) {
 	if !found {
 		return Key{}, fmt.Errorf("unserializable key string %s", s)
 	}
-	return newKey(Token(s)), nil
+	return newKey(token(s)), nil
 }
 
 // EmptyEvent should be returned by EventSource when it does not have more events.

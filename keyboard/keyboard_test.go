@@ -29,7 +29,6 @@ func Test(t *testing.T) {
 	t.Run("should create key using package variable", func(t *testing.T) {
 		key := keyboard.A
 		assert.False(t, key.IsUnknown())
-		assert.Equal(t, keyboard.Token("A"), key.Token())
 	})
 	t.Run("two keys with same token should be equal", func(t *testing.T) {
 		key1 := keyboard.A
