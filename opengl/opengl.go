@@ -6,6 +6,7 @@ package opengl
 
 import (
 	"log"
+	"time"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
@@ -44,12 +45,14 @@ func New(loop *MainThreadLoop) *OpenGL {
 		panic(err)
 	}
 	openGL := &OpenGL{
+		ticker:   time.NewTicker(4 * time.Millisecond), // 250Hz
 		textures: &textures{mainThreadLoop: loop},
 		windows: &Windows{
 			mainWindow:     mainWindow,
 			mainThreadLoop: loop,
 		},
 	}
+	go openGL.startPollingEvents()
 	return openGL
 }
 
@@ -93,6 +96,7 @@ func createWindow(share *glfw.Window) (*glfw.Window, error) {
 type OpenGL struct {
 	textures *textures
 	windows  *Windows
+	ticker   *time.Ticker
 }
 
 // AcceleratedImages returns opengl implementation of pixiq.AcceleratedImages.
@@ -112,9 +116,22 @@ func (g *OpenGL) Windows() *Windows {
 // OpenGL contexts.
 func (g *OpenGL) Destroy() {
 	g.windows.mainThreadLoop.Execute(func() {
+		g.ticker.Stop()
 		g.windows.mainWindow.MakeContextCurrent()
 		g.windows.mainWindow.Destroy()
 	})
+}
+
+func (g *OpenGL) startPollingEvents() {
+	for {
+		select {
+		case _, ok := <-g.ticker.C:
+			if !ok {
+				return
+			}
+			g.windows.mainThreadLoop.Execute(glfw.PollEvents)
+		}
+	}
 }
 
 // Windows is used for opening system windows.
@@ -134,7 +151,7 @@ func (w *Windows) Open(width, height int, options ...WindowOption) *Window {
 	}
 	win := &Window{
 		mainThreadLoop:  w.mainThreadLoop,
-		keyboardEvents:  internal.NewKeyboardEvents(16),
+		keyboardEvents:  internal.NewKeyboardEvents(keyboard.NewEventQueue(16)),
 		requestedWidth:  width,
 		requestedHeight: height,
 		zoom:            1,
@@ -279,11 +296,6 @@ func (w *Window) Zoom() int {
 // Poll retrieves and removes next keyboard Event. If there are no more
 // events false is returned. It implements keyboard.EventSource method.
 func (w *Window) Poll() (keyboard.Event, bool) {
-	if w.keyboardEvents.Drained() {
-		w.mainThreadLoop.Execute(func() {
-			glfw.PollEvents()
-		})
-	}
 	return w.keyboardEvents.Poll()
 }
 

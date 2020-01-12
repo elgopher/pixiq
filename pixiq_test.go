@@ -171,7 +171,7 @@ func TestSelection_WithSize(t *testing.T) {
 		assert.Equal(t, 0, selection.Width())
 	})
 
-	t.Run("should clamp width to zero if given width is negative and previously width was set to positive number", func(t *testing.T) {
+	t.Run("should constrain width to zero if given width is negative and previously width was set to positive number", func(t *testing.T) {
 		selection := image.Selection(1, 2).WithSize(5, 0)
 		// when
 		selection = selection.WithSize(-1, 4)
@@ -185,7 +185,7 @@ func TestSelection_WithSize(t *testing.T) {
 		assert.Equal(t, 0, selection.Height())
 	})
 
-	t.Run("should clamp height to zero if given height is negative and previously height was set to positive number", func(t *testing.T) {
+	t.Run("should constrain height to zero if given height is negative and previously height was set to positive number", func(t *testing.T) {
 		selection := image.Selection(1, 2).WithSize(0, 5)
 		// when
 		selection = selection.WithSize(3, -1)

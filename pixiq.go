@@ -31,7 +31,7 @@ type Images struct {
 }
 
 // New creates an Image with specified size given in pixels.
-// Width and height are clamped to zero if negative.
+// Width and height are constrained to zero if negative.
 func (i *Images) New(width, height int) *Image {
 	var w, h int
 	if width > 0 {
@@ -135,7 +135,7 @@ func (s Selection) ImageY() int {
 }
 
 // WithSize creates a new selection with specified size in pixels.
-// Negative width or height are clamped to 0.
+// Negative width or height are constrained to 0.
 func (s Selection) WithSize(width, height int) Selection {
 	if width > 0 {
 		s.width = width

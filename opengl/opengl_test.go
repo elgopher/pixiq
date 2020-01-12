@@ -112,7 +112,7 @@ func TestTexture_Upload(t *testing.T) {
 }
 
 func TestWindows_Open(t *testing.T) {
-	t.Run("should clamp width to platform-specific minimum if negative", func(t *testing.T) {
+	t.Run("should constrain width to platform-specific minimum if negative", func(t *testing.T) {
 		openGL := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
 		windows := openGL.Windows()
@@ -123,7 +123,7 @@ func TestWindows_Open(t *testing.T) {
 		require.NotNil(t, win)
 		assert.GreaterOrEqual(t, win.Width(), 0)
 	})
-	t.Run("should clamp height to platform-specific minimum if negative", func(t *testing.T) {
+	t.Run("should constrain height to platform-specific minimum if negative", func(t *testing.T) {
 		openGL := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
 		windows := openGL.Windows()

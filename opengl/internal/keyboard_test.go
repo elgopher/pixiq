@@ -12,22 +12,32 @@ import (
 )
 
 func TestNewKeyboardEvents(t *testing.T) {
-	t.Run("should create KeyboardEvents for initial size -1", func(t *testing.T) {
-		internal.NewKeyboardEvents(-1)
+	t.Run("should create KeyboardEvents when queue is given", func(t *testing.T) {
+		queue := keyboard.NewEventQueue(1)
+		// expect
+		assert.NotNil(t, internal.NewKeyboardEvents(queue))
+	})
+	t.Run("should panic for nil queue", func(t *testing.T) {
+		assert.Panics(t, func() {
+			assert.NotNil(t, internal.NewKeyboardEvents(nil))
+		})
 	})
 }
 
 func TestKeyboardEvents_Poll(t *testing.T) {
 	t.Run("should return EmptyEvent when there are no events", func(t *testing.T) {
-		events := internal.NewKeyboardEvents(16)
+		queue := keyboard.NewEventQueue(1)
+		events := internal.NewKeyboardEvents(queue)
 		// when
 		event, ok := events.Poll()
 		// then
 		require.False(t, ok)
 		assert.Equal(t, keyboard.EmptyEvent, event)
 	})
+
 	t.Run("should return EmptyEvent for Repeat action", func(t *testing.T) {
-		events := internal.NewKeyboardEvents(16)
+		queue := keyboard.NewEventQueue(1)
+		events := internal.NewKeyboardEvents(queue)
 		events.OnKeyCallback(nil, glfw.KeyA, 0, glfw.Repeat, 0)
 		// when
 		event, ok := events.Poll()
@@ -35,6 +45,7 @@ func TestKeyboardEvents_Poll(t *testing.T) {
 		require.False(t, ok)
 		assert.Equal(t, keyboard.EmptyEvent, event)
 	})
+
 	t.Run("should return mapped event", func(t *testing.T) {
 		tests := map[string]struct {
 			glfwKey       glfw.Key
@@ -77,7 +88,8 @@ func TestKeyboardEvents_Poll(t *testing.T) {
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
-				events := internal.NewKeyboardEvents(16)
+				queue := keyboard.NewEventQueue(1)
+				events := internal.NewKeyboardEvents(queue)
 				events.OnKeyCallback(nil, test.glfwKey, test.scanCode, test.action, 0)
 				// when
 				event, ok := events.Poll()
@@ -91,7 +103,8 @@ func TestKeyboardEvents_Poll(t *testing.T) {
 	})
 
 	t.Run("should return two mapped events", func(t *testing.T) {
-		events := internal.NewKeyboardEvents(16)
+		queue := keyboard.NewEventQueue(2)
+		events := internal.NewKeyboardEvents(queue)
 		events.OnKeyCallback(nil, glfw.KeyA, 0, glfw.Press, 0)
 		events.OnKeyCallback(nil, glfw.KeyB, 0, glfw.Release, 0)
 		// when
@@ -107,63 +120,6 @@ func TestKeyboardEvents_Poll(t *testing.T) {
 		assertNoMoreEvents(t, events)
 	})
 
-}
-
-func TestKeyboardEvents_OnKeyCallback(t *testing.T) {
-	t.Run("should expand buffer when too many events", func(t *testing.T) {
-		tests := map[string]int{
-			"initial size -1": -1,
-			"initial size 0":  0,
-			"initial size 1":  1,
-		}
-		for name, initialSize := range tests {
-			t.Run(name, func(t *testing.T) {
-				events := internal.NewKeyboardEvents(initialSize)
-				// when
-				events.OnKeyCallback(nil, glfw.KeyA, 0, glfw.Press, 0)
-				events.OnKeyCallback(nil, glfw.KeyB, 0, glfw.Press, 0)
-				// then
-				event, ok := events.Poll()
-				require.True(t, ok)
-				assert.Equal(t, keyboard.NewPressedEvent(keyboard.A), event)
-				// and
-				event, ok = events.Poll()
-				require.True(t, ok)
-				assert.Equal(t, keyboard.NewPressedEvent(keyboard.B), event)
-				// and
-				assertNoMoreEvents(t, events)
-			})
-		}
-	})
-}
-
-func TestKeyboardEvents_Drained(t *testing.T) {
-	t.Run("should return true after creation", func(t *testing.T) {
-		events := internal.NewKeyboardEvents(1)
-		// expect
-		assert.True(t, events.Drained())
-	})
-	t.Run("should return false after OnKeyCallback", func(t *testing.T) {
-		events := internal.NewKeyboardEvents(1)
-		events.OnKeyCallback(nil, glfw.KeyA, 0, glfw.Press, 0)
-		// expect
-		assert.False(t, events.Drained())
-	})
-	t.Run("should return false after OnKeyCallback and Poll", func(t *testing.T) {
-		events := internal.NewKeyboardEvents(1)
-		events.OnKeyCallback(nil, glfw.KeyA, 0, glfw.Press, 0)
-		events.Poll()
-		// expect
-		assert.False(t, events.Drained())
-	})
-	t.Run("should return true after OnKeyCallback and 2 x Poll", func(t *testing.T) {
-		events := internal.NewKeyboardEvents(1)
-		events.OnKeyCallback(nil, glfw.KeyA, 0, glfw.Press, 0)
-		events.Poll()
-		events.Poll()
-		// expect
-		assert.True(t, events.Drained())
-	})
 }
 
 func assertNoMoreEvents(t *testing.T, events *internal.KeyboardEvents) {
