@@ -363,7 +363,6 @@ func TestRun(t *testing.T) {
 		assert.NotNil(t, actualImages)
 		assert.NotNil(t, actualLoops)
 	})
-
 }
 
 func TestWindow_Poll(t *testing.T) {

@@ -62,6 +62,7 @@ func New(loop *MainThreadLoop) *OpenGL {
 func Run(main func(gl *OpenGL, images *pixiq.Images, loops *pixiq.ScreenLoops)) {
 	StartMainThreadLoop(func(loop *MainThreadLoop) {
 		openGL := New(loop)
+		defer openGL.Destroy()
 		images := pixiq.NewImages(openGL.AcceleratedImages())
 		loops := pixiq.NewScreenLoops(images)
 		main(openGL, images, loops)
