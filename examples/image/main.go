@@ -20,6 +20,8 @@ func main() {
 	opengl.StartMainThreadLoop(func(loop *opengl.MainThreadLoop) {
 		// Create OpenGL object.
 		gl := opengl.New(loop)
+		// Destroy OpenGL when the function ends
+		defer gl.Destroy()
 
 		// Create pixiq.Images which is basically a factory of images.
 		// Inject OpenGL's implementation of pixiq.AcceleratedImages.

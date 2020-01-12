@@ -45,14 +45,14 @@ func New(loop *MainThreadLoop) *OpenGL {
 		panic(err)
 	}
 	openGL := &OpenGL{
-		ticker:   time.NewTicker(4 * time.Millisecond), // 250Hz
-		textures: &textures{mainThreadLoop: loop},
+		stopPollingEvents: make(chan struct{}),
+		textures:          &textures{mainThreadLoop: loop},
 		windows: &Windows{
 			mainWindow:     mainWindow,
 			mainThreadLoop: loop,
 		},
 	}
-	go openGL.startPollingEvents()
+	go openGL.startPollingEvents(openGL.stopPollingEvents)
 	return openGL
 }
 
@@ -95,9 +95,9 @@ func createWindow(share *glfw.Window) (*glfw.Window, error) {
 // OpenGL provides opengl implementations of pixiq.AcceleratedImages
 // and pixiq.Screen. It provides Windows object for opening system windows.
 type OpenGL struct {
-	textures *textures
-	windows  *Windows
-	ticker   *time.Ticker
+	textures          *textures
+	windows           *Windows
+	stopPollingEvents chan struct{}
 }
 
 // AcceleratedImages returns opengl implementation of pixiq.AcceleratedImages.
@@ -117,16 +117,20 @@ func (g *OpenGL) Windows() *Windows {
 // OpenGL contexts.
 func (g *OpenGL) Destroy() {
 	g.windows.mainThreadLoop.Execute(func() {
-		g.ticker.Stop()
+		g.stopPollingEvents <- struct{}{}
 		g.windows.mainWindow.MakeContextCurrent()
 		g.windows.mainWindow.Destroy()
 	})
 }
 
-func (g *OpenGL) startPollingEvents() {
+func (g *OpenGL) startPollingEvents(stop <-chan struct{}) {
+	// fixme: make it configurable
+	ticker := time.NewTicker(4 * time.Millisecond) // 250Hz
 	for {
 		select {
-		case _, ok := <-g.ticker.C:
+		case <-stop:
+			return
+		case _, ok := <-ticker.C:
 			if !ok {
 				return
 			}
