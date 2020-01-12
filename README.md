@@ -42,10 +42,10 @@ import (
 func main() {
 	opengl.Run(func(gl *opengl.OpenGL, images *pixiq.Images, loops *pixiq.ScreenLoops) {
 		windows := gl.Windows()
-		window := windows.Open(320, 16)
+		window := windows.Open(80, 16, opengl.Zoom(5))
 		loops.Loop(window, func(frame *pixiq.Frame) {
 			screen := frame.Screen()
-			screen.SetColor(160, 8, colornames.White)
+			screen.SetColor(40, 8, colornames.White)
 		})
 	})
 }

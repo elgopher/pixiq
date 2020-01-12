@@ -18,28 +18,39 @@ import (
 // New creates OpenGL instance.
 // MainThreadLoop is needed because some GLFW functions has to be called
 // from the main thread.
+// There is a possibility to create multiple OpenGL objects. Please note though
+// that some platforms may limit this number. In integration tests you should
+// always remember to destroy the object after test by executing Destroy method,
+// because eventually the number of objects may reach the mentioned limit.
 func New(loop *MainThreadLoop) *OpenGL {
 	if loop == nil {
 		panic("nil MainThreadLoop")
 	}
-	var mainWindow *glfw.Window
+	var (
+		mainWindow *glfw.Window
+		err        error
+	)
 	loop.Execute(func() {
-		err := glfw.Init()
+		err = glfw.Init()
 		if err != nil {
-			panic(err)
+			return
 		}
 		mainWindow, err = createWindow(nil)
 		if err != nil {
-			panic(err)
+			return
 		}
 	})
-	return &OpenGL{
+	if err != nil {
+		panic(err)
+	}
+	openGL := &OpenGL{
 		textures: &textures{mainThreadLoop: loop},
 		windows: &Windows{
 			mainWindow:     mainWindow,
 			mainThreadLoop: loop,
 		},
 	}
+	return openGL
 }
 
 // Run is a shorthand method for creating Pixiq objects with OpenGL acceleration
@@ -62,7 +73,11 @@ func createWindow(share *glfw.Window) (*glfw.Window, error) {
 	glfw.WindowHint(glfw.Resizable, glfw.False)
 	glfw.WindowHint(glfw.Visible, glfw.False)
 	glfw.WindowHint(glfw.CocoaRetinaFramebuffer, glfw.False)
-	win, err := glfw.CreateWindow(1, 1, "OpenGL Pixiq Window", nil, share)
+	// FIXME: For some reason XVFB does not change the frame buffer size after
+	// resizing the window to higher values. That's why the window created
+	// here has size equal to the biggest window used in integration tests
+	// See: TestWindow_Draw() in opengl_test.go
+	win, err := glfw.CreateWindow(3, 3, "OpenGL Pixiq Window", nil, share)
 	if err != nil {
 		return nil, err
 	}
@@ -81,14 +96,25 @@ type OpenGL struct {
 }
 
 // AcceleratedImages returns opengl implementation of pixiq.AcceleratedImages.
-func (g OpenGL) AcceleratedImages() pixiq.AcceleratedImages {
+func (g *OpenGL) AcceleratedImages() pixiq.AcceleratedImages {
 	return g.textures
 }
 
 // Windows returns object for opening system windows. Each open Window
 // is a pixiq.Screen implementation.
-func (g OpenGL) Windows() *Windows {
+func (g *OpenGL) Windows() *Windows {
 	return g.windows
+}
+
+// Destroy cleans all the OpenGL resources associated with this instance.
+// This method has to be called in integration tests to clean resources after
+// each test. Otherwise on some platforms you may reach the limit of active
+// OpenGL contexts.
+func (g *OpenGL) Destroy() {
+	g.windows.mainThreadLoop.Execute(func() {
+		g.windows.mainWindow.MakeContextCurrent()
+		g.windows.mainWindow.Destroy()
+	})
 }
 
 // Windows is used for opening system windows.
@@ -99,18 +125,21 @@ type Windows struct {
 }
 
 // Open creates and shows Window.
-func (w Windows) Open(width, height int, options ...WindowOption) *Window {
+func (w *Windows) Open(width, height int, options ...WindowOption) *Window {
 	if width < 1 {
 		width = 1
 	}
 	if height < 1 {
 		height = 1
 	}
-	var err error
 	win := &Window{
-		mainThreadLoop: w.mainThreadLoop,
-		keyboardEvents: internal.NewKeyboardEvents(16),
+		mainThreadLoop:  w.mainThreadLoop,
+		keyboardEvents:  internal.NewKeyboardEvents(16),
+		requestedWidth:  width,
+		requestedHeight: height,
+		zoom:            1,
 	}
+	var err error
 	w.mainThreadLoop.Execute(func() {
 		win.glfwWindow, err = createWindow(w.mainWindow)
 		if err != nil {
@@ -124,7 +153,6 @@ func (w Windows) Open(width, height int, options ...WindowOption) *Window {
 		win.screenPolygon = newScreenPolygon(
 			win.program.vertexPositionLocation,
 			win.program.texturePositionLocation)
-		win.glfwWindow.SetSize(width, height)
 		for _, option := range options {
 			if option == nil {
 				log.Println("nil option given when opening the window")
@@ -132,6 +160,7 @@ func (w Windows) Open(width, height int, options ...WindowOption) *Window {
 			}
 			option(win)
 		}
+		win.glfwWindow.SetSize(win.requestedWidth*win.zoom, win.requestedHeight*win.zoom)
 		win.glfwWindow.Show()
 	})
 	if err != nil {
@@ -158,16 +187,28 @@ func Title(title string) WindowOption {
 	}
 }
 
-// Window is an implementation of pixiq.Screen.
-type Window struct {
-	glfwWindow     *glfw.Window
-	program        *program
-	mainThreadLoop *MainThreadLoop
-	screenPolygon  *screenPolygon
-	keyboardEvents *internal.KeyboardEvents
+// Zoom makes window/pixels bigger zoom times.
+func Zoom(zoom int) WindowOption {
+	return func(window *Window) {
+		if zoom > 0 {
+			window.zoom = zoom
+		}
+	}
 }
 
-// Draw draws image spanning the whole window to the invisible buffer.
+// Window is an implementation of pixiq.Screen.
+type Window struct {
+	glfwWindow      *glfw.Window
+	program         *program
+	mainThreadLoop  *MainThreadLoop
+	screenPolygon   *screenPolygon
+	keyboardEvents  *internal.KeyboardEvents
+	requestedWidth  int
+	requestedHeight int
+	zoom            int
+}
+
+// Draw draws an image spanning the whole window to the invisible buffer.
 func (w *Window) Draw(image *pixiq.Image) {
 	texture, isGL := image.Upload().(GLTexture)
 	if !isGL {
@@ -207,24 +248,32 @@ func (w *Window) ShouldClose() bool {
 	return shouldClose
 }
 
-// Width returns the width of the window in pixels.
+// Width returns the actual width of the window in pixels. It may be different
+// than requested width used when window was open due to platform limitation.
 // If zooming is used the width is not multiplied by zoom.
 func (w *Window) Width() int {
 	var width int
 	w.mainThreadLoop.Execute(func() {
 		width, _ = w.glfwWindow.GetSize()
 	})
-	return width
+	return width / w.zoom
 }
 
-// Height returns the height of the window in pixels.
+// Height returns the actual height of the window in pixels. It may be different
+// than requested height used when window was open due to platform limitation.
 // If zooming is used the height is not multiplied by zoom.
 func (w *Window) Height() int {
 	var height int
 	w.mainThreadLoop.Execute(func() {
 		_, height = w.glfwWindow.GetSize()
 	})
-	return height
+	return height / w.zoom
+}
+
+// Zoom returns the actual zoom. It is the zoom given during opening the window,
+// unless zoom < 1 was given - then the actual zoom is 1.
+func (w *Window) Zoom() int {
+	return w.zoom
 }
 
 // Poll retrieves and removes next keyboard Event. If there are no more
