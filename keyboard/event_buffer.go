@@ -1,7 +1,8 @@
 package keyboard
 
 // EventBuffer is a capped collection of accumulated events which can
-// be used by libraries. The order of added events is preserved.
+// be used by libraries or in unit tests as a fake implementation of EventSource.
+// The order of added events is preserved.
 // EventBuffer is an EventSource and can be directly consumed by Keyboard.
 type EventBuffer struct {
 	circularBuffer []Event
