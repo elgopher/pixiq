@@ -12,7 +12,7 @@ type KeyboardEvents struct {
 	buffer *keyboard.EventBuffer
 }
 
-// NewKeyboardEventsOfSize creates *KeyboardEvents of given size.
+// NewKeyboardEvents creates *KeyboardEvents of given size.
 func NewKeyboardEvents(buffer *keyboard.EventBuffer) *KeyboardEvents {
 	if buffer == nil {
 		panic("nil buffer")
