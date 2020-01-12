@@ -116,8 +116,8 @@ func (g *OpenGL) Windows() *Windows {
 // each test. Otherwise on some platforms you may reach the limit of active
 // OpenGL contexts.
 func (g *OpenGL) Destroy() {
+	g.stopPollingEvents <- struct{}{}
 	g.windows.mainThreadLoop.Execute(func() {
-		g.stopPollingEvents <- struct{}{}
 		g.windows.mainWindow.MakeContextCurrent()
 		g.windows.mainWindow.Destroy()
 	})
