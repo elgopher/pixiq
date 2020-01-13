@@ -20,8 +20,9 @@ Pixiq creators can fulfill those goals by:
   + looking at competitive solutions
   + discussing solutions with others
 + making small, **independent** packages - see:
-  + [pixiq](..)
-  + [pixiq.keyboard](../keyboard)
+  + [image](../image)
+  + [keyboard](../keyboard)
+  + [loop](../loop)
 + in most cases new features should be added to new packages (unless something
   was missing from the beginning)
 + Pixiq should be more like a **library** not a framework. It basically means, 
@@ -34,17 +35,12 @@ Pixiq creators can fulfill those goals by:
   Despite having a new git tag `v2.0.0`, new package `v2` will also be created.
 + therefore, at some point in time there will be a need to split the project into 
   pieces in order to support different versioning for each module. Stable modules
-  (such as `pixiq` or `keyboard`) will have `v1.x.x` version, unstable ones
+  (such as `image` or `keyboard`) will have `v1.x.x` version, unstable ones
   (such as `devtool`) will stay at `v0.x.x`. Thanks to that Pixiq developers 
   will still be able to introduce introduce incompatible changes to unstable modules.
   Such freedom greatly improves creativity.
 
 ### Reasoning behind design decisions (so far)
-
-Why the keyboard support is not a part of [pixiq](..) package?
-
-> Because a game might not use a keyboard at all or the game can be run on devices
-without the keyboard.
 
 Why there is no abstraction for opening windows?
 
