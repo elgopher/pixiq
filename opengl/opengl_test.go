@@ -340,7 +340,58 @@ func TestWindow_Draw(t *testing.T) {
 				})
 			}
 		})
+
+		t.Run("two windows", func(t *testing.T) {
+			openGL := opengl.New(mainThreadLoop)
+			defer openGL.Destroy()
+			window1, image1 := windowAndImage(openGL, color1)
+			defer window1.Close()
+			window2, image2 := windowAndImage(openGL, color2)
+			defer window2.Close()
+			// when
+			window1.Draw(image1)
+			// then
+			expected := []pixiq.Color{color1}
+			assert.Equal(t, expected, framebufferPixels(0, 0, 1, 1))
+			// when
+			window2.Draw(image2)
+			// then
+			expected = []pixiq.Color{color2}
+			assert.Equal(t, expected, framebufferPixels(0, 0, 1, 1))
+		})
+
+		t.Run("two OpenGL instances", func(t *testing.T) {
+			openGL1 := opengl.New(mainThreadLoop)
+			defer openGL1.Destroy()
+			openGL2 := opengl.New(mainThreadLoop)
+			defer openGL2.Destroy()
+			window1, image1 := windowAndImage(openGL1, color1)
+			defer window1.Close()
+			window2, image2 := windowAndImage(openGL2, color2)
+			defer window2.Close()
+			// when
+			window1.Draw(image1)
+			// then
+			expected := []pixiq.Color{color1}
+			assert.Equal(t, expected, framebufferPixels(0, 0, 1, 1))
+			// when
+			window2.Draw(image2)
+			// then
+			expected = []pixiq.Color{color2}
+			assert.Equal(t, expected, framebufferPixels(0, 0, 1, 1))
+		})
 	})
+}
+
+func windowAndImage(openGL *opengl.OpenGL, color pixiq.Color) (*opengl.Window, *pixiq.Image) {
+	var (
+		windows = openGL.Windows()
+		window  = windows.Open(1, 1, opengl.NoDecorationHint())
+		images  = pixiq.NewImages(openGL.AcceleratedImages())
+		image   = images.New(1, 1)
+	)
+	image.WholeImageSelection().SetColor(0, 0, color)
+	return window, image
 }
 
 func framebufferPixels(x, y, width, height int32) []pixiq.Color {

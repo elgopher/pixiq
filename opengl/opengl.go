@@ -23,20 +23,20 @@ import (
 // that some platforms may limit this number. In integration tests you should
 // always remember to destroy the object after test by executing Destroy method,
 // because eventually the number of objects may reach the mentioned limit.
-func New(loop *MainThreadLoop) *OpenGL {
-	if loop == nil {
+func New(mainThreadLoop *MainThreadLoop) *OpenGL {
+	if mainThreadLoop == nil {
 		panic("nil MainThreadLoop")
 	}
 	var (
 		mainWindow *glfw.Window
 		err        error
 	)
-	loop.Execute(func() {
+	mainThreadLoop.Execute(func() {
 		err = glfw.Init()
 		if err != nil {
 			return
 		}
-		mainWindow, err = createWindow(nil)
+		mainWindow, err = createWindow(mainThreadLoop, nil)
 		if err != nil {
 			return
 		}
@@ -45,15 +45,15 @@ func New(loop *MainThreadLoop) *OpenGL {
 		panic(err)
 	}
 	textures := &textures{
-		mainThreadLoop:     loop,
-		makeContextCurrent: mainWindow.MakeContextCurrent,
+		mainThreadLoop:     mainThreadLoop,
+		bindWindowToThread: mainThreadLoop.bind(mainWindow),
 	}
 	openGL := &OpenGL{
 		stopPollingEvents: make(chan struct{}),
 		textures:          textures,
 		windows: &Windows{
 			mainWindow:     mainWindow,
-			mainThreadLoop: loop,
+			mainThreadLoop: mainThreadLoop,
 		},
 	}
 	go openGL.startPollingEvents(openGL.stopPollingEvents)
@@ -73,7 +73,7 @@ func Run(main func(gl *OpenGL, images *pixiq.Images, loops *pixiq.ScreenLoops)) 
 	})
 }
 
-func createWindow(share *glfw.Window) (*glfw.Window, error) {
+func createWindow(mainThreadLoop *MainThreadLoop, share *glfw.Window) (*glfw.Window, error) {
 	glfw.WindowHint(glfw.ContextVersionMajor, 3)
 	glfw.WindowHint(glfw.ContextVersionMinor, 3)
 	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
@@ -89,7 +89,7 @@ func createWindow(share *glfw.Window) (*glfw.Window, error) {
 	if err != nil {
 		return nil, err
 	}
-	win.MakeContextCurrent()
+	mainThreadLoop.bind(win)()
 	if err := gl.Init(); err != nil {
 		return nil, err
 	}
@@ -121,8 +121,9 @@ func (g *OpenGL) Windows() *Windows {
 // OpenGL contexts.
 func (g *OpenGL) Destroy() {
 	g.stopPollingEvents <- struct{}{}
-	g.windows.mainThreadLoop.Execute(func() {
-		g.windows.mainWindow.MakeContextCurrent()
+	mainThreadLoop := g.windows.mainThreadLoop
+	mainThreadLoop.Execute(func() {
+		mainThreadLoop.bind(g.windows.mainWindow)()
 		g.windows.mainWindow.Destroy()
 	})
 }
@@ -167,7 +168,7 @@ func (w *Windows) Open(width, height int, options ...WindowOption) *Window {
 	}
 	var err error
 	w.mainThreadLoop.Execute(func() {
-		win.glfwWindow, err = createWindow(w.mainWindow)
+		win.glfwWindow, err = createWindow(w.mainThreadLoop, w.mainWindow)
 		if err != nil {
 			return
 		}
@@ -241,7 +242,7 @@ func (w *Window) Draw(image *pixiq.Image) {
 		panic("opengl Window can only draw images accelerated with opengl.GLTexture")
 	}
 	w.mainThreadLoop.Execute(func() {
-		w.glfwWindow.MakeContextCurrent()
+		w.mainThreadLoop.bind(w.glfwWindow)()
 		w.program.use()
 		width, height := w.glfwWindow.GetFramebufferSize()
 		gl.Viewport(0, 0, int32(width), int32(height))
@@ -313,13 +314,13 @@ func (w *Window) Poll() (keyboard.Event, bool) {
 
 type textures struct {
 	mainThreadLoop     *MainThreadLoop
-	makeContextCurrent func()
+	bindWindowToThread func()
 }
 
 func (t *textures) New(width, height int) pixiq.AcceleratedImage {
 	var id uint32
 	t.mainThreadLoop.Execute(func() {
-		t.makeContextCurrent()
+		t.bindWindowToThread()
 		gl.GenTextures(1, &id)
 		gl.BindTexture(gl.TEXTURE_2D, id)
 		gl.TexImage2D(
@@ -341,7 +342,7 @@ func (t *textures) New(width, height int) pixiq.AcceleratedImage {
 		width:              width,
 		height:             height,
 		mainThreadLoop:     t.mainThreadLoop,
-		makeContextCurrent: t.makeContextCurrent,
+		bindWindowToThread: t.bindWindowToThread,
 	}
 }
 
@@ -355,7 +356,7 @@ type texture struct {
 	id                 uint32
 	width, height      int
 	mainThreadLoop     *MainThreadLoop
-	makeContextCurrent func()
+	bindWindowToThread func()
 }
 
 func (t *texture) TextureID() uint32 {
@@ -364,7 +365,7 @@ func (t *texture) TextureID() uint32 {
 
 func (t *texture) Upload(pixels []pixiq.Color) {
 	t.mainThreadLoop.Execute(func() {
-		t.makeContextCurrent()
+		t.bindWindowToThread()
 		gl.BindTexture(gl.TEXTURE_2D, t.id)
 		gl.TexSubImage2D(
 			gl.TEXTURE_2D,
@@ -381,7 +382,7 @@ func (t *texture) Upload(pixels []pixiq.Color) {
 }
 func (t *texture) Download(output []pixiq.Color) {
 	t.mainThreadLoop.Execute(func() {
-		t.makeContextCurrent()
+		t.bindWindowToThread()
 		gl.BindTexture(gl.TEXTURE_2D, t.id)
 		gl.GetTexImage(
 			gl.TEXTURE_2D,
