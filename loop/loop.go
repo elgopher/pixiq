@@ -1,4 +1,4 @@
-// Loop package provides screen looping functionality in a platform-agnostic way
+// Package Loop provides screen looping functionality in a platform-agnostic way
 package loop
 
 import "github.com/jacekolszak/pixiq/image"
