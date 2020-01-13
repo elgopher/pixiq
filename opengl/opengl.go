@@ -1,5 +1,5 @@
 // Package opengl makes it possible to use Pixiq on PCs with Linux, Windows or MacOS.
-// It provides method for creating GPU-accelerated image.Image and Window which
+// It provides a method for creating OpenGL-accelerated image.Image and Window which
 // is an implementation of loop.Screen and keyboard.EventSource.
 // Under the hood it is using OpenGL API and GLFW for manipulating windows
 // and handling user input.
@@ -93,7 +93,7 @@ func createWindow(mainThreadLoop *MainThreadLoop, share *glfw.Window) (*glfw.Win
 	return win, nil
 }
 
-// OpenGL provides method for creating GPU-accelerated image.Image and provides
+// OpenGL provides method for creating OpenGL-accelerated image.Image and provides
 // Windows object for opening windows.
 type OpenGL struct {
 	mainThreadLoop     *MainThreadLoop
@@ -333,6 +333,7 @@ func (w *Window) Image() *image.Image {
 	return w.screenImage
 }
 
+// NewAcceleratedImage returns an OpenGL-accelerated implementation of image.AcceleratedImage
 func (g *OpenGL) NewAcceleratedImage(width, height int) image.AcceleratedImage {
 	return g.newTexture(width, height)
 }
