@@ -6,12 +6,15 @@
 package opengl
 
 import (
+	"log"
 	"time"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
 
 	"github.com/jacekolszak/pixiq/image"
+	"github.com/jacekolszak/pixiq/keyboard"
+	"github.com/jacekolszak/pixiq/opengl/internal"
 )
 
 // New creates OpenGL instance.
@@ -213,4 +216,82 @@ func (t *texture) Download(output []image.Color) {
 			gl.Ptr(output),
 		)
 	})
+}
+
+// Open creates and shows Window.
+func (g *OpenGL) Open(width, height int, options ...WindowOption) *Window {
+	if width < 1 {
+		width = 1
+	}
+	if height < 1 {
+		height = 1
+	}
+	// FIXME: EventBuffer size should be configurable
+	keyboardEvents := internal.NewKeyboardEvents(keyboard.NewEventBuffer(32))
+	screenTexture := g.newTexture(width, height)
+	screenImage := image.New(width, height, screenTexture)
+	win := &Window{
+		mainThreadLoop:  g.mainThreadLoop,
+		keyboardEvents:  keyboardEvents,
+		requestedWidth:  width,
+		requestedHeight: height,
+		screenTexture:   screenTexture,
+		screenImage:     screenImage,
+		zoom:            1,
+	}
+	var err error
+	g.mainThreadLoop.Execute(func() {
+		win.glfwWindow, err = createWindow(g.mainThreadLoop, g.mainWindow)
+		if err != nil {
+			return
+		}
+		win.glfwWindow.SetKeyCallback(win.keyboardEvents.OnKeyCallback)
+		win.program, err = compileProgram()
+		if err != nil {
+			return
+		}
+		win.screenPolygon = newScreenPolygon(
+			win.program.vertexPositionLocation,
+			win.program.texturePositionLocation)
+		for _, option := range options {
+			if option == nil {
+				log.Println("nil option given when opening the window")
+				continue
+			}
+			option(win)
+		}
+		win.glfwWindow.SetSize(win.requestedWidth*win.zoom, win.requestedHeight*win.zoom)
+		win.glfwWindow.Show()
+	})
+	if err != nil {
+		panic(err)
+	}
+	return win
+}
+
+// WindowOption is an option used when opening the window.
+type WindowOption func(window *Window)
+
+// NoDecorationHint is Window hint hiding the border, close widget, etc.
+// Exact behaviour depends on the platform.
+func NoDecorationHint() WindowOption {
+	return func(win *Window) {
+		win.glfwWindow.SetAttrib(glfw.Decorated, glfw.False)
+	}
+}
+
+// Title sets the window title.
+func Title(title string) WindowOption {
+	return func(window *Window) {
+		window.glfwWindow.SetTitle(title)
+	}
+}
+
+// Zoom makes window/pixels bigger zoom times.
+func Zoom(zoom int) WindowOption {
+	return func(window *Window) {
+		if zoom > 0 {
+			window.zoom = zoom
+		}
+	}
 }
