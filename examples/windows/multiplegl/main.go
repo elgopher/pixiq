@@ -22,7 +22,7 @@ func main() {
 func startOpenGL(mainThreadLoop *opengl.MainThreadLoop, title string, color image.Color) {
 	gl := opengl.New(mainThreadLoop)
 	defer gl.Destroy()
-	win := gl.Open(2, 1, opengl.Zoom(100), opengl.Title(title))
+	win := gl.OpenWindow(2, 1, opengl.Zoom(100), opengl.Title(title))
 	defer win.Close()
 	loop.Run(win, func(frame *loop.Frame) {
 		screen := frame.Screen()

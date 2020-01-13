@@ -218,8 +218,8 @@ func (t *texture) Download(output []image.Color) {
 	})
 }
 
-// Open creates and shows Window.
-func (g *OpenGL) Open(width, height int, options ...WindowOption) *Window {
+// OpenWindow creates and shows Window.
+func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) *Window {
 	if width < 1 {
 		width = 1
 	}

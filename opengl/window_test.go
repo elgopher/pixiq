@@ -23,7 +23,7 @@ func TestWindow_Draw(t *testing.T) {
 		t.Run("1x1", func(t *testing.T) {
 			openGL := opengl.New(mainThreadLoop)
 			defer openGL.Destroy()
-			window := openGL.Open(1, 1, opengl.NoDecorationHint())
+			window := openGL.OpenWindow(1, 1, opengl.NoDecorationHint())
 			defer window.Close()
 			window.Image().WholeImageSelection().SetColor(0, 0, color1)
 			// when
@@ -35,7 +35,7 @@ func TestWindow_Draw(t *testing.T) {
 		t.Run("1x2", func(t *testing.T) {
 			openGL := opengl.New(mainThreadLoop)
 			defer openGL.Destroy()
-			window := openGL.Open(1, 2, opengl.NoDecorationHint())
+			window := openGL.OpenWindow(1, 2, opengl.NoDecorationHint())
 			defer window.Close()
 			img := window.Image()
 			img.WholeImageSelection().SetColor(0, 0, color1)
@@ -49,7 +49,7 @@ func TestWindow_Draw(t *testing.T) {
 		t.Run("2x1", func(t *testing.T) {
 			openGL := opengl.New(mainThreadLoop)
 			defer openGL.Destroy()
-			window := openGL.Open(2, 1, opengl.NoDecorationHint())
+			window := openGL.OpenWindow(2, 1, opengl.NoDecorationHint())
 			defer window.Close()
 			img := window.Image()
 			img.WholeImageSelection().SetColor(0, 0, color1)
@@ -63,7 +63,7 @@ func TestWindow_Draw(t *testing.T) {
 		t.Run("2x2", func(t *testing.T) {
 			openGL := opengl.New(mainThreadLoop)
 			defer openGL.Destroy()
-			window := openGL.Open(2, 2, opengl.NoDecorationHint())
+			window := openGL.OpenWindow(2, 2, opengl.NoDecorationHint())
 			defer window.Close()
 			img := window.Image()
 			selection := img.WholeImageSelection()
@@ -84,7 +84,7 @@ func TestWindow_Draw(t *testing.T) {
 				t.Run(name, func(t *testing.T) {
 					openGL := opengl.New(mainThreadLoop)
 					defer openGL.Destroy()
-					window := openGL.Open(1, 1, opengl.NoDecorationHint(), opengl.Zoom(zoom))
+					window := openGL.OpenWindow(1, 1, opengl.NoDecorationHint(), opengl.Zoom(zoom))
 					defer window.Close()
 					img := window.Image()
 					img.WholeImageSelection().SetColor(0, 0, color1)
@@ -103,7 +103,7 @@ func TestWindow_Draw(t *testing.T) {
 				t.Run(name, func(t *testing.T) {
 					openGL := opengl.New(mainThreadLoop)
 					defer openGL.Destroy()
-					window := openGL.Open(1, 1, opengl.NoDecorationHint(), opengl.Zoom(zoom))
+					window := openGL.OpenWindow(1, 1, opengl.NoDecorationHint(), opengl.Zoom(zoom))
 					defer window.Close()
 					img := window.Image()
 					img.WholeImageSelection().SetColor(0, 0, color1)
@@ -163,7 +163,7 @@ func TestWindow_Draw(t *testing.T) {
 
 func windowOfColor(openGL *opengl.OpenGL, color image.Color) *opengl.Window {
 	var (
-		window    = openGL.Open(1, 1, opengl.NoDecorationHint())
+		window    = openGL.OpenWindow(1, 1, opengl.NoDecorationHint())
 		selection = window.Image().WholeImageSelection()
 	)
 	selection.SetColor(0, 0, color)
@@ -183,7 +183,7 @@ func TestWindow_Poll(t *testing.T) {
 	t.Run("should return EmptyEvent and false when there is no keyboard events", func(t *testing.T) {
 		openGL := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		win := openGL.Open(1, 1)
+		win := openGL.OpenWindow(1, 1)
 		defer win.Close()
 		// when
 		event, ok := win.Poll()
@@ -220,7 +220,7 @@ func TestWindow_Zoom(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				openGL := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
-				win := openGL.Open(0, 0, opengl.Zoom(test.zoom))
+				win := openGL.OpenWindow(0, 0, opengl.Zoom(test.zoom))
 				defer win.Close()
 				// when
 				zoom := win.Zoom()
@@ -249,7 +249,7 @@ func TestWindow_Image(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				openGL := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
-				win := openGL.Open(test.width, test.height, opengl.NoDecorationHint())
+				win := openGL.OpenWindow(test.width, test.height, opengl.NoDecorationHint())
 				defer win.Close()
 				// when
 				img := win.Image()
@@ -281,7 +281,7 @@ func TestWindow_Image(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				openGL := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
-				win := openGL.Open(640, 360, opengl.Zoom(test.zoom))
+				win := openGL.OpenWindow(640, 360, opengl.Zoom(test.zoom))
 				// when
 				screen := win.Image()
 				// then
@@ -293,7 +293,7 @@ func TestWindow_Image(t *testing.T) {
 	t.Run("initial screen is transparent", func(t *testing.T) {
 		openGL := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		win := openGL.Open(1, 1, opengl.NoDecorationHint())
+		win := openGL.OpenWindow(1, 1, opengl.NoDecorationHint())
 		transparent := image.RGBA(0, 0, 0, 0)
 		// when
 		img := win.Image()
