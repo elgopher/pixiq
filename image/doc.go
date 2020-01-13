@@ -9,6 +9,6 @@
 // Image can be manipulated using Selection:
 //
 //     wholeSelection := image.WholeImageSelection()
-// 	   wholeSelection.SetColor(0, 1, colornames.White)
+//     wholeSelection.SetColor(0, 1, colornames.White)
 //
 package image

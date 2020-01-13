@@ -169,11 +169,12 @@ func (f *screenMock) Image() *image.Image {
 }
 
 func (f *screenMock) Draw() {
-	f.imagesDrawn = append(f.imagesDrawn, clone(f.currentImage))
+	f.currentImage = clone(f.currentImage)
+	f.imagesDrawn = append(f.imagesDrawn, f.currentImage)
 }
 
 func (f *screenMock) SwapImages() {
-	f.visibleImage = f.imagesDrawn[len(f.imagesDrawn)-1]
+	f.visibleImage = f.currentImage
 	f.currentImage = image.New(f.width, f.height, &acceleratedImageStub{})
 }
 

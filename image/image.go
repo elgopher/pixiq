@@ -11,7 +11,7 @@ type AcceleratedImage interface {
 
 // New creates an Image with specified size given in pixels.
 // Width and height are constrained to zero if negative.
-// Will panic if AcceleratedImage is nil
+// Will panic if AcceleratedImage is nil.
 func New(width, height int, acceleratedImage AcceleratedImage) *Image {
 	if acceleratedImage == nil {
 		panic("nil acceleratedImage")
