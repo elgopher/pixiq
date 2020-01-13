@@ -1,5 +1,6 @@
 // Package opengl makes it possible to use Pixiq on PCs with Linux, Windows or MacOS.
-// It provides implementation of both pixiq.AcceleratedImages and pixiq.Screen.
+// It provides a method for creating OpenGL-accelerated image.Image and Window which
+// is an implementation of loop.Screen and keyboard.EventSource.
 // Under the hood it is using OpenGL API and GLFW for manipulating windows
 // and handling user input.
 package opengl
@@ -11,7 +12,7 @@ import (
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
 
-	"github.com/jacekolszak/pixiq"
+	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/keyboard"
 	"github.com/jacekolszak/pixiq/opengl/internal"
 )
@@ -44,32 +45,24 @@ func New(mainThreadLoop *MainThreadLoop) *OpenGL {
 	if err != nil {
 		panic(err)
 	}
-	textures := &textures{
+	openGL := &OpenGL{
 		mainThreadLoop:     mainThreadLoop,
 		bindWindowToThread: mainThreadLoop.bind(mainWindow),
-	}
-	openGL := &OpenGL{
-		stopPollingEvents: make(chan struct{}),
-		textures:          textures,
-		windows: &Windows{
-			mainWindow:     mainWindow,
-			mainThreadLoop: mainThreadLoop,
-		},
+		stopPollingEvents:  make(chan struct{}),
+		mainWindow:         mainWindow,
 	}
 	go openGL.startPollingEvents(openGL.stopPollingEvents)
 	return openGL
 }
 
-// Run is a shorthand method for creating Pixiq objects with OpenGL acceleration
-// and Windows. It runs the given callback function and blocks. It was created
+// Run is a shorthand method for starting MainThreadLoop and creating
+// OpenGL instance. It runs the given callback function and blocks. It was created
 // mainly for educational purposes to save a few keystrokes.
-func Run(main func(gl *OpenGL, images *pixiq.Images, loops *pixiq.ScreenLoops)) {
-	StartMainThreadLoop(func(loop *MainThreadLoop) {
-		openGL := New(loop)
+func Run(main func(gl *OpenGL)) {
+	StartMainThreadLoop(func(mainThreadLoop *MainThreadLoop) {
+		openGL := New(mainThreadLoop)
 		defer openGL.Destroy()
-		images := pixiq.NewImages(openGL.AcceleratedImages())
-		loops := pixiq.NewScreenLoops(images)
-		main(openGL, images, loops)
+		main(openGL)
 	})
 }
 
@@ -96,23 +89,13 @@ func createWindow(mainThreadLoop *MainThreadLoop, share *glfw.Window) (*glfw.Win
 	return win, nil
 }
 
-// OpenGL provides opengl implementations of pixiq.AcceleratedImages
-// and pixiq.Screen. It provides Windows object for opening system windows.
+// OpenGL provides method for creating OpenGL-accelerated image.Image and opening
+// windows.
 type OpenGL struct {
-	textures          *textures
-	windows           *Windows
-	stopPollingEvents chan struct{}
-}
-
-// AcceleratedImages returns opengl implementation of pixiq.AcceleratedImages.
-func (g *OpenGL) AcceleratedImages() pixiq.AcceleratedImages {
-	return g.textures
-}
-
-// Windows returns object for opening system windows. Each open Window
-// is a pixiq.Screen implementation.
-func (g *OpenGL) Windows() *Windows {
-	return g.windows
+	mainThreadLoop     *MainThreadLoop
+	bindWindowToThread func()
+	stopPollingEvents  chan struct{}
+	mainWindow         *glfw.Window
 }
 
 // Destroy cleans all the OpenGL resources associated with this instance.
@@ -121,10 +104,9 @@ func (g *OpenGL) Windows() *Windows {
 // OpenGL contexts.
 func (g *OpenGL) Destroy() {
 	g.stopPollingEvents <- struct{}{}
-	mainThreadLoop := g.windows.mainThreadLoop
-	mainThreadLoop.Execute(func() {
-		mainThreadLoop.bind(g.windows.mainWindow)()
-		g.windows.mainWindow.Destroy()
+	g.mainThreadLoop.Execute(func() {
+		g.mainThreadLoop.bind(g.mainWindow)()
+		g.mainWindow.Destroy()
 	})
 }
 
@@ -137,20 +119,107 @@ func (g *OpenGL) startPollingEvents(stop <-chan struct{}) {
 		case <-stop:
 			return
 		default:
-			g.windows.mainThreadLoop.Execute(glfw.PollEvents)
+			g.mainThreadLoop.Execute(glfw.PollEvents)
 		}
 	}
 }
 
-// Windows is used for opening system windows.
-type Windows struct {
-	mainThreadLoop *MainThreadLoop
-	// mainWindow contains textures and user programs
-	mainWindow *glfw.Window
+// NewImage creates an *image.Image which is using OpenGL acceleration
+// under-the-hood.
+//
+// Example:
+//
+//	   gl := opengl.New(loop)
+//	   defer gl.Destroy()
+//	   img := gl.NewImage(2, 2)
+//
+// To avoid coupling with opengl you should define your own factory function
+// for creating images and use it instead of directly accessing opengl.OpenGL:
+//
+//	   type NewImage func(width, height) *image.Image
+//
+func (g *OpenGL) NewImage(width, height int) *image.Image {
+	return image.New(width, height, g.NewAcceleratedImage(width, height))
+}
+
+// NewAcceleratedImage returns an OpenGL-accelerated implementation of image.AcceleratedImage
+func (g *OpenGL) NewAcceleratedImage(width, height int) image.AcceleratedImage {
+	return g.newTexture(width, height)
+}
+
+func (g *OpenGL) newTexture(width, height int) *texture {
+	var id uint32
+	g.mainThreadLoop.Execute(func() {
+		g.bindWindowToThread()
+		gl.GenTextures(1, &id)
+		gl.BindTexture(gl.TEXTURE_2D, id)
+		gl.TexImage2D(
+			gl.TEXTURE_2D,
+			0,
+			gl.RGBA,
+			int32(width),
+			int32(height),
+			0,
+			gl.RGBA,
+			gl.UNSIGNED_BYTE,
+			gl.Ptr(nil),
+		)
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+	})
+	return &texture{
+		id:                 id,
+		width:              width,
+		height:             height,
+		mainThreadLoop:     g.mainThreadLoop,
+		bindWindowToThread: g.bindWindowToThread,
+	}
+}
+
+type texture struct {
+	id                 uint32
+	width, height      int
+	mainThreadLoop     *MainThreadLoop
+	bindWindowToThread func()
+}
+
+func (t *texture) TextureID() uint32 {
+	return t.id
+}
+
+func (t *texture) Upload(pixels []image.Color) {
+	t.mainThreadLoop.Execute(func() {
+		t.bindWindowToThread()
+		gl.BindTexture(gl.TEXTURE_2D, t.id)
+		gl.TexSubImage2D(
+			gl.TEXTURE_2D,
+			0,
+			int32(0),
+			int32(0),
+			int32(t.width),
+			int32(t.height),
+			gl.RGBA,
+			gl.UNSIGNED_BYTE,
+			gl.Ptr(pixels),
+		)
+	})
+}
+func (t *texture) Download(output []image.Color) {
+	t.mainThreadLoop.Execute(func() {
+		t.bindWindowToThread()
+		gl.BindTexture(gl.TEXTURE_2D, t.id)
+		gl.GetTexImage(
+			gl.TEXTURE_2D,
+			0,
+			gl.RGBA,
+			gl.UNSIGNED_BYTE,
+			gl.Ptr(output),
+		)
+	})
 }
 
 // Open creates and shows Window.
-func (w *Windows) Open(width, height int, options ...WindowOption) *Window {
+func (g *OpenGL) Open(width, height int, options ...WindowOption) *Window {
 	if width < 1 {
 		width = 1
 	}
@@ -159,16 +228,20 @@ func (w *Windows) Open(width, height int, options ...WindowOption) *Window {
 	}
 	// FIXME: EventBuffer size should be configurable
 	keyboardEvents := internal.NewKeyboardEvents(keyboard.NewEventBuffer(32))
+	screenTexture := g.newTexture(width, height)
+	screenImage := image.New(width, height, screenTexture)
 	win := &Window{
-		mainThreadLoop:  w.mainThreadLoop,
+		mainThreadLoop:  g.mainThreadLoop,
 		keyboardEvents:  keyboardEvents,
 		requestedWidth:  width,
 		requestedHeight: height,
+		screenTexture:   screenTexture,
+		screenImage:     screenImage,
 		zoom:            1,
 	}
 	var err error
-	w.mainThreadLoop.Execute(func() {
-		win.glfwWindow, err = createWindow(w.mainThreadLoop, w.mainWindow)
+	g.mainThreadLoop.Execute(func() {
+		win.glfwWindow, err = createWindow(g.mainThreadLoop, g.mainWindow)
 		if err != nil {
 			return
 		}
@@ -221,175 +294,4 @@ func Zoom(zoom int) WindowOption {
 			window.zoom = zoom
 		}
 	}
-}
-
-// Window is an implementation of pixiq.Screen.
-type Window struct {
-	glfwWindow      *glfw.Window
-	program         *program
-	mainThreadLoop  *MainThreadLoop
-	screenPolygon   *screenPolygon
-	keyboardEvents  *internal.KeyboardEvents
-	requestedWidth  int
-	requestedHeight int
-	zoom            int
-}
-
-// Draw draws an image spanning the whole window to the invisible buffer.
-func (w *Window) Draw(image *pixiq.Image) {
-	texture, isGL := image.Upload().(GLTexture)
-	if !isGL {
-		panic("opengl Window can only draw images accelerated with opengl.GLTexture")
-	}
-	w.mainThreadLoop.Execute(func() {
-		w.mainThreadLoop.bind(w.glfwWindow)()
-		w.program.use()
-		width, height := w.glfwWindow.GetFramebufferSize()
-		gl.Viewport(0, 0, int32(width), int32(height))
-		gl.BindTexture(gl.TEXTURE_2D, texture.TextureID())
-		w.screenPolygon.draw()
-	})
-}
-
-// SwapImages makes last drawn image visible.
-func (w *Window) SwapImages() {
-	w.mainThreadLoop.Execute(w.glfwWindow.SwapBuffers)
-}
-
-// Close closes the window and cleans resources.
-func (w *Window) Close() {
-	w.mainThreadLoop.Execute(w.glfwWindow.Destroy)
-}
-
-// ShouldClose reports the value of the close flag of the window.
-// The flag is set to true when user clicks Close button or hits ALT+F4/CMD+Q.
-func (w *Window) ShouldClose() bool {
-	var shouldClose bool
-	w.mainThreadLoop.Execute(func() {
-		shouldClose = w.glfwWindow.ShouldClose()
-	})
-	return shouldClose
-}
-
-// Width returns the actual width of the window in pixels. It may be different
-// than requested width used when window was open due to platform limitation.
-// If zooming is used the width is not multiplied by zoom.
-func (w *Window) Width() int {
-	var width int
-	w.mainThreadLoop.Execute(func() {
-		width, _ = w.glfwWindow.GetSize()
-	})
-	return width / w.zoom
-}
-
-// Height returns the actual height of the window in pixels. It may be different
-// than requested height used when window was open due to platform limitation.
-// If zooming is used the height is not multiplied by zoom.
-func (w *Window) Height() int {
-	var height int
-	w.mainThreadLoop.Execute(func() {
-		_, height = w.glfwWindow.GetSize()
-	})
-	return height / w.zoom
-}
-
-// Zoom returns the actual zoom. It is the zoom given during opening the window,
-// unless zoom < 1 was given - then the actual zoom is 1.
-func (w *Window) Zoom() int {
-	return w.zoom
-}
-
-// Poll retrieves and removes next keyboard Event. If there are no more
-// events false is returned. It implements keyboard.EventSource method.
-func (w *Window) Poll() (keyboard.Event, bool) {
-	var (
-		event keyboard.Event
-		ok    bool
-	)
-	w.mainThreadLoop.Execute(func() {
-		event, ok = w.keyboardEvents.Poll()
-	})
-	return event, ok
-}
-
-type textures struct {
-	mainThreadLoop     *MainThreadLoop
-	bindWindowToThread func()
-}
-
-func (t *textures) New(width, height int) pixiq.AcceleratedImage {
-	var id uint32
-	t.mainThreadLoop.Execute(func() {
-		t.bindWindowToThread()
-		gl.GenTextures(1, &id)
-		gl.BindTexture(gl.TEXTURE_2D, id)
-		gl.TexImage2D(
-			gl.TEXTURE_2D,
-			0,
-			gl.RGBA,
-			int32(width),
-			int32(height),
-			0,
-			gl.RGBA,
-			gl.UNSIGNED_BYTE,
-			gl.Ptr(nil),
-		)
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
-	})
-	return &texture{
-		id:                 id,
-		width:              width,
-		height:             height,
-		mainThreadLoop:     t.mainThreadLoop,
-		bindWindowToThread: t.bindWindowToThread,
-	}
-}
-
-// GLTexture is an OpenGL texture which can be sampled to create rectangles on screen.
-type GLTexture interface {
-	pixiq.AcceleratedImage
-	TextureID() uint32
-}
-
-type texture struct {
-	id                 uint32
-	width, height      int
-	mainThreadLoop     *MainThreadLoop
-	bindWindowToThread func()
-}
-
-func (t *texture) TextureID() uint32 {
-	return t.id
-}
-
-func (t *texture) Upload(pixels []pixiq.Color) {
-	t.mainThreadLoop.Execute(func() {
-		t.bindWindowToThread()
-		gl.BindTexture(gl.TEXTURE_2D, t.id)
-		gl.TexSubImage2D(
-			gl.TEXTURE_2D,
-			0,
-			int32(0),
-			int32(0),
-			int32(t.width),
-			int32(t.height),
-			gl.RGBA,
-			gl.UNSIGNED_BYTE,
-			gl.Ptr(pixels),
-		)
-	})
-}
-func (t *texture) Download(output []pixiq.Color) {
-	t.mainThreadLoop.Execute(func() {
-		t.bindWindowToThread()
-		gl.BindTexture(gl.TEXTURE_2D, t.id)
-		gl.GetTexImage(
-			gl.TEXTURE_2D,
-			0,
-			gl.RGBA,
-			gl.UNSIGNED_BYTE,
-			gl.Ptr(output),
-		)
-	})
 }

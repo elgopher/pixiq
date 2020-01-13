@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/jacekolszak/pixiq"
 	"github.com/jacekolszak/pixiq/colornames"
+	"github.com/jacekolszak/pixiq/image"
+	"github.com/jacekolszak/pixiq/loop"
 	"github.com/jacekolszak/pixiq/opengl"
 )
 
@@ -11,21 +12,20 @@ import (
 // Please note that this functionality is experimental and may change in the
 // near future. Such feature may be harmful for overall performance of Pixiq.
 func main() {
-	opengl.Run(func(gl *opengl.OpenGL, images *pixiq.Images, loops *pixiq.ScreenLoops) {
-		windows := gl.Windows()
-		redWindow := windows.Open(320, 180, opengl.Title("red"))
-		blueWindow := windows.Open(250, 90, opengl.Title("blue"))
+	opengl.Run(func(gl *opengl.OpenGL) {
+		redWindow := gl.Open(320, 180, opengl.Title("red"))
+		blueWindow := gl.Open(250, 90, opengl.Title("blue"))
 		// Start the loop in the background, because Loop method blocks
 		// the current goroutine.
-		go loops.Loop(redWindow, fillWith(colornames.Red))
+		go loop.Run(redWindow, fillWith(colornames.Red))
 		// Start another one.
-		loops.Loop(blueWindow, fillWith(colornames.Blue))
+		loop.Run(blueWindow, fillWith(colornames.Blue))
 	})
 }
 
 // fillWith returns a function filling whole Screen with specific color.
-func fillWith(color pixiq.Color) func(frame *pixiq.Frame) {
-	return func(frame *pixiq.Frame) {
+func fillWith(color image.Color) func(frame *loop.Frame) {
+	return func(frame *loop.Frame) {
 		screen := frame.Screen()
 		for y := 0; y < screen.Height(); y++ {
 			for x := 0; x < screen.Width(); x++ {

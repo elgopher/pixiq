@@ -1,9 +1,9 @@
-package pixiq_test
+package image_test
 
 import (
 	"testing"
 
-	"github.com/jacekolszak/pixiq"
+	"github.com/jacekolszak/pixiq/image"
 )
 
 func BenchmarkRGBAi(b *testing.B) {
@@ -16,10 +16,10 @@ func BenchmarkRGBAi(b *testing.B) {
 	benchmarkRGBAi(b, red, green, blue, alpha)
 }
 
-func benchmarkRGBAi(b *testing.B, red, green, blue, alpha int) pixiq.Color {
-	var c pixiq.Color
+func benchmarkRGBAi(b *testing.B, red, green, blue, alpha int) image.Color {
+	var c image.Color
 	for i := 0; i < b.N; i++ {
-		c = pixiq.RGBAi(red, green, blue, alpha)
+		c = image.RGBAi(red, green, blue, alpha)
 	}
 	return c
 }

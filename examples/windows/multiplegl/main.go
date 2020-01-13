@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/jacekolszak/pixiq"
 	"github.com/jacekolszak/pixiq/colornames"
+	"github.com/jacekolszak/pixiq/image"
+	"github.com/jacekolszak/pixiq/loop"
 	"github.com/jacekolszak/pixiq/opengl"
 )
 
@@ -18,16 +19,12 @@ func main() {
 	})
 }
 
-func startOpenGL(loop *opengl.MainThreadLoop, title string, color pixiq.Color) {
-	openGL := opengl.New(loop)
-	defer openGL.Destroy()
-	windows := openGL.Windows()
-	acceleratedImages := openGL.AcceleratedImages()
-	images := pixiq.NewImages(acceleratedImages)
-	win := windows.Open(2, 1, opengl.Zoom(100), opengl.Title(title))
+func startOpenGL(mainThreadLoop *opengl.MainThreadLoop, title string, color image.Color) {
+	gl := opengl.New(mainThreadLoop)
+	defer gl.Destroy()
+	win := gl.Open(2, 1, opengl.Zoom(100), opengl.Title(title))
 	defer win.Close()
-	screenLoops := pixiq.NewScreenLoops(images)
-	screenLoops.Loop(win, func(frame *pixiq.Frame) {
+	loop.Run(win, func(frame *loop.Frame) {
 		screen := frame.Screen()
 		screen.SetColor(0, 0, color)
 		screen.SetColor(1, 0, color)

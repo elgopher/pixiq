@@ -1,20 +1,4 @@
-package pixiq
-
-// NewImages returns a factory of images which can be passed around to every
-// place where you construct new images.
-func NewImages(images AcceleratedImages) *Images {
-	if images == nil {
-		panic("nil AcceleratedImages parameter for pixiq.NewImages()")
-	}
-	return &Images{acceleratedImages: images}
-}
-
-// AcceleratedImages is a container of accelerated images.
-type AcceleratedImages interface {
-	// New creates an accelerated image.
-	// This can be a texture on a video card or something totally different.
-	New(width, height int) AcceleratedImage
-}
+package image
 
 // AcceleratedImage is an image processed externally (outside the CPU).
 type AcceleratedImage interface {
@@ -25,14 +9,13 @@ type AcceleratedImage interface {
 	Download(output []Color)
 }
 
-// Images is a factory of images used to create new images.
-type Images struct {
-	acceleratedImages AcceleratedImages
-}
-
 // New creates an Image with specified size given in pixels.
 // Width and height are constrained to zero if negative.
-func (i *Images) New(width, height int) *Image {
+// Will panic if AcceleratedImage is nil.
+func New(width, height int, acceleratedImage AcceleratedImage) *Image {
+	if acceleratedImage == nil {
+		panic("nil acceleratedImage")
+	}
 	var w, h int
 	if width > 0 {
 		w = width
@@ -41,10 +24,10 @@ func (i *Images) New(width, height int) *Image {
 		h = height
 	}
 	return &Image{
-		width:             w,
-		height:            h,
-		pixels:            make([]Color, w*h),
-		acceleratedImages: i.acceleratedImages,
+		width:            w,
+		height:           h,
+		pixels:           make([]Color, w*h),
+		acceleratedImage: acceleratedImage,
 	}
 }
 
@@ -55,11 +38,10 @@ func (i *Images) New(width, height int) *Image {
 // The cost of creating an Image is huge therefore new images should be created
 // sporadically, ideally when the application starts.
 type Image struct {
-	width             int
-	height            int
-	pixels            []Color
-	acceleratedImages AcceleratedImages
-	acceleratedImage  AcceleratedImage
+	width            int
+	height           int
+	pixels           []Color
+	acceleratedImage AcceleratedImage
 }
 
 // Width returns the number of pixels in a row.
@@ -91,12 +73,8 @@ func (i *Image) WholeImageSelection() Selection {
 // Upload uploads all image pixels to associated AcceleratedImage.
 // This method should be called rarely. Image pixels are uploaded automatically
 // when needed.
-func (i *Image) Upload() AcceleratedImage {
-	if i.acceleratedImage == nil {
-		i.acceleratedImage = i.acceleratedImages.New(i.width, i.height)
-	}
+func (i *Image) Upload() {
 	i.acceleratedImage.Upload(i.pixels)
-	return i.acceleratedImage
 }
 
 // Selection points to a specific area of the image. It has a starting position
