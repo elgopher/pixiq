@@ -40,7 +40,7 @@ func isMainGoroutine() bool {
 // MainThreadLoop is a loop for executing jobs in main thread.
 type MainThreadLoop struct {
 	jobs        chan func()
-	windowBound *glfw.Window
+	boundWindow *glfw.Window
 }
 
 func (g *MainThreadLoop) run() {
@@ -72,9 +72,9 @@ func (g *MainThreadLoop) Execute(job func()) {
 
 func (g *MainThreadLoop) bind(window *glfw.Window) func() {
 	return func() {
-		if g.windowBound != window {
+		if g.boundWindow != window {
 			window.MakeContextCurrent()
-			g.windowBound = window
+			g.boundWindow = window
 		}
 	}
 }
