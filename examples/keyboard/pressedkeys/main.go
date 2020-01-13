@@ -3,17 +3,17 @@ package main
 import (
 	"fmt"
 
-	"github.com/jacekolszak/pixiq"
 	"github.com/jacekolszak/pixiq/keyboard"
+	"github.com/jacekolszak/pixiq/loop"
 	"github.com/jacekolszak/pixiq/opengl"
 )
 
 func main() {
-	opengl.Run(func(gl *opengl.OpenGL, images *pixiq.Images, loops *pixiq.ScreenLoops) {
+	opengl.Run(func(gl *opengl.OpenGL) {
 		win := gl.Windows().Open(320, 10, opengl.Title("Press any key..."))
 		// Create keyboard instance for window.
 		keys := keyboard.New(win)
-		loops.Loop(win, func(frame *pixiq.Frame) {
+		loop.Run(win, func(frame *loop.Frame) {
 			// Poll keyboard events
 			keys.Update()
 			// PressedKeys will return all currently pressed keys

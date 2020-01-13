@@ -1,4 +1,4 @@
-package pixiq
+package image
 
 // Transparent is a special color where each component is zero (including alpha)
 var Transparent = RGBA(0, 0, 0, 0)

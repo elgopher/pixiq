@@ -1,18 +1,17 @@
-package pixiq_test
+package image_test
 
 import (
 	"testing"
 
-	"github.com/jacekolszak/pixiq"
+	image "github.com/jacekolszak/pixiq/image"
 )
 
 func BenchmarkSelection_SetColor(b *testing.B) {
 	b.StopTimer()
 	var (
-		color     = pixiq.RGBA(10, 20, 30, 40)
-		images    = pixiq.NewImages(&fakeAcceleratedImages{})
-		image     = images.New(1920, 1080)
-		selection = image.WholeImageSelection()
+		color     = image.RGBA(10, 20, 30, 40)
+		img       = image.New(1920, 1080, &fakeAcceleratedImage{})
+		selection = img.WholeImageSelection()
 		height    = selection.Height()
 		width     = selection.Width()
 	)
@@ -29,9 +28,8 @@ func BenchmarkSelection_SetColor(b *testing.B) {
 func BenchmarkSelection_Color(b *testing.B) {
 	b.StopTimer()
 	var (
-		images    = pixiq.NewImages(&fakeAcceleratedImages{})
-		image     = images.New(1920, 1080)
-		selection = image.WholeImageSelection()
+		img       = image.New(1920, 1080, &fakeAcceleratedImage{})
+		selection = img.WholeImageSelection()
 		height    = selection.Height()
 		width     = selection.Width()
 	)

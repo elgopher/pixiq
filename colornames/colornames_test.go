@@ -5,12 +5,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/jacekolszak/pixiq"
+	"github.com/jacekolszak/pixiq/image"
 )
 
 func Test(t *testing.T) {
 	t.Run("all colors should be opaque", func(t *testing.T) {
-		allColors := []pixiq.Color{
+		allColors := []image.Color{
 			Aliceblue,
 			Antiquewhite,
 			Aqua,

@@ -1,4 +1,4 @@
-package pixiq_test
+package loop_test
 
 import (
 	"testing"
@@ -6,26 +6,17 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/jacekolszak/pixiq"
+	"github.com/jacekolszak/pixiq/image"
+	"github.com/jacekolszak/pixiq/loop"
 )
 
-func TestNewScreenLoops(t *testing.T) {
-	t.Run("should return ScreenLoops object", func(t *testing.T) {
-		loops := pixiq.NewScreenLoops(pixiq.NewImages(&fakeAcceleratedImages{}))
-		assert.NotNil(t, loops)
-	})
-}
-
-func TestScreenLoops_Loop(t *testing.T) {
+func TestRun(t *testing.T) {
 
 	t.Run("should run callback function until loop is stopped", func(t *testing.T) {
-		var (
-			images      = pixiq.NewImages(&fakeAcceleratedImages{})
-			loops       = pixiq.NewScreenLoops(images)
-			frameNumber = 0
-		)
+		var frameNumber = 0
 		// when
-		loops.Loop(&screenMock{}, func(frame *pixiq.Frame) {
+		screen := newScreenMock(1, 1)
+		loop.Run(screen, func(frame *loop.Frame) {
 			if frameNumber == 2 {
 				frame.StopLoopEventually()
 			} else {
@@ -37,8 +28,6 @@ func TestScreenLoops_Loop(t *testing.T) {
 	})
 
 	t.Run("frame should provide screen", func(t *testing.T) {
-		images := pixiq.NewImages(&fakeAcceleratedImages{})
-		loops := pixiq.NewScreenLoops(images)
 		tests := map[string]struct {
 			width, height int
 		}{
@@ -53,9 +42,9 @@ func TestScreenLoops_Loop(t *testing.T) {
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
-				var screen pixiq.Selection
+				var screen image.Selection
 				// when
-				loops.Loop(&screenMock{width: test.width, height: test.height}, func(frame *pixiq.Frame) {
+				loop.Run(newScreenMock(test.width, test.height), func(frame *loop.Frame) {
 					screen = frame.Screen()
 					frame.StopLoopEventually()
 				})
@@ -73,14 +62,12 @@ func TestScreenLoops_Loop(t *testing.T) {
 
 	t.Run("should draw image for each frame", func(t *testing.T) {
 		var (
-			images         = pixiq.NewImages(&fakeAcceleratedImages{})
-			screen         = &screenMock{}
-			loops          = pixiq.NewScreenLoops(images)
+			screen         = newScreenMock(1, 1)
 			firstFrame     = true
-			recordedImages []*pixiq.Image
+			recordedImages []*image.Image
 		)
 		// when
-		loops.Loop(screen, func(frame *pixiq.Frame) {
+		loop.Run(screen, func(frame *loop.Frame) {
 			if !firstFrame {
 				frame.StopLoopEventually()
 			}
@@ -91,29 +78,14 @@ func TestScreenLoops_Loop(t *testing.T) {
 		assert.Equal(t, recordedImages, screen.imagesDrawn)
 	})
 
-	t.Run("initial screen is transparent", func(t *testing.T) {
-		images := pixiq.NewImages(&fakeAcceleratedImages{})
-		loops := pixiq.NewScreenLoops(images)
-		var screen pixiq.Selection
-		// when
-		loops.Loop(&screenMock{width: 1, height: 1}, func(frame *pixiq.Frame) {
-			screen = frame.Screen()
-			frame.StopLoopEventually()
-		})
-		// then
-		assert.Equal(t, transparent, screen.Color(0, 0))
-	})
-
 	t.Run("should draw modified screen", func(t *testing.T) {
 		t.Run("after first frame", func(t *testing.T) {
 			var (
-				color  = pixiq.RGBA(10, 20, 30, 40)
-				images = pixiq.NewImages(&fakeAcceleratedImages{})
-				screen = &screenMock{width: 1, height: 1}
-				loops  = pixiq.NewScreenLoops(images)
+				color  = image.RGBA(10, 20, 30, 40)
+				screen = newScreenMock(1, 1)
 			)
 			// when
-			loops.Loop(screen, func(frame *pixiq.Frame) {
+			loop.Run(screen, func(frame *loop.Frame) {
 				frame.Screen().SetColor(0, 0, color)
 				frame.StopLoopEventually()
 			})
@@ -123,15 +95,13 @@ func TestScreenLoops_Loop(t *testing.T) {
 		})
 		t.Run("after second frame", func(t *testing.T) {
 			var (
-				color1     = pixiq.RGBA(10, 20, 30, 40)
-				color2     = pixiq.RGBA(10, 20, 30, 40)
-				images     = pixiq.NewImages(&fakeAcceleratedImages{})
-				screen     = &screenMock{width: 1, height: 1}
-				loops      = pixiq.NewScreenLoops(images)
+				color1     = image.RGBA(10, 20, 30, 40)
+				color2     = image.RGBA(10, 20, 30, 40)
+				screen     = newScreenMock(1, 1)
 				firstFrame = true
 			)
 			// when
-			loops.Loop(screen, func(frame *pixiq.Frame) {
+			loop.Run(screen, func(frame *loop.Frame) {
 				if firstFrame {
 					frame.Screen().SetColor(0, 0, color1)
 					firstFrame = false
@@ -149,11 +119,9 @@ func TestScreenLoops_Loop(t *testing.T) {
 
 	t.Run("should swap images", func(t *testing.T) {
 		t.Run("after first frame", func(t *testing.T) {
-			images := pixiq.NewImages(&fakeAcceleratedImages{})
-			screen := &screenMock{}
-			loops := pixiq.NewScreenLoops(images)
+			screen := newScreenMock(1, 1)
 			// when
-			loops.Loop(screen, func(frame *pixiq.Frame) {
+			loop.Run(screen, func(frame *loop.Frame) {
 				frame.StopLoopEventually()
 			})
 			// then
@@ -162,13 +130,11 @@ func TestScreenLoops_Loop(t *testing.T) {
 		})
 		t.Run("after second frame", func(t *testing.T) {
 			var (
-				images     = pixiq.NewImages(&fakeAcceleratedImages{})
-				screen     = &screenMock{}
-				loops      = pixiq.NewScreenLoops(images)
+				screen     = newScreenMock(1, 1)
 				firstFrame = true
 			)
 			// when
-			loops.Loop(screen, func(frame *pixiq.Frame) {
+			loop.Run(screen, func(frame *loop.Frame) {
 				if !firstFrame {
 					frame.StopLoopEventually()
 				}
@@ -183,32 +149,37 @@ func TestScreenLoops_Loop(t *testing.T) {
 }
 
 type screenMock struct {
-	imagesDrawn  []*pixiq.Image
+	currentImage *image.Image
+	imagesDrawn  []*image.Image
 	width        int
 	height       int
-	visibleImage *pixiq.Image
+	visibleImage *image.Image
 }
 
-func (f *screenMock) Draw(image *pixiq.Image) {
-	f.imagesDrawn = append(f.imagesDrawn, clone(image))
+func newScreenMock(width, height int) *screenMock {
+	return &screenMock{
+		currentImage: image.New(width, height, &acceleratedImageStub{}),
+		width:        width,
+		height:       height,
+	}
+}
+
+func (f *screenMock) Image() *image.Image {
+	return f.currentImage
+}
+
+func (f *screenMock) Draw() {
+	f.imagesDrawn = append(f.imagesDrawn, clone(f.currentImage))
 }
 
 func (f *screenMock) SwapImages() {
 	f.visibleImage = f.imagesDrawn[len(f.imagesDrawn)-1]
+	f.currentImage = image.New(f.width, f.height, &acceleratedImageStub{})
 }
 
-func (f *screenMock) Width() int {
-	return f.width
-}
-
-func (f *screenMock) Height() int {
-	return f.height
-}
-
-func clone(original *pixiq.Image) *pixiq.Image {
+func clone(original *image.Image) *image.Image {
 	var (
-		images            = pixiq.NewImages(&fakeAcceleratedImages{})
-		clone             = images.New(original.Width(), original.Height())
+		clone             = image.New(original.Width(), original.Height(), &acceleratedImageStub{})
 		originalSelection = original.WholeImageSelection()
 		cloneSelection    = clone.WholeImageSelection()
 	)
@@ -219,3 +190,8 @@ func clone(original *pixiq.Image) *pixiq.Image {
 	}
 	return clone
 }
+
+type acceleratedImageStub struct{}
+
+func (f acceleratedImageStub) Upload(_ []image.Color)   {}
+func (f acceleratedImageStub) Download(_ []image.Color) {}
