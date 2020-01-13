@@ -13,9 +13,8 @@ import (
 // near future. Such feature may be harmful for overall performance of Pixiq.
 func main() {
 	opengl.Run(func(gl *opengl.OpenGL) {
-		windows := gl.Windows()
-		redWindow := windows.Open(320, 180, opengl.Title("red"))
-		blueWindow := windows.Open(250, 90, opengl.Title("blue"))
+		redWindow := gl.Open(320, 180, opengl.Title("red"))
+		blueWindow := gl.Open(250, 90, opengl.Title("blue"))
 		// Start the loop in the background, because Loop method blocks
 		// the current goroutine.
 		go loop.Run(redWindow, fillWith(colornames.Red))

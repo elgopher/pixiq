@@ -41,8 +41,7 @@ import (
 
 func main() {
 	opengl.Run(func(gl *opengl.OpenGL) {
-		windows := gl.Windows()
-		window := windows.Open(80, 16, opengl.Zoom(5))
+		window := gl.Open(80, 16, opengl.Zoom(5))
 		loop.Run(window, func(frame *loop.Frame) {
 			screen := frame.Screen()
 			screen.SetColor(40, 8, colornames.White)

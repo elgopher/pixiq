@@ -10,7 +10,7 @@ import (
 
 func main() {
 	opengl.Run(func(gl *opengl.OpenGL) {
-		win := gl.Windows().Open(320, 10, opengl.Title("Press any key..."))
+		win := gl.Open(320, 10, opengl.Title("Press any key..."))
 		// Create keyboard instance for window.
 		keys := keyboard.New(win)
 		loop.Run(win, func(frame *loop.Frame) {

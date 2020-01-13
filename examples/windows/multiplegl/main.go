@@ -20,10 +20,9 @@ func main() {
 }
 
 func startOpenGL(mainThreadLoop *opengl.MainThreadLoop, title string, color image.Color) {
-	openGL := opengl.New(mainThreadLoop)
-	defer openGL.Destroy()
-	windows := openGL.Windows()
-	win := windows.Open(2, 1, opengl.Zoom(100), opengl.Title(title))
+	gl := opengl.New(mainThreadLoop)
+	defer gl.Destroy()
+	win := gl.Open(2, 1, opengl.Zoom(100), opengl.Title(title))
 	defer win.Close()
 	loop.Run(win, func(frame *loop.Frame) {
 		screen := frame.Screen()
