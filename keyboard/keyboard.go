@@ -3,7 +3,7 @@
 // You can start using using keyboard by creating Keyboard instance:
 //
 //     keys := keyboard.New(window)
-//     loops.Loop(window, func(frame *pixiq.Frame) {
+//     loop.Run(window, func(frame *pixiq.Frame) {
 //         keys.Update() // This is needed each frame to update the state of keys
 //         if keys.Pressed(keyboard.A) {
 //             ...
