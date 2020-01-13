@@ -5,6 +5,8 @@ import (
 	"log"
 	"runtime"
 	"strconv"
+
+	"github.com/go-gl/glfw/v3.3/glfw"
 )
 
 // StartMainThreadLoop starts a loop assigned to main thread. It has to be
@@ -37,7 +39,8 @@ func isMainGoroutine() bool {
 
 // MainThreadLoop is a loop for executing jobs in main thread.
 type MainThreadLoop struct {
-	jobs chan func()
+	jobs        chan func()
+	boundWindow *glfw.Window
 }
 
 func (g *MainThreadLoop) run() {
@@ -65,4 +68,13 @@ func (g *MainThreadLoop) Execute(job func()) {
 		done <- struct{}{}
 	}
 	<-done
+}
+
+func (g *MainThreadLoop) bind(window *glfw.Window) func() {
+	return func() {
+		if g.boundWindow != window {
+			window.MakeContextCurrent()
+			g.boundWindow = window
+		}
+	}
 }
