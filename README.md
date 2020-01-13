@@ -34,16 +34,16 @@ Create Pixel Art games in Golang with fun and ease.
 package main
 
 import (
-	"github.com/jacekolszak/pixiq"
 	"github.com/jacekolszak/pixiq/colornames"
+	"github.com/jacekolszak/pixiq/loop"
 	"github.com/jacekolszak/pixiq/opengl"
 )
 
 func main() {
-	opengl.Run(func(gl *opengl.OpenGL, images *pixiq.Images, loops *pixiq.ScreenLoops) {
+	opengl.Run(func(gl *opengl.OpenGL) {
 		windows := gl.Windows()
 		window := windows.Open(80, 16, opengl.Zoom(5))
-		loops.Loop(window, func(frame *pixiq.Frame) {
+		loop.Run(window, func(frame *loop.Frame) {
 			screen := frame.Screen()
 			screen.SetColor(40, 8, colornames.White)
 		})
