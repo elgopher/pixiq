@@ -61,3 +61,9 @@ for you then propably it is time to submit an  [Issue](https://github.com/jaceko
 or maybe even make a change by submitting a [Pull Request](https://github.com/jacekolszak/pixiq/pulls).
 The `opengl.Windows` struct does not need to implement any abstractions,
 therefore it might be extended freely.
+
+
+why you are still using OpenGL in 2020?
+
+> Because the API is easy to use (compared to Vulkan for example), is multiplatform (yes, it still works on MacOS) and has decent support in Go.
+
