@@ -31,9 +31,8 @@ func TestNew(t *testing.T) {
 		// when
 		openGL := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		windows := openGL.Windows()
 		// then
-		assert.NotNil(t, windows)
+		assert.NotNil(t, openGL)
 	})
 	t.Run("should create 2 objects working at the same time", func(t *testing.T) {
 		for i := 0; i < 2; i++ {
@@ -160,7 +159,7 @@ func TestRun(t *testing.T) {
 		})
 		assert.True(t, callbackExecuted)
 	})
-	t.Run("should create pixiq objects using OpenGL acceleration and windows", func(t *testing.T) {
+	t.Run("should start a MainThreadLoop and create OpenGL object", func(t *testing.T) {
 		var (
 			actualGL *opengl.OpenGL
 		)
@@ -170,6 +169,5 @@ func TestRun(t *testing.T) {
 			})
 		})
 		assert.NotNil(t, actualGL)
-		assert.NotNil(t, actualGL.Windows())
 	})
 }

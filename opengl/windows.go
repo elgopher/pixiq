@@ -11,16 +11,8 @@ import (
 	"github.com/jacekolszak/pixiq/opengl/internal"
 )
 
-// Windows is used for opening system windows.
-type Windows struct {
-	mainThreadLoop *MainThreadLoop
-	// mainWindow contains textures and user programs
-	mainWindow *glfw.Window
-	newTexture func(width int, height int) *texture
-}
-
 // Open creates and shows Window.
-func (w *Windows) Open(width, height int, options ...WindowOption) *Window {
+func (g *OpenGL) Open(width, height int, options ...WindowOption) *Window {
 	if width < 1 {
 		width = 1
 	}
@@ -29,10 +21,10 @@ func (w *Windows) Open(width, height int, options ...WindowOption) *Window {
 	}
 	// FIXME: EventBuffer size should be configurable
 	keyboardEvents := internal.NewKeyboardEvents(keyboard.NewEventBuffer(32))
-	screenTexture := w.newTexture(width, height)
+	screenTexture := g.newTexture(width, height)
 	screenImage := image.New(width, height, screenTexture)
 	win := &Window{
-		mainThreadLoop:  w.mainThreadLoop,
+		mainThreadLoop:  g.mainThreadLoop,
 		keyboardEvents:  keyboardEvents,
 		requestedWidth:  width,
 		requestedHeight: height,
@@ -41,8 +33,8 @@ func (w *Windows) Open(width, height int, options ...WindowOption) *Window {
 		zoom:            1,
 	}
 	var err error
-	w.mainThreadLoop.Execute(func() {
-		win.glfwWindow, err = createWindow(w.mainThreadLoop, w.mainWindow)
+	g.mainThreadLoop.Execute(func() {
+		win.glfwWindow, err = createWindow(g.mainThreadLoop, g.mainWindow)
 		if err != nil {
 			return
 		}

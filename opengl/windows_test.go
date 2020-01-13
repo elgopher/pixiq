@@ -13,13 +13,12 @@ import (
 	"github.com/jacekolszak/pixiq/opengl"
 )
 
-func TestWindows_Open(t *testing.T) {
+func TestOpenGL_Open(t *testing.T) {
 	t.Run("should constrain width to platform-specific minimum if negative", func(t *testing.T) {
 		openGL := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		windows := openGL.Windows()
 		// when
-		win := windows.Open(-1, 0)
+		win := openGL.Open(-1, 0)
 		defer win.Close()
 		// then
 		require.NotNil(t, win)
@@ -28,9 +27,8 @@ func TestWindows_Open(t *testing.T) {
 	t.Run("should constrain height to platform-specific minimum if negative", func(t *testing.T) {
 		openGL := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		windows := openGL.Windows()
 		// when
-		win := windows.Open(0, -1)
+		win := openGL.Open(0, -1)
 		defer win.Close()
 		// then
 		require.NotNil(t, win)
@@ -39,9 +37,8 @@ func TestWindows_Open(t *testing.T) {
 	t.Run("should open Window", func(t *testing.T) {
 		openGL := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		windows := openGL.Windows()
 		// when
-		win := windows.Open(640, 360)
+		win := openGL.Open(640, 360)
 		defer win.Close()
 		// then
 		require.NotNil(t, win)
@@ -51,11 +48,10 @@ func TestWindows_Open(t *testing.T) {
 	t.Run("should open two windows at the same time", func(t *testing.T) {
 		openGL := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		windows := openGL.Windows()
 		// when
-		win1 := windows.Open(640, 360)
+		win1 := openGL.Open(640, 360)
 		defer win1.Close()
-		win2 := windows.Open(320, 180)
+		win2 := openGL.Open(320, 180)
 		defer win2.Close()
 		// then
 		require.NotNil(t, win1)
@@ -68,11 +64,10 @@ func TestWindows_Open(t *testing.T) {
 	t.Run("should open another Window after first one was closed", func(t *testing.T) {
 		openGL := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		windows := openGL.Windows()
-		win1 := windows.Open(640, 360)
+		win1 := openGL.Open(640, 360)
 		win1.Close()
 		// when
-		win2 := windows.Open(320, 180)
+		win2 := openGL.Open(320, 180)
 		defer win2.Close()
 		// then
 		require.NotNil(t, win2)
@@ -82,9 +77,8 @@ func TestWindows_Open(t *testing.T) {
 	t.Run("should skip nil option", func(t *testing.T) {
 		openGL := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		windows := openGL.Windows()
 		// when
-		win := windows.Open(0, 0, nil)
+		win := openGL.Open(0, 0, nil)
 		defer win.Close()
 	})
 	t.Run("zoom <= 1 should not affect the width and height", func(t *testing.T) {
@@ -105,9 +99,8 @@ func TestWindows_Open(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				openGL := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
-				windows := openGL.Windows()
 				// when
-				win := windows.Open(640, 360, opengl.Zoom(test.zoom))
+				win := openGL.Open(640, 360, opengl.Zoom(test.zoom))
 				defer win.Close()
 				// then
 				require.NotNil(t, win)
@@ -137,9 +130,8 @@ func TestWindows_Open(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				openGL := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
-				windows := openGL.Windows()
 				// when
-				win := windows.Open(640, 360, opengl.Zoom(test.zoom))
+				win := openGL.Open(640, 360, opengl.Zoom(test.zoom))
 				defer win.Close()
 				// then
 				require.NotNil(t, win)
@@ -160,8 +152,7 @@ func TestWindow_Draw(t *testing.T) {
 		t.Run("1x1", func(t *testing.T) {
 			openGL := opengl.New(mainThreadLoop)
 			defer openGL.Destroy()
-			windows := openGL.Windows()
-			window := windows.Open(1, 1, opengl.NoDecorationHint())
+			window := openGL.Open(1, 1, opengl.NoDecorationHint())
 			defer window.Close()
 			window.Image().WholeImageSelection().SetColor(0, 0, color1)
 			// when
@@ -173,8 +164,7 @@ func TestWindow_Draw(t *testing.T) {
 		t.Run("1x2", func(t *testing.T) {
 			openGL := opengl.New(mainThreadLoop)
 			defer openGL.Destroy()
-			windows := openGL.Windows()
-			window := windows.Open(1, 2, opengl.NoDecorationHint())
+			window := openGL.Open(1, 2, opengl.NoDecorationHint())
 			defer window.Close()
 			img := window.Image()
 			img.WholeImageSelection().SetColor(0, 0, color1)
@@ -188,8 +178,7 @@ func TestWindow_Draw(t *testing.T) {
 		t.Run("2x1", func(t *testing.T) {
 			openGL := opengl.New(mainThreadLoop)
 			defer openGL.Destroy()
-			windows := openGL.Windows()
-			window := windows.Open(2, 1, opengl.NoDecorationHint())
+			window := openGL.Open(2, 1, opengl.NoDecorationHint())
 			defer window.Close()
 			img := window.Image()
 			img.WholeImageSelection().SetColor(0, 0, color1)
@@ -203,8 +192,7 @@ func TestWindow_Draw(t *testing.T) {
 		t.Run("2x2", func(t *testing.T) {
 			openGL := opengl.New(mainThreadLoop)
 			defer openGL.Destroy()
-			windows := openGL.Windows()
-			window := windows.Open(2, 2, opengl.NoDecorationHint())
+			window := openGL.Open(2, 2, opengl.NoDecorationHint())
 			defer window.Close()
 			img := window.Image()
 			selection := img.WholeImageSelection()
@@ -225,8 +213,7 @@ func TestWindow_Draw(t *testing.T) {
 				t.Run(name, func(t *testing.T) {
 					openGL := opengl.New(mainThreadLoop)
 					defer openGL.Destroy()
-					windows := openGL.Windows()
-					window := windows.Open(1, 1, opengl.NoDecorationHint(), opengl.Zoom(zoom))
+					window := openGL.Open(1, 1, opengl.NoDecorationHint(), opengl.Zoom(zoom))
 					defer window.Close()
 					img := window.Image()
 					img.WholeImageSelection().SetColor(0, 0, color1)
@@ -245,8 +232,7 @@ func TestWindow_Draw(t *testing.T) {
 				t.Run(name, func(t *testing.T) {
 					openGL := opengl.New(mainThreadLoop)
 					defer openGL.Destroy()
-					windows := openGL.Windows()
-					window := windows.Open(1, 1, opengl.NoDecorationHint(), opengl.Zoom(zoom))
+					window := openGL.Open(1, 1, opengl.NoDecorationHint(), opengl.Zoom(zoom))
 					defer window.Close()
 					img := window.Image()
 					img.WholeImageSelection().SetColor(0, 0, color1)
@@ -306,8 +292,7 @@ func TestWindow_Draw(t *testing.T) {
 
 func windowOfColor(openGL *opengl.OpenGL, color image.Color) *opengl.Window {
 	var (
-		windows   = openGL.Windows()
-		window    = windows.Open(1, 1, opengl.NoDecorationHint())
+		window    = openGL.Open(1, 1, opengl.NoDecorationHint())
 		selection = window.Image().WholeImageSelection()
 	)
 	selection.SetColor(0, 0, color)
@@ -327,7 +312,7 @@ func TestWindow_Poll(t *testing.T) {
 	t.Run("should return EmptyEvent and false when there is no keyboard events", func(t *testing.T) {
 		openGL := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		win := openGL.Windows().Open(1, 1)
+		win := openGL.Open(1, 1)
 		defer win.Close()
 		// when
 		event, ok := win.Poll()
@@ -364,7 +349,7 @@ func TestWindow_Zoom(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				openGL := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
-				win := openGL.Windows().Open(0, 0, opengl.Zoom(test.zoom))
+				win := openGL.Open(0, 0, opengl.Zoom(test.zoom))
 				defer win.Close()
 				// when
 				zoom := win.Zoom()
@@ -393,7 +378,7 @@ func TestWindow_Image(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				openGL := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
-				win := openGL.Windows().Open(test.width, test.height, opengl.NoDecorationHint())
+				win := openGL.Open(test.width, test.height, opengl.NoDecorationHint())
 				defer win.Close()
 				// when
 				img := win.Image()
@@ -425,7 +410,7 @@ func TestWindow_Image(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				openGL := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
-				win := openGL.Windows().Open(640, 360, opengl.Zoom(test.zoom))
+				win := openGL.Open(640, 360, opengl.Zoom(test.zoom))
 				// when
 				screen := win.Image()
 				// then
@@ -437,7 +422,7 @@ func TestWindow_Image(t *testing.T) {
 	t.Run("initial screen is transparent", func(t *testing.T) {
 		openGL := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		win := openGL.Windows().Open(1, 1, opengl.NoDecorationHint())
+		win := openGL.Open(1, 1, opengl.NoDecorationHint())
 		transparent := image.RGBA(0, 0, 0, 0)
 		// when
 		img := win.Image()

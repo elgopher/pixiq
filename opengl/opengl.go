@@ -46,18 +46,14 @@ func New(mainThreadLoop *MainThreadLoop) *OpenGL {
 		mainThreadLoop:     mainThreadLoop,
 		bindWindowToThread: mainThreadLoop.bind(mainWindow),
 		stopPollingEvents:  make(chan struct{}),
-		windows: &Windows{
-			mainWindow:     mainWindow,
-			mainThreadLoop: mainThreadLoop,
-		},
+		mainWindow:         mainWindow,
 	}
-	openGL.windows.newTexture = openGL.newTexture
 	go openGL.startPollingEvents(openGL.stopPollingEvents)
 	return openGL
 }
 
-// Run is a shorthand method for creating Pixiq objects with OpenGL acceleration
-// and Windows. It runs the given callback function and blocks. It was created
+// Run is a shorthand method for starting MainThreadLoop and creating
+// OpenGL instance. It runs the given callback function and blocks. It was created
 // mainly for educational purposes to save a few keystrokes.
 func Run(main func(gl *OpenGL)) {
 	StartMainThreadLoop(func(mainThreadLoop *MainThreadLoop) {
@@ -90,19 +86,13 @@ func createWindow(mainThreadLoop *MainThreadLoop, share *glfw.Window) (*glfw.Win
 	return win, nil
 }
 
-// OpenGL provides method for creating OpenGL-accelerated image.Image and provides
-// Windows object for opening windows.
+// OpenGL provides method for creating OpenGL-accelerated image.Image and opening
+// windows.
 type OpenGL struct {
 	mainThreadLoop     *MainThreadLoop
 	bindWindowToThread func()
-	windows            *Windows
 	stopPollingEvents  chan struct{}
-}
-
-// Windows returns object for opening system windows. Each open Window
-// is a pixiq.Screen implementation.
-func (g *OpenGL) Windows() *Windows {
-	return g.windows
+	mainWindow         *glfw.Window
 }
 
 // Destroy cleans all the OpenGL resources associated with this instance.
@@ -111,10 +101,9 @@ func (g *OpenGL) Windows() *Windows {
 // OpenGL contexts.
 func (g *OpenGL) Destroy() {
 	g.stopPollingEvents <- struct{}{}
-	mainThreadLoop := g.windows.mainThreadLoop
-	mainThreadLoop.Execute(func() {
-		mainThreadLoop.bind(g.windows.mainWindow)()
-		g.windows.mainWindow.Destroy()
+	g.mainThreadLoop.Execute(func() {
+		g.mainThreadLoop.bind(g.mainWindow)()
+		g.mainWindow.Destroy()
 	})
 }
 
@@ -127,7 +116,7 @@ func (g *OpenGL) startPollingEvents(stop <-chan struct{}) {
 		case <-stop:
 			return
 		default:
-			g.windows.mainThreadLoop.Execute(glfw.PollEvents)
+			g.mainThreadLoop.Execute(glfw.PollEvents)
 		}
 	}
 }
