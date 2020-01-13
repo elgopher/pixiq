@@ -10,7 +10,7 @@ func main() {
 	// Use OpenGL on PCs with Linux, Windows and MacOS.
 	// This package can open windows and draw images on them.
 	opengl.Run(func(gl *opengl.OpenGL) {
-		window := gl.Open(80, 16, opengl.Zoom(5))
+		window := gl.OpenWindow(80, 16, opengl.Zoom(5))
 		// Create a loop for a screen. OpenGL's Window is a Screen (some day
 		// in the future Pixiq may support different platforms such as mobile
 		// or browser, therefore we need a Screen abstraction).

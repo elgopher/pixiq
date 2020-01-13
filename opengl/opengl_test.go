@@ -173,12 +173,12 @@ func TestRun(t *testing.T) {
 	})
 }
 
-func TestOpenGL_Open(t *testing.T) {
+func TestOpenGL_OpenWindow(t *testing.T) {
 	t.Run("should constrain width to platform-specific minimum if negative", func(t *testing.T) {
 		openGL := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
 		// when
-		win := openGL.Open(-1, 0)
+		win := openGL.OpenWindow(-1, 0)
 		defer win.Close()
 		// then
 		require.NotNil(t, win)
@@ -188,7 +188,7 @@ func TestOpenGL_Open(t *testing.T) {
 		openGL := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
 		// when
-		win := openGL.Open(0, -1)
+		win := openGL.OpenWindow(0, -1)
 		defer win.Close()
 		// then
 		require.NotNil(t, win)
@@ -198,7 +198,7 @@ func TestOpenGL_Open(t *testing.T) {
 		openGL := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
 		// when
-		win := openGL.Open(640, 360)
+		win := openGL.OpenWindow(640, 360)
 		defer win.Close()
 		// then
 		require.NotNil(t, win)
@@ -209,9 +209,9 @@ func TestOpenGL_Open(t *testing.T) {
 		openGL := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
 		// when
-		win1 := openGL.Open(640, 360)
+		win1 := openGL.OpenWindow(640, 360)
 		defer win1.Close()
-		win2 := openGL.Open(320, 180)
+		win2 := openGL.OpenWindow(320, 180)
 		defer win2.Close()
 		// then
 		require.NotNil(t, win1)
@@ -224,10 +224,10 @@ func TestOpenGL_Open(t *testing.T) {
 	t.Run("should open another Window after first one was closed", func(t *testing.T) {
 		openGL := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		win1 := openGL.Open(640, 360)
+		win1 := openGL.OpenWindow(640, 360)
 		win1.Close()
 		// when
-		win2 := openGL.Open(320, 180)
+		win2 := openGL.OpenWindow(320, 180)
 		defer win2.Close()
 		// then
 		require.NotNil(t, win2)
@@ -238,7 +238,7 @@ func TestOpenGL_Open(t *testing.T) {
 		openGL := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
 		// when
-		win := openGL.Open(0, 0, nil)
+		win := openGL.OpenWindow(0, 0, nil)
 		defer win.Close()
 	})
 	t.Run("zoom <= 1 should not affect the width and height", func(t *testing.T) {
@@ -260,7 +260,7 @@ func TestOpenGL_Open(t *testing.T) {
 				openGL := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
 				// when
-				win := openGL.Open(640, 360, opengl.Zoom(test.zoom))
+				win := openGL.OpenWindow(640, 360, opengl.Zoom(test.zoom))
 				defer win.Close()
 				// then
 				require.NotNil(t, win)
@@ -291,7 +291,7 @@ func TestOpenGL_Open(t *testing.T) {
 				openGL := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
 				// when
-				win := openGL.Open(640, 360, opengl.Zoom(test.zoom))
+				win := openGL.OpenWindow(640, 360, opengl.Zoom(test.zoom))
 				defer win.Close()
 				// then
 				require.NotNil(t, win)
