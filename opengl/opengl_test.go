@@ -25,19 +25,21 @@ func TestMain(m *testing.M) {
 func TestNew(t *testing.T) {
 	t.Run("should panic when MainThreadLoop is nil", func(t *testing.T) {
 		assert.Panics(t, func() {
-			opengl.New(nil)
+			_, _ = opengl.New(nil)
 		})
 	})
 	t.Run("should create OpenGL using supplied MainThreadLoop", func(t *testing.T) {
 		// when
-		openGL := opengl.New(mainThreadLoop)
+		openGL, err := opengl.New(mainThreadLoop)
+		require.NoError(t, err)
 		defer openGL.Destroy()
 		// then
 		assert.NotNil(t, openGL)
 	})
 	t.Run("should create 2 objects working at the same time", func(t *testing.T) {
 		for i := 0; i < 2; i++ {
-			openGL := opengl.New(mainThreadLoop)
+			openGL, err := opengl.New(mainThreadLoop)
+			require.NoError(t, err)
 			defer openGL.Destroy()
 		}
 	})
@@ -60,7 +62,8 @@ func TestOpenGL_NewImage(t *testing.T) {
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
-				openGL := opengl.New(mainThreadLoop)
+				openGL, err := opengl.New(mainThreadLoop)
+				require.NoError(t, err)
 				defer openGL.Destroy()
 				// when
 				img := openGL.NewImage(test.width, test.height)
@@ -75,7 +78,8 @@ func TestOpenGL_NewImage(t *testing.T) {
 
 func TestOpenGL_NewAcceleratedImage(t *testing.T) {
 	t.Run("should create AcceleratedImage", func(t *testing.T) {
-		openGL := opengl.New(mainThreadLoop)
+		openGL, err := opengl.New(mainThreadLoop)
+		require.NoError(t, err)
 		defer openGL.Destroy()
 		// when
 		img := openGL.NewAcceleratedImage(0, 0)
@@ -118,7 +122,8 @@ func TestTexture_Upload(t *testing.T) {
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
-				openGL := opengl.New(mainThreadLoop)
+				openGL, err := opengl.New(mainThreadLoop)
+				require.NoError(t, err)
 				defer openGL.Destroy()
 				img := openGL.NewAcceleratedImage(test.width, test.height)
 				// when
@@ -131,9 +136,11 @@ func TestTexture_Upload(t *testing.T) {
 		}
 	})
 	t.Run("2 OpenGL contexts", func(t *testing.T) {
-		gl1 := opengl.New(mainThreadLoop)
+		gl1, err := opengl.New(mainThreadLoop)
+		require.NoError(t, err)
 		defer gl1.Destroy()
-		gl2 := opengl.New(mainThreadLoop)
+		gl2, err := opengl.New(mainThreadLoop)
+		require.NoError(t, err)
 		defer gl2.Destroy()
 		img1 := gl1.NewAcceleratedImage(1, 1)
 		img2 := gl2.NewAcceleratedImage(1, 1)
@@ -150,11 +157,11 @@ func TestTexture_Upload(t *testing.T) {
 	})
 }
 
-func TestRun(t *testing.T) {
+func TestRunOrDie(t *testing.T) {
 	t.Run("should run provided callback", func(t *testing.T) {
 		var callbackExecuted bool
 		mainThreadLoop.Execute(func() {
-			opengl.Run(func(gl *opengl.OpenGL) {
+			opengl.RunOrDie(func(gl *opengl.OpenGL) {
 				callbackExecuted = true
 			})
 		})
@@ -165,7 +172,7 @@ func TestRun(t *testing.T) {
 			actualGL *opengl.OpenGL
 		)
 		mainThreadLoop.Execute(func() {
-			opengl.Run(func(gl *opengl.OpenGL) {
+			opengl.RunOrDie(func(gl *opengl.OpenGL) {
 				actualGL = gl
 			})
 		})
@@ -175,30 +182,36 @@ func TestRun(t *testing.T) {
 
 func TestOpenGL_OpenWindow(t *testing.T) {
 	t.Run("should constrain width to platform-specific minimum if negative", func(t *testing.T) {
-		openGL := opengl.New(mainThreadLoop)
+		openGL, err := opengl.New(mainThreadLoop)
+		require.NoError(t, err)
 		defer openGL.Destroy()
 		// when
-		win := openGL.OpenWindow(-1, 0)
+		win, err := openGL.OpenWindow(-1, 0)
+		require.NoError(t, err)
 		defer win.Close()
 		// then
 		require.NotNil(t, win)
 		assert.GreaterOrEqual(t, win.Width(), 0)
 	})
 	t.Run("should constrain height to platform-specific minimum if negative", func(t *testing.T) {
-		openGL := opengl.New(mainThreadLoop)
+		openGL, err := opengl.New(mainThreadLoop)
+		require.NoError(t, err)
 		defer openGL.Destroy()
 		// when
-		win := openGL.OpenWindow(0, -1)
+		win, err := openGL.OpenWindow(0, -1)
+		require.NoError(t, err)
 		defer win.Close()
 		// then
 		require.NotNil(t, win)
 		assert.GreaterOrEqual(t, win.Height(), 0)
 	})
 	t.Run("should open Window", func(t *testing.T) {
-		openGL := opengl.New(mainThreadLoop)
+		openGL, err := opengl.New(mainThreadLoop)
+		require.NoError(t, err)
 		defer openGL.Destroy()
 		// when
-		win := openGL.OpenWindow(640, 360)
+		win, err := openGL.OpenWindow(640, 360)
+		require.NoError(t, err)
 		defer win.Close()
 		// then
 		require.NotNil(t, win)
@@ -206,12 +219,15 @@ func TestOpenGL_OpenWindow(t *testing.T) {
 		assert.Equal(t, 360, win.Height())
 	})
 	t.Run("should open two windows at the same time", func(t *testing.T) {
-		openGL := opengl.New(mainThreadLoop)
+		openGL, err := opengl.New(mainThreadLoop)
+		require.NoError(t, err)
 		defer openGL.Destroy()
 		// when
-		win1 := openGL.OpenWindow(640, 360)
+		win1, err := openGL.OpenWindow(640, 360)
+		require.NoError(t, err)
 		defer win1.Close()
-		win2 := openGL.OpenWindow(320, 180)
+		win2, err := openGL.OpenWindow(320, 180)
+		require.NoError(t, err)
 		defer win2.Close()
 		// then
 		require.NotNil(t, win1)
@@ -222,12 +238,15 @@ func TestOpenGL_OpenWindow(t *testing.T) {
 		assert.Equal(t, 180, win2.Height())
 	})
 	t.Run("should open another Window after first one was closed", func(t *testing.T) {
-		openGL := opengl.New(mainThreadLoop)
+		openGL, err := opengl.New(mainThreadLoop)
+		require.NoError(t, err)
 		defer openGL.Destroy()
-		win1 := openGL.OpenWindow(640, 360)
+		win1, err := openGL.OpenWindow(640, 360)
+		require.NoError(t, err)
 		win1.Close()
 		// when
-		win2 := openGL.OpenWindow(320, 180)
+		win2, err := openGL.OpenWindow(320, 180)
+		require.NoError(t, err)
 		defer win2.Close()
 		// then
 		require.NotNil(t, win2)
@@ -235,10 +254,12 @@ func TestOpenGL_OpenWindow(t *testing.T) {
 		assert.Equal(t, 180, win2.Height())
 	})
 	t.Run("should skip nil option", func(t *testing.T) {
-		openGL := opengl.New(mainThreadLoop)
+		openGL, err := opengl.New(mainThreadLoop)
+		require.NoError(t, err)
 		defer openGL.Destroy()
 		// when
-		win := openGL.OpenWindow(0, 0, nil)
+		win, err := openGL.OpenWindow(0, 0, nil)
+		require.NoError(t, err)
 		defer win.Close()
 	})
 	t.Run("zoom <= 1 should not affect the width and height", func(t *testing.T) {
@@ -257,10 +278,12 @@ func TestOpenGL_OpenWindow(t *testing.T) {
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
-				openGL := opengl.New(mainThreadLoop)
+				openGL, err := opengl.New(mainThreadLoop)
+				require.NoError(t, err)
 				defer openGL.Destroy()
 				// when
-				win := openGL.OpenWindow(640, 360, opengl.Zoom(test.zoom))
+				win, err := openGL.OpenWindow(640, 360, opengl.Zoom(test.zoom))
+				require.NoError(t, err)
 				defer win.Close()
 				// then
 				require.NotNil(t, win)
@@ -288,10 +311,12 @@ func TestOpenGL_OpenWindow(t *testing.T) {
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
-				openGL := opengl.New(mainThreadLoop)
+				openGL, err := opengl.New(mainThreadLoop)
+				require.NoError(t, err)
 				defer openGL.Destroy()
 				// when
-				win := openGL.OpenWindow(640, 360, opengl.Zoom(test.zoom))
+				win, err := openGL.OpenWindow(640, 360, opengl.Zoom(test.zoom))
+				require.NoError(t, err)
 				defer win.Close()
 				// then
 				require.NotNil(t, win)

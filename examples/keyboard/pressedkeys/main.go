@@ -9,8 +9,11 @@ import (
 )
 
 func main() {
-	opengl.Run(func(gl *opengl.OpenGL) {
-		win := gl.OpenWindow(320, 10, opengl.Title("Press any key..."))
+	opengl.RunOrDie(func(gl *opengl.OpenGL) {
+		win, err := gl.OpenWindow(320, 10, opengl.Title("Press any key..."))
+		if err != nil {
+			panic(err)
+		}
 		// Create keyboard instance for window.
 		keys := keyboard.New(win)
 		loop.Run(win, func(frame *loop.Frame) {

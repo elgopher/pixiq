@@ -40,8 +40,11 @@ import (
 )
 
 func main() {
-	opengl.Run(func(gl *opengl.OpenGL) {
-		window := gl.OpenWindow(80, 16, opengl.Zoom(5))
+	opengl.RunOrDie(func(gl *opengl.OpenGL) {
+		window, err := gl.OpenWindow(80, 16, opengl.Zoom(5))
+		if err != nil {
+			panic(err)
+		}
 		loop.Run(window, func(frame *loop.Frame) {
 			screen := frame.Screen()
 			screen.SetColor(40, 8, colornames.White)

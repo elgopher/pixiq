@@ -20,11 +20,17 @@ import (
 // New creates OpenGL instance.
 // MainThreadLoop is needed because some GLFW functions has to be called
 // from the main thread.
+//
 // There is a possibility to create multiple OpenGL objects. Please note though
 // that some platforms may limit this number. In integration tests you should
 // always remember to destroy the object after test by executing Destroy method,
 // because eventually the number of objects may reach the mentioned limit.
-func New(mainThreadLoop *MainThreadLoop) *OpenGL {
+//
+// New may return error for different reasons, such as OpenGL is not supported
+// on the platform.
+//
+// New will panic if mainThreadLoop is nil.
+func New(mainThreadLoop *MainThreadLoop) (*OpenGL, error) {
 	if mainThreadLoop == nil {
 		panic("nil MainThreadLoop")
 	}
@@ -43,7 +49,7 @@ func New(mainThreadLoop *MainThreadLoop) *OpenGL {
 		}
 	})
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	openGL := &OpenGL{
 		mainThreadLoop:     mainThreadLoop,
@@ -52,15 +58,22 @@ func New(mainThreadLoop *MainThreadLoop) *OpenGL {
 		mainWindow:         mainWindow,
 	}
 	go openGL.startPollingEvents(openGL.stopPollingEvents)
-	return openGL
+	return openGL, nil
 }
 
-// Run is a shorthand method for starting MainThreadLoop and creating
+// RunOrDie is a shorthand method for starting MainThreadLoop and creating
 // OpenGL instance. It runs the given callback function and blocks. It was created
-// mainly for educational purposes to save a few keystrokes.
-func Run(main func(gl *OpenGL)) {
+// mainly for educational purposes to save a few keystrokes. In production
+// quality code you should write this code yourself and implement a proper error
+// handling.
+//
+// Will panic if OpenGL cannot be created.
+func RunOrDie(main func(gl *OpenGL)) {
 	StartMainThreadLoop(func(mainThreadLoop *MainThreadLoop) {
-		openGL := New(mainThreadLoop)
+		openGL, err := New(mainThreadLoop)
+		if err != nil {
+			panic(err)
+		}
 		defer openGL.Destroy()
 		main(openGL)
 	})
@@ -219,7 +232,7 @@ func (t *texture) Download(output []image.Color) {
 }
 
 // OpenWindow creates and shows Window.
-func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) *Window {
+func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window, error) {
 	if width < 1 {
 		width = 1
 	}
@@ -264,9 +277,9 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) *Window 
 		win.glfwWindow.Show()
 	})
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return win
+	return win, nil
 }
 
 // WindowOption is an option used when opening the window.

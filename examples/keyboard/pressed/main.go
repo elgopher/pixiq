@@ -8,8 +8,11 @@ import (
 )
 
 func main() {
-	opengl.Run(func(gl *opengl.OpenGL) {
-		window := gl.OpenWindow(80, 40, opengl.Title("Use WSAD and ESC to close window"), opengl.Zoom(4))
+	opengl.RunOrDie(func(gl *opengl.OpenGL) {
+		window, err := gl.OpenWindow(80, 40, opengl.Title("Use WSAD and ESC to close window"), opengl.Zoom(4))
+		if err != nil {
+			panic(err)
+		}
 		// Create keyboard instance for window.
 		keys := keyboard.New(window)
 		x := 40
