@@ -181,10 +181,11 @@ func TestWindow_Draw(t *testing.T) {
 }
 
 func windowOfColor(openGL *opengl.OpenGL, color image.Color) (*opengl.Window, error) {
-	var (
-		window, err = openGL.OpenWindow(1, 1, opengl.NoDecorationHint())
-		selection   = window.Image().WholeImageSelection()
-	)
+	window, err := openGL.OpenWindow(1, 1, opengl.NoDecorationHint())
+	if err != nil {
+		return nil, err
+	}
+	selection := window.Image().WholeImageSelection()
 	selection.SetColor(0, 0, color)
 	return window, err
 }
