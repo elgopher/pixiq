@@ -18,7 +18,10 @@ func main() {
 	// thread.
 	opengl.StartMainThreadLoop(func(loop *opengl.MainThreadLoop) {
 		// Create OpenGL object.
-		gl := opengl.New(loop)
+		gl, err := opengl.New(loop)
+		if err != nil {
+			panic(err)
+		}
 		// Destroy OpenGL when the function ends
 		defer gl.Destroy()
 
