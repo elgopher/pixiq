@@ -9,7 +9,10 @@ import (
 
 func main() {
 	opengl.Run(func(gl *opengl.OpenGL) {
-		window, _ := gl.OpenWindow(80, 40, opengl.Title("Use WSAD and ESC to close window"), opengl.Zoom(4))
+		window, err := gl.OpenWindow(80, 40, opengl.Title("Use WSAD and ESC to close window"), opengl.Zoom(4))
+		if err != nil {
+			panic(err)
+		}
 		// Create keyboard instance for window.
 		keys := keyboard.New(window)
 		x := 40
