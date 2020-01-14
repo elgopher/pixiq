@@ -61,11 +61,11 @@ func New(mainThreadLoop *MainThreadLoop) (*OpenGL, error) {
 	return openGL, nil
 }
 
-// Run is a shorthand method for starting MainThreadLoop and creating
+// RunOrDie is a shorthand method for starting MainThreadLoop and creating
 // OpenGL instance. It runs the given callback function and blocks. It was created
 // mainly for educational purposes to save a few keystrokes.
 // Will panic if OpenGL cannot be created.
-func Run(main func(gl *OpenGL)) {
+func RunOrDie(main func(gl *OpenGL)) {
 	StartMainThreadLoop(func(mainThreadLoop *MainThreadLoop) {
 		openGL, err := New(mainThreadLoop)
 		if err != nil {

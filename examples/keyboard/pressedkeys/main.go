@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	opengl.Run(func(gl *opengl.OpenGL) {
+	opengl.RunOrDie(func(gl *opengl.OpenGL) {
 		win, err := gl.OpenWindow(320, 10, opengl.Title("Press any key..."))
 		if err != nil {
 			panic(err)

@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	opengl.Run(func(gl *opengl.OpenGL) {
+	opengl.RunOrDie(func(gl *opengl.OpenGL) {
 		window, err := gl.OpenWindow(80, 40, opengl.Title("Use WSAD and ESC to close window"), opengl.Zoom(4))
 		if err != nil {
 			panic(err)

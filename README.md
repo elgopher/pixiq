@@ -40,7 +40,7 @@ import (
 )
 
 func main() {
-	opengl.Run(func(gl *opengl.OpenGL) {
+	opengl.RunOrDie(func(gl *opengl.OpenGL) {
 		window, err := gl.OpenWindow(80, 16, opengl.Zoom(5))
 		if err != nil {
 			panic(err)

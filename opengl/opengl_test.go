@@ -161,7 +161,7 @@ func TestRun(t *testing.T) {
 	t.Run("should run provided callback", func(t *testing.T) {
 		var callbackExecuted bool
 		mainThreadLoop.Execute(func() {
-			opengl.Run(func(gl *opengl.OpenGL) {
+			opengl.RunOrDie(func(gl *opengl.OpenGL) {
 				callbackExecuted = true
 			})
 		})
@@ -172,7 +172,7 @@ func TestRun(t *testing.T) {
 			actualGL *opengl.OpenGL
 		)
 		mainThreadLoop.Execute(func() {
-			opengl.Run(func(gl *opengl.OpenGL) {
+			opengl.RunOrDie(func(gl *opengl.OpenGL) {
 				actualGL = gl
 			})
 		})

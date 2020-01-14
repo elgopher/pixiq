@@ -12,7 +12,7 @@ import (
 // Please note that this functionality is experimental and may change in the
 // near future. Such feature may be harmful for overall performance of Pixiq.
 func main() {
-	opengl.Run(func(gl *opengl.OpenGL) {
+	opengl.RunOrDie(func(gl *opengl.OpenGL) {
 		redWindow, err := gl.OpenWindow(320, 180, opengl.Title("red"))
 		if err != nil {
 			panic(err)
