@@ -229,7 +229,7 @@ func (t *texture) Download(output []image.Color) {
 }
 
 // OpenWindow creates and shows Window.
-func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) *Window {
+func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window, error) {
 	if width < 1 {
 		width = 1
 	}
@@ -274,9 +274,9 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) *Window 
 		win.glfwWindow.Show()
 	})
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return win
+	return win, nil
 }
 
 // WindowOption is an option used when opening the window.

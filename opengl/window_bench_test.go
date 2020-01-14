@@ -12,7 +12,7 @@ func BenchmarkWindow_Draw(b *testing.B) {
 	if err != nil {
 		panic(err)
 	}
-	win := openGL.OpenWindow(640, 360)
+	win, _ := openGL.OpenWindow(640, 360)
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		win.Draw()

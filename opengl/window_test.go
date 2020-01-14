@@ -24,7 +24,8 @@ func TestWindow_Draw(t *testing.T) {
 			openGL, err := opengl.New(mainThreadLoop)
 			require.NoError(t, err)
 			defer openGL.Destroy()
-			window := openGL.OpenWindow(1, 1, opengl.NoDecorationHint())
+			window, err := openGL.OpenWindow(1, 1, opengl.NoDecorationHint())
+			require.NoError(t, err)
 			defer window.Close()
 			window.Image().WholeImageSelection().SetColor(0, 0, color1)
 			// when
@@ -37,7 +38,8 @@ func TestWindow_Draw(t *testing.T) {
 			openGL, err := opengl.New(mainThreadLoop)
 			require.NoError(t, err)
 			defer openGL.Destroy()
-			window := openGL.OpenWindow(1, 2, opengl.NoDecorationHint())
+			window, err := openGL.OpenWindow(1, 2, opengl.NoDecorationHint())
+			require.NoError(t, err)
 			defer window.Close()
 			img := window.Image()
 			img.WholeImageSelection().SetColor(0, 0, color1)
@@ -52,7 +54,8 @@ func TestWindow_Draw(t *testing.T) {
 			openGL, err := opengl.New(mainThreadLoop)
 			require.NoError(t, err)
 			defer openGL.Destroy()
-			window := openGL.OpenWindow(2, 1, opengl.NoDecorationHint())
+			window, err := openGL.OpenWindow(2, 1, opengl.NoDecorationHint())
+			require.NoError(t, err)
 			defer window.Close()
 			img := window.Image()
 			img.WholeImageSelection().SetColor(0, 0, color1)
@@ -67,7 +70,8 @@ func TestWindow_Draw(t *testing.T) {
 			openGL, err := opengl.New(mainThreadLoop)
 			require.NoError(t, err)
 			defer openGL.Destroy()
-			window := openGL.OpenWindow(2, 2, opengl.NoDecorationHint())
+			window, err := openGL.OpenWindow(2, 2, opengl.NoDecorationHint())
+			require.NoError(t, err)
 			defer window.Close()
 			img := window.Image()
 			selection := img.WholeImageSelection()
@@ -89,7 +93,8 @@ func TestWindow_Draw(t *testing.T) {
 					openGL, err := opengl.New(mainThreadLoop)
 					require.NoError(t, err)
 					defer openGL.Destroy()
-					window := openGL.OpenWindow(1, 1, opengl.NoDecorationHint(), opengl.Zoom(zoom))
+					window, err := openGL.OpenWindow(1, 1, opengl.NoDecorationHint(), opengl.Zoom(zoom))
+					require.NoError(t, err)
 					defer window.Close()
 					img := window.Image()
 					img.WholeImageSelection().SetColor(0, 0, color1)
@@ -109,7 +114,8 @@ func TestWindow_Draw(t *testing.T) {
 					openGL, err := opengl.New(mainThreadLoop)
 					require.NoError(t, err)
 					defer openGL.Destroy()
-					window := openGL.OpenWindow(1, 1, opengl.NoDecorationHint(), opengl.Zoom(zoom))
+					window, err := openGL.OpenWindow(1, 1, opengl.NoDecorationHint(), opengl.Zoom(zoom))
+					require.NoError(t, err)
 					defer window.Close()
 					img := window.Image()
 					img.WholeImageSelection().SetColor(0, 0, color1)
@@ -129,9 +135,11 @@ func TestWindow_Draw(t *testing.T) {
 			openGL, err := opengl.New(mainThreadLoop)
 			require.NoError(t, err)
 			defer openGL.Destroy()
-			window1 := windowOfColor(openGL, color1)
+			window1, err := windowOfColor(openGL, color1)
+			require.NoError(t, err)
 			defer window1.Close()
-			window2 := windowOfColor(openGL, color2)
+			window2, err := windowOfColor(openGL, color2)
+			require.NoError(t, err)
 			defer window2.Close()
 			// when
 			window1.Draw()
@@ -152,9 +160,11 @@ func TestWindow_Draw(t *testing.T) {
 			openGL2, err := opengl.New(mainThreadLoop)
 			require.NoError(t, err)
 			defer openGL2.Destroy()
-			window1 := windowOfColor(openGL1, color1)
+			window1, err := windowOfColor(openGL1, color1)
+			require.NoError(t, err)
 			defer window1.Close()
-			window2 := windowOfColor(openGL2, color2)
+			window2, err := windowOfColor(openGL2, color2)
+			require.NoError(t, err)
 			defer window2.Close()
 			// when
 			window1.Draw()
@@ -170,13 +180,13 @@ func TestWindow_Draw(t *testing.T) {
 	})
 }
 
-func windowOfColor(openGL *opengl.OpenGL, color image.Color) *opengl.Window {
+func windowOfColor(openGL *opengl.OpenGL, color image.Color) (*opengl.Window, error) {
 	var (
-		window    = openGL.OpenWindow(1, 1, opengl.NoDecorationHint())
-		selection = window.Image().WholeImageSelection()
+		window, err = openGL.OpenWindow(1, 1, opengl.NoDecorationHint())
+		selection   = window.Image().WholeImageSelection()
 	)
 	selection.SetColor(0, 0, color)
-	return window
+	return window, err
 }
 
 func framebufferPixels(x, y, width, height int32) []image.Color {
@@ -193,7 +203,8 @@ func TestWindow_Poll(t *testing.T) {
 		openGL, err := opengl.New(mainThreadLoop)
 		require.NoError(t, err)
 		defer openGL.Destroy()
-		win := openGL.OpenWindow(1, 1)
+		win, err := openGL.OpenWindow(1, 1)
+		require.NoError(t, err)
 		defer win.Close()
 		// when
 		event, ok := win.Poll()
@@ -231,7 +242,8 @@ func TestWindow_Zoom(t *testing.T) {
 				openGL, err := opengl.New(mainThreadLoop)
 				require.NoError(t, err)
 				defer openGL.Destroy()
-				win := openGL.OpenWindow(0, 0, opengl.Zoom(test.zoom))
+				win, err := openGL.OpenWindow(0, 0, opengl.Zoom(test.zoom))
+				require.NoError(t, err)
 				defer win.Close()
 				// when
 				zoom := win.Zoom()
@@ -261,7 +273,8 @@ func TestWindow_Image(t *testing.T) {
 				openGL, err := opengl.New(mainThreadLoop)
 				require.NoError(t, err)
 				defer openGL.Destroy()
-				win := openGL.OpenWindow(test.width, test.height, opengl.NoDecorationHint())
+				win, err := openGL.OpenWindow(test.width, test.height, opengl.NoDecorationHint())
+				require.NoError(t, err)
 				defer win.Close()
 				// when
 				img := win.Image()
@@ -294,7 +307,8 @@ func TestWindow_Image(t *testing.T) {
 				openGL, err := opengl.New(mainThreadLoop)
 				require.NoError(t, err)
 				defer openGL.Destroy()
-				win := openGL.OpenWindow(640, 360, opengl.Zoom(test.zoom))
+				win, err := openGL.OpenWindow(640, 360, opengl.Zoom(test.zoom))
+				require.NoError(t, err)
 				// when
 				screen := win.Image()
 				// then
@@ -307,7 +321,8 @@ func TestWindow_Image(t *testing.T) {
 		openGL, err := opengl.New(mainThreadLoop)
 		require.NoError(t, err)
 		defer openGL.Destroy()
-		win := openGL.OpenWindow(1, 1, opengl.NoDecorationHint())
+		win, err := openGL.OpenWindow(1, 1, opengl.NoDecorationHint())
+		require.NoError(t, err)
 		transparent := image.RGBA(0, 0, 0, 0)
 		// when
 		img := win.Image()

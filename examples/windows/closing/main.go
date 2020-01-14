@@ -8,7 +8,10 @@ import (
 // This example shows how to properly close the window.
 func main() {
 	opengl.Run(func(gl *opengl.OpenGL) {
-		window := gl.OpenWindow(320, 180)
+		window, err := gl.OpenWindow(320, 180)
+		if err != nil {
+			panic(err)
+		}
 		// clean resources when function ends
 		defer window.Close()
 		loop.Run(window, func(frame *loop.Frame) {
