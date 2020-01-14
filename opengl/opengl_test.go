@@ -157,7 +157,7 @@ func TestTexture_Upload(t *testing.T) {
 	})
 }
 
-func TestRun(t *testing.T) {
+func TestRunOrDie(t *testing.T) {
 	t.Run("should run provided callback", func(t *testing.T) {
 		var callbackExecuted bool
 		mainThreadLoop.Execute(func() {
