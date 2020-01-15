@@ -65,5 +65,5 @@ for opening windows, therefore it might be extended freely.
 
 Why you are still using OpenGL in 2020?
 
-> Because the API is easy to use (compared to Vulkan for example), is multiplatform (yes, it still works on MacOS) and has decent support in Go.
+> Because the API is easy to use (compared to Vulkan for example), is multiplatform (yes, it still works on MacOS) and has decent support for Go.
 
