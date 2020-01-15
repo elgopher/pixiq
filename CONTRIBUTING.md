@@ -12,3 +12,4 @@ Some ways to contribute:
 
 For those who are really interested in serious Pixiq development here are some interesting documentation:
 * [Architecture](docs/architecture.md)
+* [Testing](docs/testing.md)
