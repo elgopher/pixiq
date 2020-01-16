@@ -70,3 +70,4 @@ API changes. More about architecture can be found in [architecture document](doc
 + Create Go API which is just fun to use. It will provide tools known from Pixel Art software.
 + Create Development Tools similar to Chrome Developer Tools to support the development process
 + Make it fast - image manipulation requires a lot of computation, therefore Pixiq should be well optimized
++ Create a set of loosely coupled packages which can be used selectively and replaced or extended easily
