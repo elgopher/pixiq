@@ -14,6 +14,13 @@ type AcceleratedFragmentLocation struct {
 	X, Y, Width, Height int
 }
 
+// AcceleratedFragmentPixels contains pixel colors which should be updated
+// in the AcceleratedImage.
+// Image will always create consistent instance, meaning that:
+// + location is always clamped to image boundries
+// + startingPosition >= 0
+// + stride >= 0
+// + Pixels has length big enough to hold pixels
 type AcceleratedFragmentPixels struct {
 	Location AcceleratedFragmentLocation
 	// Pixels has pixel colors sorted by coordinates
@@ -21,7 +28,8 @@ type AcceleratedFragmentPixels struct {
 	Pixels []Color
 	// StartPosition is an index of the first color in Pixels
 	StartingPosition int
-	Stride           int
+	// Stride is a row length
+	Stride int
 }
 
 // New creates an Image with specified size given in pixels.

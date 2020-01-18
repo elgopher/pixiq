@@ -39,45 +39,6 @@ func TestNewFakeAcceleratedImage(t *testing.T) {
 	})
 }
 
-//
-//func TestFakeAcceleratedImage_Download(t *testing.T) {
-//	//white := image.RGBA(255, 255, 255, 255)
-//	tests := map[string]struct {
-//		width, height int
-//		selection     image.AcceleratedFragmentLocation
-//		output        image.AcceleratedFragmentPixels
-//		expected      []image.Color
-//	}{
-//		"image 1x1, selection 0,0 with size 1x1": {
-//			selection: image.AcceleratedFragmentLocation{
-//				Width:  1,
-//				Height: 1,
-//			},
-//			output: image.AcceleratedFragmentPixels{
-//				Pixels:           make([]image.Color, 1),
-//				StartingPosition: 0,
-//				Stride:           0,
-//			},
-//			expected: []image.Color{transparent},
-//		},
-//		//"image 1x1; selection 0,0 with size 1x1": {
-//		//	width: 1, height: 1,
-//		//	selection:    image.AcceleratedFragmentLocation{Width: 1, Height: 1},
-//		//	outputPixels: []image.Color{white},
-//		//	expected:     []image.Color{white},
-//		//},
-//	}
-//	for name, test := range tests {
-//		t.Run(name, func(t *testing.T) {
-//			img := image.NewFakeAcceleratedImage(test.width, test.height)
-//			// when
-//			img.Download2(test.selection, test.output)
-//			// then
-//			assert.Equal(t, test.expected, test.output.Pixels)
-//		})
-//	}
-//}
-
 func TestFakeAcceleratedImage_Upload(t *testing.T) {
 	white := image.RGBA(255, 255, 255, 255)
 	red := image.RGBA(255, 0, 0, 255)
@@ -242,4 +203,57 @@ func TestFakeAcceleratedImage_Upload2(t *testing.T) {
 		img.Download(output)
 		assert.Equal(t, []image.Color{transparent}, output.Pixels)
 	})
+}
+
+func TestFakeAcceleratedImage_Download2(t *testing.T) {
+	t.Run("should panic when image has not been uploaded before download", func(t *testing.T) {
+		img := image.NewFakeAcceleratedImage(1, 1)
+		assert.Panics(t, func() {
+			img.Download(image.AcceleratedFragmentPixels{})
+		})
+	})
+}
+
+func TestFakeAcceleratedImage_Download(t *testing.T) {
+	white := image.RGBA(255, 255, 255, 255)
+	//red := image.RGBA(255, 0, 0, 255)
+	tests := map[string]struct {
+		width, height int
+		input         []image.Color
+		output        image.AcceleratedFragmentPixels
+		expected      []image.Color
+	}{
+		"image 0x0, output 0,0 with size 0x0": {
+			output: image.AcceleratedFragmentPixels{
+				Location: image.AcceleratedFragmentLocation{},
+				Pixels:   []image.Color{},
+			},
+			expected: []image.Color{},
+		},
+		"image 1x1, output 0,0 with size 1x1": {
+			width: 1, height: 1,
+			input: []image.Color{white},
+			output: image.AcceleratedFragmentPixels{
+				Location: image.AcceleratedFragmentLocation{Width: 1, Height: 1},
+				Pixels:   []image.Color{transparent},
+			},
+			expected: []image.Color{white},
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			img := image.NewFakeAcceleratedImage(test.width, test.height)
+			input := image.AcceleratedFragmentPixels{
+				Location: image.AcceleratedFragmentLocation{Width: test.width, Height: test.height},
+				Stride:   test.width,
+				Pixels:   test.input,
+			}
+			img.Upload(input)
+			// when
+			img.Download(test.output)
+			// then
+			assert.Equal(t, test.expected, test.output.Pixels)
+		})
+	}
+
 }

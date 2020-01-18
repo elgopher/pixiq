@@ -34,9 +34,6 @@ func (i *FakeAcceleratedImage) Upload(input AcceleratedFragmentPixels) {
 	}
 }
 func (i *FakeAcceleratedImage) Download(pixels AcceleratedFragmentPixels) {
-	if i.width == 0 || i.height == 0 {
-		return
-	}
 	for y := 0; y < i.height; y++ {
 		for x := 0; x < i.width; x++ {
 			idx := y*i.width + x
