@@ -573,7 +573,6 @@ func TestKeyboard_Update(t *testing.T) {
 				source := newFakeEventSourceWith(numberOfEvents)
 				k := keyboard.New(source)
 				k.Update()
-				source.events = append(source.events)
 				// when
 				k.Update()
 				// then
@@ -586,9 +585,7 @@ func TestKeyboard_Update(t *testing.T) {
 func newFakeEventSource(events ...keyboard.Event) *fakeEventSource {
 	source := &fakeEventSource{}
 	source.events = []keyboard.Event{}
-	for _, event := range events {
-		source.events = append(source.events, event)
-	}
+	source.events = append(source.events, events...)
 	return source
 }
 

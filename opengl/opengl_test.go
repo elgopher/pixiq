@@ -46,6 +46,26 @@ func TestNew(t *testing.T) {
 }
 
 func TestOpenGL_NewImage(t *testing.T) {
+	t.Run("should return error for negative width", func(t *testing.T) {
+		openGL, err := opengl.New(mainThreadLoop)
+		require.NoError(t, err)
+		defer openGL.Destroy()
+		// when
+		img, err := openGL.NewImage(-1, 0)
+		// then
+		require.Error(t, err)
+		assert.Nil(t, img)
+	})
+	t.Run("should return error for negative height", func(t *testing.T) {
+		openGL, err := opengl.New(mainThreadLoop)
+		require.NoError(t, err)
+		defer openGL.Destroy()
+		// when
+		img, err := openGL.NewImage(0, -1)
+		// then
+		require.Error(t, err)
+		assert.Nil(t, img)
+	})
 	t.Run("should create Image", func(t *testing.T) {
 		tests := map[string]struct {
 			width  int
@@ -66,8 +86,9 @@ func TestOpenGL_NewImage(t *testing.T) {
 				require.NoError(t, err)
 				defer openGL.Destroy()
 				// when
-				img := openGL.NewImage(test.width, test.height)
+				img, err := openGL.NewImage(test.width, test.height)
 				// then
+				require.NoError(t, err)
 				assert.NotNil(t, img)
 				assert.Equal(t, test.width, img.Width())
 				assert.Equal(t, test.height, img.Height())
@@ -77,13 +98,34 @@ func TestOpenGL_NewImage(t *testing.T) {
 }
 
 func TestOpenGL_NewAcceleratedImage(t *testing.T) {
+	t.Run("should return error for negative width", func(t *testing.T) {
+		openGL, err := opengl.New(mainThreadLoop)
+		require.NoError(t, err)
+		defer openGL.Destroy()
+		// when
+		img, err := openGL.NewAcceleratedImage(-1, 0)
+		// then
+		require.Error(t, err)
+		assert.Nil(t, img)
+	})
+	t.Run("should return error for negative height", func(t *testing.T) {
+		openGL, err := opengl.New(mainThreadLoop)
+		require.NoError(t, err)
+		defer openGL.Destroy()
+		// when
+		img, err := openGL.NewAcceleratedImage(0, -1)
+		// then
+		require.Error(t, err)
+		assert.Nil(t, img)
+	})
 	t.Run("should create AcceleratedImage", func(t *testing.T) {
 		openGL, err := opengl.New(mainThreadLoop)
 		require.NoError(t, err)
 		defer openGL.Destroy()
 		// when
-		img := openGL.NewAcceleratedImage(0, 0)
+		img, err := openGL.NewAcceleratedImage(0, 0)
 		// then
+		require.NoError(t, err)
 		assert.NotNil(t, img)
 	})
 }
@@ -125,7 +167,8 @@ func TestTexture_Upload(t *testing.T) {
 				openGL, err := opengl.New(mainThreadLoop)
 				require.NoError(t, err)
 				defer openGL.Destroy()
-				img := openGL.NewAcceleratedImage(test.width, test.height)
+				img, err := openGL.NewAcceleratedImage(test.width, test.height)
+				require.NoError(t, err)
 				// when
 				img.Upload(test.inputColors)
 				// then
@@ -142,8 +185,10 @@ func TestTexture_Upload(t *testing.T) {
 		gl2, err := opengl.New(mainThreadLoop)
 		require.NoError(t, err)
 		defer gl2.Destroy()
-		img1 := gl1.NewAcceleratedImage(1, 1)
-		img2 := gl2.NewAcceleratedImage(1, 1)
+		img1, err := gl1.NewAcceleratedImage(1, 1)
+		require.NoError(t, err)
+		img2, err := gl2.NewAcceleratedImage(1, 1)
+		require.NoError(t, err)
 		// when
 		img1.Upload([]image.Color{color1})
 		img2.Upload([]image.Color{color2})
