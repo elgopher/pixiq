@@ -12,6 +12,7 @@ import (
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
 
+	glslshader "github.com/jacekolszak/pixiq/glsl/shader"
 	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/keyboard"
 	"github.com/jacekolszak/pixiq/opengl/internal"
@@ -217,6 +218,7 @@ func (t *texture) Upload(pixels []image.Color) {
 		)
 	})
 }
+
 func (t *texture) Download(output []image.Color) {
 	t.mainThreadLoop.Execute(func() {
 		t.bindWindowToThread()
@@ -307,4 +309,25 @@ func Zoom(zoom int) WindowOption {
 			window.zoom = zoom
 		}
 	}
+}
+
+func (g *OpenGL) Compile(fragmentShaderSource string) (glslshader.Program, error) {
+	return &Program{}, nil
+}
+
+type Program struct {
+}
+
+func (p *Program) Call() glslshader.ProgramCall {
+	return &OpenGLProgramCall{}
+}
+
+type OpenGLProgramCall struct {
+}
+
+func (o *OpenGLProgramCall) SetTexture(uniformName string, selection image.Selection) {
+
+}
+
+func (o *OpenGLProgramCall) Release() {
 }

@@ -326,3 +326,16 @@ func TestOpenGL_OpenWindow(t *testing.T) {
 		}
 	})
 }
+
+func TestOpenGL_Compile(t *testing.T) {
+	t.Run("should compile empty fragment shader", func(t *testing.T) {
+		openGL, err := opengl.New(mainThreadLoop)
+		require.NoError(t, err)
+		defer openGL.Destroy()
+		// when
+		program, err := openGL.Compile("")
+		// then
+		require.NoError(t, err)
+		assert.NotNil(t, program)
+	})
+}
