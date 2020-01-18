@@ -2,19 +2,20 @@ package image
 
 // AcceleratedImage is an image processed externally (outside the CPU).
 type AcceleratedImage interface {
-	Upload(selection AcceleratedFragment, pixels PixelSlice)
-	Download(selection AcceleratedFragment, pixels PixelSlice)
-	Modify(selection AcceleratedFragment, call AcceleratedCall)
+	Upload(pixels AcceleratedFragmentPixels)
+	Download(pixels AcceleratedFragmentPixels)
+	Modify(selection AcceleratedFragmentLocation, call AcceleratedCall)
 }
 
 type AcceleratedCall interface{}
 
-// AcceleratedFragment differs from Selection that it clamps to images boundaries.
-type AcceleratedFragment struct {
+// AcceleratedFragmentLocation differs from Selection that it clamps to images boundaries.
+type AcceleratedFragmentLocation struct {
 	X, Y, Width, Height int
 }
 
-type PixelSlice struct {
+type AcceleratedFragmentPixels struct {
+	Location AcceleratedFragmentLocation
 	// Pixels has pixel colors sorted by coordinates
 	// Pixels are sent for first line first, from left to right.
 	Pixels []Color
@@ -90,11 +91,11 @@ func (i *Image) WholeImageSelection() Selection {
 // TODO DEPRECATED
 func (i *Image) Upload() {
 	i.acceleratedImage.Upload(
-		AcceleratedFragment{
-			Width:  i.width,
-			Height: i.height,
-		},
-		PixelSlice{
+		AcceleratedFragmentPixels{
+			Location: AcceleratedFragmentLocation{
+				Width:  i.width,
+				Height: i.height,
+			},
 			Pixels: i.pixels,
 		},
 	)
@@ -212,16 +213,17 @@ func (s Selection) SetColor(localX, localY int, color Color) {
 }
 
 func (s Selection) Modify(call AcceleratedCall) {
-	selection := AcceleratedFragment{
+	location := AcceleratedFragmentLocation{
 		X:      s.x,
 		Y:      s.y,
 		Width:  s.width,
 		Height: s.height,
 	}
 	img := s.image
-	pixels := PixelSlice{
-		Pixels: img.pixels,
+	pixels := AcceleratedFragmentPixels{
+		Location: location,
+		Pixels:   img.pixels,
 	}
-	s.image.acceleratedImage.Upload(selection, pixels)
-	s.image.acceleratedImage.Modify(selection, call)
+	s.image.acceleratedImage.Upload(pixels)
+	s.image.acceleratedImage.Modify(location, call)
 }

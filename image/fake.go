@@ -13,26 +13,27 @@ type FakeAcceleratedImage struct {
 }
 
 type ModifyCall struct {
-	Selection        AcceleratedFragment
+	Selection        AcceleratedFragmentLocation
 	Call             AcceleratedCall
 	PixelsDuringCall []Color
 }
 
-func (i *FakeAcceleratedImage) Upload(selection AcceleratedFragment, input PixelSlice) {
+func (i *FakeAcceleratedImage) Upload(input AcceleratedFragmentPixels) {
 	if i.pixels == nil {
 		i.pixels = make([]Color, i.width*i.height)
 	}
 	inputOffset := input.StartingPosition
-	for y := 0; y < selection.Height; y++ {
-		for x := 0; x < selection.Width; x++ {
-			index := y*i.width + x + selection.X + selection.Y*i.width
+	location := input.Location
+	for y := 0; y < location.Height; y++ {
+		for x := 0; x < location.Width; x++ {
+			index := y*i.width + x + location.X + location.Y*i.width
 			i.pixels[index] = input.Pixels[inputOffset]
 			inputOffset += 1
 		}
-		inputOffset += input.Stride - selection.Width
+		inputOffset += input.Stride - location.Width
 	}
 }
-func (i *FakeAcceleratedImage) Download(selection AcceleratedFragment, pixels PixelSlice) {
+func (i *FakeAcceleratedImage) Download(pixels AcceleratedFragmentPixels) {
 	if i.width == 0 || i.height == 0 {
 		return
 	}
@@ -44,7 +45,7 @@ func (i *FakeAcceleratedImage) Download(selection AcceleratedFragment, pixels Pi
 	}
 }
 
-func (i *FakeAcceleratedImage) Modify(selection AcceleratedFragment, call AcceleratedCall) {
+func (i *FakeAcceleratedImage) Modify(selection AcceleratedFragmentLocation, call AcceleratedCall) {
 	pixelsCopy := make([]Color, len(i.pixels))
 	copy(pixelsCopy, i.pixels)
 	modifyCall := ModifyCall{

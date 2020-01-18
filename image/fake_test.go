@@ -44,16 +44,16 @@ func TestNewFakeAcceleratedImage(t *testing.T) {
 //	//white := image.RGBA(255, 255, 255, 255)
 //	tests := map[string]struct {
 //		width, height int
-//		selection     image.AcceleratedFragment
-//		output        image.PixelSlice
+//		selection     image.AcceleratedFragmentLocation
+//		output        image.AcceleratedFragmentPixels
 //		expected      []image.Color
 //	}{
 //		"image 1x1, selection 0,0 with size 1x1": {
-//			selection: image.AcceleratedFragment{
+//			selection: image.AcceleratedFragmentLocation{
 //				Width:  1,
 //				Height: 1,
 //			},
-//			output: image.PixelSlice{
+//			output: image.AcceleratedFragmentPixels{
 //				Pixels:           make([]image.Color, 1),
 //				StartingPosition: 0,
 //				Stride:           0,
@@ -62,7 +62,7 @@ func TestNewFakeAcceleratedImage(t *testing.T) {
 //		},
 //		//"image 1x1; selection 0,0 with size 1x1": {
 //		//	width: 1, height: 1,
-//		//	selection:    image.AcceleratedFragment{Width: 1, Height: 1},
+//		//	selection:    image.AcceleratedFragmentLocation{Width: 1, Height: 1},
 //		//	outputPixels: []image.Color{white},
 //		//	expected:     []image.Color{white},
 //		//},
@@ -83,114 +83,113 @@ func TestFakeAcceleratedImage_Upload(t *testing.T) {
 	red := image.RGBA(255, 0, 0, 255)
 	tests := map[string]struct {
 		width, height int
-		fragment      image.AcceleratedFragment
-		input         image.PixelSlice
+		input         image.AcceleratedFragmentPixels
 		expected      []image.Color
 	}{
 		"image 1x1; fragment 0,0 with size 1x1, white": {
 			width: 1, height: 1,
-			fragment: image.AcceleratedFragment{Width: 1, Height: 1},
-			input: image.PixelSlice{
-				Pixels: []image.Color{white},
+			input: image.AcceleratedFragmentPixels{
+				Location: image.AcceleratedFragmentLocation{Width: 1, Height: 1},
+				Pixels:   []image.Color{white},
 			},
 			expected: []image.Color{white},
 		},
 		"image 1x1; fragment 0,0 with size 1x1, red": {
 			width: 1, height: 1,
-			fragment: image.AcceleratedFragment{Width: 1, Height: 1},
-			input: image.PixelSlice{
-				Pixels: []image.Color{red},
+			input: image.AcceleratedFragmentPixels{
+				Location: image.AcceleratedFragmentLocation{Width: 1, Height: 1},
+				Pixels:   []image.Color{red},
 			},
 			expected: []image.Color{red},
 		},
 		"image 1x1; fragment 0,0 with size 0x0": {
 			width: 1, height: 1,
-			input: image.PixelSlice{
+			input: image.AcceleratedFragmentPixels{
 				Pixels: []image.Color{red},
 			},
 			expected: []image.Color{transparent},
 		},
 		"image 0x0; fragment 0,0 with size 0x0": {
-			input: image.PixelSlice{
+			input: image.AcceleratedFragmentPixels{
 				Pixels: []image.Color{},
 			},
 			expected: []image.Color{},
 		},
 		"image 1x0; fragment 0,0 with size 0x0": {
 			width: 1,
-			input: image.PixelSlice{
+			input: image.AcceleratedFragmentPixels{
 				Pixels: []image.Color{},
 			},
 			expected: []image.Color{},
 		},
 		"image 0x1; fragment 0,0 with size 0x0": {
 			height: 1,
-			input: image.PixelSlice{
+			input: image.AcceleratedFragmentPixels{
 				Pixels: []image.Color{},
 			},
 			expected: []image.Color{},
 		},
 		"image 2x1; fragment 0,0 with size 1x1": {
 			width: 2, height: 1,
-			fragment: image.AcceleratedFragment{Width: 1, Height: 1},
-			input: image.PixelSlice{
-				Pixels: []image.Color{red, white},
+			input: image.AcceleratedFragmentPixels{
+				Location: image.AcceleratedFragmentLocation{Width: 1, Height: 1},
+				Pixels:   []image.Color{red, white},
 			},
 			expected: []image.Color{red, transparent},
 		},
 		"image 2x1; fragment 0,0 with size 2x1": {
 			width: 2, height: 1,
-			fragment: image.AcceleratedFragment{Width: 2, Height: 1},
-			input: image.PixelSlice{
-				Pixels: []image.Color{red, white},
+			input: image.AcceleratedFragmentPixels{
+				Location: image.AcceleratedFragmentLocation{Width: 2, Height: 1},
+				Pixels:   []image.Color{red, white},
 			},
 			expected: []image.Color{red, white},
 		},
 		"image 1x2; fragment 0,0 with size 1x1": {
 			width: 1, height: 2,
-			fragment: image.AcceleratedFragment{Width: 1, Height: 1},
-			input: image.PixelSlice{
-				Pixels: []image.Color{red, white},
+			input: image.AcceleratedFragmentPixels{
+				Location: image.AcceleratedFragmentLocation{Width: 1, Height: 1},
+				Pixels:   []image.Color{red, white},
 			},
 			expected: []image.Color{red, transparent},
 		},
 		"image 1x2; fragment 0,0 with size 1x2": {
 			width: 1, height: 2,
-			fragment: image.AcceleratedFragment{Width: 1, Height: 2},
-			input: image.PixelSlice{
-				Pixels: []image.Color{red, white},
-				Stride: 1,
+			input: image.AcceleratedFragmentPixels{
+				Location: image.AcceleratedFragmentLocation{Width: 1, Height: 2},
+				Pixels:   []image.Color{red, white},
+				Stride:   1,
 			},
 			expected: []image.Color{red, white},
 		},
 		"image 2x1; fragment 1,0 with size 1x1": {
 			width: 2, height: 1,
-			fragment: image.AcceleratedFragment{X: 1, Width: 1, Height: 1},
-			input: image.PixelSlice{
-				Pixels: []image.Color{white},
+			input: image.AcceleratedFragmentPixels{
+				Location: image.AcceleratedFragmentLocation{X: 1, Width: 1, Height: 1},
+				Pixels:   []image.Color{white},
 			},
 			expected: []image.Color{transparent, white},
 		},
 		"image 1x2; fragment 0,1 with size 1x1": {
 			width: 1, height: 2,
-			fragment: image.AcceleratedFragment{Y: 1, Width: 1, Height: 1},
-			input: image.PixelSlice{
-				Pixels: []image.Color{white},
+			input: image.AcceleratedFragmentPixels{
+				Location: image.AcceleratedFragmentLocation{Y: 1, Width: 1, Height: 1},
+				Pixels:   []image.Color{white},
 			},
 			expected: []image.Color{transparent, white},
 		},
 		"image 2x2; fragment 0,1 with size 1x1": {
 			width: 2, height: 2,
-			fragment: image.AcceleratedFragment{Y: 1, Width: 1, Height: 1},
-			input: image.PixelSlice{
-				Pixels: []image.Color{white},
+			input: image.AcceleratedFragmentPixels{
+				Location: image.AcceleratedFragmentLocation{Y: 1, Width: 1, Height: 1},
+				Pixels:   []image.Color{white},
 			},
 			expected: []image.Color{transparent, transparent, white, transparent},
 		},
 		"image 1x1; fragment 0,0 with size 1x1, starting position 1": {
 			width: 1, height: 1,
-			fragment: image.AcceleratedFragment{Width: 1, Height: 1},
-			input: image.PixelSlice{
+			input: image.AcceleratedFragmentPixels{
+				Location:         image.AcceleratedFragmentLocation{Width: 1, Height: 1},
 				StartingPosition: 1,
 				Pixels:           []image.Color{white, red},
 			},
@@ -198,10 +197,10 @@ func TestFakeAcceleratedImage_Upload(t *testing.T) {
 		},
 		"image 1x2; fragment 0,0 with size 1x2, stride 2": {
 			width: 1, height: 2,
-			fragment: image.AcceleratedFragment{Width: 1, Height: 2},
-			input: image.PixelSlice{
-				Pixels: []image.Color{white, white, red, white},
-				Stride: 2,
+			input: image.AcceleratedFragmentPixels{
+				Location: image.AcceleratedFragmentLocation{Width: 1, Height: 2},
+				Pixels:   []image.Color{white, white, red, white},
+				Stride:   2,
 			},
 			expected: []image.Color{white, red},
 		},
@@ -210,13 +209,13 @@ func TestFakeAcceleratedImage_Upload(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			img := image.NewFakeAcceleratedImage(test.width, test.height)
 			// when
-			img.Upload(test.fragment, test.input)
+			img.Upload(test.input)
 			// then
-			whole := image.AcceleratedFragment{Width: test.width, Height: test.height}
-			output := image.PixelSlice{
-				Pixels: make([]image.Color, len(test.expected)),
+			output := image.AcceleratedFragmentPixels{
+				Location: image.AcceleratedFragmentLocation{Width: test.width, Height: test.height},
+				Pixels:   make([]image.Color, len(test.expected)),
 			}
-			img.Download(whole, output)
+			img.Download(output)
 			assert.Equal(t, test.expected, output.Pixels)
 		})
 	}
@@ -227,19 +226,20 @@ func TestFakeAcceleratedImage_Upload2(t *testing.T) {
 	white := image.RGBA(255, 255, 255, 255)
 
 	t.Run("should copy pixels", func(t *testing.T) {
-		input := image.PixelSlice{
-			Pixels: []image.Color{transparent},
+		input := image.AcceleratedFragmentPixels{
+			Location: image.AcceleratedFragmentLocation{Width: 1, Height: 1},
+			Pixels:   []image.Color{transparent},
 		}
 		img := image.NewFakeAcceleratedImage(1, 1)
-		fragment := image.AcceleratedFragment{Width: 1, Height: 1}
-		img.Upload(fragment, input)
+		img.Upload(input)
 		// when
 		input.Pixels[0] = white
 		// then
-		output := image.PixelSlice{
-			Pixels: []image.Color{transparent},
+		output := image.AcceleratedFragmentPixels{
+			Location: image.AcceleratedFragmentLocation{Width: 1, Height: 1},
+			Pixels:   []image.Color{transparent},
 		}
-		img.Download(fragment, output)
+		img.Download(output)
 		assert.Equal(t, []image.Color{transparent}, output.Pixels)
 	})
 }

@@ -199,7 +199,7 @@ type texture struct {
 	bindWindowToThread func()
 }
 
-func (t *texture) Modify(selection image.AcceleratedFragment, call image.AcceleratedCall) {
+func (t *texture) Modify(selection image.AcceleratedFragmentLocation, call image.AcceleratedCall) {
 	panic("implement me")
 }
 
@@ -207,32 +207,32 @@ func (t *texture) TextureID() uint32 {
 	return t.id
 }
 
-func (t *texture) Upload(selection image.AcceleratedFragment, pixels image.PixelSlice) {
+func (t *texture) Upload(input image.AcceleratedFragmentPixels) {
 	// TODO EXPERIMENTAL IMPLEMENTATION JUST TO PROVE THAT MY ABSTRACTION CAN BE IMPLEMENTED!
 	t.mainThreadLoop.Execute(func() {
 		t.bindWindowToThread()
 		gl.BindTexture(gl.TEXTURE_2D, t.id)
-		gl.PixelStorei(gl.UNPACK_ROW_LENGTH, int32(pixels.Stride))
+		gl.PixelStorei(gl.UNPACK_ROW_LENGTH, int32(input.Stride))
 		gl.TexSubImage2D(
 			gl.TEXTURE_2D,
 			0,
-			int32(selection.X),
-			int32(selection.Y),
-			int32(selection.Width),
-			int32(selection.Height),
+			int32(input.Location.X),
+			int32(input.Location.Y),
+			int32(input.Location.Width),
+			int32(input.Location.Height),
 			gl.RGBA,
 			gl.UNSIGNED_BYTE,
 			unsafe.Pointer(
 				reflect.
-					ValueOf(pixels.Pixels).
-					Index(pixels.StartingPosition).
+					ValueOf(input.Pixels).
+					Index(input.StartingPosition).
 					UnsafeAddr(),
 			),
 		)
 	})
 }
 
-func (t *texture) Download(selection image.AcceleratedFragment, pixels image.PixelSlice) {
+func (t *texture) Download(output image.AcceleratedFragmentPixels) {
 	//t.mainThreadLoop.Execute(func() {
 	//	t.bindWindowToThread()
 	//	gl.BindTexture(gl.TEXTURE_2D, t.id)

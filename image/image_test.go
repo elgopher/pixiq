@@ -522,7 +522,7 @@ func TestSelection_Modify(t *testing.T) {
 					img       = image.New(1, 1, accImage)
 					call      = struct{}{}
 					selection = img.Selection(test.x, test.y).WithSize(test.width, test.height)
-					expected  = image.AcceleratedFragment{
+					expected  = image.AcceleratedFragmentLocation{
 						X:      test.x,
 						Y:      test.y,
 						Width:  test.width,
@@ -540,7 +540,7 @@ func TestSelection_Modify(t *testing.T) {
 			})
 		}
 	})
-	t.Run("should upload AcceleratedFragment before running Modify", func(t *testing.T) {
+	t.Run("should upload AcceleratedFragmentLocation before running Modify", func(t *testing.T) {
 		white := image.RGB(255, 255, 255)
 		tests := map[string]struct {
 			imageWidth, imageHeight         int

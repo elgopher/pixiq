@@ -194,9 +194,9 @@ func clone(original *image.Image) *image.Image {
 
 type acceleratedImageStub struct{}
 
-func (a acceleratedImageStub) Upload(selection image.AcceleratedFragment, pixels image.PixelSlice) {
+func (a acceleratedImageStub) Upload(input image.AcceleratedFragmentPixels) {
 }
-func (a acceleratedImageStub) Download(selection image.AcceleratedFragment, pixels image.PixelSlice) {
+func (a acceleratedImageStub) Download(output image.AcceleratedFragmentPixels) {
 }
-func (a acceleratedImageStub) Modify(selection image.AcceleratedFragment, call image.AcceleratedCall) {
+func (a acceleratedImageStub) Modify(location image.AcceleratedFragmentLocation, call image.AcceleratedCall) {
 }
