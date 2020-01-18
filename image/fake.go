@@ -33,12 +33,16 @@ func (i *FakeAcceleratedImage) Upload(input AcceleratedFragmentPixels) {
 		inputOffset += input.Stride - location.Width
 	}
 }
-func (i *FakeAcceleratedImage) Download(pixels AcceleratedFragmentPixels) {
-	for y := 0; y < i.height; y++ {
-		for x := 0; x < i.width; x++ {
-			idx := y*i.width + x
-			pixels.Pixels[idx] = i.pixels[idx]
+func (i *FakeAcceleratedImage) Download(output AcceleratedFragmentPixels) {
+	location := output.Location
+	outputOffset := output.StartingPosition
+	for y := 0; y < location.Height; y++ {
+		for x := 0; x < location.Width; x++ {
+			index := y*i.width + x + location.X + location.Y*i.width
+			output.Pixels[outputOffset] = i.pixels[index]
+			outputOffset += 1
 		}
+		outputOffset += output.Stride - location.Width
 	}
 }
 
