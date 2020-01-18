@@ -2,21 +2,23 @@ package image
 
 // AcceleratedImage is an image processed externally (outside the CPU).
 type AcceleratedImage interface {
-	Upload(selection AcceleratedSelection, pixels PixelSlice)
-	Download(selection AcceleratedSelection, pixels PixelSlice)
-	Modify(selection AcceleratedSelection, call AcceleratedCall)
+	Upload(selection AcceleratedFragment, pixels PixelSlice)
+	Download(selection AcceleratedFragment, pixels PixelSlice)
+	Modify(selection AcceleratedFragment, call AcceleratedCall)
 }
 
 type AcceleratedCall interface{}
 
-type AcceleratedSelection struct {
+// AcceleratedFragment differs from Selection that it clamps to images boundaries.
+type AcceleratedFragment struct {
 	X, Y, Width, Height int
 }
 
 type PixelSlice struct {
 	// Pixels has pixel colors sorted by coordinates
 	// Pixels are sent for first line first, from left to right.
-	Pixels           []Color
+	Pixels []Color
+	// StartPosition is an index of the first color in Pixels
 	StartingPosition int
 	Stride           int
 }
@@ -88,7 +90,7 @@ func (i *Image) WholeImageSelection() Selection {
 // TODO DEPRECATED
 func (i *Image) Upload() {
 	i.acceleratedImage.Upload(
-		AcceleratedSelection{
+		AcceleratedFragment{
 			Width:  i.width,
 			Height: i.height,
 		},
@@ -210,7 +212,7 @@ func (s Selection) SetColor(localX, localY int, color Color) {
 }
 
 func (s Selection) Modify(call AcceleratedCall) {
-	selection := AcceleratedSelection{
+	selection := AcceleratedFragment{
 		X:      s.x,
 		Y:      s.y,
 		Width:  s.width,

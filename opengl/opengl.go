@@ -199,7 +199,7 @@ type texture struct {
 	bindWindowToThread func()
 }
 
-func (t *texture) Modify(selection image.AcceleratedSelection, call image.AcceleratedCall) {
+func (t *texture) Modify(selection image.AcceleratedFragment, call image.AcceleratedCall) {
 	panic("implement me")
 }
 
@@ -207,9 +207,8 @@ func (t *texture) TextureID() uint32 {
 	return t.id
 }
 
-func (t *texture) Upload(selection image.AcceleratedSelection, pixels image.PixelSlice) {
+func (t *texture) Upload(selection image.AcceleratedFragment, pixels image.PixelSlice) {
 	// TODO EXPERIMENTAL IMPLEMENTATION JUST TO PROVE THAT MY ABSTRACTION CAN BE IMPLEMENTED!
-	// TODO Coordinates should be clamped before !
 	t.mainThreadLoop.Execute(func() {
 		t.bindWindowToThread()
 		gl.BindTexture(gl.TEXTURE_2D, t.id)
@@ -233,7 +232,7 @@ func (t *texture) Upload(selection image.AcceleratedSelection, pixels image.Pixe
 	})
 }
 
-func (t *texture) Download(selection image.AcceleratedSelection, pixels image.PixelSlice) {
+func (t *texture) Download(selection image.AcceleratedFragment, pixels image.PixelSlice) {
 	//t.mainThreadLoop.Execute(func() {
 	//	t.bindWindowToThread()
 	//	gl.BindTexture(gl.TEXTURE_2D, t.id)
