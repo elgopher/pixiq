@@ -2,14 +2,18 @@ package image
 
 // Width and height are constrained to zero if negative.
 func NewFakeAcceleratedImage(width, height int) *FakeAcceleratedImage {
-	return &FakeAcceleratedImage{width: width, height: height}
+	return &FakeAcceleratedImage{
+		width:  width,
+		height: height,
+		pixels: make([]Color, width*height),
+	}
 }
 
 type FakeAcceleratedImage struct {
 	pixels      []Color
 	width       int
 	height      int
-	ModifyCalls []ModifyCall
+	modifyCalls []ModifyCall
 }
 
 type ModifyCall struct {
@@ -19,9 +23,6 @@ type ModifyCall struct {
 }
 
 func (i *FakeAcceleratedImage) Upload(input AcceleratedFragmentPixels) {
-	if i.pixels == nil {
-		i.pixels = make([]Color, i.width*i.height)
-	}
 	inputOffset := input.StartingPosition
 	location := input.Location
 	for y := 0; y < location.Height; y++ {
@@ -54,5 +55,9 @@ func (i *FakeAcceleratedImage) Modify(selection AcceleratedFragmentLocation, cal
 		Call:             call,
 		PixelsDuringCall: pixelsCopy,
 	}
-	i.ModifyCalls = append(i.ModifyCalls, modifyCall)
+	i.modifyCalls = append(i.modifyCalls, modifyCall)
+}
+
+func (i *FakeAcceleratedImage) ModifyCalls() []ModifyCall {
+	return i.modifyCalls
 }

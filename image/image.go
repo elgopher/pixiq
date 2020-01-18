@@ -228,9 +228,11 @@ func (s Selection) Modify(call AcceleratedCall) {
 		Height: s.height,
 	}
 	img := s.image
+	start := s.x + s.y*img.width
 	pixels := AcceleratedFragmentPixels{
-		Location: location,
-		Pixels:   img.pixels,
+		Location:         location,
+		Pixels:           img.pixels,
+		StartingPosition: start,
 	}
 	s.image.acceleratedImage.Upload(pixels)
 	s.image.acceleratedImage.Modify(location, call)

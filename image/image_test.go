@@ -532,15 +532,15 @@ func TestSelection_Modify(t *testing.T) {
 				// when
 				selection.Modify(call)
 				// then
-				require.Len(t, accImage.ModifyCalls, 1)
-				modifyCall := accImage.ModifyCalls[0]
+				require.Len(t, accImage.ModifyCalls(), 1)
+				modifyCall := accImage.ModifyCalls()[0]
 				assert.Equal(t, expected, modifyCall.Selection)
 				assert.Equal(t, call, modifyCall.Call)
 				assert.Equal(t, []image.Color{transparent}, modifyCall.PixelsDuringCall)
 			})
 		}
 	})
-	t.Run("should upload AcceleratedFragmentLocation before running Modify", func(t *testing.T) {
+	t.Run("should upload AcceleratedFragment before running Modify", func(t *testing.T) {
 		white := image.RGB(255, 255, 255)
 		tests := map[string]struct {
 			imageWidth, imageHeight         int
@@ -563,6 +563,15 @@ func TestSelection_Modify(t *testing.T) {
 				selectionHeight: 1,
 				expectedPixels:  []image.Color{transparent, white},
 			},
+			"image 2x2, selection (1,1) with size 1x1": {
+				imageWidth:      2,
+				imageHeight:     2,
+				selectionX:      1,
+				selectionY:      1,
+				selectionWidth:  1,
+				selectionHeight: 1,
+				expectedPixels:  []image.Color{transparent, transparent, transparent, white},
+			},
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
@@ -580,8 +589,8 @@ func TestSelection_Modify(t *testing.T) {
 				// when
 				selection.Modify(call)
 				// then
-				require.Len(t, accImage.ModifyCalls, 1)
-				modifyCall := accImage.ModifyCalls[0]
+				require.Len(t, accImage.ModifyCalls(), 1)
+				modifyCall := accImage.ModifyCalls()[0]
 				assert.Equal(t, test.expectedPixels, modifyCall.PixelsDuringCall)
 			})
 		}
