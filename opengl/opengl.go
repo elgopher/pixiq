@@ -7,7 +7,9 @@ package opengl
 
 import (
 	"log"
+	"reflect"
 	"time"
+	"unsafe"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
@@ -197,40 +199,52 @@ type texture struct {
 	bindWindowToThread func()
 }
 
+func (t *texture) Modify(selection image.AcceleratedSelection, call image.AcceleratedCall) {
+	panic("implement me")
+}
+
 func (t *texture) TextureID() uint32 {
 	return t.id
 }
 
-func (t *texture) Upload(pixels []image.Color) {
+func (t *texture) Upload(selection image.AcceleratedSelection, pixels image.PixelSlice) {
+	// TODO EXPERIMENTAL IMPLEMENTATION JUST TO PROVE THAT MY ABSTRACTION CAN BE IMPLEMENTED!
+	// TODO Coordinates should be clamped before !
 	t.mainThreadLoop.Execute(func() {
 		t.bindWindowToThread()
 		gl.BindTexture(gl.TEXTURE_2D, t.id)
+		gl.PixelStorei(gl.UNPACK_ROW_LENGTH, int32(pixels.Stride))
 		gl.TexSubImage2D(
 			gl.TEXTURE_2D,
 			0,
-			int32(0),
-			int32(0),
-			int32(t.width),
-			int32(t.height),
+			int32(selection.X),
+			int32(selection.Y),
+			int32(selection.Width),
+			int32(selection.Height),
 			gl.RGBA,
 			gl.UNSIGNED_BYTE,
-			gl.Ptr(pixels),
+			unsafe.Pointer(
+				reflect.
+					ValueOf(pixels.Pixels).
+					Index(pixels.StartingPosition).
+					UnsafeAddr(),
+			),
 		)
 	})
 }
 
-func (t *texture) Download(output []image.Color) {
-	t.mainThreadLoop.Execute(func() {
-		t.bindWindowToThread()
-		gl.BindTexture(gl.TEXTURE_2D, t.id)
-		gl.GetTexImage(
-			gl.TEXTURE_2D,
-			0,
-			gl.RGBA,
-			gl.UNSIGNED_BYTE,
-			gl.Ptr(output),
-		)
-	})
+func (t *texture) Download(selection image.AcceleratedSelection, pixels image.PixelSlice) {
+	//t.mainThreadLoop.Execute(func() {
+	//	t.bindWindowToThread()
+	//	gl.BindTexture(gl.TEXTURE_2D, t.id)
+	//	gl.GetTexImage(
+	//		gl.TEXTURE_2D,
+	//		0,
+	//		gl.RGBA,
+	//		gl.UNSIGNED_BYTE,
+	//		gl.Ptr(output),
+	//	)
+	//})
 }
 
 // OpenWindow creates and shows Window.

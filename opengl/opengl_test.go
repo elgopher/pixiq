@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/opengl"
 )
 
@@ -88,74 +87,74 @@ func TestOpenGL_NewAcceleratedImage(t *testing.T) {
 	})
 }
 
-func TestTexture_Upload(t *testing.T) {
-	color1 := image.RGBA(10, 20, 30, 40)
-	color2 := image.RGBA(50, 60, 70, 80)
-	color3 := image.RGBA(90, 100, 110, 120)
-	color4 := image.RGBA(130, 140, 150, 160)
-
-	t.Run("should upload pixels", func(t *testing.T) {
-		tests := map[string]struct {
-			width, height int
-			inputColors   []image.Color
-		}{
-			"1x1": {
-				width:       1,
-				height:      1,
-				inputColors: []image.Color{color1},
-			},
-			"2x1": {
-				width:       2,
-				height:      1,
-				inputColors: []image.Color{color1, color2},
-			},
-			"1x2": {
-				width:       1,
-				height:      2,
-				inputColors: []image.Color{color1, color2},
-			},
-			"2x2": {
-				width:       2,
-				height:      2,
-				inputColors: []image.Color{color1, color2, color3, color4},
-			},
-		}
-		for name, test := range tests {
-			t.Run(name, func(t *testing.T) {
-				openGL, err := opengl.New(mainThreadLoop)
-				require.NoError(t, err)
-				defer openGL.Destroy()
-				img := openGL.NewAcceleratedImage(test.width, test.height)
-				// when
-				img.Upload(test.inputColors)
-				// then
-				output := make([]image.Color, len(test.inputColors))
-				img.Download(output)
-				assert.Equal(t, test.inputColors, output)
-			})
-		}
-	})
-	t.Run("2 OpenGL contexts", func(t *testing.T) {
-		gl1, err := opengl.New(mainThreadLoop)
-		require.NoError(t, err)
-		defer gl1.Destroy()
-		gl2, err := opengl.New(mainThreadLoop)
-		require.NoError(t, err)
-		defer gl2.Destroy()
-		img1 := gl1.NewAcceleratedImage(1, 1)
-		img2 := gl2.NewAcceleratedImage(1, 1)
-		// when
-		img1.Upload([]image.Color{color1})
-		img2.Upload([]image.Color{color2})
-		// then
-		output := make([]image.Color, 1)
-		img1.Download(output)
-		assert.Equal(t, []image.Color{color1}, output)
-		// and
-		img2.Download(output)
-		assert.Equal(t, []image.Color{color2}, output)
-	})
-}
+//func TestTexture_Upload(t *testing.T) {
+//	color1 := image.RGBA(10, 20, 30, 40)
+//	color2 := image.RGBA(50, 60, 70, 80)
+//	color3 := image.RGBA(90, 100, 110, 120)
+//	color4 := image.RGBA(130, 140, 150, 160)
+//
+//	t.Run("should upload pixels", func(t *testing.T) {
+//		tests := map[string]struct {
+//			width, height int
+//			inputColors   []image.Color
+//		}{
+//			"1x1": {
+//				width:       1,
+//				height:      1,
+//				inputColors: []image.Color{color1},
+//			},
+//			"2x1": {
+//				width:       2,
+//				height:      1,
+//				inputColors: []image.Color{color1, color2},
+//			},
+//			"1x2": {
+//				width:       1,
+//				height:      2,
+//				inputColors: []image.Color{color1, color2},
+//			},
+//			"2x2": {
+//				width:       2,
+//				height:      2,
+//				inputColors: []image.Color{color1, color2, color3, color4},
+//			},
+//		}
+//		for name, test := range tests {
+//			t.Run(name, func(t *testing.T) {
+//				openGL, err := opengl.New(mainThreadLoop)
+//				require.NoError(t, err)
+//				defer openGL.Destroy()
+//				img := openGL.NewAcceleratedImage(test.width, test.height)
+//				// when
+//				img.Upload(test.inputColors)
+//				// then
+//				output := make([]image.Color, len(test.inputColors))
+//				img.Download(output)
+//				assert.Equal(t, test.inputColors, output)
+//			})
+//		}
+//	})
+//	t.Run("2 OpenGL contexts", func(t *testing.T) {
+//		gl1, err := opengl.New(mainThreadLoop)
+//		require.NoError(t, err)
+//		defer gl1.Destroy()
+//		gl2, err := opengl.New(mainThreadLoop)
+//		require.NoError(t, err)
+//		defer gl2.Destroy()
+//		img1 := gl1.NewAcceleratedImage(1, 1)
+//		img2 := gl2.NewAcceleratedImage(1, 1)
+//		// when
+//		img1.Upload([]image.Color{color1})
+//		img2.Upload([]image.Color{color2})
+//		// then
+//		output := make([]image.Color, 1)
+//		img1.Download(output)
+//		assert.Equal(t, []image.Color{color1}, output)
+//		// and
+//		img2.Download(output)
+//		assert.Equal(t, []image.Color{color2}, output)
+//	})
+//}
 
 func TestRunOrDie(t *testing.T) {
 	t.Run("should run provided callback", func(t *testing.T) {

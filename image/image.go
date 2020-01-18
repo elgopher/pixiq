@@ -2,11 +2,23 @@ package image
 
 // AcceleratedImage is an image processed externally (outside the CPU).
 type AcceleratedImage interface {
-	// Upload send pixels colors sorted by coordinates.
-	// First all pixels are sent for y=0, from left to right.
-	Upload(pixels []Color)
-	// Downloads pixels by filling output Color slice
-	Download(output []Color)
+	Upload(selection AcceleratedSelection, pixels PixelSlice)
+	Download(selection AcceleratedSelection, pixels PixelSlice)
+	Modify(selection AcceleratedSelection, call AcceleratedCall)
+}
+
+type AcceleratedCall interface{}
+
+type AcceleratedSelection struct {
+	X, Y, Width, Height int
+}
+
+type PixelSlice struct {
+	// Pixels has pixel colors sorted by coordinates
+	// Pixels are sent for first line first, from left to right.
+	Pixels           []Color
+	StartingPosition int
+	Stride           int
 }
 
 // New creates an Image with specified size given in pixels.
@@ -73,8 +85,17 @@ func (i *Image) WholeImageSelection() Selection {
 // Upload uploads all image pixels to associated AcceleratedImage.
 // This method should be called rarely. Image pixels are uploaded automatically
 // when needed.
+// TODO DEPRECATED
 func (i *Image) Upload() {
-	i.acceleratedImage.Upload(i.pixels)
+	i.acceleratedImage.Upload(
+		AcceleratedSelection{
+			Width:  i.width,
+			Height: i.height,
+		},
+		PixelSlice{
+			Pixels: i.pixels,
+		},
+	)
 }
 
 // Selection points to a specific area of the image. It has a starting position
@@ -186,4 +207,19 @@ func (s Selection) SetColor(localX, localY int, color Color) {
 		return
 	}
 	s.image.pixels[index] = color
+}
+
+func (s Selection) Modify(call AcceleratedCall) {
+	selection := AcceleratedSelection{
+		X:      s.x,
+		Y:      s.y,
+		Width:  s.width,
+		Height: s.height,
+	}
+	img := s.image
+	pixels := PixelSlice{
+		Pixels: img.pixels,
+	}
+	s.image.acceleratedImage.Upload(selection, pixels)
+	s.image.acceleratedImage.Modify(selection, call)
 }
