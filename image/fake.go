@@ -17,6 +17,12 @@ func (i *Fake) NewAcceleratedImage(width, height int) *FakeAcceleratedImage {
 		pixels: make([]Color, width*height),
 	}
 }
+
+// This method can be used in unit tests for CPU-based functionality
+func (i *Fake) NewImageWithFakeAcceleration(width, height int) *Image {
+	return New(width, height, i.NewAcceleratedImage(width, height))
+}
+
 func (i *Fake) FillWithColor(c Color) AcceleratedCall {
 	call := &FillWithColor{color: c}
 	i.calls[call] = call
