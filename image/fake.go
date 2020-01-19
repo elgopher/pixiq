@@ -71,7 +71,7 @@ func (i *FakeAcceleratedImage) Download(output AcceleratedFragmentPixels) {
 func (i *FakeAcceleratedImage) Modify(selection AcceleratedFragmentLocation, call AcceleratedCall) {
 	fakeCall, ok := i.calls[call]
 	if !ok {
-		panic("invalid call")
+		panic("invalid call") // TODO Return error instead
 	}
 	fakeCall.Run(selection, i)
 }
