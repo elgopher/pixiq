@@ -12,7 +12,7 @@ import (
 var transparent = image.RGBA(0, 0, 0, 0)
 
 func fakeAcceleratedImage() *image.FakeAcceleratedImage {
-	return image.NewFakeAcceleratedImage(0, 0)
+	return image.NewFake().NewAcceleratedImage(0, 0)
 }
 
 func TestNew(t *testing.T) {
@@ -497,9 +497,12 @@ func assertColors(t *testing.T, selection image.Selection, expectedColorLines []
 }
 
 func TestSelection_Modify(t *testing.T) {
-	t.Run("should run AcceleratedImage#Modify", func(t *testing.T) {
+	white := image.RGB(255, 255, 255)
+
+	t.Run("should run AcceleratedCall on AcceleratedFragment", func(t *testing.T) {
 		tests := map[string]struct {
 			x, y, width, height int
+			expectedColor       image.Color
 		}{
 			"0,0 with size 0x0": {},
 			"1,0 with size 0x0": {
@@ -518,28 +521,25 @@ func TestSelection_Modify(t *testing.T) {
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
 				var (
-					accImage  = image.NewFakeAcceleratedImage(1, 1)
+					images    = image.NewFake()
+					accImage  = images.NewAcceleratedImage(1, 1)
+					call      = images.FillWithColor(white)
 					img       = image.New(1, 1, accImage)
-					call      = struct{}{}
 					selection = img.Selection(test.x, test.y).WithSize(test.width, test.height)
-					expected  = image.AcceleratedFragmentLocation{
-						X:      test.x,
-						Y:      test.y,
-						Width:  test.width,
-						Height: test.height,
-					}
 				)
 				// when
 				selection.Modify(call)
 				// then
-				require.Len(t, accImage.ModifyCalls(), 1)
-				modifyCall := accImage.ModifyCalls()[0]
-				assert.Equal(t, expected, modifyCall.Selection)
-				assert.Equal(t, call, modifyCall.Call)
-				assert.Equal(t, []image.Color{transparent}, modifyCall.PixelsDuringCall)
+				output := image.AcceleratedFragmentPixels{
+					Location: image.AcceleratedFragmentLocation{Width: 1, Height: 1},
+					Pixels:   make([]image.Color, 1),
+				}
+				accImage.Download(output)
+				assert.Equal(t, test.expectedColor, output.Pixels[0])
 			})
 		}
 	})
+	// mozna po prostu funkcje przekazac ktora nic nie robi
 	t.Run("should upload AcceleratedFragment before running Modify", func(t *testing.T) {
 		white := image.RGB(255, 255, 255)
 		tests := map[string]struct {
@@ -576,7 +576,7 @@ func TestSelection_Modify(t *testing.T) {
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
 				var (
-					accImage = image.NewFakeAcceleratedImage(
+					accImage = image.NewFake().NewAcceleratedImage(
 						test.imageWidth,
 						test.imageHeight,
 					)
@@ -589,9 +589,6 @@ func TestSelection_Modify(t *testing.T) {
 				// when
 				selection.Modify(call)
 				// then
-				require.Len(t, accImage.ModifyCalls(), 1)
-				modifyCall := accImage.ModifyCalls()[0]
-				assert.Equal(t, test.expectedPixels, modifyCall.PixelsDuringCall)
 			})
 		}
 	})

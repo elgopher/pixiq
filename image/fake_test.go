@@ -32,7 +32,7 @@ func TestNewFakeAcceleratedImage(t *testing.T) {
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
-				img := image.NewFakeAcceleratedImage(test.width, test.height)
+				img := image.NewFake().NewAcceleratedImage(test.width, test.height)
 				assert.NotNil(t, img)
 			})
 		}
@@ -169,7 +169,7 @@ func TestFakeAcceleratedImage_Upload(t *testing.T) {
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
-				img := image.NewFakeAcceleratedImage(test.width, test.height)
+				img := image.NewFake().NewAcceleratedImage(test.width, test.height)
 				// when
 				img.Upload(test.input)
 				// then
@@ -191,7 +191,7 @@ func TestFakeAcceleratedImage_Upload(t *testing.T) {
 			Location: image.AcceleratedFragmentLocation{Width: 1, Height: 1},
 			Pixels:   []image.Color{transparent},
 		}
-		img := image.NewFakeAcceleratedImage(1, 1)
+		img := image.NewFake().NewAcceleratedImage(1, 1)
 		img.Upload(input)
 		// when
 		input.Pixels[0] = white
@@ -298,7 +298,7 @@ func TestFakeAcceleratedImage_Download(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			img := image.NewFakeAcceleratedImage(test.width, test.height)
+			img := image.NewFake().NewAcceleratedImage(test.width, test.height)
 			input := image.AcceleratedFragmentPixels{
 				Location: image.AcceleratedFragmentLocation{Width: test.width, Height: test.height},
 				Stride:   test.width,
@@ -311,5 +311,20 @@ func TestFakeAcceleratedImage_Download(t *testing.T) {
 			assert.Equal(t, test.expected, test.output.Pixels)
 		})
 	}
+}
 
+func TestFakeAcceleratedImage_Modify(t *testing.T) {
+	white := image.RGB(255, 255, 255)
+	fakeImages := image.NewFake()
+	img := fakeImages.NewAcceleratedImage(1, 1)
+	location := image.AcceleratedFragmentLocation{Width: 1, Height: 1}
+	// when
+	img.Modify(location, fakeImages.FillWithColor(white))
+	// then
+	output := image.AcceleratedFragmentPixels{
+		Location: image.AcceleratedFragmentLocation{Width: 1, Height: 1},
+		Pixels:   []image.Color{transparent},
+	}
+	img.Download(output)
+	assert.Equal(t, []image.Color{white}, output.Pixels)
 }

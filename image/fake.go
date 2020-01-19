@@ -1,25 +1,46 @@
 package image
 
+func NewFake() *Fake {
+	return &Fake{calls: map[interface{}]fakeCall{}}
+}
+
+type Fake struct {
+	calls map[interface{}]fakeCall
+}
+
 // Width and height are constrained to zero if negative.
-func NewFakeAcceleratedImage(width, height int) *FakeAcceleratedImage {
+func (i *Fake) NewAcceleratedImage(width, height int) *FakeAcceleratedImage {
 	return &FakeAcceleratedImage{
+		calls:  i.calls,
 		width:  width,
 		height: height,
 		pixels: make([]Color, width*height),
 	}
 }
-
-type FakeAcceleratedImage struct {
-	pixels      []Color
-	width       int
-	height      int
-	modifyCalls []ModifyCall
+func (i *Fake) FillWithColor(c Color) AcceleratedCall {
+	call := &FillWithColor{color: c}
+	i.calls[call] = call
+	return call
 }
 
-type ModifyCall struct {
-	Selection        AcceleratedFragmentLocation
-	Call             AcceleratedCall
-	PixelsDuringCall []Color
+type fakeCall interface {
+	Run(selection AcceleratedFragmentLocation, image *FakeAcceleratedImage)
+}
+
+type FillWithColor struct {
+	color Color
+}
+
+func (f *FillWithColor) Run(selection AcceleratedFragmentLocation, image *FakeAcceleratedImage) {
+	// TODO Implement rest
+	image.pixels[0] = f.color
+}
+
+type FakeAcceleratedImage struct {
+	calls  map[interface{}]fakeCall
+	pixels []Color
+	width  int
+	height int
 }
 
 func (i *FakeAcceleratedImage) Upload(input AcceleratedFragmentPixels) {
@@ -48,16 +69,9 @@ func (i *FakeAcceleratedImage) Download(output AcceleratedFragmentPixels) {
 }
 
 func (i *FakeAcceleratedImage) Modify(selection AcceleratedFragmentLocation, call AcceleratedCall) {
-	pixelsCopy := make([]Color, len(i.pixels))
-	copy(pixelsCopy, i.pixels)
-	modifyCall := ModifyCall{
-		Selection:        selection,
-		Call:             call,
-		PixelsDuringCall: pixelsCopy,
+	fakeCall, ok := i.calls[call]
+	if !ok {
+		panic("invalid call")
 	}
-	i.modifyCalls = append(i.modifyCalls, modifyCall)
-}
-
-func (i *FakeAcceleratedImage) ModifyCalls() []ModifyCall {
-	return i.modifyCalls
+	fakeCall.Run(selection, i)
 }
