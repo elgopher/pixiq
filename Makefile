@@ -1,6 +1,6 @@
 lint:
-	./scripts/gofmt-check.sh
 	golint -set_exit_status ./...
+	golangci-lint run -E gofmt
 
 test:
 	go test -race -v ./...
