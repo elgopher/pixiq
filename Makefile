@@ -1,6 +1,6 @@
 lint:
 	golint -set_exit_status ./...
-	golangci-lint run -E gofmt
+	golangci-lint run -E goimports,unconvert,misspell,maligned,gocyclo,gocritic,gochecknoinits
 
 test:
 	go test -race -v ./...
