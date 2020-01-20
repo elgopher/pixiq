@@ -72,7 +72,7 @@ func (i *FakeAcceleratedImage) Upload(input AcceleratedFragmentPixels) {
 		for x := 0; x < location.Width; x++ {
 			index := y*i.width + x + location.X + location.Y*i.width
 			i.pixels[index] = input.Pixels[inputOffset]
-			inputOffset += 1
+			inputOffset++
 		}
 		inputOffset += input.Stride - location.Width
 	}
@@ -84,7 +84,7 @@ func (i *FakeAcceleratedImage) Download(output AcceleratedFragmentPixels) {
 		for x := 0; x < location.Width; x++ {
 			index := y*i.width + x + location.X + location.Y*i.width
 			output.Pixels[outputOffset] = i.pixels[index]
-			outputOffset += 1
+			outputOffset++
 		}
 		outputOffset += output.Stride - location.Width
 	}

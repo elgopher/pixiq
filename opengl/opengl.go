@@ -332,15 +332,15 @@ type Program struct {
 }
 
 func (p *Program) Call() glslshader.ProgramCall {
-	return &OpenGLProgramCall{}
+	return &ProgramCall{}
 }
 
-type OpenGLProgramCall struct {
+type ProgramCall struct {
 }
 
-func (o *OpenGLProgramCall) SetTexture(uniformName string, selection image.Selection) {
+func (o *ProgramCall) SetTexture(uniformName string, selection image.Selection) {
 
 }
 
-func (o *OpenGLProgramCall) Release() {
+func (o *ProgramCall) Release() {
 }
