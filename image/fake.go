@@ -24,7 +24,13 @@ func (i *Fake) NewImageWithFakeAcceleration(width, height int) *Image {
 }
 
 func (i *Fake) FillWithColor(c Color) AcceleratedCall {
-	call := &FillWithColor{color: c}
+	call := &fillWithColor{color: c}
+	i.calls[call] = call
+	return call
+}
+
+func (i *Fake) NoOp() AcceleratedCall {
+	call := &noOp{}
 	i.calls[call] = call
 	return call
 }
@@ -33,13 +39,23 @@ type fakeCall interface {
 	Run(selection AcceleratedFragmentLocation, image *FakeAcceleratedImage)
 }
 
-type FillWithColor struct {
+type fillWithColor struct {
 	color Color
 }
 
-func (f *FillWithColor) Run(selection AcceleratedFragmentLocation, image *FakeAcceleratedImage) {
-	// TODO Implement rest
-	image.pixels[0] = f.color
+func (f *fillWithColor) Run(selection AcceleratedFragmentLocation, image *FakeAcceleratedImage) {
+	for x := selection.X; x < selection.X+selection.Width; x++ {
+		for y := selection.Y; y < selection.Y+selection.Height; y++ {
+			index := x + y*image.width
+			image.pixels[index] = f.color
+		}
+	}
+}
+
+type noOp struct {
+}
+
+func (n noOp) Run(selection AcceleratedFragmentLocation, image *FakeAcceleratedImage) {
 }
 
 type FakeAcceleratedImage struct {
@@ -77,7 +93,7 @@ func (i *FakeAcceleratedImage) Download(output AcceleratedFragmentPixels) {
 func (i *FakeAcceleratedImage) Modify(selection AcceleratedFragmentLocation, call AcceleratedCall) {
 	fakeCall, ok := i.calls[call]
 	if !ok {
-		panic("invalid call") // TODO Return error instead
+		panic("invalid call")
 	}
 	fakeCall.Run(selection, i)
 }

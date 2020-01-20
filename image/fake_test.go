@@ -8,6 +8,11 @@ import (
 	"github.com/jacekolszak/pixiq/image"
 )
 
+var (
+	white = image.RGB(255, 255, 255)
+	red   = image.RGBA(255, 0, 0, 255)
+)
+
 func TestNewFakeAcceleratedImage(t *testing.T) {
 	t.Run("should create FakeAcceleratedImage for testing", func(t *testing.T) {
 		tests := map[string]struct {
@@ -41,8 +46,6 @@ func TestNewFakeAcceleratedImage(t *testing.T) {
 
 func TestFakeAcceleratedImage_Upload(t *testing.T) {
 	t.Run("should upload fragment", func(t *testing.T) {
-		white := image.RGBA(255, 255, 255, 255)
-		red := image.RGBA(255, 0, 0, 255)
 		tests := map[string]struct {
 			width, height int
 			input         image.AcceleratedFragmentPixels
@@ -185,8 +188,6 @@ func TestFakeAcceleratedImage_Upload(t *testing.T) {
 	})
 
 	t.Run("should copy pixels", func(t *testing.T) {
-		white := image.RGBA(255, 255, 255, 255)
-
 		input := image.AcceleratedFragmentPixels{
 			Location: image.AcceleratedFragmentLocation{Width: 1, Height: 1},
 			Pixels:   []image.Color{transparent},
@@ -206,8 +207,6 @@ func TestFakeAcceleratedImage_Upload(t *testing.T) {
 }
 
 func TestFakeAcceleratedImage_Download(t *testing.T) {
-	white := image.RGBA(255, 255, 255, 255)
-	red := image.RGBA(255, 0, 0, 255)
 	tests := map[string]struct {
 		width, height int
 		input         []image.Color
@@ -314,17 +313,112 @@ func TestFakeAcceleratedImage_Download(t *testing.T) {
 }
 
 func TestFakeAcceleratedImage_Modify(t *testing.T) {
-	white := image.RGB(255, 255, 255)
-	fakeImages := image.NewFake()
-	img := fakeImages.NewAcceleratedImage(1, 1)
-	location := image.AcceleratedFragmentLocation{Width: 1, Height: 1}
-	// when
-	img.Modify(location, fakeImages.FillWithColor(white))
-	// then
-	output := image.AcceleratedFragmentPixels{
-		Location: image.AcceleratedFragmentLocation{Width: 1, Height: 1},
-		Pixels:   []image.Color{transparent},
-	}
-	img.Download(output)
-	assert.Equal(t, []image.Color{white}, output.Pixels)
+	t.Run("should panic when call has not been created with Fake", func(t *testing.T) {
+		fakeImages := image.NewFake()
+		img := fakeImages.NewAcceleratedImage(1, 1)
+		location := image.AcceleratedFragmentLocation{Width: 1, Height: 1}
+		assert.Panics(t, func() {
+			img.Modify(location, struct{}{})
+		})
+	})
+	t.Run("FillWithColor", func(t *testing.T) {
+		tests := map[string]struct {
+			width, height int
+			location      image.AcceleratedFragmentLocation
+			expected      []image.Color
+		}{
+			"1x1": {
+				width:    1,
+				height:   1,
+				location: image.AcceleratedFragmentLocation{Width: 1, Height: 1},
+				expected: []image.Color{white},
+			},
+			"2x1": {
+				width:    2,
+				height:   1,
+				location: image.AcceleratedFragmentLocation{Width: 1, Height: 1},
+				expected: []image.Color{white, transparent},
+			},
+			"2x1, location X:1": {
+				width:    2,
+				height:   1,
+				location: image.AcceleratedFragmentLocation{X: 1, Width: 1, Height: 1},
+				expected: []image.Color{transparent, white},
+			},
+			"1x2": {
+				width:    1,
+				height:   2,
+				location: image.AcceleratedFragmentLocation{Width: 1, Height: 1},
+				expected: []image.Color{white, transparent},
+			},
+			"1x2, location Y: 1": {
+				width:    1,
+				height:   2,
+				location: image.AcceleratedFragmentLocation{Y: 1, Width: 1, Height: 1},
+				expected: []image.Color{transparent, white},
+			},
+			"2x2, location Y: 1": {
+				width:    2,
+				height:   2,
+				location: image.AcceleratedFragmentLocation{Y: 1, Width: 1, Height: 1},
+				expected: []image.Color{transparent, transparent, white, transparent},
+			},
+			"2x1, location Width: 2": {
+				width:    2,
+				height:   1,
+				location: image.AcceleratedFragmentLocation{Width: 2, Height: 1},
+				expected: []image.Color{white, white},
+			},
+			"1x2, location Height: 2": {
+				width:    1,
+				height:   2,
+				location: image.AcceleratedFragmentLocation{Width: 1, Height: 2},
+				expected: []image.Color{white, white},
+			},
+			"2x2, location Width: 2, Height: 2": {
+				width:    2,
+				height:   2,
+				location: image.AcceleratedFragmentLocation{Width: 2, Height: 2},
+				expected: []image.Color{white, white, white, white},
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				fakeImages := image.NewFake()
+				img := fakeImages.NewAcceleratedImage(test.width, test.height)
+				// when
+				img.Modify(test.location, fakeImages.FillWithColor(white))
+				// then
+				output := image.AcceleratedFragmentPixels{
+					Location: image.AcceleratedFragmentLocation{
+						Width:  test.width,
+						Height: test.height,
+					},
+					Stride: test.width,
+					Pixels: make([]image.Color, len(test.expected)),
+				}
+				img.Download(output)
+				assert.Equal(t, test.expected, output.Pixels)
+			})
+		}
+	})
+	t.Run("NoOp", func(t *testing.T) {
+		t.Run("should not do anything", func(t *testing.T) {
+			fakeImages := image.NewFake()
+			img := fakeImages.NewAcceleratedImage(1, 1)
+			location := image.AcceleratedFragmentLocation{Width: 1, Height: 1}
+			// when
+			img.Modify(location, fakeImages.NoOp())
+			// then
+			output := image.AcceleratedFragmentPixels{
+				Location: image.AcceleratedFragmentLocation{
+					Width:  1,
+					Height: 1,
+				},
+				Pixels: make([]image.Color, 1),
+			}
+			img.Download(output)
+			assert.Equal(t, []image.Color{transparent}, output.Pixels)
+		})
+	})
 }

@@ -496,6 +496,7 @@ func assertColors(t *testing.T, selection image.Selection, expectedColorLines []
 	}
 }
 
+// TODO FINISH THIS ONE
 func TestSelection_Modify(t *testing.T) {
 	white := image.RGB(255, 255, 255)
 
@@ -539,7 +540,7 @@ func TestSelection_Modify(t *testing.T) {
 			})
 		}
 	})
-	// mozna po prostu funkcje przekazac ktora nic nie robi
+	// just use noop function to verify if image has been uploaded
 	t.Run("should upload AcceleratedFragment before running Modify", func(t *testing.T) {
 		white := image.RGB(255, 255, 255)
 		tests := map[string]struct {
