@@ -421,4 +421,25 @@ func TestFakeAcceleratedImage_Modify(t *testing.T) {
 			assert.Equal(t, []image.Color{transparent}, output.Pixels)
 		})
 	})
+	t.Run("RegisterCall", func(t *testing.T) {
+		t.Run("should execute custom call", func(t *testing.T) {
+			fakeImages := image.NewFake()
+			img := fakeImages.NewAcceleratedImage(1, 1)
+			location := image.AcceleratedFragmentLocation{Width: 1, Height: 1}
+			callMock := &callMock{}
+			fakeImages.RegisterCall(callMock)
+			// when
+			img.Modify(location, callMock)
+			// then
+			assert.True(t, callMock.executed)
+		})
+	})
+}
+
+type callMock struct {
+	executed bool
+}
+
+func (f *callMock) Run(selection image.AcceleratedFragmentLocation, image *image.FakeAcceleratedImage) {
+	f.executed = true
 }

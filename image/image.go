@@ -4,6 +4,7 @@ package image
 type AcceleratedImage interface {
 	Upload(pixels AcceleratedFragmentPixels)
 	Download(pixels AcceleratedFragmentPixels)
+	// There is a guarantee that passed image will be clamped to image boundaries
 	Modify(selection AcceleratedFragmentLocation, call AcceleratedCall)
 }
 
@@ -11,6 +12,7 @@ type AcceleratedCall interface{}
 
 // AcceleratedFragmentLocation differs from Selection that it clamps to images boundaries.
 type AcceleratedFragmentLocation struct {
+	// TODO Maybe use uint ??
 	X, Y, Width, Height int
 }
 
@@ -221,19 +223,43 @@ func (s Selection) SetColor(localX, localY int, color Color) {
 }
 
 func (s Selection) Modify(call AcceleratedCall) {
+	var (
+		x      = s.x
+		y      = s.y
+		width  = s.width
+		height = s.height
+	)
+	if x < 0 {
+		x = 0
+	}
+	if y < 0 {
+		y = 0
+	}
+	if x >= s.image.width {
+		x = 0
+	}
+	if x+width > s.image.width {
+		width = s.image.width - x
+	}
+	if y >= s.image.height {
+		y = 0
+	}
+	if y+height > s.image.height {
+		height = s.image.height - y
+	}
 	location := AcceleratedFragmentLocation{
-		X:      s.x,
-		Y:      s.y,
-		Width:  s.width,
-		Height: s.height,
+		X:      x,
+		Y:      y,
+		Width:  width,
+		Height: height,
 	}
-	img := s.image
-	start := s.x + s.y*img.width
-	pixels := AcceleratedFragmentPixels{
-		Location:         location,
-		Pixels:           img.pixels,
-		StartingPosition: start,
-	}
-	s.image.acceleratedImage.Upload(pixels)
+	//img := s.image
+	//start := s.x + s.y*img.width
+	//pixels := AcceleratedFragmentPixels{
+	//	Location:         location,
+	//	Pixels:           img.pixels,
+	//	StartingPosition: start,
+	//}
+	//s.image.acceleratedImage.Upload(pixels)
 	s.image.acceleratedImage.Modify(location, call)
 }

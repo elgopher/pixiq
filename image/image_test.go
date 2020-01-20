@@ -496,53 +496,183 @@ func assertColors(t *testing.T, selection image.Selection, expectedColorLines []
 	}
 }
 
-// TODO FINISH THIS ONE
 func TestSelection_Modify(t *testing.T) {
-	white := image.RGB(255, 255, 255)
-
 	t.Run("should run AcceleratedCall on AcceleratedFragment", func(t *testing.T) {
 		tests := map[string]struct {
-			x, y, width, height int
-			expectedColor       image.Color
+			imageWidth, imageHeight         int
+			selectionX, selectionY          int
+			selectionWidth, selectionHeight int
+			expectedColors                  []image.Color
 		}{
-			"0,0 with size 0x0": {},
-			"1,0 with size 0x0": {
-				x: 1,
+			"image 1x1, selection 0,0 with size 1x1": {
+				imageWidth: 1, imageHeight: 1,
+				selectionWidth: 1, selectionHeight: 1,
+				expectedColors: []image.Color{white},
 			},
-			"0,1 with size 0x0": {
-				y: 1,
+			"image 1x1, selection 1,0 with size 0x1": {
+				imageWidth: 1, imageHeight: 1,
+				selectionX: 1, selectionHeight: 1,
+				expectedColors: []image.Color{transparent},
 			},
-			"0,0 with size 1x0": {
-				width: 1,
+			"image 1x1, selection 0,1 with size 1x0": {
+				imageWidth: 1, imageHeight: 1,
+				selectionY: 1, selectionWidth: 1,
+				expectedColors: []image.Color{transparent},
 			},
-			"0,0 with size 0x1": {
-				height: 1,
+			"image 1x1, selection 0,0 with size 1x0": {
+				imageWidth: 1, imageHeight: 1,
+				selectionWidth: 1,
+				expectedColors: []image.Color{transparent},
+			},
+			"image 1x1, selection 0,0 with size 0x1": {
+				imageWidth: 1, imageHeight: 1,
+				selectionHeight: 1,
+				expectedColors:  []image.Color{transparent},
+			},
+			"image 1x1, selection 0,0 with size 2x1": {
+				imageWidth: 1, imageHeight: 1,
+				selectionWidth: 2, selectionHeight: 1,
+				expectedColors: []image.Color{white},
+			},
+			"image 1x1, selection 0,0 with size 1x2": {
+				imageWidth: 1, imageHeight: 1,
+				selectionWidth: 1, selectionHeight: 2,
+				expectedColors: []image.Color{white},
+			},
+			"image 2x1, selection 1,0 with size 2x1": {
+				imageWidth: 2, imageHeight: 1,
+				selectionX:     1,
+				selectionWidth: 2, selectionHeight: 1,
+				expectedColors: []image.Color{transparent, white},
+			},
+			"image 1x2, selection 0,1 with size 1x2": {
+				imageWidth: 1, imageHeight: 2,
+				selectionY:     1,
+				selectionWidth: 1, selectionHeight: 2,
+				expectedColors: []image.Color{transparent, white},
 			},
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
 				var (
 					images    = image.NewFake()
-					accImage  = images.NewAcceleratedImage(1, 1)
+					accImage  = images.NewAcceleratedImage(test.imageWidth, test.imageHeight)
 					call      = images.FillWithColor(white)
-					img       = image.New(1, 1, accImage)
-					selection = img.Selection(test.x, test.y).WithSize(test.width, test.height)
+					img       = image.New(test.imageWidth, test.imageHeight, accImage)
+					selection = img.Selection(test.selectionX, test.selectionY).
+							WithSize(test.selectionWidth, test.selectionHeight)
 				)
 				// when
 				selection.Modify(call)
 				// then
 				output := image.AcceleratedFragmentPixels{
-					Location: image.AcceleratedFragmentLocation{Width: 1, Height: 1},
-					Pixels:   make([]image.Color, 1),
+					Location: image.AcceleratedFragmentLocation{
+						Width:  test.imageWidth,
+						Height: test.imageHeight,
+					},
+					Stride: test.imageWidth,
+					Pixels: make([]image.Color, len(test.expectedColors)),
 				}
 				accImage.Download(output)
-				assert.Equal(t, test.expectedColor, output.Pixels[0])
+				assert.Equal(t, test.expectedColors, output.Pixels)
 			})
 		}
 	})
+	t.Run("location should be a selection clamped to image boundaries", func(t *testing.T) {
+		tests := map[string]struct {
+			imageWidth, imageHeight         int
+			selectionX, selectionY          int
+			selectionWidth, selectionHeight int
+		}{
+			"image 0x0, selection -1,0 with size 0x0": {
+				selectionX: -1,
+			},
+			"image 0x0, selection -2,0 with size 0x0": {
+				selectionX: -2,
+			},
+			"image 1x1, selection -1,0 with size 0x0": {
+				imageWidth: 1, imageHeight: 1,
+				selectionX: -1,
+			},
+			"image 0x0, selection 0,-1 with size 0x0": {
+				selectionY: -1,
+			},
+			"image 0x0, selection 0,-2 with size 0x0": {
+				selectionY: -2,
+			},
+			"image 1x1, selection 0,-1 with size 0x0": {
+				imageWidth: 1, imageHeight: 1,
+				selectionY: -1,
+			},
+			"image 0x0, selection 0,0 with size 1x0": {
+				selectionWidth: 1,
+			},
+			"image 0x0, selection 0,0 with size 2x0": {
+				selectionWidth: 2,
+			},
+			"image 1x1, selection 0,0 with size 2x0": {
+				imageWidth: 1, imageHeight: 1,
+				selectionWidth: 2,
+			},
+			"image 0x0, selection 0,0 with size 0x1": {
+				selectionHeight: 1,
+			},
+			"image 0x0, selection 0,0 with size 0x2": {
+				selectionHeight: 2,
+			},
+			"image 1x1, selection 0,0 with size 0x2": {
+				imageWidth: 1, imageHeight: 1,
+				selectionHeight: 2,
+			},
+			"image 1x1, selection 1,0 with size 1x0": {
+				imageWidth: 1, imageHeight: 1,
+				selectionX:     1,
+				selectionWidth: 1,
+			},
+			"image 2x1, selection 1,0 with size 2x0": {
+				imageWidth: 2, imageHeight: 1,
+				selectionX:     1,
+				selectionWidth: 2,
+			},
+			"image 1x1, selection 2,0 with size 0x0": {
+				imageWidth: 1, imageHeight: 1,
+				selectionX: 2,
+			},
+			"image 1x1, selection 0,1 with size 0x1": {
+				imageWidth: 1, imageHeight: 1,
+				selectionY:      1,
+				selectionHeight: 1,
+			},
+			"image 1x2, selection 0,1 with size 0x2": {
+				imageWidth: 1, imageHeight: 2,
+				selectionY:      1,
+				selectionHeight: 2,
+			},
+			"image 1x1, selection 0,2 with size 0x0": {
+				imageWidth: 1, imageHeight: 1,
+				selectionY: 2,
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				var (
+					fake      = image.NewFake()
+					accImage  = fake.NewAcceleratedImage(test.imageWidth, test.imageHeight)
+					img       = image.New(test.imageWidth, test.imageHeight, accImage)
+					call      = &assertLocationClampedCall{t: t, image: img}
+					selection = img.Selection(test.selectionX, test.selectionY).
+							WithSize(test.selectionWidth, test.selectionHeight)
+				)
+				fake.RegisterCall(call)
+				// when
+				selection.Modify(call)
+			})
+		}
+	})
+
+	// TODO Implement this from scratch
 	// just use noop function to verify if image has been uploaded
 	t.Run("should upload AcceleratedFragment before running Modify", func(t *testing.T) {
-		white := image.RGB(255, 255, 255)
 		tests := map[string]struct {
 			imageWidth, imageHeight         int
 			selectionX, selectionY          int
@@ -593,4 +723,18 @@ func TestSelection_Modify(t *testing.T) {
 			})
 		}
 	})
+}
+
+type assertLocationClampedCall struct {
+	image *image.Image
+	t     *testing.T
+}
+
+func (a *assertLocationClampedCall) Run(selection image.AcceleratedFragmentLocation, _ *image.FakeAcceleratedImage) {
+	assert.True(a.t, selection.X >= 0, "x>=0")
+	assert.True(a.t, selection.Y >= 0, "y>=0")
+	assert.True(a.t, selection.Width >= 0, "width>=0")
+	assert.True(a.t, selection.Height >= 0, "height>=0")
+	assert.True(a.t, selection.X+selection.Width <= a.image.Width(), "x+width<image.width")
+	assert.True(a.t, selection.Y+selection.Height <= a.image.Height(), "y+height<image.height")
 }

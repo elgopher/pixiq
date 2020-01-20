@@ -1,11 +1,11 @@
 package image
 
 func NewFake() *Fake {
-	return &Fake{calls: map[interface{}]fakeCall{}}
+	return &Fake{calls: map[interface{}]FakeCall{}}
 }
 
 type Fake struct {
-	calls map[interface{}]fakeCall
+	calls map[interface{}]FakeCall
 }
 
 // Width and height are constrained to zero if negative.
@@ -35,7 +35,12 @@ func (i *Fake) NoOp() AcceleratedCall {
 	return call
 }
 
-type fakeCall interface {
+// TODO Test for nil call
+func (i *Fake) RegisterCall(call FakeCall) {
+	i.calls[call] = call
+}
+
+type FakeCall interface {
 	Run(selection AcceleratedFragmentLocation, image *FakeAcceleratedImage)
 }
 
@@ -59,7 +64,7 @@ func (n noOp) Run(selection AcceleratedFragmentLocation, image *FakeAcceleratedI
 }
 
 type FakeAcceleratedImage struct {
-	calls  map[interface{}]fakeCall
+	calls  map[interface{}]FakeCall
 	pixels []Color
 	width  int
 	height int
@@ -90,6 +95,7 @@ func (i *FakeAcceleratedImage) Download(output AcceleratedFragmentPixels) {
 	}
 }
 
+// TODO Test for nil call
 func (i *FakeAcceleratedImage) Modify(selection AcceleratedFragmentLocation, call AcceleratedCall) {
 	fakeCall, ok := i.calls[call]
 	if !ok {
