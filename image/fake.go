@@ -1,42 +1,54 @@
 package image
 
+// NewFakeImages creates an instance of FakeImages
 func NewFakeImages() *FakeImages {
-	return &FakeImages{calls: map[interface{}]FakeCall{}}
-}
-
-type FakeImages struct {
-	calls map[interface{}]FakeCall
-}
-
-// Width and height are constrained to zero if negative.
-func (i *FakeImages) NewAcceleratedImage(width, height int) *FakeAcceleratedImage {
-	return &FakeAcceleratedImage{
-		calls:  i.calls,
-		width:  width,
-		height: height,
-		pixels: make([]Color, width*height),
+	return &FakeImages{
+		registeredCalls: map[interface{}]FakeCall{},
 	}
 }
 
-// This method can be used in unit tests for CPU-based functionality
+// FakeImages is a factory of Fake images and registry of calls which can
+// be executed on them. It is useful in unit testing.
+type FakeImages struct {
+	registeredCalls map[interface{}]FakeCall
+}
+
+// NewAcceleratedImage creates a new FakeAcceleratedImage instance which can
+// be used in unit testing.
+// TODO Width and height are constrained to zero if negative.
+func (i *FakeImages) NewAcceleratedImage(width, height int) *FakeAcceleratedImage {
+	return &FakeAcceleratedImage{
+		registeredCalls: i.registeredCalls,
+		width:           width,
+		height:          height,
+		pixels:          make([]Color, width*height),
+	}
+}
+
+// NewImageWithFakeAcceleration can be used in unit tests for testing
+// CPU-based functionality
 func (i *FakeImages) NewImageWithFakeAcceleration(width, height int) *Image {
 	return New(width, height, i.NewAcceleratedImage(width, height))
 }
 
+// RegisterCall registers a FakeCall implementation which then can be used in Modify.
 func (i *FakeImages) RegisterCall(call FakeCall) {
 	if call == nil {
 		panic("nil call")
 	}
-	i.calls[call] = call
+	i.registeredCalls[call] = call
 }
 
+// FakeCall is an interface which must be implemented by any fake calls
+// used in FakeAcceleratedImage.Modify().
 type FakeCall interface {
 	Run(selection AcceleratedFragmentLocation, image *FakeAcceleratedImage)
 }
 
+// AddColor creates and registers an
 func (i *FakeImages) AddColor(c Color) AcceleratedCall {
 	call := &fakeAddColor{color: c}
-	i.calls[call] = call
+	i.registeredCalls[call] = call
 	return call
 }
 
@@ -58,13 +70,17 @@ func (f *fakeAddColor) Run(selection AcceleratedFragmentLocation, image *FakeAcc
 	}
 }
 
+// FakeAcceleratedImage is an AcceleratedImage which emulates the behaviour of
+// a real AcceleratedImage and can be used in unit tests.
+// FakeAcceleratedImage stores the uploaded pixels in RAM.
 type FakeAcceleratedImage struct {
-	calls  map[interface{}]FakeCall
-	pixels []Color
-	width  int
-	height int
+	registeredCalls map[interface{}]FakeCall
+	pixels          []Color
+	width           int
+	height          int
 }
 
+// Upload copies the pixels to RAM.
 func (i *FakeAcceleratedImage) Upload(input AcceleratedFragmentPixels) {
 	inputOffset := input.StartingPosition
 	location := input.Location
@@ -77,6 +93,8 @@ func (i *FakeAcceleratedImage) Upload(input AcceleratedFragmentPixels) {
 		inputOffset += input.Stride - location.Width
 	}
 }
+
+// Download copies the pixels from RAM to AcceleratedFragmentPixels struct.
 func (i *FakeAcceleratedImage) Download(output AcceleratedFragmentPixels) {
 	location := output.Location
 	outputOffset := output.StartingPosition
@@ -90,11 +108,13 @@ func (i *FakeAcceleratedImage) Download(output AcceleratedFragmentPixels) {
 	}
 }
 
+// Modify executes the call. Call must be a FakeCall implementation registered
+// before using the FakeAcceleratedImage.RegisterCall method.
 func (i *FakeAcceleratedImage) Modify(selection AcceleratedFragmentLocation, call AcceleratedCall) {
 	if call == nil {
 		panic("nil call")
 	}
-	fakeCall, ok := i.calls[call]
+	fakeCall, ok := i.registeredCalls[call]
 	if !ok {
 		panic("invalid call")
 	}
