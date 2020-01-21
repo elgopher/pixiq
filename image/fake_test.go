@@ -321,6 +321,14 @@ func TestFakeAcceleratedImage_Modify(t *testing.T) {
 			img.Modify(location, struct{}{})
 		})
 	})
+	t.Run("should panic when call is nil", func(t *testing.T) {
+		fakeImages := image.NewFake()
+		img := fakeImages.NewAcceleratedImage(1, 1)
+		location := image.AcceleratedFragmentLocation{Width: 1, Height: 1}
+		assert.Panics(t, func() {
+			img.Modify(location, nil)
+		})
+	})
 	t.Run("AddColor", func(t *testing.T) {
 		var (
 			colorToAdd = image.RGBA(1, 2, 3, 4)
@@ -446,6 +454,12 @@ func TestFakeAcceleratedImage_Modify(t *testing.T) {
 			img.Modify(location, callMock)
 			// then
 			assert.True(t, callMock.executed)
+		})
+		t.Run("should panic when trying to register nil call", func(t *testing.T) {
+			fakeImages := image.NewFake()
+			assert.Panics(t, func() {
+				fakeImages.RegisterCall(nil)
+			})
 		})
 	})
 }

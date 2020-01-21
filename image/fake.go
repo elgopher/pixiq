@@ -29,8 +29,10 @@ func (i *Fake) AddColor(c Color) AcceleratedCall {
 	return call
 }
 
-// TODO Test for nil call
 func (i *Fake) RegisterCall(call FakeCall) {
+	if call == nil {
+		panic("nil call")
+	}
 	i.calls[call] = call
 }
 
@@ -88,8 +90,10 @@ func (i *FakeAcceleratedImage) Download(output AcceleratedFragmentPixels) {
 	}
 }
 
-// TODO Test for nil call
 func (i *FakeAcceleratedImage) Modify(selection AcceleratedFragmentLocation, call AcceleratedCall) {
+	if call == nil {
+		panic("nil call")
+	}
 	fakeCall, ok := i.calls[call]
 	if !ok {
 		panic("invalid call")
