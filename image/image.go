@@ -256,14 +256,14 @@ func (s Selection) Modify(call AcceleratedCall) {
 		height = s.image.height - y
 	}
 	var (
+		img      = s.image
+		start    = s.x + s.y*img.width
 		location = AcceleratedFragmentLocation{
 			X:      x,
 			Y:      y,
 			Width:  width,
 			Height: height,
 		}
-		img    = s.image
-		start  = s.x + s.y*img.width
 		pixels = AcceleratedFragmentPixels{
 			Location:         location,
 			Pixels:           img.pixels,
