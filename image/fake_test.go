@@ -435,25 +435,6 @@ func TestFakeAcceleratedImage_Modify(t *testing.T) {
 			})
 		}
 	})
-	t.Run("NoOp", func(t *testing.T) {
-		t.Run("should not do anything", func(t *testing.T) {
-			fakeImages := image.NewFake()
-			img := fakeImages.NewAcceleratedImage(1, 1)
-			location := image.AcceleratedFragmentLocation{Width: 1, Height: 1}
-			// when
-			img.Modify(location, fakeImages.NoOp())
-			// then
-			output := image.AcceleratedFragmentPixels{
-				Location: image.AcceleratedFragmentLocation{
-					Width:  1,
-					Height: 1,
-				},
-				Pixels: make([]image.Color, 1),
-			}
-			img.Download(output)
-			assert.Equal(t, []image.Color{transparent}, output.Pixels)
-		})
-	})
 	t.Run("RegisterCall", func(t *testing.T) {
 		t.Run("should execute custom call", func(t *testing.T) {
 			fakeImages := image.NewFake()

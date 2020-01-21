@@ -29,12 +29,6 @@ func (i *Fake) AddColor(c Color) AcceleratedCall {
 	return call
 }
 
-func (i *Fake) NoOp() AcceleratedCall {
-	call := &noOp{}
-	i.calls[call] = call
-	return call
-}
-
 // TODO Test for nil call
 func (i *Fake) RegisterCall(call FakeCall) {
 	i.calls[call] = call
@@ -60,12 +54,6 @@ func (f *fakeAddColor) Run(selection AcceleratedFragmentLocation, image *FakeAcc
 			)
 		}
 	}
-}
-
-type noOp struct {
-}
-
-func (n noOp) Run(selection AcceleratedFragmentLocation, image *FakeAcceleratedImage) {
 }
 
 type FakeAcceleratedImage struct {
