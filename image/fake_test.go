@@ -13,7 +13,7 @@ var (
 	red   = image.RGBA(255, 0, 0, 255)
 )
 
-func TestNewFakeAcceleratedImage(t *testing.T) {
+func TestFake_NewAcceleratedImage(t *testing.T) {
 	t.Run("should create FakeAcceleratedImage for testing", func(t *testing.T) {
 		tests := map[string]struct {
 			width, height int
