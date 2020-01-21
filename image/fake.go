@@ -1,15 +1,15 @@
 package image
 
-func NewFake() *Fake {
-	return &Fake{calls: map[interface{}]FakeCall{}}
+func NewFakeImages() *FakeImages {
+	return &FakeImages{calls: map[interface{}]FakeCall{}}
 }
 
-type Fake struct {
+type FakeImages struct {
 	calls map[interface{}]FakeCall
 }
 
 // Width and height are constrained to zero if negative.
-func (i *Fake) NewAcceleratedImage(width, height int) *FakeAcceleratedImage {
+func (i *FakeImages) NewAcceleratedImage(width, height int) *FakeAcceleratedImage {
 	return &FakeAcceleratedImage{
 		calls:  i.calls,
 		width:  width,
@@ -19,17 +19,11 @@ func (i *Fake) NewAcceleratedImage(width, height int) *FakeAcceleratedImage {
 }
 
 // This method can be used in unit tests for CPU-based functionality
-func (i *Fake) NewImageWithFakeAcceleration(width, height int) *Image {
+func (i *FakeImages) NewImageWithFakeAcceleration(width, height int) *Image {
 	return New(width, height, i.NewAcceleratedImage(width, height))
 }
 
-func (i *Fake) AddColor(c Color) AcceleratedCall {
-	call := &fakeAddColor{color: c}
-	i.calls[call] = call
-	return call
-}
-
-func (i *Fake) RegisterCall(call FakeCall) {
+func (i *FakeImages) RegisterCall(call FakeCall) {
 	if call == nil {
 		panic("nil call")
 	}
@@ -38,6 +32,12 @@ func (i *Fake) RegisterCall(call FakeCall) {
 
 type FakeCall interface {
 	Run(selection AcceleratedFragmentLocation, image *FakeAcceleratedImage)
+}
+
+func (i *FakeImages) AddColor(c Color) AcceleratedCall {
+	call := &fakeAddColor{color: c}
+	i.calls[call] = call
+	return call
 }
 
 type fakeAddColor struct {

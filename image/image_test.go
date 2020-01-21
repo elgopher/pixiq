@@ -12,7 +12,7 @@ import (
 var transparent = image.RGBA(0, 0, 0, 0)
 
 func fakeAcceleratedImage() *image.FakeAcceleratedImage {
-	return image.NewFake().NewAcceleratedImage(0, 0)
+	return image.NewFakeImages().NewAcceleratedImage(0, 0)
 }
 
 func TestNew(t *testing.T) {
@@ -595,7 +595,7 @@ func TestSelection_Modify(t *testing.T) {
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
 				var (
-					images    = image.NewFake()
+					images    = image.NewFakeImages()
 					accImage  = images.NewAcceleratedImage(test.imageWidth, test.imageHeight)
 					call      = images.AddColor(colorToAdd)
 					img       = image.New(test.imageWidth, test.imageHeight, accImage)
@@ -700,14 +700,14 @@ func TestSelection_Modify(t *testing.T) {
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
 				var (
-					fake      = image.NewFake()
-					accImage  = fake.NewAcceleratedImage(test.imageWidth, test.imageHeight)
+					fakes     = image.NewFakeImages()
+					accImage  = fakes.NewAcceleratedImage(test.imageWidth, test.imageHeight)
 					img       = image.New(test.imageWidth, test.imageHeight, accImage)
 					call      = &assertLocationClampedCall{t: t, image: img}
 					selection = img.Selection(test.selectionX, test.selectionY).
 							WithSize(test.selectionWidth, test.selectionHeight)
 				)
-				fake.RegisterCall(call)
+				fakes.RegisterCall(call)
 				// when
 				selection.Modify(call)
 			})

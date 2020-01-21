@@ -37,7 +37,7 @@ func TestFake_NewAcceleratedImage(t *testing.T) {
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
-				img := image.NewFake().NewAcceleratedImage(test.width, test.height)
+				img := image.NewFakeImages().NewAcceleratedImage(test.width, test.height)
 				assert.NotNil(t, img)
 			})
 		}
@@ -172,7 +172,7 @@ func TestFakeAcceleratedImage_Upload(t *testing.T) {
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
-				img := image.NewFake().NewAcceleratedImage(test.width, test.height)
+				img := image.NewFakeImages().NewAcceleratedImage(test.width, test.height)
 				// when
 				img.Upload(test.input)
 				// then
@@ -192,7 +192,7 @@ func TestFakeAcceleratedImage_Upload(t *testing.T) {
 			Location: image.AcceleratedFragmentLocation{Width: 1, Height: 1},
 			Pixels:   []image.Color{transparent},
 		}
-		img := image.NewFake().NewAcceleratedImage(1, 1)
+		img := image.NewFakeImages().NewAcceleratedImage(1, 1)
 		img.Upload(input)
 		// when
 		input.Pixels[0] = white
@@ -297,7 +297,7 @@ func TestFakeAcceleratedImage_Download(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			img := image.NewFake().NewAcceleratedImage(test.width, test.height)
+			img := image.NewFakeImages().NewAcceleratedImage(test.width, test.height)
 			input := image.AcceleratedFragmentPixels{
 				Location: image.AcceleratedFragmentLocation{Width: test.width, Height: test.height},
 				Stride:   test.width,
@@ -314,16 +314,16 @@ func TestFakeAcceleratedImage_Download(t *testing.T) {
 
 func TestFakeAcceleratedImage_Modify(t *testing.T) {
 	t.Run("should panic when call has not been created with Fake", func(t *testing.T) {
-		fakeImages := image.NewFake()
-		img := fakeImages.NewAcceleratedImage(1, 1)
+		fakes := image.NewFakeImages()
+		img := fakes.NewAcceleratedImage(1, 1)
 		location := image.AcceleratedFragmentLocation{Width: 1, Height: 1}
 		assert.Panics(t, func() {
 			img.Modify(location, struct{}{})
 		})
 	})
 	t.Run("should panic when call is nil", func(t *testing.T) {
-		fakeImages := image.NewFake()
-		img := fakeImages.NewAcceleratedImage(1, 1)
+		fakes := image.NewFakeImages()
+		img := fakes.NewAcceleratedImage(1, 1)
 		location := image.AcceleratedFragmentLocation{Width: 1, Height: 1}
 		assert.Panics(t, func() {
 			img.Modify(location, nil)
@@ -414,8 +414,8 @@ func TestFakeAcceleratedImage_Modify(t *testing.T) {
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
-				fakeImages := image.NewFake()
-				img := fakeImages.NewAcceleratedImage(test.width, test.height)
+				fakes := image.NewFakeImages()
+				img := fakes.NewAcceleratedImage(test.width, test.height)
 				img.Upload(image.AcceleratedFragmentPixels{
 					Location: image.AcceleratedFragmentLocation{
 						X:      0,
@@ -428,7 +428,7 @@ func TestFakeAcceleratedImage_Modify(t *testing.T) {
 					Stride:           test.width,
 				})
 				// when
-				img.Modify(test.location, fakeImages.AddColor(colorToAdd))
+				img.Modify(test.location, fakes.AddColor(colorToAdd))
 				// then
 				output := image.AcceleratedFragmentPixels{
 					Location: image.AcceleratedFragmentLocation{
@@ -445,20 +445,20 @@ func TestFakeAcceleratedImage_Modify(t *testing.T) {
 	})
 	t.Run("RegisterCall", func(t *testing.T) {
 		t.Run("should execute custom call", func(t *testing.T) {
-			fakeImages := image.NewFake()
-			img := fakeImages.NewAcceleratedImage(1, 1)
+			fakes := image.NewFakeImages()
+			img := fakes.NewAcceleratedImage(1, 1)
 			location := image.AcceleratedFragmentLocation{Width: 1, Height: 1}
 			callMock := &callMock{}
-			fakeImages.RegisterCall(callMock)
+			fakes.RegisterCall(callMock)
 			// when
 			img.Modify(location, callMock)
 			// then
 			assert.True(t, callMock.executed)
 		})
 		t.Run("should panic when trying to register nil call", func(t *testing.T) {
-			fakeImages := image.NewFake()
+			fakes := image.NewFakeImages()
 			assert.Panics(t, func() {
-				fakeImages.RegisterCall(nil)
+				fakes.RegisterCall(nil)
 			})
 		})
 	})
