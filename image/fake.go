@@ -23,8 +23,8 @@ func (i *Fake) NewImageWithFakeAcceleration(width, height int) *Image {
 	return New(width, height, i.NewAcceleratedImage(width, height))
 }
 
-func (i *Fake) FillWithColor(c Color) AcceleratedCall {
-	call := &fillWithColor{color: c}
+func (i *Fake) AddColor(c Color) AcceleratedCall {
+	call := &fakeAddColor{color: c}
 	i.calls[call] = call
 	return call
 }
@@ -44,15 +44,20 @@ type FakeCall interface {
 	Run(selection AcceleratedFragmentLocation, image *FakeAcceleratedImage)
 }
 
-type fillWithColor struct {
+type fakeAddColor struct {
 	color Color
 }
 
-func (f *fillWithColor) Run(selection AcceleratedFragmentLocation, image *FakeAcceleratedImage) {
+func (f *fakeAddColor) Run(selection AcceleratedFragmentLocation, image *FakeAcceleratedImage) {
 	for x := selection.X; x < selection.X+selection.Width; x++ {
 		for y := selection.Y; y < selection.Y+selection.Height; y++ {
 			index := x + y*image.width
-			image.pixels[index] = f.color
+			image.pixels[index] = RGBA(
+				image.pixels[index].R()+f.color.R(),
+				image.pixels[index].G()+f.color.G(),
+				image.pixels[index].B()+f.color.B(),
+				image.pixels[index].A()+f.color.A(),
+			)
 		}
 	}
 }

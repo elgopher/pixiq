@@ -321,73 +321,106 @@ func TestFakeAcceleratedImage_Modify(t *testing.T) {
 			img.Modify(location, struct{}{})
 		})
 	})
-	t.Run("FillWithColor", func(t *testing.T) {
+	t.Run("AddColor", func(t *testing.T) {
+		var (
+			colorToAdd = image.RGBA(1, 2, 3, 4)
+			color1     = image.RGBA(10, 20, 30, 40)
+			modif1     = image.RGBA(11, 22, 33, 44)
+			color2     = image.RGBA(50, 60, 70, 80)
+			modif2     = image.RGBA(51, 62, 73, 84)
+			color3     = image.RGBA(90, 100, 110, 120)
+			modif3     = image.RGBA(91, 102, 113, 124)
+			color4     = image.RGBA(130, 140, 150, 160)
+			modif4     = image.RGBA(131, 142, 153, 164)
+		)
+
 		tests := map[string]struct {
 			width, height int
 			location      image.AcceleratedFragmentLocation
+			given         []image.Color
 			expected      []image.Color
 		}{
 			"1x1": {
 				width:    1,
 				height:   1,
 				location: image.AcceleratedFragmentLocation{Width: 1, Height: 1},
-				expected: []image.Color{white},
+				given:    []image.Color{color1},
+				expected: []image.Color{modif1},
 			},
 			"2x1": {
 				width:    2,
 				height:   1,
 				location: image.AcceleratedFragmentLocation{Width: 1, Height: 1},
-				expected: []image.Color{white, transparent},
+				given:    []image.Color{color1, color2},
+				expected: []image.Color{modif1, color2},
 			},
 			"2x1, location X:1": {
 				width:    2,
 				height:   1,
 				location: image.AcceleratedFragmentLocation{X: 1, Width: 1, Height: 1},
-				expected: []image.Color{transparent, white},
+				given:    []image.Color{color1, color2},
+				expected: []image.Color{color1, modif2},
 			},
 			"1x2": {
 				width:    1,
 				height:   2,
 				location: image.AcceleratedFragmentLocation{Width: 1, Height: 1},
-				expected: []image.Color{white, transparent},
+				given:    []image.Color{color1, color2},
+				expected: []image.Color{modif1, color2},
 			},
 			"1x2, location Y: 1": {
 				width:    1,
 				height:   2,
 				location: image.AcceleratedFragmentLocation{Y: 1, Width: 1, Height: 1},
-				expected: []image.Color{transparent, white},
+				given:    []image.Color{color1, color2},
+				expected: []image.Color{color1, modif2},
 			},
 			"2x2, location Y: 1": {
 				width:    2,
 				height:   2,
 				location: image.AcceleratedFragmentLocation{Y: 1, Width: 1, Height: 1},
-				expected: []image.Color{transparent, transparent, white, transparent},
+				given:    []image.Color{color1, color2, color3, color4},
+				expected: []image.Color{color1, color2, modif3, color4},
 			},
 			"2x1, location Width: 2": {
 				width:    2,
 				height:   1,
 				location: image.AcceleratedFragmentLocation{Width: 2, Height: 1},
-				expected: []image.Color{white, white},
+				given:    []image.Color{color1, color2},
+				expected: []image.Color{modif1, modif2},
 			},
 			"1x2, location Height: 2": {
 				width:    1,
 				height:   2,
 				location: image.AcceleratedFragmentLocation{Width: 1, Height: 2},
-				expected: []image.Color{white, white},
+				given:    []image.Color{color1, color2},
+				expected: []image.Color{modif1, modif2},
 			},
 			"2x2, location Width: 2, Height: 2": {
 				width:    2,
 				height:   2,
 				location: image.AcceleratedFragmentLocation{Width: 2, Height: 2},
-				expected: []image.Color{white, white, white, white},
+				given:    []image.Color{color1, color2, color3, color4},
+				expected: []image.Color{modif1, modif2, modif3, modif4},
 			},
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
 				fakeImages := image.NewFake()
 				img := fakeImages.NewAcceleratedImage(test.width, test.height)
+				img.Upload(image.AcceleratedFragmentPixels{
+					Location: image.AcceleratedFragmentLocation{
+						X:      0,
+						Y:      0,
+						Width:  test.width,
+						Height: test.height,
+					},
+					Pixels:           test.given,
+					StartingPosition: 0,
+					Stride:           test.width,
+				})
 				// when
-				img.Modify(test.location, fakeImages.FillWithColor(white))
+				img.Modify(test.location, fakeImages.AddColor(colorToAdd))
 				// then
 				output := image.AcceleratedFragmentPixels{
 					Location: image.AcceleratedFragmentLocation{

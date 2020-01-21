@@ -253,13 +253,14 @@ func (s Selection) Modify(call AcceleratedCall) {
 		Width:  width,
 		Height: height,
 	}
-	//img := s.image
-	//start := s.x + s.y*img.width
-	//pixels := AcceleratedFragmentPixels{
-	//	Location:         location,
-	//	Pixels:           img.pixels,
-	//	StartingPosition: start,
-	//}
-	//s.image.acceleratedImage.Upload(pixels)
+	img := s.image
+	start := s.x + s.y*img.width
+	pixels := AcceleratedFragmentPixels{
+		Location:         location,
+		Pixels:           img.pixels,
+		StartingPosition: start,
+	}
+	s.image.acceleratedImage.Upload(pixels)
 	s.image.acceleratedImage.Modify(location, call)
+	s.image.acceleratedImage.Download(pixels)
 }
