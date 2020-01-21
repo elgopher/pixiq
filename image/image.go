@@ -8,6 +8,8 @@ type AcceleratedImage interface {
 	Modify(selection AcceleratedFragmentLocation, call AcceleratedCall)
 }
 
+// AcceleratedCall is an execution of a previously complied program which runs
+// externally (outside the CPU).
 type AcceleratedCall interface{}
 
 // AcceleratedFragmentLocation differs from Selection that it clamps to images boundaries.
@@ -16,21 +18,20 @@ type AcceleratedFragmentLocation struct {
 	X, Y, Width, Height int
 }
 
-// AcceleratedFragmentPixels contains pixel colors which should be updated
-// in the AcceleratedImage.
-// Image will always create consistent instance, meaning that:
-// + location is always clamped to image boundries
-// + startingPosition >= 0
-// + stride >= 0
-// + Pixels has length big enough to hold pixels
+// AcceleratedFragmentPixels contains pixel slice which can be uploaded
+// to AcceleratedImage or be used as an output for downloaded pixels.
 type AcceleratedFragmentPixels struct {
+	// Location is always clamped to image boundaries.
 	Location AcceleratedFragmentLocation
-	// Pixels has pixel colors sorted by coordinates
+	// Pixels has pixel colors sorted by coordinates.
 	// Pixels are sent for first line first, from left to right.
+	// Pixels slice is always big enough to hold input/output pixels.
 	Pixels []Color
-	// StartPosition is an index of the first color in Pixels
+	// StartPosition is an index of the first color in Pixels.
+	// It is always >= 0.
 	StartingPosition int
-	// Stride is a row length
+	// Stride is a row length.
+	// It is always >= 0
 	Stride int
 }
 
@@ -222,6 +223,13 @@ func (s Selection) SetColor(localX, localY int, color Color) {
 	s.image.pixels[index] = color
 }
 
+// Modify (eventually) runs the previously compiled AcceleratedCall on the whole
+// Selection. All pixels in the Selection will be modified. The exact time when
+// this will happen depends on many factors - the image package itself may
+// suspend the execution, the underlying AcceleratedImage implementation may be
+// asynchronous too. Though, there is a guarantee that next time Get method is
+// invoked it will return the changed color. Same for another Modify call - it
+// will se the changes.
 func (s Selection) Modify(call AcceleratedCall) {
 	var (
 		x      = s.x
