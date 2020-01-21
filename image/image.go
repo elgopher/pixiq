@@ -257,7 +257,6 @@ func (s Selection) Modify(call AcceleratedCall) {
 	}
 	var (
 		img      = s.image
-		start    = s.x + s.y*img.width
 		location = AcceleratedFragmentLocation{
 			X:      x,
 			Y:      y,
@@ -267,7 +266,7 @@ func (s Selection) Modify(call AcceleratedCall) {
 		pixels = AcceleratedFragmentPixels{
 			Location:         location,
 			Pixels:           img.pixels,
-			StartingPosition: start,
+			StartingPosition: s.x + s.y*img.width,
 		}
 	)
 	s.image.acceleratedImage.Upload(pixels)
