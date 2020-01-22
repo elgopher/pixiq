@@ -332,7 +332,7 @@ func TestOpenGL_Compile(t *testing.T) {
 		require.NoError(t, err)
 		defer openGL.Destroy()
 		// when
-		program, err := openGL.Compile("")
+		program, err := openGL.CompileFragmentShader("")
 		// then
 		require.NoError(t, err)
 		assert.NotNil(t, program)

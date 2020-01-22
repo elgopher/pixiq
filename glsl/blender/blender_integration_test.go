@@ -51,7 +51,7 @@ func TestIntegration_With_OpenGL_Package(t *testing.T) {
 		sourceSelection.SetColor(0, 0, white)
 		targetSelection.SetColor(0, 0, black)
 		// when
-		imageBlender.Source(sourceSelection).Into(targetSelection)
+		imageBlender.Blend(sourceSelection, targetSelection)
 		// then
 		assert.Equal(t, white, targetSelection.Color(0, 0))
 	})

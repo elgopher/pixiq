@@ -10,7 +10,7 @@ import (
 )
 
 // should be 0 alloc
-func BenchmarkImageBlenderCall_Into(b *testing.B) {
+func BenchmarkImageBlender_Blend(b *testing.B) {
 	b.StopTimer()
 	gl, err := opengl.New(mainThreadLoop)
 	require.NoError(b, err)
@@ -21,6 +21,6 @@ func BenchmarkImageBlenderCall_Into(b *testing.B) {
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		// when
-		imageBlender.Source(source).Into(target)
+		imageBlender.Blend(source, target)
 	}
 }

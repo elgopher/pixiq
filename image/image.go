@@ -273,3 +273,11 @@ func (s Selection) Modify(call AcceleratedCall) {
 	s.image.acceleratedImage.Modify(location, call)
 	s.image.acceleratedImage.Download(pixels)
 }
+
+// Upload uploads pixels from Selection to associated AcceleratedImage.
+// This method should be called rarely. Image pixels are uploaded automatically
+// when needed.
+// TODO Implement
+func (s Selection) Upload() {
+
+}

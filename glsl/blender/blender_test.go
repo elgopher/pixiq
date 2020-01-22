@@ -8,12 +8,11 @@ import (
 
 	"github.com/jacekolszak/pixiq/glsl/blender"
 	"github.com/jacekolszak/pixiq/glsl/shader"
-	"github.com/jacekolszak/pixiq/image"
 )
 
 func TestCompileImageBlender(t *testing.T) {
 	t.Run("should compile ImageBlender", func(t *testing.T) {
-		compiler := &compilerStub{}
+		compiler := &fragmentCompilerStub{}
 		// when
 		imageBlender, err := blender.CompileImageBlender(compiler)
 		// then
@@ -27,27 +26,20 @@ func TestCompileImageBlender(t *testing.T) {
 	})
 }
 
-type compilerStub struct {
+type fragmentCompilerStub struct {
 }
 
-func (c *compilerStub) Compile(fragmentShaderSource string) (shader.Program, error) {
-	return &compiledShaderStub{programCallStub: &programCallStub{}}, nil
+func (f *fragmentCompilerStub) DrawTriangles(vertices []float32, vertexShader shader.VertexShader, fragmentShader shader.FragmentShader) shader.Call {
+	panic("implement me")
 }
 
-type compiledShaderStub struct {
-	*programCallStub
+func (f *fragmentCompilerStub) CompileVertexShader(glsl string) (shader.VertexShader, error) {
+	panic("implement me")
 }
 
-func (c *compiledShaderStub) Call() shader.ProgramCall {
-	return &programCallStub{}
+func (f *fragmentCompilerStub) CompileFragmentShader(glsl string) (shader.FragmentShader, error) {
+	return &fragmentShaderStub{}, nil
 }
 
-type programCallStub struct {
-}
-
-func (p programCallStub) SetTexture(uniformName string, selection image.Selection) {
-
-}
-
-func (p programCallStub) Release() {
+type fragmentShaderStub struct {
 }

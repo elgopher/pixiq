@@ -14,7 +14,7 @@ import (
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
 
-	glslshader "github.com/jacekolszak/pixiq/glsl/shader"
+	sh "github.com/jacekolszak/pixiq/glsl/shader"
 	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/keyboard"
 	"github.com/jacekolszak/pixiq/opengl/internal"
@@ -199,7 +199,7 @@ type texture struct {
 	bindWindowToThread func()
 }
 
-func (t *texture) Modify(selection image.AcceleratedFragmentLocation, call image.AcceleratedCall) {
+func (t *texture) Modify(location image.AcceleratedFragmentLocation, call image.AcceleratedCall) {
 	panic("implement me")
 }
 
@@ -324,23 +324,34 @@ func Zoom(zoom int) WindowOption {
 	}
 }
 
-func (g *OpenGL) Compile(fragmentShaderSource string) (glslshader.Program, error) {
-	return &Program{}, nil
+func (g *OpenGL) CompileVertexShader(glsl string) (sh.VertexShader, error) {
+	return nil, nil
 }
 
-type Program struct {
+func (g *OpenGL) CompileFragmentShader(glsl string) (sh.FragmentShader, error) {
+	return nil, nil
 }
 
-func (p *Program) Call() glslshader.ProgramCall {
-	return &ProgramCall{}
+func (g *OpenGL) DrawTriangles(vertices []float32, vertexShader sh.VertexShader, fragmentShader sh.FragmentShader) sh.Call {
+	c := &call{}
+	return sh.NewCall(c)
 }
 
-type ProgramCall struct {
+type call struct {
 }
 
-func (o *ProgramCall) SetTexture(uniformName string, selection image.Selection) {
-
+func (c *call) SetMatrix4(name string, val [16]float32) {
+	panic("implement me")
 }
 
-func (o *ProgramCall) Release() {
+func (c *call) SetTexture(name string, img *image.Image) {
+	panic("implement me")
+}
+
+func (c *call) SetFloat(name string, val float32) {
+	panic("implement me")
+}
+
+func (c *call) SetInt(name string, val int) {
+	panic("implement me")
 }
