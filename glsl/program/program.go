@@ -1,4 +1,4 @@
-package shader
+package program
 
 import "github.com/jacekolszak/pixiq/image"
 
@@ -14,7 +14,8 @@ type GLCompiledProgram interface {
 
 type GLCall interface {
 	// data is (x,y) -> (u,v), that is: vertexPosition -> texturePosition
-	Set(data []float32)
+	//(TODO we need a way to specify offset and stride)
+	SetVertices(data []float32)
 	SetTexture(name string, img *image.Image)
 	SetFloat(name string, val float32)
 	SetInt(name string, val int)
@@ -25,11 +26,11 @@ type Program struct {
 	program GLProgram
 }
 
-func NewProgram(program GLProgram) *Program {
+func New(program GLProgram) *Program {
 	return &Program{program: program}
 }
 
-func (p *Program) AddSelectionUniform(name string) {
+func (p *Program) AddSelectionParameter(name string) {
 
 }
 
@@ -74,7 +75,7 @@ type CompiledProgram struct {
 	compiled GLCompiledProgram
 }
 
-func (p *CompiledProgram) New() *Call {
+func (p *CompiledProgram) NewCall() *Call {
 	return &Call{call: p.compiled.New()}
 }
 
@@ -91,5 +92,5 @@ func (c *Call) SetSelection(name string, selection image.Selection) {
 }
 
 func (c *Call) SetVertices(data []float32) {
-	c.call.Set(data)
+	c.call.SetVertices(data)
 }

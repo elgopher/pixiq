@@ -14,7 +14,7 @@ import (
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
 
-	sh "github.com/jacekolszak/pixiq/glsl/shader"
+	program2 "github.com/jacekolszak/pixiq/glsl/program"
 	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/keyboard"
 	"github.com/jacekolszak/pixiq/opengl/internal"
@@ -324,14 +324,14 @@ func Zoom(zoom int) WindowOption {
 	}
 }
 
-func (g *OpenGL) DrawTriangles() sh.GLProgram {
+func (g *OpenGL) DrawTriangles() program2.GLProgram {
 	return &glProgram{}
 }
 
 type glProgram struct {
 }
 
-func (g *glProgram) Compile() (sh.GLCompiledProgram, error) {
+func (g *glProgram) Compile() (program2.GLCompiledProgram, error) {
 	panic("implement me")
 }
 

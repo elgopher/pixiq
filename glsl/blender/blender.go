@@ -1,30 +1,30 @@
 package blender
 
 import (
-	"github.com/jacekolszak/pixiq/glsl/shader"
+	"github.com/jacekolszak/pixiq/glsl/program"
 	"github.com/jacekolszak/pixiq/image"
 )
 
 type GL interface {
-	DrawTriangles() shader.GLProgram
+	DrawTriangles() program.GLProgram
 }
 
 func CompileImageBlender(gl GL) (*ImageBlender, error) {
 	if gl == nil {
 		panic("nil drawer")
 	}
-	program := shader.NewProgram(gl.DrawTriangles())
-	program.AddSelectionUniform("source")
+	prog := program.New(gl.DrawTriangles())
+	prog.AddSelectionParameter("source")
 
-	vertexShader := shader.NewVertexShader()
+	vertexShader := program.NewVertexShader()
 	vertexShader.SetMain("color = sampleSelection(tex, position);")
-	program.SetVertexShader(vertexShader)
+	prog.SetVertexShader(vertexShader)
 
-	fragmentShader := shader.NewFragmentShader()
+	fragmentShader := program.NewFragmentShader()
 	fragmentShader.SetMain("gl_Position = vec4(vertexPosition, 0.0, 1.0); position = texturePosition;")
-	program.SetFragmentShader(fragmentShader)
+	prog.SetFragmentShader(fragmentShader)
 
-	compiledProgram, _ := program.Compille()
+	compiledProgram, _ := prog.Compille()
 
 	// TODO Here we can verify that blending really works on this platform
 	// by executing blend. If it does not we can return error. This is much
@@ -33,11 +33,11 @@ func CompileImageBlender(gl GL) (*ImageBlender, error) {
 }
 
 type ImageBlender struct {
-	program *shader.CompiledProgram
+	program *program.CompiledProgram
 }
 
 func (b *ImageBlender) Blend(source, target image.Selection) {
-	call := b.program.New()
+	call := b.program.NewCall()
 	call.SetVertices([]float32{})
 	call.SetSelection("source", source)
 	target.Modify(call)

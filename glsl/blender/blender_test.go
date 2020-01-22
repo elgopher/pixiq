@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/jacekolszak/pixiq/glsl/blender"
-	"github.com/jacekolszak/pixiq/glsl/shader"
+	"github.com/jacekolszak/pixiq/glsl/program"
 )
 
 func TestCompileImageBlender(t *testing.T) {
@@ -29,6 +29,6 @@ func TestCompileImageBlender(t *testing.T) {
 type fragmentCompilerStub struct {
 }
 
-func (f fragmentCompilerStub) DrawTriangles() shader.GLProgram {
+func (f fragmentCompilerStub) DrawTriangles() program.GLProgram {
 	panic("implement me")
 }
