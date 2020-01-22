@@ -324,34 +324,21 @@ func Zoom(zoom int) WindowOption {
 	}
 }
 
-func (g *OpenGL) CompileVertexShader(glsl string) (sh.VertexShader, error) {
-	return nil, nil
+func (g *OpenGL) DrawTriangles() sh.GLProgram {
+	return &glProgram{}
 }
 
-func (g *OpenGL) CompileFragmentShader(glsl string) (sh.FragmentShader, error) {
-	return nil, nil
+type glProgram struct {
 }
 
-func (g *OpenGL) DrawTriangles(vertices []float32, vertexShader sh.VertexShader, fragmentShader sh.FragmentShader) sh.Call {
-	c := &call{}
-	return sh.NewCall(c)
-}
-
-type call struct {
-}
-
-func (c *call) SetMatrix4(name string, val [16]float32) {
+func (g *glProgram) Compile() (sh.GLCompiledProgram, error) {
 	panic("implement me")
 }
 
-func (c *call) SetTexture(name string, img *image.Image) {
+func (g *glProgram) SetVertexShader(glsl string) {
 	panic("implement me")
 }
 
-func (c *call) SetFloat(name string, val float32) {
-	panic("implement me")
-}
-
-func (c *call) SetInt(name string, val int) {
+func (g *glProgram) SetFragmentShader(glsl string) {
 	panic("implement me")
 }

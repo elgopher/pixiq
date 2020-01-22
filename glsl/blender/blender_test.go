@@ -29,17 +29,6 @@ func TestCompileImageBlender(t *testing.T) {
 type fragmentCompilerStub struct {
 }
 
-func (f *fragmentCompilerStub) DrawTriangles(vertices []float32, vertexShader shader.VertexShader, fragmentShader shader.FragmentShader) shader.Call {
+func (f fragmentCompilerStub) DrawTriangles() shader.GLProgram {
 	panic("implement me")
-}
-
-func (f *fragmentCompilerStub) CompileVertexShader(glsl string) (shader.VertexShader, error) {
-	panic("implement me")
-}
-
-func (f *fragmentCompilerStub) CompileFragmentShader(glsl string) (shader.FragmentShader, error) {
-	return &fragmentShaderStub{}, nil
-}
-
-type fragmentShaderStub struct {
 }
