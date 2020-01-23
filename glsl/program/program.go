@@ -2,31 +2,55 @@ package program
 
 import "github.com/jacekolszak/pixiq/image"
 
-type GLProgram interface {
+type Draw interface {
 	SetVertexShader(glsl string)
 	SetFragmentShader(glsl string)
-	Compile() (GLCompiledProgram, error)
+	Compile() (CompiledDraw, error)
 }
 
-type GLCompiledProgram interface {
-	New() GLCall
+type CompiledDraw interface {
+	GetVertexIndex(name string)
+	GetParameterIndex(name string) int
+	SetVertexFormat(values []VertexValue)
+	New() DrawCall
 }
 
-type GLCall interface {
-	// data is (x,y) -> (u,v), that is: vertexPosition -> texturePosition
-	//(TODO we need a way to specify offset and stride)
-	SetVertices(data []float32)
-	SetTexture(name string, img *image.Image)
-	SetFloat(name string, val float32)
-	SetInt(name string, val int)
-	SetMatrix4(name string, val [16]float32)
+type DrawCall interface {
+	SetVertexBuffer(buffer VertexBuffer)
+	SetTexture(index int, img *image.Image)
+	SetFloat(index int, val float32)
+	SetInt(index int, val int)
+	SetMatrix4(index int, val [16]float32)
+}
+
+type VertexBuffer struct {
+}
+
+func (b *VertexBuffer) AddFloat(val float32) {
+
+}
+
+func (b *VertexBuffer) AddFloat2(val1 float32, val2 float32) {
+
+}
+
+func (b *VertexBuffer) AddFloat3(val1 float32, val2 float32) {
+
 }
 
 type Program struct {
-	program GLProgram
+	program    Draw
+	parameters []Parameter
 }
 
-func New(program GLProgram) *Program {
+type Parameter struct {
+	Name string
+	Type ParameterType
+}
+
+type ParameterType int
+
+func New(program Draw) *Program {
 	return &Program{program: program}
 }
 
@@ -46,7 +70,12 @@ func (p *Program) Compille() (*CompiledProgram, error) {
 	p.program.SetVertexShader("...")
 	p.program.SetFragmentShader("...")
 	compiled, _ := p.program.Compile()
-	return &CompiledProgram{compiled: compiled}, nil
+	parameterIndices := map[string]int{}
+	for _, param := range p.parameters {
+		parameterIndices[param.Name] = compiled.GetParameterIndex(param.Name)
+	}
+
+	return &CompiledProgram{compiled: compiled, parameterIndices: parameterIndices}, nil
 }
 
 func NewFragmentShader() *FragmentShader {
@@ -72,25 +101,65 @@ func (s *VertexShader) SetMain(sourceCode string) {
 }
 
 type CompiledProgram struct {
-	compiled GLCompiledProgram
+	compiled         CompiledDraw
+	parameterIndices map[string]int
+}
+
+func (p *CompiledProgram) SetVertexFormat(format VertexFormat) {
+	p.compiled.SetVertexFormat(format.values)
 }
 
 func (p *CompiledProgram) NewCall() *Call {
-	return &Call{call: p.compiled.New()}
+	return &Call{call: p.compiled.New(), parameterIndices: p.parameterIndices}
 }
 
 type Call struct {
-	call GLCall
+	call             DrawCall
+	parameterIndices map[string]int
+	buffer           VertexBuffer
 }
 
 func (c *Call) SetSelection(name string, selection image.Selection) {
-	c.call.SetTexture("source", selection.Image())
-	c.call.SetInt("source_x", selection.ImageX())
-	c.call.SetInt("source_y", selection.ImageY())
-	c.call.SetInt("source_width", selection.Width())
-	c.call.SetInt("source_height", selection.Height())
+	c.call.SetTexture(c.parameterIndices[name], selection.Image())
+	c.call.SetInt(c.parameterIndices[name+"_x"], selection.ImageX())
+	c.call.SetInt(c.parameterIndices[name+"_y"], selection.ImageY())
+	c.call.SetInt(c.parameterIndices[name+"_width"], selection.Width())
+	c.call.SetInt(c.parameterIndices[name+"_height"], selection.Height())
 }
 
-func (c *Call) SetVertices(data []float32) {
-	c.call.SetVertices(data)
+func (c *Call) SetVertexBuffer(buffer VertexBuffer) {
+	c.buffer = buffer
 }
+
+type VertexFormat struct {
+	values []VertexValue
+}
+
+// 1 x float32
+func (f VertexFormat) AddFloat(name string) {
+}
+
+// 2 x float32
+func (f VertexFormat) AddFloat2(name string) {
+}
+
+// 3 x float32
+func (f VertexFormat) AddFloat3(name string) {
+}
+
+// 4 x float32
+func (f VertexFormat) AddFloat4(name string) {
+}
+
+func (f VertexFormat) AddByte(name string) {
+}
+
+type VertexValue struct {
+	Index      int
+	Size       int
+	VertexType VertexType
+	Stride     int
+	Offset     int
+}
+
+type VertexType int // TODO FLOAT,

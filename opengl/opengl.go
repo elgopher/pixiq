@@ -324,21 +324,21 @@ func Zoom(zoom int) WindowOption {
 	}
 }
 
-func (g *OpenGL) DrawTriangles() program2.GLProgram {
-	return &glProgram{}
+func (g *OpenGL) DrawProgram() program2.Draw {
+	return &drawProgram{}
 }
 
-type glProgram struct {
+type drawProgram struct {
 }
 
-func (g *glProgram) Compile() (program2.GLCompiledProgram, error) {
+func (g *drawProgram) Compile() (program2.CompiledDraw, error) {
 	panic("implement me")
 }
 
-func (g *glProgram) SetVertexShader(glsl string) {
+func (g *drawProgram) SetVertexShader(glsl string) {
 	panic("implement me")
 }
 
-func (g *glProgram) SetFragmentShader(glsl string) {
+func (g *drawProgram) SetFragmentShader(glsl string) {
 	panic("implement me")
 }

@@ -29,6 +29,6 @@ func TestCompileImageBlender(t *testing.T) {
 type fragmentCompilerStub struct {
 }
 
-func (f fragmentCompilerStub) DrawTriangles() program.GLProgram {
+func (f fragmentCompilerStub) DrawProgram() program.Draw {
 	panic("implement me")
 }

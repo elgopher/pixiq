@@ -6,14 +6,14 @@ import (
 )
 
 type GL interface {
-	DrawTriangles() program.GLProgram
+	DrawProgram() program.Draw
 }
 
 func CompileImageBlender(gl GL) (*ImageBlender, error) {
 	if gl == nil {
 		panic("nil drawer")
 	}
-	prog := program.New(gl.DrawTriangles())
+	prog := program.New(gl.DrawProgram())
 	prog.AddSelectionParameter("source")
 
 	vertexShader := program.NewVertexShader()
@@ -25,6 +25,11 @@ func CompileImageBlender(gl GL) (*ImageBlender, error) {
 	prog.SetFragmentShader(fragmentShader)
 
 	compiledProgram, _ := prog.Compille()
+
+	vertexFormat := program.VertexFormat{}
+	vertexFormat.AddFloat2("vertexPosition")
+	vertexFormat.AddFloat2("texturePosition")
+	compiledProgram.SetVertexFormat(vertexFormat)
 
 	// TODO Here we can verify that blending really works on this platform
 	// by executing blend. If it does not we can return error. This is much
@@ -38,7 +43,11 @@ type ImageBlender struct {
 
 func (b *ImageBlender) Blend(source, target image.Selection) {
 	call := b.program.NewCall()
-	call.SetVertices([]float32{})
+	buffer := program.VertexBuffer{}
+	buffer.AddFloat2(1, 2)
+	buffer.AddFloat2(1, 2)
+
+	call.SetVertexBuffer(buffer)
 	call.SetSelection("source", source)
 	target.Modify(call)
 }
