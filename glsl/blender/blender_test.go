@@ -29,6 +29,10 @@ func TestCompileImageBlender(t *testing.T) {
 type fragmentCompilerStub struct {
 }
 
+func (f fragmentCompilerStub) NewFloatVertexBuffer(program.BufferUsage) program.FloatVertexBuffer {
+	panic("implement me")
+}
+
 func (f fragmentCompilerStub) DrawProgram() program.Draw {
 	panic("implement me")
 }

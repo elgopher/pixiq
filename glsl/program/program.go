@@ -1,6 +1,35 @@
 package program
 
-import "github.com/jacekolszak/pixiq/image"
+import (
+	"github.com/jacekolszak/pixiq/image"
+)
+
+type Buffers interface {
+	NewFloatVertexBuffer(BufferUsage) FloatVertexBuffer
+}
+type BufferUsage int
+
+const (
+	StreamDraw BufferUsage = iota
+	StreamRead
+	StreamCopy
+	StaticDraw
+	StaticRead
+	StaticCopy
+	DynamicDraw
+	DynamicRead
+	DynamicCopy
+)
+
+// FloatVertexBuffer represents a buffer of floats held in a video card memory
+type FloatVertexBuffer interface {
+	Update(offset int, data []float32)
+	Pointer(start, length, stride int) VertexBufferPointer
+	Delete()
+}
+
+type VertexBufferPointer interface {
+}
 
 type Draw interface {
 	SetVertexShader(glsl string)
@@ -9,19 +38,32 @@ type Draw interface {
 }
 
 type CompiledDraw interface {
-	GetVertexIndex(name string)
-	GetParameterIndex(name string) int
-	SetVertexFormat(values []VertexValue)
-	New() DrawCall
+	GetVertexAttributeLocation(name string) int
+	GetUniformLocation(name string) int
+	NewCall(func(call DrawCall)) image.AcceleratedCall
 }
 
 type DrawCall interface {
-	SetVertexBuffer(buffer VertexBuffer)
-	SetTexture(index int, img *image.Image)
-	SetFloat(index int, val float32)
-	SetInt(index int, val int)
-	SetMatrix4(index int, val [16]float32)
+	SetVertexAttribute(location int, pointer VertexBufferPointer)
+	SetTexture0(img *image.Image)
+	SetFloatUniform(location int, val float32)
+	SetIntUniform(location int, val int)
+	SetMatrix4Uniform(location int, val [16]float32)
+	Draw(mode Mode, first, count int)
 }
+
+// Mode specifies what kind of primitives to render
+type Mode int
+
+const (
+	Points Mode = iota
+	LineStrip
+	LineLoop
+	Lines
+	TriangleStrip
+	TriangleFan
+	Triangles
+)
 
 type VertexBuffer struct {
 }
@@ -72,7 +114,7 @@ func (p *Program) Compille() (*CompiledProgram, error) {
 	compiled, _ := p.program.Compile()
 	parameterIndices := map[string]int{}
 	for _, param := range p.parameters {
-		parameterIndices[param.Name] = compiled.GetParameterIndex(param.Name)
+		parameterIndices[param.Name] = compiled.GetUniformLocation(param.Name)
 	}
 
 	return &CompiledProgram{compiled: compiled, parameterIndices: parameterIndices}, nil
@@ -106,29 +148,10 @@ type CompiledProgram struct {
 }
 
 func (p *CompiledProgram) SetVertexFormat(format VertexFormat) {
-	p.compiled.SetVertexFormat(format.values)
 }
 
-func (p *CompiledProgram) NewCall() *Call {
-	return &Call{call: p.compiled.New(), parameterIndices: p.parameterIndices}
-}
-
-type Call struct {
-	call             DrawCall
-	parameterIndices map[string]int
-	buffer           VertexBuffer
-}
-
-func (c *Call) SetSelection(name string, selection image.Selection) {
-	c.call.SetTexture(c.parameterIndices[name], selection.Image())
-	c.call.SetInt(c.parameterIndices[name+"_x"], selection.ImageX())
-	c.call.SetInt(c.parameterIndices[name+"_y"], selection.ImageY())
-	c.call.SetInt(c.parameterIndices[name+"_width"], selection.Width())
-	c.call.SetInt(c.parameterIndices[name+"_height"], selection.Height())
-}
-
-func (c *Call) SetVertexBuffer(buffer VertexBuffer) {
-	c.buffer = buffer
+func (p *CompiledProgram) NewCall(f func(call HighLevelCall)) image.AcceleratedCall {
+	return nil
 }
 
 type VertexFormat struct {
@@ -156,10 +179,31 @@ func (f VertexFormat) AddByte(name string) {
 
 type VertexValue struct {
 	Index      int
-	Size       int
 	VertexType VertexType
-	Stride     int
-	Offset     int
+	// Size specifies the number of components per generic vertex attribute.
+	// Must be 1, 2, 3, 4. The initial value is 4.
+	Size int
+	// Stride specifies the byte offset between consecutive generic vertex attributes.
+	// If stride is 0, the generic vertex attributes are understood to be tightly
+	// packed in the array. The initial value is 0.
+	Stride int
+	// Specifies a pointer to the first generic vertex attribute in the array.
+	// If a non-zero buffer is currently bound to the GL_ARRAY_BUFFER target,
+	// pointer specifies an offset of into the array in the data store of that buffer.
+	Offset int
 }
 
 type VertexType int // TODO FLOAT,
+
+const (
+	Float VertexType = iota
+)
+
+type HighLevelCall struct {
+	VertexBuffer
+	DrawCall
+}
+
+func (c *HighLevelCall) SetSelection(name string, selection image.Selection) {
+	// save in some map or something
+}

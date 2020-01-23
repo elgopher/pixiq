@@ -342,3 +342,52 @@ func (g *drawProgram) SetVertexShader(glsl string) {
 func (g *drawProgram) SetFragmentShader(glsl string) {
 	panic("implement me")
 }
+
+type compiledDraw struct {
+	programID uint32
+}
+
+func (c *compiledDraw) NewCall(f func(call program2.DrawCall)) image.AcceleratedCall {
+	return func() {
+		f(&drawCall{})
+	}
+}
+
+func (c *compiledDraw) GetVertexAttributeLocation(name string) int {
+	return int(gl.GetAttribLocation(c.programID, gl.Str("vertexPosition\x00")))
+}
+
+func (c *compiledDraw) GetUniformLocation(name string) int {
+	panic("implement me")
+}
+
+type drawCall struct {
+}
+
+func (d *drawCall) SetVertexAttribute(location int, pointer program2.VertexBufferPointer) {
+	panic("implement me")
+}
+
+func (d *drawCall) SetTexture0(img *image.Image) {
+	panic("implement me")
+}
+
+func (d *drawCall) SetFloatUniform(location int, val float32) {
+	panic("implement me")
+}
+
+func (d *drawCall) SetIntUniform(location int, val int) {
+	panic("implement me")
+}
+
+func (d *drawCall) SetMatrix4Uniform(location int, val [16]float32) {
+	panic("implement me")
+}
+
+func (d *drawCall) Draw(mode program2.Mode, first, count int) {
+	panic("implement me")
+}
+
+func (g *OpenGL) NewFloatVertexBuffer(program2.BufferUsage) program2.FloatVertexBuffer {
+	panic("implement me")
+}
