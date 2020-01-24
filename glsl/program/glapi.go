@@ -27,7 +27,12 @@ type FloatVertexBuffer interface {
 	Delete()
 }
 
-type VertexBufferPointer interface {
+type VertexBufferPointer struct {
+	ID     uint32
+	Size   int
+	GLType int
+	Stride int
+	Offset int
 }
 
 type Draw interface {

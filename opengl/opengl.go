@@ -274,7 +274,7 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 			return
 		}
 		win.glfwWindow.SetKeyCallback(win.keyboardEvents.OnKeyCallback)
-		win.program, err = compileProgram()
+		win.program, err = compileProgram(vertexShaderSrc, fragmentShaderSrc)
 		if err != nil {
 			return
 		}
@@ -325,30 +325,50 @@ func Zoom(zoom int) WindowOption {
 }
 
 func (g *OpenGL) DrawProgram() program2.Draw {
-	return &drawProgram{}
+	return &drawProgram{mainThreadLoop: g.mainThreadLoop, glfwWindow: g.mainWindow}
 }
 
 type drawProgram struct {
+	vertexShaderSrc   string
+	fragmentShaderSrc string
+	mainThreadLoop    *MainThreadLoop
+	glfwWindow        *glfw.Window
 }
 
 func (g *drawProgram) Compile() (program2.CompiledDraw, error) {
-	panic("implement me")
+	var err error
+	var program *program
+	g.mainThreadLoop.Execute(func() {
+		g.mainThreadLoop.bind(g.glfwWindow)()
+		program, err = compileProgram(g.vertexShaderSrc, g.fragmentShaderSrc)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &compiledDraw{program: program, glfwWindow: g.glfwWindow, mainThreadLoop: g.mainThreadLoop}, nil
 }
 
 func (g *drawProgram) SetVertexShader(glsl string) {
-	panic("implement me")
+	g.vertexShaderSrc = glsl
 }
 
 func (g *drawProgram) SetFragmentShader(glsl string) {
-	panic("implement me")
+	g.fragmentShaderSrc = glsl
 }
 
 type compiledDraw struct {
-	programID uint32
+	mainThreadLoop *MainThreadLoop
+	glfwWindow     *glfw.Window
+	program        *program
 }
 
 func (c *compiledDraw) NewVertexArrayObject() program2.VertexArrayObject {
-	panic("implement me")
+	var id uint32
+	c.mainThreadLoop.Execute(func() {
+		c.mainThreadLoop.bind(c.glfwWindow)()
+		gl.GenVertexArrays(1, &id)
+	})
+	return &vao{id: id, mainThreadLoop: c.mainThreadLoop, glfwWindow: c.glfwWindow}
 }
 
 func (c *compiledDraw) Delete() {
@@ -357,13 +377,21 @@ func (c *compiledDraw) Delete() {
 
 func (c *compiledDraw) NewCall(f func(call program2.DrawCall)) image.AcceleratedCall {
 	return func() {
-		// bind program
-		f(&drawCall{})
+		c.mainThreadLoop.Execute(func() {
+			c.mainThreadLoop.bind(c.glfwWindow)()
+			gl.UseProgram(c.program.id)
+			f(&drawCall{})
+		})
 	}
 }
 
 func (c *compiledDraw) GetVertexAttributeLocation(name string) int {
-	return int(gl.GetAttribLocation(c.programID, gl.Str("vertexPosition\x00")))
+	var location int
+	c.mainThreadLoop.Execute(func() {
+		c.mainThreadLoop.bind(c.glfwWindow)()
+		location = int(gl.GetAttribLocation(c.program.id, gl.Str(name+"\x00")))
+	})
+	return location
 }
 
 func (c *compiledDraw) GetUniformLocation(name string) int {
@@ -398,5 +426,63 @@ func (d *drawCall) Draw(mode program2.Mode, first, count int) {
 }
 
 func (g *OpenGL) NewFloatVertexBuffer(program2.BufferUsage) program2.FloatVertexBuffer {
+	var id uint32
+	g.mainThreadLoop.Execute(func() {
+		g.mainThreadLoop.bind(g.mainWindow)()
+		gl.GenBuffers(1, &id)
+	})
+	return &floatVBO{id: id, mainThreadLoop: g.mainThreadLoop, glfwWindow: g.mainWindow}
+}
+
+type floatVBO struct {
+	mainThreadLoop *MainThreadLoop
+	glfwWindow     *glfw.Window
+	id             uint32
+}
+
+func (f *floatVBO) Update(offset int, data []float32) {
+	f.mainThreadLoop.Execute(func() {
+		f.mainThreadLoop.bind(f.glfwWindow)()
+		gl.BufferSubData(f.id, offset, len(data)*4, gl.Ptr(data))
+	})
+}
+
+func (f *floatVBO) Pointer(start, length, stride int) program2.VertexBufferPointer {
+	return program2.VertexBufferPointer{
+		ID:     f.id,
+		Size:   length,
+		GLType: gl.FLOAT,
+		Stride: stride * 4,
+		Offset: start * 4,
+	}
+}
+
+func (f *floatVBO) Delete() {
+	panic("implement me")
+}
+
+type vao struct {
+	id             uint32
+	mainThreadLoop *MainThreadLoop
+	glfwWindow     *glfw.Window
+}
+
+func (v *vao) SetVertexAttribute(location int, pointer program2.VertexBufferPointer) {
+	v.mainThreadLoop.Execute(func() {
+		v.mainThreadLoop.bind(v.glfwWindow)()
+		gl.BindVertexArray(v.id)
+		gl.BindBuffer(gl.ARRAY_BUFFER, pointer.ID)
+		gl.VertexAttribPointer(
+			uint32(location),
+			int32(pointer.Size),
+			gl.FLOAT,
+			false,
+			int32(pointer.Stride),
+			gl.PtrOffset(pointer.Offset),
+		)
+	})
+}
+
+func (v *vao) Delete() {
 	panic("implement me")
 }
