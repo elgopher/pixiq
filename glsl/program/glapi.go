@@ -50,8 +50,8 @@ type VertexArrayObject interface {
 }
 
 type DrawCall interface {
-	SetVertexArrayObject(VertexArrayObject)
-	SetTexture0(img *image.Image)
+	BindVertexArrayObject(VertexArrayObject)
+	BindTexture0(img *image.Image)
 	SetFloatUniform(location int, val float32)
 	SetIntUniform(location int, val int)
 	SetMatrix4Uniform(location int, val [16]float32)

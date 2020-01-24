@@ -106,8 +106,8 @@ func (b *ImageBlender) Blend(source, target image.Selection) {
 	// or low-level
 	lowLevelCall := b.compiled.NewCall(func(call program.DrawCall) {
 		// TODO niebezpieczne troche bo closure wciaz ma dostep do zmiennych w funkcji otaczajacej
-		call.SetVertexArrayObject(b.vao)
-		call.SetTexture0(source.Image())
+		call.BindVertexArrayObject(b.vao)
+		call.BindTexture0(source.Image())
 		call.Draw(program.Triangles, 0, 3)
 		call.Draw(program.Triangles, 3, 3)
 	})

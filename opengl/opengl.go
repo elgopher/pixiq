@@ -373,11 +373,11 @@ func (c *compiledDraw) GetUniformLocation(name string) int {
 type drawCall struct {
 }
 
-func (d *drawCall) SetVertexArrayObject(program2.VertexArrayObject) {
+func (d *drawCall) BindVertexArrayObject(program2.VertexArrayObject) {
 	panic("implement me")
 }
 
-func (d *drawCall) SetTexture0(img *image.Image) {
+func (d *drawCall) BindTexture0(img *image.Image) {
 	panic("implement me")
 }
 
