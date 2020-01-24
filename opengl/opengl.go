@@ -347,8 +347,17 @@ type compiledDraw struct {
 	programID uint32
 }
 
+func (c *compiledDraw) NewVertexArrayObject() program2.VertexArrayObject {
+	panic("implement me")
+}
+
+func (c *compiledDraw) Delete() {
+	panic("implement me")
+}
+
 func (c *compiledDraw) NewCall(f func(call program2.DrawCall)) image.AcceleratedCall {
 	return func() {
+		// bind program
 		f(&drawCall{})
 	}
 }
