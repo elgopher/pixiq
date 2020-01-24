@@ -41,6 +41,7 @@ func main() {
 		}
 		vbo.Update(0, data)
 
+		// TODO Shared VAO is not possible
 		vao := compiledProgram.NewVertexArrayObject()
 		vao.SetVertexAttribute(vertexPosition, vbo.Pointer(0, 2, 4))
 		vao.SetVertexAttribute(texturePosition, vbo.Pointer(2, 2, 4))
