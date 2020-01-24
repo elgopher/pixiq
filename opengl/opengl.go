@@ -364,7 +364,7 @@ func (c *compiledDraw) GetUniformLocation(name string) int {
 type drawCall struct {
 }
 
-func (d *drawCall) SetVertexAttribute(location int, pointer program2.VertexBufferPointer) {
+func (d *drawCall) SetVertexArrayObject(program2.VertexArrayObject) {
 	panic("implement me")
 }
 

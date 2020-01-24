@@ -53,6 +53,10 @@ func CompileImageBlender(gl GL) (*ImageBlender, error) {
 		-1, 1, 0, 0,
 	})
 
+	vao := compiled.NewVertexArrayObject()
+	vao.SetVertexAttribute(vertexPosition, buffer.Pointer(0, 2, 4))
+	vao.SetVertexAttribute(texturePosition, buffer.Pointer(2, 2, 4))
+
 	// high level:
 	prog := program.New(gl.DrawProgram())
 	prog.AddSelectionParameter("source")
@@ -75,21 +79,17 @@ func CompileImageBlender(gl GL) (*ImageBlender, error) {
 	// by executing blend. If it does not we can return error. This is much
 	// better than panicking during real Blending
 	return &ImageBlender{
-			program:         compiledProgram,
-			compiled:        compiled,
-			vertexPosition:  vertexPosition,
-			texturePosition: texturePosition,
-			buffer:          buffer,
+			program:  compiledProgram,
+			compiled: compiled,
+			vao:      vao,
 		},
 		nil
 }
 
 type ImageBlender struct {
-	program         *program.CompiledProgram
-	vertexPosition  int
-	texturePosition int
-	buffer          program.FloatVertexBuffer
-	compiled        program.CompiledDraw
+	program  *program.CompiledProgram
+	compiled program.CompiledDraw
+	vao      program.VertexArrayObject
 }
 
 func (b *ImageBlender) Blend(source, target image.Selection) {
@@ -106,8 +106,7 @@ func (b *ImageBlender) Blend(source, target image.Selection) {
 	// or low-level
 	lowLevelCall := b.compiled.NewCall(func(call program.DrawCall) {
 		// TODO niebezpieczne troche bo closure wciaz ma dostep do zmiennych w funkcji otaczajacej
-		call.SetVertexAttribute(b.vertexPosition, b.buffer.Pointer(0, 2, 4))
-		call.SetVertexAttribute(b.texturePosition, b.buffer.Pointer(2, 2, 4))
+		call.SetVertexArrayObject(b.vao)
 		call.SetTexture0(source.Image())
 		call.Draw(program.Triangles, 0, 3)
 		call.Draw(program.Triangles, 3, 3)

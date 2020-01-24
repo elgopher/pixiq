@@ -7,6 +7,7 @@ import (
 type Buffers interface {
 	NewFloatVertexBuffer(BufferUsage) FloatVertexBuffer
 }
+
 type BufferUsage int
 
 const (
@@ -40,11 +41,18 @@ type Draw interface {
 type CompiledDraw interface {
 	GetVertexAttributeLocation(name string) int
 	GetUniformLocation(name string) int
+	NewVertexArrayObject() VertexArrayObject
 	NewCall(func(call DrawCall)) image.AcceleratedCall
+	Delete()
+}
+
+type VertexArrayObject interface {
+	SetVertexAttribute(location int, pointer VertexBufferPointer)
+	Delete()
 }
 
 type DrawCall interface {
-	SetVertexAttribute(location int, pointer VertexBufferPointer)
+	SetVertexArrayObject(VertexArrayObject)
 	SetTexture0(img *image.Image)
 	SetFloatUniform(location int, val float32)
 	SetIntUniform(location int, val int)
