@@ -112,4 +112,12 @@ func (b *ImageBlender) Blend(source, target image.Selection) {
 		call.Draw(program.Triangles, 3, 3)
 	})
 	target.Modify(lowLevelCall)
+
+	vertexBuffer := struct{}{}
+
+	target.Modify2(b.program, func(call image.ProgramCall) {
+		call.SetSelection("source", source) // tu nie cieknie abstrakcja wiec ta funkckja moze dzialac z roznymi technologiami
+		call.SetFloat("a", 1.0)
+		call.Draw(vertexBuffer, program.Triangles)
+	})
 }

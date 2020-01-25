@@ -1,6 +1,10 @@
 package image
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/jacekolszak/pixiq/glsl/program"
+)
 
 // AcceleratedImage is an image processed externally (outside the CPU).
 type AcceleratedImage interface {
@@ -8,15 +12,25 @@ type AcceleratedImage interface {
 	Download(pixels AcceleratedFragmentPixels)
 	// There is a guarantee that passed image will be clamped to image boundaries
 	Modify(selection AcceleratedFragmentLocation, call AcceleratedCall)
+	Modify2() AcceleratedModifyCall
+}
+
+type AcceleratedModifyCall interface {
+	SetFloat(name string, value float32)
+	// TODO Tu nie ma clampowania
+	SetSelection(name string,
+		image AcceleratedImage,
+		location AcceleratedFragmentLocation)
+}
+
+type VertexBuffer interface {
 }
 
 // AcceleratedCall is an execution of a previously complied program which runs
 // externally (outside the CPU).
 type AcceleratedCall interface{}
 
-// AcceleratedFragmentLocation differs from Selection that it clamps to images boundaries.
 type AcceleratedFragmentLocation struct {
-	// TODO Maybe use uint ??
 	X, Y, Width, Height int
 }
 
@@ -281,5 +295,28 @@ func (s Selection) Modify(call AcceleratedCall) {
 // when needed.
 // TODO Implement
 func (s Selection) Upload() {
+
+}
+
+// JAK DO TEJ PORY ZDECYDOWANIE NAJLEPSZA ABSTRAKCJA
+func (s Selection) Modify2(compiledProgram *program.CompiledProgram, f func(call ProgramCall)) {
+	call := ProgramCall{acceleratedCall: s.image.acceleratedImage.Modify2()}
+	f(call)
+}
+
+type ProgramCall struct {
+	acceleratedCall AcceleratedModifyCall
+}
+
+func (c ProgramCall) SetFloat(name string, value float32) {
+	c.acceleratedCall.SetFloat(name, value)
+}
+
+func (c ProgramCall) SetSelection(name string, selection Selection) {
+	selection.image.acceleratedImage.Upload(AcceleratedFragmentPixels{})
+	c.acceleratedCall.SetSelection(name, selection.image.acceleratedImage, AcceleratedFragmentLocation{})
+}
+
+func (c ProgramCall) Draw(buffer struct{}, triangles program.Mode) {
 
 }
