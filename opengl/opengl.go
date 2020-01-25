@@ -53,11 +53,17 @@ func New(mainThreadLoop *MainThreadLoop) (*OpenGL, error) {
 	if err != nil {
 		return nil, err
 	}
+	runInOpenGLContextThread := func(job func()) {
+		mainThreadLoop.Execute(func() {
+			mainThreadLoop.bind(mainWindow)
+			job()
+		})
+	}
 	openGL := &OpenGL{
-		mainThreadLoop:     mainThreadLoop,
-		bindWindowToThread: mainThreadLoop.bind(mainWindow),
-		stopPollingEvents:  make(chan struct{}),
-		mainWindow:         mainWindow,
+		mainThreadLoop:           mainThreadLoop,
+		runInOpenGLContextThread: runInOpenGLContextThread,
+		stopPollingEvents:        make(chan struct{}),
+		mainWindow:               mainWindow,
 	}
 	go openGL.startPollingEvents(openGL.stopPollingEvents)
 	return openGL, nil
@@ -97,7 +103,7 @@ func createWindow(mainThreadLoop *MainThreadLoop, share *glfw.Window) (*glfw.Win
 	if err != nil {
 		return nil, err
 	}
-	mainThreadLoop.bind(win)()
+	mainThreadLoop.bind(win)
 	if err := gl.Init(); err != nil {
 		return nil, err
 	}
@@ -107,10 +113,10 @@ func createWindow(mainThreadLoop *MainThreadLoop, share *glfw.Window) (*glfw.Win
 // OpenGL provides method for creating OpenGL-accelerated image.Image and opening
 // windows.
 type OpenGL struct {
-	mainThreadLoop     *MainThreadLoop
-	bindWindowToThread func()
-	stopPollingEvents  chan struct{}
-	mainWindow         *glfw.Window
+	mainThreadLoop           *MainThreadLoop
+	runInOpenGLContextThread func(func())
+	stopPollingEvents        chan struct{}
+	mainWindow               *glfw.Window
 }
 
 // Destroy cleans all the OpenGL resources associated with this instance.
@@ -119,8 +125,7 @@ type OpenGL struct {
 // OpenGL contexts.
 func (g *OpenGL) Destroy() {
 	g.stopPollingEvents <- struct{}{}
-	g.mainThreadLoop.Execute(func() {
-		g.mainThreadLoop.bind(g.mainWindow)()
+	g.runInOpenGLContextThread(func() {
 		g.mainWindow.Destroy()
 	})
 }
@@ -187,8 +192,7 @@ func (g *OpenGL) NewAcceleratedImage(width, height int) (image.AcceleratedImage,
 func (g *OpenGL) newTexture(width, height int) (*texture, error) {
 	var id uint32
 	var err error
-	g.mainThreadLoop.Execute(func() {
-		g.bindWindowToThread()
+	g.runInOpenGLContextThread(func() {
 		gl.GenTextures(1, &id)
 		gl.BindTexture(gl.TEXTURE_2D, id)
 		gl.TexImage2D(
@@ -216,16 +220,14 @@ func (g *OpenGL) newTexture(width, height int) (*texture, error) {
 		id:                 id,
 		width:              width,
 		height:             height,
-		mainThreadLoop:     g.mainThreadLoop,
-		bindWindowToThread: g.bindWindowToThread,
+		runInContextThread: g.runInOpenGLContextThread,
 	}, nil
 }
 
 type texture struct {
 	id                 uint32
 	width, height      int
-	mainThreadLoop     *MainThreadLoop
-	bindWindowToThread func()
+	runInContextThread func(func())
 }
 
 func (t *texture) TextureID() uint32 {
@@ -233,8 +235,7 @@ func (t *texture) TextureID() uint32 {
 }
 
 func (t *texture) Upload(pixels []image.Color) {
-	t.mainThreadLoop.Execute(func() {
-		t.bindWindowToThread()
+	t.runInContextThread(func() {
 		gl.BindTexture(gl.TEXTURE_2D, t.id)
 		gl.TexSubImage2D(
 			gl.TEXTURE_2D,
@@ -251,8 +252,7 @@ func (t *texture) Upload(pixels []image.Color) {
 }
 
 func (t *texture) Download(output []image.Color) {
-	t.mainThreadLoop.Execute(func() {
-		t.bindWindowToThread()
+	t.runInContextThread(func() {
 		gl.BindTexture(gl.TEXTURE_2D, t.id)
 		gl.GetTexImage(
 			gl.TEXTURE_2D,
@@ -324,8 +324,7 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 func (g *OpenGL) CompileFragmentShader(sourceCode string) (*FragmentShader, error) {
 	var shader *shader
 	var err error
-	g.mainThreadLoop.Execute(func() {
-		g.mainThreadLoop.bind(g.mainWindow)
+	g.runInOpenGLContextThread(func() {
 		shader, err = compileFragmentShader(sourceCode)
 	})
 	if err != nil {
@@ -338,8 +337,7 @@ func (g *OpenGL) CompileFragmentShader(sourceCode string) (*FragmentShader, erro
 func (g *OpenGL) CompileVertexShader(sourceCode string) (*VertexShader, error) {
 	var shader *shader
 	var err error
-	g.mainThreadLoop.Execute(func() {
-		g.mainThreadLoop.bind(g.mainWindow)
+	g.runInOpenGLContextThread(func() {
 		shader, err = compileVertexShader(sourceCode)
 	})
 	if err != nil {
@@ -359,8 +357,7 @@ func (g *OpenGL) LinkProgram(vertexShader *VertexShader, fragmentShader *Fragmen
 	}
 	var program *program
 	var err error
-	g.mainThreadLoop.Execute(func() {
-		g.mainThreadLoop.bind(g.mainWindow)
+	g.runInOpenGLContextThread(func() {
 		program, err = linkProgram(vertexShader.shader, fragmentShader.shader)
 	})
 	if err != nil {
