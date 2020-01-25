@@ -217,17 +217,17 @@ func (g *OpenGL) newTexture(width, height int) (*texture, error) {
 		return nil, err
 	}
 	return &texture{
-		id:                 id,
-		width:              width,
-		height:             height,
-		runInContextThread: g.runInOpenGLContextThread,
+		id:                       id,
+		width:                    width,
+		height:                   height,
+		runInOpenGLContextThread: g.runInOpenGLContextThread,
 	}, nil
 }
 
 type texture struct {
-	id                 uint32
-	width, height      int
-	runInContextThread func(func())
+	id                       uint32
+	width, height            int
+	runInOpenGLContextThread func(func())
 }
 
 func (t *texture) TextureID() uint32 {
@@ -235,7 +235,7 @@ func (t *texture) TextureID() uint32 {
 }
 
 func (t *texture) Upload(pixels []image.Color) {
-	t.runInContextThread(func() {
+	t.runInOpenGLContextThread(func() {
 		gl.BindTexture(gl.TEXTURE_2D, t.id)
 		gl.TexSubImage2D(
 			gl.TEXTURE_2D,
@@ -252,7 +252,7 @@ func (t *texture) Upload(pixels []image.Color) {
 }
 
 func (t *texture) Download(output []image.Color) {
-	t.runInContextThread(func() {
+	t.runInOpenGLContextThread(func() {
 		gl.BindTexture(gl.TEXTURE_2D, t.id)
 		gl.GetTexImage(
 			gl.TEXTURE_2D,
