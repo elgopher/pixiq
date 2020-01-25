@@ -49,7 +49,7 @@ type screenPolygon struct {
 }
 
 func (p *screenPolygon) draw() {
-	gl.BindBuffer(gl.ARRAY_BUFFER, p.vertexBufferID) // TODO To jest niezbedne?
+	gl.BindBuffer(gl.ARRAY_BUFFER, p.vertexBufferID)
 	gl.BindVertexArray(p.vertexArrayID)
 	gl.DrawArrays(gl.TRIANGLES, 0, 6)
 }

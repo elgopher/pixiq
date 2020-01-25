@@ -471,6 +471,18 @@ func (g *OpenGL) NewFloatVertexBuffer(program2.BufferUsage) program2.FloatVertex
 	return &floatVBO{id: id, mainThreadLoop: g.mainThreadLoop, glfwWindow: g.mainWindow}
 }
 
+func (g *OpenGL) CompileVertexShader(src string) (*shader, error) {
+	return compileVertexShader(src)
+}
+
+func (g *OpenGL) CompileFragmentShader(src string) (*shader, error) {
+	return compileFragmentShader(src)
+}
+
+func (g *OpenGL) LinkProgram(vertexShader *shader, fragmentShader *shader) {
+
+}
+
 type floatVBO struct {
 	mainThreadLoop *MainThreadLoop
 	glfwWindow     *glfw.Window

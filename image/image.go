@@ -24,6 +24,8 @@ type AcceleratedModifyCall interface {
 }
 
 type VertexBuffer interface {
+	AddColor(color Color)
+	AddFloat2(x, y float32)
 }
 
 // AcceleratedCall is an execution of a previously complied program which runs
@@ -317,6 +319,6 @@ func (c ProgramCall) SetSelection(name string, selection Selection) {
 	c.acceleratedCall.SetSelection(name, selection.image.acceleratedImage, AcceleratedFragmentLocation{})
 }
 
-func (c ProgramCall) Draw(buffer struct{}, triangles program.Mode) {
+func (c ProgramCall) Draw(buffer VertexBuffer, triangles program.Mode) {
 
 }

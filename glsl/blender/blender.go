@@ -1,6 +1,7 @@
 package blender
 
 import (
+	"github.com/jacekolszak/pixiq/colornames"
 	"github.com/jacekolszak/pixiq/glsl/program"
 	"github.com/jacekolszak/pixiq/image"
 )
@@ -113,11 +114,13 @@ func (b *ImageBlender) Blend(source, target image.Selection) {
 	})
 	target.Modify(lowLevelCall)
 
-	vertexBuffer := struct{}{}
+	var vb image.VertexBuffer
 
 	target.Modify2(b.program, func(call image.ProgramCall) {
 		call.SetSelection("source", source) // tu nie cieknie abstrakcja wiec ta funkckja moze dzialac z roznymi technologiami
 		call.SetFloat("a", 1.0)
-		call.Draw(vertexBuffer, program.Triangles)
+		vb.AddColor(colornames.Blue)
+		vb.AddFloat2(2, 3)
+		call.Draw(vb, program.Triangles)
 	})
 }
