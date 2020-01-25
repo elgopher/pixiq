@@ -320,6 +320,57 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 	return win, nil
 }
 
+// CompileFragmentShader compiles fragment shader source code written in GLSL.
+func (g *OpenGL) CompileFragmentShader(sourceCode string) (FragmentShader, error) {
+	var shader *shader
+	var err error
+	g.mainThreadLoop.Execute(func() {
+		g.mainThreadLoop.bind(g.mainWindow)
+		shader, err = compileFragmentShader(sourceCode)
+	})
+	return shader, err
+}
+
+// CompileVertexShader compiles vertex shader source code written in GLSL.
+func (g *OpenGL) CompileVertexShader(sourceCode string) (VertexShader, error) {
+	var shader *shader
+	var err error
+	g.mainThreadLoop.Execute(func() {
+		g.mainThreadLoop.bind(g.mainWindow)
+		shader, err = compileVertexShader(sourceCode)
+	})
+	return shader, err
+}
+
+// LinkProgram links an OpenGL program from shaders. Created program can be used
+// in image.Modify
+func (g *OpenGL) LinkProgram(vertexShader VertexShader, fragmentShader FragmentShader) (Program, error) {
+	if vertexShader == nil {
+		return nil, errors.New("nil vertexShader")
+	}
+	if fragmentShader == nil {
+		return nil, errors.New("nil fragmentShader")
+	}
+	var program *program
+	var err error
+	g.mainThreadLoop.Execute(func() {
+		g.mainThreadLoop.bind(g.mainWindow)
+		program, err = linkProgram(vertexShader, fragmentShader)
+	})
+	return program, err
+}
+
+// FragmentShader is a part of an OpenGL program which transforms each fragment
+// (pixel) color into another one
+type FragmentShader *shader
+
+// VertexShader is a part of an OpenGL program which applies transformations
+// to drawn vertices.
+type VertexShader *shader
+
+// Program is shaders linked together
+type Program *program
+
 // WindowOption is an option used when opening the window.
 type WindowOption func(window *Window)
 

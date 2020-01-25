@@ -76,6 +76,9 @@ func compileFragmentShader(src string) (*shader, error) {
 }
 
 func compileShader(xtype uint32, src string) (*shader, error) {
+	if src == "" {
+		src = " "
+	}
 	shaderID := gl.CreateShader(xtype)
 	srcXString, free := gl.Strs(src)
 	defer free()

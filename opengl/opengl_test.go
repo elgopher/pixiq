@@ -371,3 +371,133 @@ func TestOpenGL_OpenWindow(t *testing.T) {
 		}
 	})
 }
+
+func TestOpenGL_CompileVertexShader(t *testing.T) {
+	t.Run("should return error for incorrect shader", func(t *testing.T) {
+		tests := map[string]string{
+			"golang code": "package main\nfunc main() {}",
+		}
+		for name, source := range tests {
+			t.Run(name, func(t *testing.T) {
+				openGL, _ := opengl.New(mainThreadLoop)
+				defer openGL.Destroy()
+				// when
+				shader, err := openGL.CompileVertexShader(source)
+				// then
+				assert.Error(t, err)
+				assert.Nil(t, shader)
+			})
+		}
+	})
+	t.Run("should compile shader", func(t *testing.T) {
+		tests := map[string]string{
+			"main": "void main() {}",
+			"minimal": `
+#version 330 core
+void main() {
+	gl_Position = vec4(0., 0., 0., 0.);
+}
+`,
+		}
+		for name, source := range tests {
+			t.Run(name, func(t *testing.T) {
+				openGL, _ := opengl.New(mainThreadLoop)
+				defer openGL.Destroy()
+				// when
+				shader, err := openGL.CompileVertexShader(source)
+				// then
+				require.NoError(t, err)
+				assert.NotNil(t, shader)
+			})
+		}
+	})
+	t.Run("should not panic for empty shader", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		// when
+		_, _ = openGL.CompileVertexShader("")
+	})
+}
+
+func TestOpenGL_CompileFragmentShader(t *testing.T) {
+	t.Run("should return error for incorrect shader", func(t *testing.T) {
+		tests := map[string]string{
+			"golang code": "package main\nfunc main() {}",
+		}
+		for name, source := range tests {
+			t.Run(name, func(t *testing.T) {
+				openGL, _ := opengl.New(mainThreadLoop)
+				defer openGL.Destroy()
+				// when
+				shader, err := openGL.CompileFragmentShader(source)
+				assert.Error(t, err)
+				assert.Nil(t, shader)
+			})
+		}
+	})
+	t.Run("should compile shader", func(t *testing.T) {
+		tests := map[string]string{
+			"main": "void main() {}",
+			"minimal": `
+#version 330 core
+void main() {
+}
+`,
+		}
+		for name, source := range tests {
+			t.Run(name, func(t *testing.T) {
+				openGL, _ := opengl.New(mainThreadLoop)
+				defer openGL.Destroy()
+				// when
+				shader, err := openGL.CompileFragmentShader(source)
+				require.NoError(t, err)
+				assert.NotNil(t, shader)
+			})
+		}
+	})
+	t.Run("should not panic for empty shader", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		// when
+		_, _ = openGL.CompileFragmentShader("")
+	})
+}
+
+func TestOpenGL_LinkProgram(t *testing.T) {
+	t.Run("should return error when vertex shader is nil", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		fragmentShader, _ := openGL.CompileFragmentShader("")
+		// when
+		program, err := openGL.LinkProgram(nil, fragmentShader)
+		// then
+		assert.Error(t, err)
+		assert.Nil(t, program)
+	})
+	t.Run("should return error when fragment shader is nil", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		vertexShader, _ := openGL.CompileVertexShader("")
+		// when
+		program, err := openGL.LinkProgram(vertexShader, nil)
+		// then
+		assert.Error(t, err)
+		assert.Nil(t, program)
+	})
+	t.Run("should return program", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		vertexShader, _ := openGL.CompileVertexShader(`
+#version 330 core
+void main() {
+	gl_Position = vec4(0., 0., 0., 0.);
+}
+`)
+		fragmentShader, _ := openGL.CompileFragmentShader("void main() {}")
+		// when
+		program, err := openGL.LinkProgram(vertexShader, fragmentShader)
+		// then
+		require.NoError(t, err)
+		assert.NotNil(t, program)
+	})
+}
