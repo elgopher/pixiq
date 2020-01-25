@@ -39,7 +39,8 @@ type AcceleratedFragmentPixels struct {
 
 // New creates an Image with specified size given in pixels.
 // Width and height are constrained to zero if negative.
-// Will return error if AcceleratedImage is nil or width and height are negative
+// Will panic if AcceleratedImage is nil
+// Will return error if width and height are negative
 func New(width, height int, acceleratedImage AcceleratedImage) (*Image, error) {
 	if acceleratedImage == nil {
 		panic("nil acceleratedImage")

@@ -7,6 +7,7 @@ package opengl
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"reflect"
 	"time"
@@ -155,6 +156,9 @@ func (g *OpenGL) startPollingEvents(stop <-chan struct{}) {
 //
 //	   type NewImage func(width, height) (*image.Image, error)
 //
+// Will return error if width or height are negative or image of this dimensions
+// cannot be created on a video card. (For instance when dimensions are not
+// a power of two)
 func (g *OpenGL) NewImage(width, height int) (*image.Image, error) {
 	if width < 0 {
 		return nil, errors.New("negative width")
@@ -170,6 +174,9 @@ func (g *OpenGL) NewImage(width, height int) (*image.Image, error) {
 }
 
 // NewAcceleratedImage returns an OpenGL-accelerated implementation of image.AcceleratedImage
+// Will return error if width or height are negative or image of this dimensions
+// cannot be created on a video card. (For instance when dimensions are not
+// a power of two)
 func (g *OpenGL) NewAcceleratedImage(width, height int) (image.AcceleratedImage, error) {
 	if width < 0 {
 		return nil, errors.New("negative width")
@@ -177,11 +184,12 @@ func (g *OpenGL) NewAcceleratedImage(width, height int) (image.AcceleratedImage,
 	if height < 0 {
 		return nil, errors.New("negative height")
 	}
-	return g.newTexture(width, height), nil
+	return g.newTexture(width, height)
 }
 
-func (g *OpenGL) newTexture(width, height int) *texture {
+func (g *OpenGL) newTexture(width, height int) (*texture, error) {
 	var id uint32
+	var err error
 	g.mainThreadLoop.Execute(func() {
 		g.bindWindowToThread()
 		gl.GenTextures(1, &id)
@@ -197,16 +205,23 @@ func (g *OpenGL) newTexture(width, height int) *texture {
 			gl.UNSIGNED_BYTE,
 			gl.Ptr(nil),
 		)
+		if glError := gl.GetError(); glError != gl.NO_ERROR {
+			err = fmt.Errorf("OpenGL texture creation failed: %d", glError)
+			return
+		}
 		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
 		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
 	})
+	if err != nil {
+		return nil, err
+	}
 	return &texture{
 		id:                 id,
 		width:              width,
 		height:             height,
 		mainThreadLoop:     g.mainThreadLoop,
 		bindWindowToThread: g.bindWindowToThread,
-	}
+	}, nil
 }
 
 type texture struct {
@@ -273,11 +288,13 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 	}
 	// FIXME: EventBuffer size should be configurable
 	keyboardEvents := internal.NewKeyboardEvents(keyboard.NewEventBuffer(32))
-	screenTexture := g.newTexture(width, height)
+	screenTexture, err := g.newTexture(width, height)
+	if err != nil {
+		return nil, err
+	}
 	screenImage, err := image.New(width, height, screenTexture)
 	if err != nil {
-		// TODO Return error
-		panic(err)
+		return nil, err
 	}
 	win := &Window{
 		mainThreadLoop:  g.mainThreadLoop,
