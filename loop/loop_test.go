@@ -157,8 +157,12 @@ type screenMock struct {
 }
 
 func newScreenMock(width, height int) *screenMock {
+	img, err := image.New(width, height, &acceleratedImageStub{})
+	if err != nil {
+		panic(err)
+	}
 	return &screenMock{
-		currentImage: image.New(width, height, &acceleratedImageStub{}),
+		currentImage: img,
 		width:        width,
 		height:       height,
 	}
@@ -175,12 +179,19 @@ func (f *screenMock) Draw() {
 
 func (f *screenMock) SwapImages() {
 	f.visibleImage = f.currentImage
-	f.currentImage = image.New(f.width, f.height, &acceleratedImageStub{})
+	newCurrentImage, err := image.New(f.width, f.height, &acceleratedImageStub{})
+	if err != nil {
+		panic(err)
+	}
+	f.currentImage = newCurrentImage
 }
 
 func clone(original *image.Image) *image.Image {
+	clone, err := image.New(original.Width(), original.Height(), &acceleratedImageStub{})
+	if err != nil {
+		panic(err)
+	}
 	var (
-		clone             = image.New(original.Width(), original.Height(), &acceleratedImageStub{})
 		originalSelection = original.WholeImageSelection()
 		cloneSelection    = clone.WholeImageSelection()
 	)

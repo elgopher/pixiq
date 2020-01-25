@@ -40,9 +40,11 @@ func TestIntegration_With_OpenGL_Package(t *testing.T) {
 		defer gl.Destroy()
 		imageBlender, err := blender.CompileImageBlender(gl)
 		require.NoError(t, err)
+		source, err := gl.NewImage(1, 1)
+		require.NoError(t, err)
+		target, err := gl.NewImage(1, 1)
+		require.NoError(t, err)
 		var (
-			source          = gl.NewImage(1, 1)
-			target          = gl.NewImage(1, 1)
 			white           = image.RGB(255, 255, 255)
 			black           = image.RGB(0, 0, 0)
 			sourceSelection = source.WholeImageSelection()

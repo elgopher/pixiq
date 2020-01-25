@@ -6,6 +6,7 @@
 package opengl
 
 import (
+	"errors"
 	"log"
 	"reflect"
 	"time"
@@ -147,20 +148,36 @@ func (g *OpenGL) startPollingEvents(stop <-chan struct{}) {
 //
 //	   gl := opengl.New(loop)
 //	   defer gl.Destroy()
-//	   img := gl.NewImage(2, 2)
+//	   img, err := gl.NewImage(2, 2)
 //
 // To avoid coupling with opengl you should define your own factory function
 // for creating images and use it instead of directly accessing opengl.OpenGL:
 //
-//	   type NewImage func(width, height) *image.Image
+//	   type NewImage func(width, height) (*image.Image, error)
 //
-func (g *OpenGL) NewImage(width, height int) *image.Image {
-	return image.New(width, height, g.NewAcceleratedImage(width, height))
+func (g *OpenGL) NewImage(width, height int) (*image.Image, error) {
+	if width < 0 {
+		return nil, errors.New("negative width")
+	}
+	if height < 0 {
+		return nil, errors.New("negative height")
+	}
+	acceleratedImage, err := g.NewAcceleratedImage(width, height)
+	if err != nil {
+		return nil, err
+	}
+	return image.New(width, height, acceleratedImage)
 }
 
 // NewAcceleratedImage returns an OpenGL-accelerated implementation of image.AcceleratedImage
-func (g *OpenGL) NewAcceleratedImage(width, height int) image.AcceleratedImage {
-	return g.newTexture(width, height)
+func (g *OpenGL) NewAcceleratedImage(width, height int) (image.AcceleratedImage, error) {
+	if width < 0 {
+		return nil, errors.New("negative width")
+	}
+	if height < 0 {
+		return nil, errors.New("negative height")
+	}
+	return g.newTexture(width, height), nil
 }
 
 func (g *OpenGL) newTexture(width, height int) *texture {
@@ -257,7 +274,11 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 	// FIXME: EventBuffer size should be configurable
 	keyboardEvents := internal.NewKeyboardEvents(keyboard.NewEventBuffer(32))
 	screenTexture := g.newTexture(width, height)
-	screenImage := image.New(width, height, screenTexture)
+	screenImage, err := image.New(width, height, screenTexture)
+	if err != nil {
+		// TODO Return error
+		panic(err)
+	}
 	win := &Window{
 		mainThreadLoop:  g.mainThreadLoop,
 		keyboardEvents:  keyboardEvents,
@@ -267,7 +288,6 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 		screenImage:     screenImage,
 		zoom:            1,
 	}
-	var err error
 	g.mainThreadLoop.Execute(func() {
 		win.glfwWindow, err = createWindow(g.mainThreadLoop, g.mainWindow)
 		if err != nil {

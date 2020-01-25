@@ -1,5 +1,7 @@
 package image
 
+import "errors"
+
 // NewFakeImages creates an instance of FakeImages
 func NewFakeImages() *FakeImages {
 	return &FakeImages{
@@ -15,20 +17,31 @@ type FakeImages struct {
 
 // NewAcceleratedImage creates a new FakeAcceleratedImage instance which can
 // be used in unit testing.
-// TODO Width and height are constrained to zero if negative.
-func (i *FakeImages) NewAcceleratedImage(width, height int) *FakeAcceleratedImage {
+// Return error when width or height are negative
+func (i *FakeImages) NewAcceleratedImage(width, height int) (*FakeAcceleratedImage, error) {
+	if width < 0 {
+		return nil, errors.New("negative width")
+	}
+	if height < 0 {
+		return nil, errors.New("negative height")
+	}
 	return &FakeAcceleratedImage{
 		registeredCalls: i.registeredCalls,
 		width:           width,
 		height:          height,
 		pixels:          make([]Color, width*height),
-	}
+	}, nil
 }
 
 // NewImageWithFakeAcceleration can be used in unit tests for testing
 // CPU-based functionality
-func (i *FakeImages) NewImageWithFakeAcceleration(width, height int) *Image {
-	return New(width, height, i.NewAcceleratedImage(width, height))
+// Return error when width or height are negative
+func (i *FakeImages) NewImageWithFakeAcceleration(width, height int) (*Image, error) {
+	image, err := i.NewAcceleratedImage(width, height)
+	if err != nil {
+		return nil, err
+	}
+	return New(width, height, image)
 }
 
 // RegisterCall registers a FakeCall implementation which then can be used in Modify.

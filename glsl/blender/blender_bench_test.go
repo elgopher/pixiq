@@ -16,8 +16,12 @@ func BenchmarkImageBlender_Blend(b *testing.B) {
 	require.NoError(b, err)
 	imageBlender, err := blender.CompileImageBlender(gl)
 	require.NoError(b, err)
-	source := gl.NewImage(0, 0).WholeImageSelection()
-	target := gl.NewImage(0, 0).WholeImageSelection()
+	sourceImage, err := gl.NewImage(0, 0)
+	require.NoError(b, err)
+	source := sourceImage.WholeImageSelection()
+	targetImage, err := gl.NewImage(0, 0)
+	require.NoError(b, err)
+	target := targetImage.WholeImageSelection()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		// when
