@@ -391,7 +391,7 @@ func TestOpenGL_CompileVertexShader(t *testing.T) {
 	})
 	t.Run("should compile shader", func(t *testing.T) {
 		tests := map[string]string{
-			"main": "void main() {}",
+			"GLSL 1.10": "void main() {}",
 			"minimal": `
 #version 330 core
 void main() {
@@ -437,11 +437,10 @@ func TestOpenGL_CompileFragmentShader(t *testing.T) {
 	})
 	t.Run("should compile shader", func(t *testing.T) {
 		tests := map[string]string{
-			"main": "void main() {}",
+			"GLSL 1.10": "void main() {}",
 			"minimal": `
 #version 330 core
-void main() {
-}
+void main() {}
 `,
 		}
 		for name, source := range tests {
@@ -484,6 +483,25 @@ func TestOpenGL_LinkProgram(t *testing.T) {
 		assert.Error(t, err)
 		assert.Nil(t, program)
 	})
+	t.Run("should return error", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		vertexShader, err := openGL.CompileVertexShader(`
+#version 330 core
+void noMain() {}
+`)
+		require.NoError(t, err)
+		fragmentShader, err := openGL.CompileFragmentShader(`
+#version 330 core
+void noMainEither() {}
+`)
+		require.NoError(t, err)
+		// when
+		program, err := openGL.LinkProgram(vertexShader, fragmentShader)
+		// then
+		assert.Error(t, err)
+		assert.Nil(t, program)
+	})
 	t.Run("should return program", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
@@ -493,7 +511,10 @@ void main() {
 	gl_Position = vec4(0., 0., 0., 0.);
 }
 `)
-		fragmentShader, _ := openGL.CompileFragmentShader("void main() {}")
+		fragmentShader, _ := openGL.CompileFragmentShader(`
+#version 330 core
+void main() {}
+`)
 		// when
 		program, err := openGL.LinkProgram(vertexShader, fragmentShader)
 		// then
