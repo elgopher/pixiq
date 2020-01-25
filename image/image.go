@@ -9,6 +9,21 @@ type AcceleratedImage interface {
 	Upload(pixels []Color)
 	// Downloads pixels by filling output Color slice
 	Download(output []Color)
+	// Create a modification program using AcceleratedProgram. The results should
+	// be store in in a given selection
+	// Passed AcceleratedImageSelection is always clamped to image boundaries
+	Modify(AcceleratedProgram, AcceleratedImageSelection) (AcceleratedModification, error)
+}
+
+type AcceleratedModification interface {
+}
+
+type AcceleratedImageSelection struct {
+	X, Y, Width, Height int
+}
+
+// AcceleratedProgram is a program executed externally (outside the CPU).
+type AcceleratedProgram interface {
 }
 
 // New creates an Image with specified size given in pixels.
@@ -189,4 +204,56 @@ func (s Selection) SetColor(localX, localY int, color Color) {
 		return
 	}
 	s.image.pixels[index] = color
+}
+
+func (s Selection) toAcceleratedImageSelection() AcceleratedImageSelection {
+	var (
+		x      = s.x
+		y      = s.y
+		width  = s.width
+		height = s.height
+	)
+	if x < 0 {
+		x = 0
+	}
+	if y < 0 {
+		y = 0
+	}
+	if x >= s.image.width {
+		x = 0
+	}
+	if x+width > s.image.width {
+		width = s.image.width - x
+	}
+	if y >= s.image.height {
+		y = 0
+	}
+	if y+height > s.image.height {
+		height = s.image.height - y
+	}
+	return AcceleratedImageSelection{
+		X:      x,
+		Y:      y,
+		Width:  width,
+		Height: height,
+	}
+}
+
+type SelectionModification struct {
+}
+
+func (s Selection) Modify(acceleratedProgram AcceleratedProgram, cpuProgram func(SelectionModification)) error {
+	if acceleratedProgram == nil {
+		return errors.New("nil acceleratedProgram")
+	}
+	if cpuProgram == nil {
+		return errors.New("nil cpuProgram")
+	}
+
+	_, err := s.image.acceleratedImage.Modify(acceleratedProgram, s.toAcceleratedImageSelection())
+	if err != nil {
+		return err
+	}
+	cpuProgram(SelectionModification{})
+	return nil
 }

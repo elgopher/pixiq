@@ -18,12 +18,12 @@ func TestNew(t *testing.T) {
 		})
 	})
 	t.Run("should return error when width is less than 0", func(t *testing.T) {
-		img, err := image.New(-1, 4, &fakeAcceleratedImage{})
+		img, err := image.New(-1, 4, newFakeAcceleratedImage())
 		assert.Error(t, err)
 		assert.Nil(t, img)
 	})
 	t.Run("should return error when height is less than 0", func(t *testing.T) {
-		img, err := image.New(2, -1, &fakeAcceleratedImage{})
+		img, err := image.New(2, -1, newFakeAcceleratedImage())
 		assert.Error(t, err)
 		assert.Nil(t, img)
 	})
@@ -55,7 +55,7 @@ func TestNew(t *testing.T) {
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
 				// when
-				img, err := image.New(test.width, test.height, &fakeAcceleratedImage{})
+				img, err := image.New(test.width, test.height, newFakeAcceleratedImage())
 				// then
 				require.NoError(t, err)
 				require.NotNil(t, img)
@@ -67,7 +67,7 @@ func TestNew(t *testing.T) {
 }
 
 func newImage(width, height int) *image.Image {
-	img, err := image.New(width, height, &fakeAcceleratedImage{})
+	img, err := image.New(width, height, newFakeAcceleratedImage())
 	if err != nil {
 		panic(err)
 	}
@@ -77,12 +77,12 @@ func newImage(width, height int) *image.Image {
 func TestImage_Selection(t *testing.T) {
 	img := newImage(0, 0)
 
-	t.Run("should create a selection for negative x", func(t *testing.T) {
+	t.Run("should create a selection for negative X", func(t *testing.T) {
 		selection := img.Selection(-1, 0)
 		assert.Equal(t, -1, selection.ImageX())
 	})
 
-	t.Run("should create a selection for negative y", func(t *testing.T) {
+	t.Run("should create a selection for negative Y", func(t *testing.T) {
 		selection := img.Selection(0, -1)
 		assert.Equal(t, -1, selection.ImageY())
 	})
@@ -446,7 +446,7 @@ func TestSelection_SetColor(t *testing.T) {
 func TestImage_Upload(t *testing.T) {
 	t.Run("should upload pixels", func(t *testing.T) {
 		t.Run("0x0", func(t *testing.T) {
-			acceleratedImage := &fakeAcceleratedImage{}
+			acceleratedImage := newFakeAcceleratedImage()
 			img, _ := image.New(0, 0, acceleratedImage)
 			// when
 			img.Upload()
@@ -455,7 +455,7 @@ func TestImage_Upload(t *testing.T) {
 			assert.Len(t, acceleratedImage.pixels, 0)
 		})
 		t.Run("1x1", func(t *testing.T) {
-			acceleratedImage := &fakeAcceleratedImage{}
+			acceleratedImage := newFakeAcceleratedImage()
 			img, _ := image.New(1, 1, acceleratedImage)
 			color := image.RGBA(10, 20, 30, 40)
 			img.Selection(0, 0).SetColor(0, 0, color)
@@ -466,7 +466,7 @@ func TestImage_Upload(t *testing.T) {
 			assert.Equal(t, color, acceleratedImage.pixels[0])
 		})
 		t.Run("2x2", func(t *testing.T) {
-			acceleratedImage := &fakeAcceleratedImage{}
+			acceleratedImage := newFakeAcceleratedImage()
 			img, _ := image.New(2, 2, acceleratedImage)
 			color1 := image.RGBA(10, 20, 30, 40)
 			color2 := image.RGBA(50, 50, 60, 70)
@@ -499,4 +499,150 @@ func assertColors(t *testing.T, selection image.Selection, expectedColorLines []
 			assert.Equal(t, expectedColorLine[x], color, "position (%d,%d)", x, y)
 		}
 	}
+}
+
+func TestSelection_Modify(t *testing.T) {
+	t.Run("should return error when acceleratedProgram is not given", func(t *testing.T) {
+		img := newImage(1, 1)
+		selection := img.WholeImageSelection()
+		// when
+		err := selection.Modify(nil, func(modification image.SelectionModification) {})
+		// then
+		assert.Error(t, err)
+	})
+	t.Run("should return error when cpuProgram is not given", func(t *testing.T) {
+		var (
+			acceleratedImage = newFakeAcceleratedImage()
+			program          = acceleratedImage.RegisterProgram(func(selection image.AcceleratedImageSelection) {})
+			img, _           = image.New(1, 1, acceleratedImage)
+			selection        = img.WholeImageSelection()
+		)
+		// when
+		err := selection.Modify(program, nil)
+		// then
+		assert.Error(t, err)
+	})
+	t.Run("should return error when cpuProgram has not been created by fake", func(t *testing.T) {
+		var (
+			acceleratedImage = newFakeAcceleratedImage()
+			img, _           = image.New(1, 1, acceleratedImage)
+			selection        = img.WholeImageSelection()
+		)
+		// when
+		err := selection.Modify(struct{}{}, func(modification image.SelectionModification) {})
+		// then
+		assert.Error(t, err)
+	})
+	t.Run("should immediately execute AcceleratedImage#Modify", func(t *testing.T) {
+		var (
+			executed  = false
+			fakeImage = newFakeAcceleratedImage()
+			program   = fakeImage.RegisterProgram(func(selection image.AcceleratedImageSelection) {})
+			img, _    = image.New(1, 1, fakeImage)
+			selection = img.WholeImageSelection()
+		)
+		// when
+		err := selection.Modify(program, func(modification image.SelectionModification) {
+			executed = true
+		})
+		// then
+		require.NoError(t, err)
+		assert.True(t, executed)
+	})
+	t.Run("selection should be clamped to image boundaries", func(t *testing.T) {
+		tests := map[string]struct {
+			imageWidth, imageHeight         int
+			selectionX, selectionY          int
+			selectionWidth, selectionHeight int
+		}{
+			"image 0x0, selection -1,0 with size 0x0": {
+				selectionX: -1,
+			},
+			"image 0x0, selection -2,0 with size 0x0": {
+				selectionX: -2,
+			},
+			"image 1x1, selection -1,0 with size 0x0": {
+				imageWidth: 1, imageHeight: 1,
+				selectionX: -1,
+			},
+			"image 0x0, selection 0,-1 with size 0x0": {
+				selectionY: -1,
+			},
+			"image 0x0, selection 0,-2 with size 0x0": {
+				selectionY: -2,
+			},
+			"image 1x1, selection 0,-1 with size 0x0": {
+				imageWidth: 1, imageHeight: 1,
+				selectionY: -1,
+			},
+			"image 0x0, selection 0,0 with size 1x0": {
+				selectionWidth: 1,
+			},
+			"image 0x0, selection 0,0 with size 2x0": {
+				selectionWidth: 2,
+			},
+			"image 1x1, selection 0,0 with size 2x0": {
+				imageWidth: 1, imageHeight: 1,
+				selectionWidth: 2,
+			},
+			"image 0x0, selection 0,0 with size 0x1": {
+				selectionHeight: 1,
+			},
+			"image 0x0, selection 0,0 with size 0x2": {
+				selectionHeight: 2,
+			},
+			"image 1x1, selection 0,0 with size 0x2": {
+				imageWidth: 1, imageHeight: 1,
+				selectionHeight: 2,
+			},
+			"image 1x1, selection 1,0 with size 1x0": {
+				imageWidth: 1, imageHeight: 1,
+				selectionX:     1,
+				selectionWidth: 1,
+			},
+			"image 2x1, selection 1,0 with size 2x0": {
+				imageWidth: 2, imageHeight: 1,
+				selectionX:     1,
+				selectionWidth: 2,
+			},
+			"image 1x1, selection 2,0 with size 0x0": {
+				imageWidth: 1, imageHeight: 1,
+				selectionX: 2,
+			},
+			"image 1x1, selection 0,1 with size 0x1": {
+				imageWidth: 1, imageHeight: 1,
+				selectionY:      1,
+				selectionHeight: 1,
+			},
+			"image 1x2, selection 0,1 with size 0x2": {
+				imageWidth: 1, imageHeight: 2,
+				selectionY:      1,
+				selectionHeight: 2,
+			},
+			"image 1x1, selection 0,2 with size 0x0": {
+				imageWidth: 1, imageHeight: 1,
+				selectionY: 2,
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				fakeImage := newFakeAcceleratedImage()
+				program := fakeImage.RegisterProgram(func(selection image.AcceleratedImageSelection) {
+					// then
+					assert.True(t, selection.X >= 0, "x>=0")
+					assert.True(t, selection.Y >= 0, "y>=0")
+					assert.True(t, selection.Width >= 0, "width>=0")
+					assert.True(t, selection.Height >= 0, "height>=0")
+					assert.True(t, selection.X+selection.Width <= test.imageWidth, "x+width<image.width")
+					assert.True(t, selection.Y+selection.Height <= test.imageHeight, "y+height<image.height")
+				})
+				img, _ := image.New(test.imageWidth, test.imageHeight, fakeImage)
+				selection := img.Selection(test.selectionX, test.selectionY).
+					WithSize(test.selectionWidth, test.selectionHeight)
+				// when
+				_ = selection.Modify(program, func(modification image.SelectionModification) {})
+			})
+		}
+	})
+
 }
