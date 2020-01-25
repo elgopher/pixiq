@@ -27,7 +27,7 @@ func TestNew(t *testing.T) {
 		assert.Error(t, err)
 		assert.Nil(t, img)
 	})
-	t.Run("should create an image of any size", func(t *testing.T) {
+	t.Run("should create an image of given size", func(t *testing.T) {
 		tests := map[string]struct {
 			width, height int
 		}{

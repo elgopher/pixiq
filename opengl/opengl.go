@@ -153,7 +153,7 @@ func (g *OpenGL) startPollingEvents(stop <-chan struct{}) {
 //
 //	   type NewImage func(width, height) (*image.Image, error)
 //
-// Will return error if width or height are negative or image of this dimensions
+// Will return error if width or height are negative or image of these dimensions
 // cannot be created on a video card. (For instance when dimensions are not
 // a power of two)
 func (g *OpenGL) NewImage(width, height int) (*image.Image, error) {
@@ -171,7 +171,7 @@ func (g *OpenGL) NewImage(width, height int) (*image.Image, error) {
 }
 
 // NewAcceleratedImage returns an OpenGL-accelerated implementation of image.AcceleratedImage
-// Will return error if width or height are negative or image of this dimensions
+// Will return error if width or height are negative or image of these dimensions
 // cannot be created on a video card. (For instance when dimensions are not
 // a power of two)
 func (g *OpenGL) NewAcceleratedImage(width, height int) (image.AcceleratedImage, error) {

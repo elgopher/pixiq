@@ -12,7 +12,6 @@ type AcceleratedImage interface {
 }
 
 // New creates an Image with specified size given in pixels.
-// Width and height are constrained to zero if negative.
 // Will panic if AcceleratedImage is nil
 // Will return error if width and height are negative
 func New(width, height int, acceleratedImage AcceleratedImage) (*Image, error) {
@@ -75,7 +74,8 @@ func (i *Image) WholeImageSelection() Selection {
 // Upload uploads all image pixels to associated AcceleratedImage.
 // This method should be called rarely. Image pixels are uploaded automatically
 // when needed.
-// TODO DEPRECATED
+//
+// DEPRECATED - this method will be removed in next release
 func (i *Image) Upload() {
 	i.acceleratedImage.Upload(i.pixels)
 }
