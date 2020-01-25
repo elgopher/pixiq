@@ -70,11 +70,9 @@ func (g *MainThreadLoop) Execute(job func()) {
 	<-done
 }
 
-func (g *MainThreadLoop) bind(window *glfw.Window) func() {
-	return func() {
-		if g.boundWindow != window {
-			window.MakeContextCurrent()
-			g.boundWindow = window
-		}
+func (g *MainThreadLoop) bind(window *glfw.Window) {
+	if g.boundWindow != window {
+		window.MakeContextCurrent()
+		g.boundWindow = window
 	}
 }

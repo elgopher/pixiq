@@ -28,7 +28,7 @@ type Window struct {
 func (w *Window) Draw() {
 	w.screenImage.Upload()
 	w.mainThreadLoop.Execute(func() {
-		w.mainThreadLoop.bind(w.glfwWindow)()
+		w.mainThreadLoop.bind(w.glfwWindow)
 		w.program.use()
 		width, height := w.glfwWindow.GetFramebufferSize()
 		gl.Viewport(0, 0, int32(width), int32(height))
