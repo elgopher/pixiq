@@ -14,20 +14,20 @@ var transparent = image.RGBA(0, 0, 0, 0)
 func TestNew(t *testing.T) {
 	t.Run("should panic when AcceleratedImage is nil", func(t *testing.T) {
 		assert.Panics(t, func() {
-			image.New(1, 1, nil)
+			_, _ = image.New(1, 1, nil)
 		})
 	})
-	t.Run("should create an image of zero width when given width is less than 0", func(t *testing.T) {
-		img := image.New(-1, 4, &fakeAcceleratedImage{})
-		require.NotNil(t, img)
-		assert.Equal(t, 0, img.Width())
+	t.Run("should return error when width is less than 0", func(t *testing.T) {
+		img, err := image.New(-1, 4, &fakeAcceleratedImage{})
+		assert.Error(t, err)
+		assert.Nil(t, img)
 	})
-	t.Run("should create an image of zero height when given height is less than 0", func(t *testing.T) {
-		img := image.New(2, -1, &fakeAcceleratedImage{})
-		require.NotNil(t, img)
-		assert.Equal(t, 0, img.Height())
+	t.Run("should return error when height is less than 0", func(t *testing.T) {
+		img, err := image.New(2, -1, &fakeAcceleratedImage{})
+		assert.Error(t, err)
+		assert.Nil(t, img)
 	})
-	t.Run("should create an image of any size", func(t *testing.T) {
+	t.Run("should create an image of given size", func(t *testing.T) {
 		tests := map[string]struct {
 			width, height int
 		}{
@@ -55,8 +55,9 @@ func TestNew(t *testing.T) {
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
 				// when
-				img := image.New(test.width, test.height, &fakeAcceleratedImage{})
+				img, err := image.New(test.width, test.height, &fakeAcceleratedImage{})
 				// then
+				require.NoError(t, err)
 				require.NotNil(t, img)
 				assert.Equal(t, test.width, img.Width())
 				assert.Equal(t, test.height, img.Height())
@@ -65,8 +66,16 @@ func TestNew(t *testing.T) {
 	})
 }
 
+func newImage(width, height int) *image.Image {
+	img, err := image.New(width, height, &fakeAcceleratedImage{})
+	if err != nil {
+		panic(err)
+	}
+	return img
+}
+
 func TestImage_Selection(t *testing.T) {
-	img := image.New(0, 0, &fakeAcceleratedImage{})
+	img := newImage(0, 0)
 
 	t.Run("should create a selection for negative x", func(t *testing.T) {
 		selection := img.Selection(-1, 0)
@@ -89,7 +98,7 @@ func TestImage_Selection(t *testing.T) {
 }
 
 func TestSelection_Selection(t *testing.T) {
-	img := image.New(0, 0, &fakeAcceleratedImage{})
+	img := newImage(0, 0)
 
 	t.Run("should create a selection for negative x", func(t *testing.T) {
 		selection := img.Selection(2, 0)
@@ -122,12 +131,12 @@ func TestImage_WholeImageSelection(t *testing.T) {
 			expectedHeight int
 		}{
 			"1": {
-				image:          image.New(0, 0, &fakeAcceleratedImage{}),
+				image:          newImage(0, 0),
 				expectedWidth:  0,
 				expectedHeight: 0,
 			},
 			"2": {
-				image:          image.New(3, 2, &fakeAcceleratedImage{}),
+				image:          newImage(3, 2),
 				expectedWidth:  3,
 				expectedHeight: 2,
 			},
@@ -148,7 +157,7 @@ func TestImage_WholeImageSelection(t *testing.T) {
 }
 
 func TestSelection_WithSize(t *testing.T) {
-	img := image.New(0, 0, &fakeAcceleratedImage{})
+	img := newImage(0, 0)
 
 	t.Run("should set selection width to zero if given width is negative", func(t *testing.T) {
 		selection := img.Selection(1, 2)
@@ -194,32 +203,32 @@ func TestSelection_Color(t *testing.T) {
 			x, y  int
 		}{
 			"1": {
-				image: image.New(0, 0, &fakeAcceleratedImage{}),
+				image: newImage(0, 0),
 				x:     0,
 				y:     0,
 			},
 			"2": {
-				image: image.New(1, 1, &fakeAcceleratedImage{}),
+				image: newImage(1, 1),
 				x:     1,
 				y:     0,
 			},
 			"3": {
-				image: image.New(1, 1, &fakeAcceleratedImage{}),
+				image: newImage(1, 1),
 				x:     0,
 				y:     1,
 			},
 			"4": {
-				image: image.New(1, 1, &fakeAcceleratedImage{}),
+				image: newImage(1, 1),
 				x:     -1,
 				y:     0,
 			},
 			"5": {
-				image: image.New(1, 1, &fakeAcceleratedImage{}),
+				image: newImage(1, 1),
 				x:     0,
 				y:     -1,
 			},
 			"6": {
-				image: image.New(2, 2, &fakeAcceleratedImage{}),
+				image: newImage(2, 2),
 				x:     0,
 				y:     2,
 			},
@@ -238,7 +247,7 @@ func TestSelection_Color(t *testing.T) {
 		color := image.RGBA(10, 20, 30, 40)
 
 		t.Run("1", func(t *testing.T) {
-			img := image.New(1, 1, &fakeAcceleratedImage{})
+			img := newImage(1, 1)
 			img.Selection(0, 0).SetColor(0, 0, color)
 			selection := img.Selection(1, 0)
 			// expect
@@ -246,7 +255,7 @@ func TestSelection_Color(t *testing.T) {
 		})
 
 		t.Run("2", func(t *testing.T) {
-			img := image.New(1, 1, &fakeAcceleratedImage{})
+			img := newImage(1, 1)
 			img.Selection(0, 0).SetColor(0, 0, color)
 			selection := img.Selection(-1, 0)
 			// expect
@@ -254,7 +263,7 @@ func TestSelection_Color(t *testing.T) {
 		})
 
 		t.Run("3", func(t *testing.T) {
-			img := image.New(1, 1, &fakeAcceleratedImage{})
+			img := newImage(1, 1)
 			img.Selection(0, 0).SetColor(0, 0, color)
 			selection := img.Selection(0, 1)
 			// expect
@@ -262,7 +271,7 @@ func TestSelection_Color(t *testing.T) {
 		})
 
 		t.Run("4", func(t *testing.T) {
-			img := image.New(1, 2, &fakeAcceleratedImage{})
+			img := newImage(1, 2)
 			img.Selection(0, 0).SetColor(0, 1, color)
 			selection := img.Selection(0, 1)
 			// expect
@@ -278,14 +287,14 @@ func TestSelection_SetColor(t *testing.T) {
 	t.Run("should set pixel color inside the image", func(t *testing.T) {
 
 		t.Run("1", func(t *testing.T) {
-			selection := image.New(1, 1, &fakeAcceleratedImage{}).Selection(0, 0)
+			selection := newImage(1, 1).Selection(0, 0)
 			// when
 			selection.SetColor(0, 0, color)
 			assert.Equal(t, color, selection.Color(0, 0))
 		})
 
 		t.Run("2", func(t *testing.T) {
-			selection := image.New(2, 1, &fakeAcceleratedImage{}).WholeImageSelection()
+			selection := newImage(2, 1).WholeImageSelection()
 			// when
 			selection.SetColor(1, 0, color)
 			assertColors(t, selection, [][]image.Color{
@@ -294,7 +303,7 @@ func TestSelection_SetColor(t *testing.T) {
 		})
 
 		t.Run("3", func(t *testing.T) {
-			selection := image.New(1, 2, &fakeAcceleratedImage{}).WholeImageSelection()
+			selection := newImage(1, 2).WholeImageSelection()
 			// when
 			selection.SetColor(0, 1, color)
 			assertColors(t, selection, [][]image.Color{
@@ -304,7 +313,7 @@ func TestSelection_SetColor(t *testing.T) {
 		})
 
 		t.Run("4", func(t *testing.T) {
-			selection := image.New(2, 2, &fakeAcceleratedImage{}).WholeImageSelection()
+			selection := newImage(2, 2).WholeImageSelection()
 			// when
 			selection.SetColor(0, 1, color)
 			assertColors(t, selection, [][]image.Color{
@@ -317,28 +326,28 @@ func TestSelection_SetColor(t *testing.T) {
 	t.Run("setting pixel color outside the image does nothing", func(t *testing.T) {
 
 		t.Run("1", func(t *testing.T) {
-			selection := image.New(0, 0, &fakeAcceleratedImage{}).Selection(0, 0)
+			selection := newImage(0, 0).Selection(0, 0)
 			// when
 			selection.SetColor(0, 0, color)
 			assert.Equal(t, transparent, selection.Color(0, 0))
 		})
 
 		t.Run("2", func(t *testing.T) {
-			selection := image.New(1, 1, &fakeAcceleratedImage{}).Selection(0, 0)
+			selection := newImage(1, 1).Selection(0, 0)
 			// when
 			selection.SetColor(1, 0, color)
 			assert.Equal(t, transparent, selection.Color(0, 0))
 		})
 
 		t.Run("3", func(t *testing.T) {
-			selection := image.New(1, 1, &fakeAcceleratedImage{}).Selection(0, 0)
+			selection := newImage(1, 1).Selection(0, 0)
 			// when
 			selection.SetColor(0, 1, color)
 			assert.Equal(t, transparent, selection.Color(0, 0))
 		})
 
 		t.Run("4", func(t *testing.T) {
-			selection := image.New(2, 1, &fakeAcceleratedImage{}).WholeImageSelection()
+			selection := newImage(2, 1).WholeImageSelection()
 			// when
 			selection.SetColor(0, 1, color)
 			assertColors(t, selection, [][]image.Color{
@@ -347,7 +356,7 @@ func TestSelection_SetColor(t *testing.T) {
 		})
 
 		t.Run("5", func(t *testing.T) {
-			selection := image.New(1, 2, &fakeAcceleratedImage{}).WholeImageSelection()
+			selection := newImage(1, 2).WholeImageSelection()
 			// when
 			selection.SetColor(1, 0, color)
 			assertColors(t, selection, [][]image.Color{
@@ -357,14 +366,14 @@ func TestSelection_SetColor(t *testing.T) {
 		})
 
 		t.Run("6", func(t *testing.T) {
-			selection := image.New(1, 1, &fakeAcceleratedImage{}).Selection(0, 0)
+			selection := newImage(1, 1).Selection(0, 0)
 			// when
 			selection.SetColor(-1, 0, color)
 			assert.Equal(t, transparent, selection.Color(0, 0))
 		})
 
 		t.Run("7", func(t *testing.T) {
-			selection := image.New(1, 1, &fakeAcceleratedImage{}).Selection(0, 0)
+			selection := newImage(1, 1).Selection(0, 0)
 			// when
 			selection.SetColor(0, -1, color)
 			assert.Equal(t, transparent, selection.Color(0, 0))
@@ -374,7 +383,7 @@ func TestSelection_SetColor(t *testing.T) {
 	t.Run("should set pixel color outside the selection", func(t *testing.T) {
 
 		t.Run("1", func(t *testing.T) {
-			img := image.New(1, 1, &fakeAcceleratedImage{})
+			img := newImage(1, 1)
 			selection := img.Selection(0, 0)
 			// when
 			selection.SetColor(0, 0, color)
@@ -382,7 +391,7 @@ func TestSelection_SetColor(t *testing.T) {
 		})
 
 		t.Run("2", func(t *testing.T) {
-			img := image.New(2, 1, &fakeAcceleratedImage{})
+			img := newImage(2, 1)
 			selection := img.Selection(1, 0)
 			// when
 			selection.SetColor(0, 0, color)
@@ -392,7 +401,7 @@ func TestSelection_SetColor(t *testing.T) {
 		})
 
 		t.Run("3", func(t *testing.T) {
-			img := image.New(2, 1, &fakeAcceleratedImage{})
+			img := newImage(2, 1)
 			selection := img.Selection(1, 0)
 			// when
 			selection.SetColor(-1, 0, color)
@@ -402,7 +411,7 @@ func TestSelection_SetColor(t *testing.T) {
 		})
 
 		t.Run("4", func(t *testing.T) {
-			img := image.New(1, 1, &fakeAcceleratedImage{})
+			img := newImage(1, 1)
 			selection := img.Selection(-1, 0)
 			// when
 			selection.SetColor(1, 0, color)
@@ -410,7 +419,7 @@ func TestSelection_SetColor(t *testing.T) {
 		})
 
 		t.Run("5", func(t *testing.T) {
-			img := image.New(1, 2, &fakeAcceleratedImage{})
+			img := newImage(1, 2)
 			selection := img.Selection(0, 1)
 			// when
 			selection.SetColor(0, 0, color)
@@ -421,7 +430,7 @@ func TestSelection_SetColor(t *testing.T) {
 		})
 
 		t.Run("6", func(t *testing.T) {
-			img := image.New(1, 2, &fakeAcceleratedImage{})
+			img := newImage(1, 2)
 			selection := img.Selection(0, 1)
 			// when
 			selection.SetColor(0, -1, color)
@@ -438,16 +447,16 @@ func TestImage_Upload(t *testing.T) {
 	t.Run("should upload pixels", func(t *testing.T) {
 		t.Run("0x0", func(t *testing.T) {
 			acceleratedImage := &fakeAcceleratedImage{}
-			img := image.New(0, 0, acceleratedImage)
+			img, _ := image.New(0, 0, acceleratedImage)
 			// when
 			img.Upload()
 			// then
-			assert.NotNil(t, acceleratedImage.pixels)
+			require.NotNil(t, acceleratedImage.pixels)
 			assert.Len(t, acceleratedImage.pixels, 0)
 		})
 		t.Run("1x1", func(t *testing.T) {
 			acceleratedImage := &fakeAcceleratedImage{}
-			img := image.New(1, 1, acceleratedImage)
+			img, _ := image.New(1, 1, acceleratedImage)
 			color := image.RGBA(10, 20, 30, 40)
 			img.Selection(0, 0).SetColor(0, 0, color)
 			// when
@@ -458,7 +467,7 @@ func TestImage_Upload(t *testing.T) {
 		})
 		t.Run("2x2", func(t *testing.T) {
 			acceleratedImage := &fakeAcceleratedImage{}
-			img := image.New(2, 2, acceleratedImage)
+			img, _ := image.New(2, 2, acceleratedImage)
 			color1 := image.RGBA(10, 20, 30, 40)
 			color2 := image.RGBA(50, 50, 60, 70)
 			color3 := image.RGBA(80, 90, 100, 110)

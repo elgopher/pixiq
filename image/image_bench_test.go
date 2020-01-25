@@ -3,14 +3,14 @@ package image_test
 import (
 	"testing"
 
-	image "github.com/jacekolszak/pixiq/image"
+	"github.com/jacekolszak/pixiq/image"
 )
 
 func BenchmarkSelection_SetColor(b *testing.B) {
 	b.StopTimer()
 	var (
 		color     = image.RGBA(10, 20, 30, 40)
-		img       = image.New(1920, 1080, &fakeAcceleratedImage{})
+		img, _    = image.New(1920, 1080, &fakeAcceleratedImage{})
 		selection = img.WholeImageSelection()
 		height    = selection.Height()
 		width     = selection.Width()
@@ -28,7 +28,7 @@ func BenchmarkSelection_SetColor(b *testing.B) {
 func BenchmarkSelection_Color(b *testing.B) {
 	b.StopTimer()
 	var (
-		img       = image.New(1920, 1080, &fakeAcceleratedImage{})
+		img, _    = image.New(1920, 1080, &fakeAcceleratedImage{})
 		selection = img.WholeImageSelection()
 		height    = selection.Height()
 		width     = selection.Width()

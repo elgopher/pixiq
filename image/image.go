@@ -1,5 +1,7 @@
 package image
 
+import "errors"
+
 // AcceleratedImage is an image processed externally (outside the CPU).
 type AcceleratedImage interface {
 	// Upload send pixels colors sorted by coordinates.
@@ -10,25 +12,24 @@ type AcceleratedImage interface {
 }
 
 // New creates an Image with specified size given in pixels.
-// Width and height are constrained to zero if negative.
-// Will panic if AcceleratedImage is nil.
-func New(width, height int, acceleratedImage AcceleratedImage) *Image {
+// Will panic if AcceleratedImage is nil
+// Will return error if width and height are negative
+func New(width, height int, acceleratedImage AcceleratedImage) (*Image, error) {
 	if acceleratedImage == nil {
 		panic("nil acceleratedImage")
 	}
-	var w, h int
-	if width > 0 {
-		w = width
+	if width < 0 {
+		return nil, errors.New("negative width")
 	}
-	if height > 0 {
-		h = height
+	if height < 0 {
+		return nil, errors.New("negative height")
 	}
 	return &Image{
-		width:            w,
-		height:           h,
-		pixels:           make([]Color, w*h),
+		width:            width,
+		height:           height,
+		pixels:           make([]Color, width*height),
 		acceleratedImage: acceleratedImage,
-	}
+	}, nil
 }
 
 // Image is a 2D picture composed of pixels each having a specific color.
@@ -73,6 +74,8 @@ func (i *Image) WholeImageSelection() Selection {
 // Upload uploads all image pixels to associated AcceleratedImage.
 // This method should be called rarely. Image pixels are uploaded automatically
 // when needed.
+//
+// DEPRECATED - this method will be removed in next release
 func (i *Image) Upload() {
 	i.acceleratedImage.Upload(i.pixels)
 }

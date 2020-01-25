@@ -6,7 +6,7 @@ import (
 	"github.com/go-gl/gl/v3.3-core/gl"
 )
 
-func compileProgram() (*program, error) {
+func compileProgram(vertexShaderSrc, fragmentShaderSrc string) (*program, error) {
 	vertexShader, err := compileVertexShader(vertexShaderSrc)
 	if err != nil {
 		return nil, err

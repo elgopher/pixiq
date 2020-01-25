@@ -6,6 +6,8 @@
 package opengl
 
 import (
+	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -144,24 +146,47 @@ func (g *OpenGL) startPollingEvents(stop <-chan struct{}) {
 //
 //	   gl := opengl.New(loop)
 //	   defer gl.Destroy()
-//	   img := gl.NewImage(2, 2)
+//	   img, err := gl.NewImage(2, 2)
 //
 // To avoid coupling with opengl you should define your own factory function
 // for creating images and use it instead of directly accessing opengl.OpenGL:
 //
-//	   type NewImage func(width, height) *image.Image
+//	   type NewImage func(width, height) (*image.Image, error)
 //
-func (g *OpenGL) NewImage(width, height int) *image.Image {
-	return image.New(width, height, g.NewAcceleratedImage(width, height))
+// Will return error if width or height are negative or image of these dimensions
+// cannot be created on a video card. (For instance when dimensions are not
+// a power of two)
+func (g *OpenGL) NewImage(width, height int) (*image.Image, error) {
+	if width < 0 {
+		return nil, errors.New("negative width")
+	}
+	if height < 0 {
+		return nil, errors.New("negative height")
+	}
+	acceleratedImage, err := g.NewAcceleratedImage(width, height)
+	if err != nil {
+		return nil, err
+	}
+	return image.New(width, height, acceleratedImage)
 }
 
 // NewAcceleratedImage returns an OpenGL-accelerated implementation of image.AcceleratedImage
-func (g *OpenGL) NewAcceleratedImage(width, height int) image.AcceleratedImage {
+// Will return error if width or height are negative or image of these dimensions
+// cannot be created on a video card. (For instance when dimensions are not
+// a power of two)
+func (g *OpenGL) NewAcceleratedImage(width, height int) (image.AcceleratedImage, error) {
+	if width < 0 {
+		return nil, errors.New("negative width")
+	}
+	if height < 0 {
+		return nil, errors.New("negative height")
+	}
 	return g.newTexture(width, height)
 }
 
-func (g *OpenGL) newTexture(width, height int) *texture {
+func (g *OpenGL) newTexture(width, height int) (*texture, error) {
 	var id uint32
+	var err error
 	g.mainThreadLoop.Execute(func() {
 		g.bindWindowToThread()
 		gl.GenTextures(1, &id)
@@ -177,16 +202,23 @@ func (g *OpenGL) newTexture(width, height int) *texture {
 			gl.UNSIGNED_BYTE,
 			gl.Ptr(nil),
 		)
+		if glError := gl.GetError(); glError != gl.NO_ERROR {
+			err = fmt.Errorf("OpenGL texture creation failed: %d", glError)
+			return
+		}
 		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
 		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
 	})
+	if err != nil {
+		return nil, err
+	}
 	return &texture{
 		id:                 id,
 		width:              width,
 		height:             height,
 		mainThreadLoop:     g.mainThreadLoop,
 		bindWindowToThread: g.bindWindowToThread,
-	}
+	}, nil
 }
 
 type texture struct {
@@ -217,6 +249,7 @@ func (t *texture) Upload(pixels []image.Color) {
 		)
 	})
 }
+
 func (t *texture) Download(output []image.Color) {
 	t.mainThreadLoop.Execute(func() {
 		t.bindWindowToThread()
@@ -241,8 +274,14 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 	}
 	// FIXME: EventBuffer size should be configurable
 	keyboardEvents := internal.NewKeyboardEvents(keyboard.NewEventBuffer(32))
-	screenTexture := g.newTexture(width, height)
-	screenImage := image.New(width, height, screenTexture)
+	screenTexture, err := g.newTexture(width, height)
+	if err != nil {
+		return nil, err
+	}
+	screenImage, err := image.New(width, height, screenTexture)
+	if err != nil {
+		return nil, err
+	}
 	win := &Window{
 		mainThreadLoop:  g.mainThreadLoop,
 		keyboardEvents:  keyboardEvents,
@@ -252,14 +291,13 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 		screenImage:     screenImage,
 		zoom:            1,
 	}
-	var err error
 	g.mainThreadLoop.Execute(func() {
 		win.glfwWindow, err = createWindow(g.mainThreadLoop, g.mainWindow)
 		if err != nil {
 			return
 		}
 		win.glfwWindow.SetKeyCallback(win.keyboardEvents.OnKeyCallback)
-		win.program, err = compileProgram()
+		win.program, err = compileProgram(vertexShaderSrc, fragmentShaderSrc)
 		if err != nil {
 			return
 		}
