@@ -12,10 +12,10 @@ import (
 var transparent = image.RGBA(0, 0, 0, 0)
 
 func TestNew(t *testing.T) {
-	t.Run("should return error when AcceleratedImage is nil", func(t *testing.T) {
-		img, err := image.New(1, 1, nil)
-		assert.Error(t, err)
-		assert.Nil(t, img)
+	t.Run("should panic when AcceleratedImage is nil", func(t *testing.T) {
+		assert.Panics(t, func() {
+			_, _ = image.New(1, 1, nil)
+		})
 	})
 	t.Run("should return error when width is less than 0", func(t *testing.T) {
 		img, err := image.New(-1, 4, newFakeAcceleratedImage(0, 0))

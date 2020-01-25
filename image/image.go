@@ -42,7 +42,7 @@ type AcceleratedFragmentPixels struct {
 // Will return error if AcceleratedImage is nil or width and height are negative
 func New(width, height int, acceleratedImage AcceleratedImage) (*Image, error) {
 	if acceleratedImage == nil {
-		return nil, errors.New("nil acceleratedImage")
+		panic("nil acceleratedImage")
 	}
 	if width < 0 {
 		return nil, errors.New("negative width")
