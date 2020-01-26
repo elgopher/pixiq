@@ -556,23 +556,45 @@ func TestSelection_Modify(t *testing.T) {
 		require.NoError(t, err)
 		assert.True(t, executed)
 	})
-	t.Run("should draw Primitive ", func(t *testing.T) {
-		var (
-			accelerator      = fake.NewAccelerator()
-			acceleratedImage = accelerator.NewImage(1, 1)
-			program          = accelerator.NewProgram()
-			img, _           = image.New(1, 1, acceleratedImage)
-			selection        = img.WholeImageSelection()
-		)
-		primitive := &fake.Primtive{}
-		// when
-		err := selection.Modify(program, func(drawer image.Drawer) {
-			err := drawer.Draw(primitive)
-			require.NoError(t, err)
-		})
-		// then
-		require.NoError(t, err)
-		assert.True(t, primitive.Drawn())
+	t.Run("should draw Primitive", func(t *testing.T) {
+		tests := map[string]struct {
+			x, y, width, height int
+		}{
+			"selection 0,0 with size 1x1": {
+				x: 0, y: 0, width: 1, height: 1,
+			},
+			"selection 1,2 with size 3x4": {
+				x: 1, y: 2, width: 3, height: 4,
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				var (
+					accelerator      = fake.NewAccelerator()
+					acceleratedImage = accelerator.NewImage(4, 4)
+					program          = accelerator.NewProgram()
+					img, _           = image.New(1, 1, acceleratedImage)
+					selection        = img.Selection(test.x, test.y).WithSize(test.width, test.height)
+					primitive        = &fake.Primtive{}
+				)
+				// when
+				err := selection.Modify(program, func(drawer image.Drawer) {
+					err := drawer.Draw(primitive)
+					require.NoError(t, err)
+				})
+				// then
+				require.NoError(t, err)
+				assert.True(t, primitive.Drawn())
+				expectedLocation := image.AcceleratedImageLocation{
+					X:      test.x,
+					Y:      test.y,
+					Width:  test.width,
+					Height: test.height,
+				}
+				assert.Equal(t, expectedLocation, primitive.TargetLocation())
+				assert.Equal(t, acceleratedImage, primitive.TargetImage())
+			})
+		}
 	})
 
 }

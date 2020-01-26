@@ -22,11 +22,20 @@ type Accelerator struct {
 
 type Primtive struct {
 	image.Primitive
-	drawn bool
+	drawn  bool
+	drawer *drawer
 }
 
 func (p *Primtive) Drawn() bool {
 	return p.drawn
+}
+
+func (p *Primtive) TargetLocation() image.AcceleratedImageLocation {
+	return p.drawer.targetLocation
+}
+
+func (p *Primtive) TargetImage() image.AcceleratedImage {
+	return p.drawer.targetImage
 }
 
 // NewImage returns a new instance of *AcceleratedImage
@@ -40,7 +49,7 @@ func (i *Accelerator) NewImage(imageWidth, imageHeight int) *AcceleratedImage {
 }
 
 // NewProgram returns a new instance of program which can be used to create
-// a Drawer.
+// a drawer.
 func (i *Accelerator) NewProgram() image.AcceleratedProgram {
 	program := &program{}
 	i.programs[program] = program
@@ -55,38 +64,35 @@ type AcceleratedImage struct {
 	imageHeight int
 }
 
-type Drawer struct {
-	selections  map[string]image.AcceleratedImageSelection
-	program     *program
-	location    image.AcceleratedImageLocation
-	outputImage *AcceleratedImage
+type drawer struct {
+	selections     map[string]image.AcceleratedImageSelection
+	targetLocation image.AcceleratedImageLocation
+	targetImage    *AcceleratedImage
 }
 
-func (d *Drawer) Draw(primitive image.Primitive, params ...interface{}) error {
+func (d *drawer) Draw(primitive image.Primitive, params ...interface{}) error {
 	fakePrimitive, ok := primitive.(*Primtive)
 	if !ok {
 		return errors.New("primitive cannot be drawn")
 	}
 	fakePrimitive.drawn = true
+	fakePrimitive.drawer = d
 	return nil
 }
 
-func (d *Drawer) SetSelection(name string, selection image.AcceleratedImageSelection) {
+func (d *drawer) SetSelection(name string, selection image.AcceleratedImageSelection) {
 	d.selections[name] = selection
 }
 
-// Drawer returns an AcceleratedDrawer for the program created by the same Accelerator
-// as this image.
 func (i *AcceleratedImage) Modify(program image.AcceleratedProgram, location image.AcceleratedImageLocation, procedure func(drawer image.AcceleratedDrawer)) error {
-	prg, ok := i.programs[program]
+	_, ok := i.programs[program]
 	if !ok {
 		return errors.New("unknown program")
 	}
-	drawer := &Drawer{
-		selections:  map[string]image.AcceleratedImageSelection{},
-		program:     prg,
-		location:    location,
-		outputImage: i,
+	drawer := &drawer{
+		selections:     map[string]image.AcceleratedImageSelection{},
+		targetLocation: location,
+		targetImage:    i,
 	}
 	procedure(drawer)
 	return nil
