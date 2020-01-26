@@ -10,21 +10,27 @@ type AcceleratedImage interface {
 	Upload(pixels []Color)
 	// Downloads pixels by filling output Color slice
 	Download(output []Color)
-	// Drawer returns an AcceleratedDrawer. The resulting pixels should be stored
-	// in a given selection of the AcceleratedImage.
-	// Passed AcceleratedImageSelection is always clamped to image boundaries
-	// TODO Probably it is better to do clamping in OpenGL adapter?
-	Drawer(AcceleratedProgram, AcceleratedImageSelection) (AcceleratedDrawer, error)
+	// The resulting pixels must be stored in a given selection of the AcceleratedImage.
+	Modify(program AcceleratedProgram, location AcceleratedImageLocation, procedure func(AcceleratedDrawer)) error
 }
 
 // AcceleratedDrawer is for drawing primitives (such as triangles) efficiently
 // on the external device (outside the CPU).
 type AcceleratedDrawer interface {
+	SetSelection(name string, selection AcceleratedImageSelection)
+	Draw(primitive Primitive, params ...interface{}) error
 }
 
-// AcceleratedImageSelection is a location of a AcceleratedImage
-type AcceleratedImageSelection struct {
+type Primitive interface{}
+
+// AcceleratedImageLocation is a location of a AcceleratedImage
+type AcceleratedImageLocation struct {
 	X, Y, Width, Height int
+}
+
+type AcceleratedImageSelection struct {
+	AcceleratedImageLocation
+	AcceleratedImage
 }
 
 // AcceleratedProgram is a program executed externally (outside the CPU).
@@ -211,41 +217,30 @@ func (s Selection) SetColor(localX, localY int, color Color) {
 	s.image.pixels[index] = color
 }
 
-func (s Selection) toAcceleratedImageSelection() AcceleratedImageSelection {
-	var (
-		x      = s.x
-		y      = s.y
-		width  = s.width
-		height = s.height
-	)
-	if x < 0 {
-		x = 0
-	}
-	if y < 0 {
-		y = 0
-	}
-	if x >= s.image.width {
-		x = 0
-	}
-	if x+width > s.image.width {
-		width = s.image.width - x
-	}
-	if y >= s.image.height {
-		y = 0
-	}
-	if y+height > s.image.height {
-		height = s.image.height - y
-	}
-	return AcceleratedImageSelection{
-		X:      x,
-		Y:      y,
-		Width:  width,
-		Height: height,
+func (s Selection) toAcceleratedImageLocation() AcceleratedImageLocation {
+	return AcceleratedImageLocation{
+		X:      s.x,
+		Y:      s.y,
+		Width:  s.width,
+		Height: s.height,
 	}
 }
 
 // Drawer is for drawing primitives such as triangles
 type Drawer struct {
+	drawer AcceleratedDrawer
+}
+
+func (d Drawer) SetSelection(name string, selection Selection) {
+	selection.image.acceleratedImage.Upload(selection.image.pixels)
+	d.drawer.SetSelection(name, AcceleratedImageSelection{
+		AcceleratedImageLocation: selection.toAcceleratedImageLocation(),
+		AcceleratedImage:         selection.image.acceleratedImage,
+	})
+}
+
+func (d Drawer) Draw(primitive Primitive, params ...interface{}) error {
+	return d.drawer.Draw(primitive, params)
 }
 
 // Modify runs the AcceleratedProgram using the procedure. The results (modified
@@ -258,12 +253,12 @@ func (s Selection) Modify(acceleratedProgram AcceleratedProgram, procedure func(
 		return errors.New("nil procedure")
 	}
 
-	s.image.acceleratedImage.Upload(s.image.pixels)
-	_, err := s.image.acceleratedImage.Drawer(acceleratedProgram, s.toAcceleratedImageSelection())
+	err := s.image.acceleratedImage.Modify(acceleratedProgram, s.toAcceleratedImageLocation(), func(drawer AcceleratedDrawer) {
+		procedure(Drawer{drawer: drawer})
+	})
 	if err != nil {
 		return err
 	}
-	procedure(Drawer{})
-	s.image.acceleratedImage.Download(s.image.pixels)
+	//s.image.acceleratedImage.Download(s.image.pixels)
 	return nil
 }

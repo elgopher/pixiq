@@ -2,7 +2,6 @@ package image_test
 
 import (
 	"errors"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -519,7 +518,7 @@ func TestSelection_Modify(t *testing.T) {
 		var (
 			accelerator      = fake.NewAccelerator()
 			acceleratedImage = accelerator.NewImage(1, 1)
-			program          = accelerator.NewProgram(func(i *fake.AcceleratedImage, selection image.AcceleratedImageSelection) {})
+			program          = accelerator.NewProgram()
 			img, _           = image.New(1, 1, acceleratedImage)
 			selection        = img.WholeImageSelection()
 		)
@@ -540,12 +539,12 @@ func TestSelection_Modify(t *testing.T) {
 		// then
 		assert.Error(t, err)
 	})
-	t.Run("should immediately execute AcceleratedImage#Drawer", func(t *testing.T) {
+	t.Run("should execute procedure", func(t *testing.T) {
 		var (
 			executed         = false
 			accelerator      = fake.NewAccelerator()
 			acceleratedImage = accelerator.NewImage(1, 1)
-			program          = accelerator.NewProgram(func(i *fake.AcceleratedImage, selection image.AcceleratedImageSelection) {})
+			program          = accelerator.NewProgram()
 			img, _           = image.New(1, 1, acceleratedImage)
 			selection        = img.WholeImageSelection()
 		)
@@ -557,217 +556,25 @@ func TestSelection_Modify(t *testing.T) {
 		require.NoError(t, err)
 		assert.True(t, executed)
 	})
-	t.Run("should run program on each pixel in selection", func(t *testing.T) {
+	t.Run("should draw Primitive ", func(t *testing.T) {
 		var (
-			colorToAdd = image.RGBA(1, 2, 3, 4)
-			color1     = image.RGBA(10, 20, 30, 40)
-			modif1     = image.RGBA(11, 22, 33, 44)
-			color2     = image.RGBA(50, 60, 70, 80)
-			modif2     = image.RGBA(51, 62, 73, 84)
-			color3     = image.RGBA(90, 100, 110, 120)
-			color4     = image.RGBA(130, 140, 150, 160)
-			modif4     = image.RGBA(131, 142, 153, 164)
+			accelerator      = fake.NewAccelerator()
+			acceleratedImage = accelerator.NewImage(1, 1)
+			program          = accelerator.NewProgram()
+			img, _           = image.New(1, 1, acceleratedImage)
+			selection        = img.WholeImageSelection()
 		)
-		tests := map[string]struct {
-			selectionX, selectionY          int
-			selectionWidth, selectionHeight int
-			given                           *image.Image
-			givenColors                     [][]image.Color
-			expectedColors                  [][]image.Color
-		}{
-			"image 1x1, selection 0,0 with size 1x1": {
-				selectionWidth: 1, selectionHeight: 1,
-				givenColors:    [][]image.Color{{color1}},
-				expectedColors: [][]image.Color{{modif1}},
-			},
-			"image 1x1, selection 1,0 with size 0x1": {
-				selectionX: 1, selectionHeight: 1,
-				givenColors:    [][]image.Color{{color1}},
-				expectedColors: [][]image.Color{{color1}},
-			},
-			"image 1x1, selection 0,1 with size 1x0": {
-				selectionY: 1, selectionWidth: 1,
-				givenColors:    [][]image.Color{{color1}},
-				expectedColors: [][]image.Color{{color1}},
-			},
-			"image 1x1, selection 0,0 with size 1x0": {
-				selectionWidth: 1,
-				givenColors:    [][]image.Color{{color1}},
-				expectedColors: [][]image.Color{{color1}},
-			},
-			"image 1x1, selection 0,0 with size 0x1": {
-				selectionHeight: 1,
-				givenColors:     [][]image.Color{{color1}},
-				expectedColors:  [][]image.Color{{color1}},
-			},
-			"image 1x1, selection 0,0 with size 2x1": {
-				selectionWidth: 2, selectionHeight: 1,
-				givenColors:    [][]image.Color{{color1}},
-				expectedColors: [][]image.Color{{modif1}},
-			},
-			"image 1x1, selection 0,0 with size 1x2": {
-				selectionWidth: 1, selectionHeight: 2,
-				givenColors:    [][]image.Color{{color1}},
-				expectedColors: [][]image.Color{{modif1}},
-			},
-			"image 2x1, selection 1,0 with size 2x1": {
-				selectionX:     1,
-				selectionWidth: 2, selectionHeight: 1,
-				givenColors:    [][]image.Color{{color1, color2}},
-				expectedColors: [][]image.Color{{color1, modif2}},
-			},
-			"image 1x2, selection 0,1 with size 1x2": {
-				selectionY:     1,
-				selectionWidth: 1, selectionHeight: 2,
-				givenColors: [][]image.Color{
-					{color1},
-					{color2},
-				},
-				expectedColors: [][]image.Color{
-					{color1},
-					{modif2},
-				},
-			},
-			"image 2x2, selection 1,1 with size 1x1": {
-				selectionX: 1, selectionY: 1,
-				selectionWidth: 1, selectionHeight: 1,
-				givenColors: [][]image.Color{
-					{color1, color2},
-					{color3, color4},
-				},
-				expectedColors: [][]image.Color{
-					{color1, color2},
-					{color3, modif4},
-				},
-			},
-		}
-		for name, test := range tests {
-			t.Run(name, func(t *testing.T) {
-				var (
-					imageWidth  = len(test.givenColors[0])
-					imageHeight = len(test.givenColors)
-					accelerator = fake.NewAccelerator()
-					addColor    = accelerator.NewAddColorProgram(colorToAdd)
-					fakeImage   = accelerator.NewImage(imageWidth, imageHeight)
-					img, _      = image.New(imageWidth, imageHeight, fakeImage)
-					selection   = img.Selection(test.selectionX, test.selectionY).
-							WithSize(test.selectionWidth, test.selectionHeight)
-				)
-				fillImageWithColors(img, test.givenColors)
-				// when
-				err := selection.Modify(addColor, func(drawer image.Drawer) {})
-				// then
-				require.NoError(t, err)
-				assertColors(t, img.WholeImageSelection(), test.expectedColors)
-			})
-		}
+		primitive := &fake.Primtive{}
+		// when
+		err := selection.Modify(program, func(drawer image.Drawer) {
+			err := drawer.Draw(primitive)
+			require.NoError(t, err)
+		})
+		// then
+		require.NoError(t, err)
+		assert.True(t, primitive.Drawn())
 	})
-	t.Run("selection passed to AcceleratedImage#Drawer should be clamped to image boundaries", func(t *testing.T) {
-		tests := map[string]struct {
-			imageWidth, imageHeight         int
-			selectionX, selectionY          int
-			selectionWidth, selectionHeight int
-		}{
-			"image 0x0, selection -1,0 with size 0x0": {
-				selectionX: -1,
-			},
-			"image 0x0, selection -2,0 with size 0x0": {
-				selectionX: -2,
-			},
-			"image 1x1, selection -1,0 with size 0x0": {
-				imageWidth: 1, imageHeight: 1,
-				selectionX: -1,
-			},
-			"image 0x0, selection 0,-1 with size 0x0": {
-				selectionY: -1,
-			},
-			"image 0x0, selection 0,-2 with size 0x0": {
-				selectionY: -2,
-			},
-			"image 1x1, selection 0,-1 with size 0x0": {
-				imageWidth: 1, imageHeight: 1,
-				selectionY: -1,
-			},
-			"image 0x0, selection 0,0 with size 1x0": {
-				selectionWidth: 1,
-			},
-			"image 0x0, selection 0,0 with size 2x0": {
-				selectionWidth: 2,
-			},
-			"image 1x1, selection 0,0 with size 2x0": {
-				imageWidth: 1, imageHeight: 1,
-				selectionWidth: 2,
-			},
-			"image 0x0, selection 0,0 with size 0x1": {
-				selectionHeight: 1,
-			},
-			"image 0x0, selection 0,0 with size 0x2": {
-				selectionHeight: 2,
-			},
-			"image 1x1, selection 0,0 with size 0x2": {
-				imageWidth: 1, imageHeight: 1,
-				selectionHeight: 2,
-			},
-			"image 1x1, selection 1,0 with size 1x0": {
-				imageWidth: 1, imageHeight: 1,
-				selectionX:     1,
-				selectionWidth: 1,
-			},
-			"image 2x1, selection 1,0 with size 2x0": {
-				imageWidth: 2, imageHeight: 1,
-				selectionX:     1,
-				selectionWidth: 2,
-			},
-			"image 1x1, selection 2,0 with size 0x0": {
-				imageWidth: 1, imageHeight: 1,
-				selectionX: 2,
-			},
-			"image 1x1, selection 0,1 with size 0x1": {
-				imageWidth: 1, imageHeight: 1,
-				selectionY:      1,
-				selectionHeight: 1,
-			},
-			"image 1x2, selection 0,1 with size 0x2": {
-				imageWidth: 1, imageHeight: 2,
-				selectionY:      1,
-				selectionHeight: 2,
-			},
-			"image 1x1, selection 0,2 with size 0x0": {
-				imageWidth: 1, imageHeight: 1,
-				selectionY: 2,
-			},
-		}
-		for name, test := range tests {
-			t.Run(name, func(t *testing.T) {
-				accelerator := fake.NewAccelerator()
-				program := accelerator.NewProgram(func(img *fake.AcceleratedImage, selection image.AcceleratedImageSelection) {
-					// then
-					assert.True(t, selection.X >= 0, "x>=0")
-					assert.True(t, selection.Y >= 0, "y>=0")
-					assert.True(t, selection.Width >= 0, "width>=0")
-					assert.True(t, selection.Height >= 0, "height>=0")
-					assert.True(t, selection.X+selection.Width <= test.imageWidth, "x+width<image.width")
-					assert.True(t, selection.Y+selection.Height <= test.imageHeight, "y+height<image.height")
-				})
-				fakeImage := accelerator.NewImage(test.imageWidth, test.imageHeight)
-				img, _ := image.New(test.imageWidth, test.imageHeight, fakeImage)
-				selection := img.Selection(test.selectionX, test.selectionY).
-					WithSize(test.selectionWidth, test.selectionHeight)
-				// when
-				_ = selection.Modify(program, func(drawer image.Drawer) {})
-				fmt.Println()
-			})
-		}
-	})
-}
 
-func fillImageWithColors(img *image.Image, colors [][]image.Color) {
-	wholeImage := img.WholeImageSelection()
-	for y, row := range colors {
-		for x, color := range row {
-			wholeImage.SetColor(x, y, color)
-		}
-	}
 }
 
 type fakeAcceleratedImage struct {
@@ -778,8 +585,8 @@ func newFakeAcceleratedImage() *fakeAcceleratedImage {
 	return &fakeAcceleratedImage{}
 }
 
-func (i *fakeAcceleratedImage) Drawer(image.AcceleratedProgram, image.AcceleratedImageSelection) (image.AcceleratedDrawer, error) {
-	return nil, errors.New("unknown program")
+func (i fakeAcceleratedImage) Modify(p image.AcceleratedProgram, location image.AcceleratedImageLocation, procedure func(drawer image.AcceleratedDrawer)) error {
+	return errors.New("unknown program")
 }
 
 func (i *fakeAcceleratedImage) Upload(pixels []image.Color) {
@@ -796,10 +603,17 @@ func (i *fakeAcceleratedImage) Download(output []image.Color) {
 
 type acceleratedImageStub struct{}
 
-func (i acceleratedImageStub) Upload(pixels []image.Color)   {}
-func (i acceleratedImageStub) Download(output []image.Color) {}
-func (i acceleratedImageStub) Drawer(image.AcceleratedProgram, image.AcceleratedImageSelection) (image.AcceleratedDrawer, error) {
-	return acceleratedDrawerStub{}, nil
+func (i acceleratedImageStub) Upload([]image.Color)   {}
+func (i acceleratedImageStub) Download([]image.Color) {}
+func (i acceleratedImageStub) Modify(_ image.AcceleratedProgram, _ image.AcceleratedImageLocation, procedure func(drawer image.AcceleratedDrawer)) error {
+	procedure(acceleratedDrawerStub{})
+	return nil
 }
 
 type acceleratedDrawerStub struct{}
+
+func (a acceleratedDrawerStub) Draw(image.Primitive, ...interface{}) error {
+	return nil
+}
+
+func (a acceleratedDrawerStub) SetSelection(string, image.AcceleratedImageSelection) {}

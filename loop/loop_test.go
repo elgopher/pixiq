@@ -205,12 +205,17 @@ func clone(original *image.Image) *image.Image {
 
 type acceleratedImageStub struct{}
 
-func (a acceleratedImageStub) Drawer(image.AcceleratedProgram, image.AcceleratedImageSelection) (image.AcceleratedDrawer, error) {
-	return nil, nil
+func (i acceleratedImageStub) Upload([]image.Color)   {}
+func (i acceleratedImageStub) Download([]image.Color) {}
+func (i acceleratedImageStub) Modify(_ image.AcceleratedProgram, _ image.AcceleratedImageLocation, procedure func(drawer image.AcceleratedDrawer)) error {
+	procedure(acceleratedDrawerStub{})
+	return nil
 }
 
-func (a acceleratedImageStub) Upload(pixels []image.Color) {
+type acceleratedDrawerStub struct{}
+
+func (a acceleratedDrawerStub) Draw(image.Primitive, ...interface{}) error {
+	return nil
 }
 
-func (a acceleratedImageStub) Download(output []image.Color) {
-}
+func (a acceleratedDrawerStub) SetSelection(string, image.AcceleratedImageSelection) {}

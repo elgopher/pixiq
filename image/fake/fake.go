@@ -20,42 +20,31 @@ type Accelerator struct {
 	programs map[image.AcceleratedProgram]*program
 }
 
+type Primtive struct {
+	image.Primitive
+	drawn bool
+}
+
+func (p *Primtive) Drawn() bool {
+	return p.drawn
+}
+
 // NewImage returns a new instance of *AcceleratedImage
 func (i *Accelerator) NewImage(imageWidth, imageHeight int) *AcceleratedImage {
-	return &AcceleratedImage{
+	img := &AcceleratedImage{
 		programs:    i.programs,
 		imageWidth:  imageWidth,
 		imageHeight: imageHeight,
 	}
+	return img
 }
 
 // NewProgram returns a new instance of program which can be used to create
 // a Drawer.
-func (i *Accelerator) NewProgram(f func(img *AcceleratedImage, selection image.AcceleratedImageSelection)) image.AcceleratedProgram {
-	program := &program{f: f}
+func (i *Accelerator) NewProgram() image.AcceleratedProgram {
+	program := &program{}
 	i.programs[program] = program
 	return program
-}
-
-// NewAddColorProgram creates a new program adding all color components to each
-// pixel in a selection.
-func (i *Accelerator) NewAddColorProgram(colorToAdd image.Color) image.AcceleratedProgram {
-	// TODO Test
-	return i.NewProgram(func(img *AcceleratedImage, selection image.AcceleratedImageSelection) {
-		for y := selection.Y; y < selection.Y+selection.Height; y++ {
-			for x := selection.X; x < selection.X+selection.Width; x++ {
-				idx := y*img.imageWidth + x
-				color := img.pixels[idx]
-				var (
-					r = color.R() + colorToAdd.R()
-					g = color.G() + colorToAdd.G()
-					b = color.B() + colorToAdd.B()
-					a = color.A() + colorToAdd.A()
-				)
-				img.pixels[idx] = image.RGBA(r, g, b, a)
-			}
-		}
-	})
 }
 
 // AcceleratedImage stores pixel data in RAM and uses CPU solely.
@@ -66,18 +55,41 @@ type AcceleratedImage struct {
 	imageHeight int
 }
 
-type drawer struct {
+type Drawer struct {
+	selections  map[string]image.AcceleratedImageSelection
+	program     *program
+	location    image.AcceleratedImageLocation
+	outputImage *AcceleratedImage
+}
+
+func (d *Drawer) Draw(primitive image.Primitive, params ...interface{}) error {
+	fakePrimitive, ok := primitive.(*Primtive)
+	if !ok {
+		return errors.New("primitive cannot be drawn")
+	}
+	fakePrimitive.drawn = true
+	return nil
+}
+
+func (d *Drawer) SetSelection(name string, selection image.AcceleratedImageSelection) {
+	d.selections[name] = selection
 }
 
 // Drawer returns an AcceleratedDrawer for the program created by the same Accelerator
 // as this image.
-func (i *AcceleratedImage) Drawer(program image.AcceleratedProgram, selection image.AcceleratedImageSelection) (image.AcceleratedDrawer, error) {
+func (i *AcceleratedImage) Modify(program image.AcceleratedProgram, location image.AcceleratedImageLocation, procedure func(drawer image.AcceleratedDrawer)) error {
 	prg, ok := i.programs[program]
 	if !ok {
-		return nil, errors.New("unknown program")
+		return errors.New("unknown program")
 	}
-	prg.f(i, selection)
-	return &drawer{}, nil
+	drawer := &Drawer{
+		selections:  map[string]image.AcceleratedImageSelection{},
+		program:     prg,
+		location:    location,
+		outputImage: i,
+	}
+	procedure(drawer)
+	return nil
 }
 
 // Upload send pixels to a container in RAM
@@ -94,6 +106,4 @@ func (i *AcceleratedImage) Download(output []image.Color) {
 	}
 }
 
-type program struct {
-	f func(img *AcceleratedImage, selection image.AcceleratedImageSelection)
-}
+type program struct{}
