@@ -10,11 +10,11 @@ type AcceleratedImage interface {
 	Upload(pixels []Color)
 	// Downloads pixels by filling output Color slice
 	Download(output []Color)
-	// NewDrawer creates an AcceleratedDrawer. The resulting pixels should be stored
+	// Drawer returns an AcceleratedDrawer. The resulting pixels should be stored
 	// in a given selection of the AcceleratedImage.
 	// Passed AcceleratedImageSelection is always clamped to image boundaries
 	// TODO Probably it is better to do clamping in OpenGL adapter?
-	NewDrawer(AcceleratedProgram, AcceleratedImageSelection) (AcceleratedDrawer, error)
+	Drawer(AcceleratedProgram, AcceleratedImageSelection) (AcceleratedDrawer, error)
 }
 
 // AcceleratedDrawer is for drawing primitives (such as triangles) efficiently
@@ -259,7 +259,7 @@ func (s Selection) Modify(acceleratedProgram AcceleratedProgram, procedure func(
 	}
 
 	s.image.acceleratedImage.Upload(s.image.pixels)
-	_, err := s.image.acceleratedImage.NewDrawer(acceleratedProgram, s.toAcceleratedImageSelection())
+	_, err := s.image.acceleratedImage.Drawer(acceleratedProgram, s.toAcceleratedImageSelection())
 	if err != nil {
 		return err
 	}

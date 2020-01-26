@@ -230,7 +230,7 @@ type texture struct {
 	runInOpenGLContextThread func(func())
 }
 
-func (t *texture) NewDrawer(image.AcceleratedProgram, image.AcceleratedImageSelection) (image.AcceleratedDrawer, error) {
+func (t *texture) Drawer(image.AcceleratedProgram, image.AcceleratedImageSelection) (image.AcceleratedDrawer, error) {
 	return nil, nil
 }
 
