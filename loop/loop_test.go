@@ -205,6 +205,10 @@ func clone(original *image.Image) *image.Image {
 
 type acceleratedImageStub struct{}
 
+func (a acceleratedImageStub) Modify(image.AcceleratedProgram, image.AcceleratedImageSelection) (image.AcceleratedModification, error) {
+	return nil, nil
+}
+
 func (a acceleratedImageStub) Upload(pixels []image.Color) {
 }
 

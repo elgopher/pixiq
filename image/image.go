@@ -10,9 +10,9 @@ type AcceleratedImage interface {
 	// Downloads pixels by filling output Color slice
 	Download(output []Color)
 	// Create a modification program using AcceleratedProgram. The results should
-	// be store in in a given selection
+	// be stored in in a given selection.
 	// Passed AcceleratedImageSelection is always clamped to image boundaries
-	// TODO Probably is better to do clamping in OpenGL adapter?
+	// TODO Probably it is better to do clamping in OpenGL adapter?
 	Modify(AcceleratedProgram, AcceleratedImageSelection) (AcceleratedModification, error)
 }
 
