@@ -1,6 +1,7 @@
 package image_test
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -8,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/jacekolszak/pixiq/image"
+	"github.com/jacekolszak/pixiq/image/fake"
 )
 
 var transparent = image.RGBA(0, 0, 0, 0)
@@ -19,12 +21,12 @@ func TestNew(t *testing.T) {
 		})
 	})
 	t.Run("should return error when width is less than 0", func(t *testing.T) {
-		img, err := image.New(-1, 4, newFakeAcceleratedImage())
+		img, err := image.New(-1, 4, acceleratedImageStub{})
 		assert.Error(t, err)
 		assert.Nil(t, img)
 	})
 	t.Run("should return error when height is less than 0", func(t *testing.T) {
-		img, err := image.New(2, -1, newFakeAcceleratedImage())
+		img, err := image.New(2, -1, acceleratedImageStub{})
 		assert.Error(t, err)
 		assert.Nil(t, img)
 	})
@@ -56,7 +58,7 @@ func TestNew(t *testing.T) {
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
 				// when
-				img, err := image.New(test.width, test.height, newFakeAcceleratedImage())
+				img, err := image.New(test.width, test.height, acceleratedImageStub{})
 				// then
 				require.NoError(t, err)
 				require.NotNil(t, img)
@@ -68,7 +70,7 @@ func TestNew(t *testing.T) {
 }
 
 func newImage(width, height int) *image.Image {
-	img, err := image.New(width, height, newFakeAcceleratedImage())
+	img, err := image.New(width, height, acceleratedImageStub{})
 	if err != nil {
 		panic(err)
 	}
@@ -503,8 +505,11 @@ func assertColors(t *testing.T, selection image.Selection, expectedColorLines []
 
 func TestSelection_Modify(t *testing.T) {
 	t.Run("should return error when acceleratedProgram is not given", func(t *testing.T) {
-		img := newImage(1, 1)
-		selection := img.WholeImageSelection()
+		var (
+			accelerator = fake.NewAccelerator()
+			img, _      = image.New(1, 1, accelerator.NewImage())
+			selection   = img.WholeImageSelection()
+		)
 		// when
 		err := selection.Modify(nil, func(drawer image.Drawer) {})
 		// then
@@ -512,8 +517,9 @@ func TestSelection_Modify(t *testing.T) {
 	})
 	t.Run("should return error when procedure is not given", func(t *testing.T) {
 		var (
-			acceleratedImage = newFakeAcceleratedImage()
-			program          = acceleratedImage.NewProgram(func(selection image.AcceleratedImageSelection) {})
+			accelerator      = fake.NewAccelerator()
+			acceleratedImage = accelerator.NewImage()
+			program          = accelerator.NewProgram(func(i *fake.AcceleratedImage, selection image.AcceleratedImageSelection) {})
 			img, _           = image.New(1, 1, acceleratedImage)
 			selection        = img.WholeImageSelection()
 		)
@@ -524,7 +530,8 @@ func TestSelection_Modify(t *testing.T) {
 	})
 	t.Run("should return error when program has not been created by fake", func(t *testing.T) {
 		var (
-			acceleratedImage = newFakeAcceleratedImage()
+			accelerator      = fake.NewAccelerator()
+			acceleratedImage = accelerator.NewImage()
 			img, _           = image.New(1, 1, acceleratedImage)
 			selection        = img.WholeImageSelection()
 		)
@@ -535,11 +542,12 @@ func TestSelection_Modify(t *testing.T) {
 	})
 	t.Run("should immediately execute AcceleratedImage#Drawer", func(t *testing.T) {
 		var (
-			executed  = false
-			fakeImage = newFakeAcceleratedImage()
-			program   = fakeImage.NewProgram(func(selection image.AcceleratedImageSelection) {})
-			img, _    = image.New(1, 1, fakeImage)
-			selection = img.WholeImageSelection()
+			executed         = false
+			accelerator      = fake.NewAccelerator()
+			acceleratedImage = accelerator.NewImage()
+			program          = accelerator.NewProgram(func(i *fake.AcceleratedImage, selection image.AcceleratedImageSelection) {})
+			img, _           = image.New(1, 1, acceleratedImage)
+			selection        = img.WholeImageSelection()
 		)
 		// when
 		err := selection.Modify(program, func(drawer image.Drawer) {
@@ -638,8 +646,9 @@ func TestSelection_Modify(t *testing.T) {
 				var (
 					imageWidth  = len(test.givenColors[0])
 					imageHeight = len(test.givenColors)
-					fakeImage   = newFakeAcceleratedImage()
-					addColor    = fakeImage.NewAddColorProgram(imageWidth, colorToAdd)
+					accelerator = fake.NewAccelerator()
+					addColor    = accelerator.NewAddColorProgram(imageWidth, colorToAdd)
+					fakeImage   = accelerator.NewImage()
 					img, _      = image.New(imageWidth, imageHeight, fakeImage)
 					selection   = img.Selection(test.selectionX, test.selectionY).
 							WithSize(test.selectionWidth, test.selectionHeight)
@@ -730,8 +739,8 @@ func TestSelection_Modify(t *testing.T) {
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
-				fakeImage := newFakeAcceleratedImage()
-				program := fakeImage.NewProgram(func(selection image.AcceleratedImageSelection) {
+				accelerator := fake.NewAccelerator()
+				program := accelerator.NewProgram(func(img *fake.AcceleratedImage, selection image.AcceleratedImageSelection) {
 					// then
 					assert.True(t, selection.X >= 0, "x>=0")
 					assert.True(t, selection.Y >= 0, "y>=0")
@@ -740,6 +749,7 @@ func TestSelection_Modify(t *testing.T) {
 					assert.True(t, selection.X+selection.Width <= test.imageWidth, "x+width<image.width")
 					assert.True(t, selection.Y+selection.Height <= test.imageHeight, "y+height<image.height")
 				})
+				fakeImage := accelerator.NewImage()
 				img, _ := image.New(test.imageWidth, test.imageHeight, fakeImage)
 				selection := img.Selection(test.selectionX, test.selectionY).
 					WithSize(test.selectionWidth, test.selectionHeight)
@@ -759,3 +769,37 @@ func fillImageWithColors(img *image.Image, colors [][]image.Color) {
 		}
 	}
 }
+
+type fakeAcceleratedImage struct {
+	pixels []image.Color
+}
+
+func newFakeAcceleratedImage() *fakeAcceleratedImage {
+	return &fakeAcceleratedImage{}
+}
+
+func (i *fakeAcceleratedImage) Drawer(image.AcceleratedProgram, image.AcceleratedImageSelection) (image.AcceleratedDrawer, error) {
+	return nil, errors.New("unknown program")
+}
+
+func (i *fakeAcceleratedImage) Upload(pixels []image.Color) {
+	i.pixels = make([]image.Color, len(pixels))
+	// copy pixels to ensure that Upload method has been called
+	copy(i.pixels, pixels)
+}
+
+func (i *fakeAcceleratedImage) Download(output []image.Color) {
+	for j := 0; j < len(output); j++ {
+		output[j] = i.pixels[j]
+	}
+}
+
+type acceleratedImageStub struct{}
+
+func (i acceleratedImageStub) Upload(pixels []image.Color)   {}
+func (i acceleratedImageStub) Download(output []image.Color) {}
+func (i acceleratedImageStub) Drawer(image.AcceleratedProgram, image.AcceleratedImageSelection) (image.AcceleratedDrawer, error) {
+	return acceleratedDrawerStub{}, nil
+}
+
+type acceleratedDrawerStub struct{}
