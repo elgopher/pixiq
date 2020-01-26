@@ -8,5 +8,5 @@ jobs:
       - image: hakyer/opengl-go-glfw:18.2.4.7
     steps:
       - checkout
-      - run: make lint
       - run: make xvfb-test
+      - run: make lint
