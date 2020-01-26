@@ -41,7 +41,7 @@ func (i *fakeAcceleratedImage) Download(output []image.Color) {
 	}
 }
 
-func (i *fakeAcceleratedImage) RegisterProgram(f func(selection image.AcceleratedImageSelection)) image.AcceleratedProgram {
+func (i *fakeAcceleratedImage) NewProgram(f func(selection image.AcceleratedImageSelection)) image.AcceleratedProgram {
 	program := &fakeProgram{f: f}
 	i.programs[program] = program
 	return program

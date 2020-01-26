@@ -250,10 +250,12 @@ func (s Selection) Modify(acceleratedProgram AcceleratedProgram, cpuProgram func
 		return errors.New("nil cpuProgram")
 	}
 
+	s.image.acceleratedImage.Upload(s.image.pixels)
 	_, err := s.image.acceleratedImage.Modify(acceleratedProgram, s.toAcceleratedImageSelection())
 	if err != nil {
 		return err
 	}
 	cpuProgram(SelectionModification{})
+	s.image.acceleratedImage.Download(s.image.pixels)
 	return nil
 }

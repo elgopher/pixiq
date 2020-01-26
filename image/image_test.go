@@ -1,6 +1,7 @@
 package image_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -440,7 +441,6 @@ func TestSelection_SetColor(t *testing.T) {
 			})
 		})
 	})
-
 }
 
 func TestImage_Upload(t *testing.T) {
@@ -513,7 +513,7 @@ func TestSelection_Modify(t *testing.T) {
 	t.Run("should return error when cpuProgram is not given", func(t *testing.T) {
 		var (
 			acceleratedImage = newFakeAcceleratedImage()
-			program          = acceleratedImage.RegisterProgram(func(selection image.AcceleratedImageSelection) {})
+			program          = acceleratedImage.NewProgram(func(selection image.AcceleratedImageSelection) {})
 			img, _           = image.New(1, 1, acceleratedImage)
 			selection        = img.WholeImageSelection()
 		)
@@ -537,7 +537,7 @@ func TestSelection_Modify(t *testing.T) {
 		var (
 			executed  = false
 			fakeImage = newFakeAcceleratedImage()
-			program   = fakeImage.RegisterProgram(func(selection image.AcceleratedImageSelection) {})
+			program   = fakeImage.NewProgram(func(selection image.AcceleratedImageSelection) {})
 			img, _    = image.New(1, 1, fakeImage)
 			selection = img.WholeImageSelection()
 		)
@@ -549,7 +549,122 @@ func TestSelection_Modify(t *testing.T) {
 		require.NoError(t, err)
 		assert.True(t, executed)
 	})
-	t.Run("selection should be clamped to image boundaries", func(t *testing.T) {
+	t.Run("should MODIFY", func(t *testing.T) {
+		var (
+			colorToAdd = image.RGBA(1, 2, 3, 4)
+			color1     = image.RGBA(10, 20, 30, 40)
+			modif1     = image.RGBA(11, 22, 33, 44)
+			color2     = image.RGBA(50, 60, 70, 80)
+			modif2     = image.RGBA(51, 62, 73, 84)
+			color3     = image.RGBA(90, 100, 110, 120)
+			//modif3     = image.RGBA(91, 102, 113, 124)
+			color4 = image.RGBA(130, 140, 150, 160)
+			modif4 = image.RGBA(131, 142, 153, 164)
+		)
+		tests := map[string]struct {
+			selectionX, selectionY          int
+			selectionWidth, selectionHeight int
+			given                           *image.Image
+			givenColors                     [][]image.Color
+			expectedColors                  [][]image.Color
+		}{
+			"image 1x1, selection 0,0 with size 1x1": {
+				selectionWidth: 1, selectionHeight: 1,
+				givenColors:    [][]image.Color{{color1}},
+				expectedColors: [][]image.Color{{modif1}},
+			},
+			"image 1x1, selection 1,0 with size 0x1": {
+				selectionX: 1, selectionHeight: 1,
+				givenColors:    [][]image.Color{{color1}},
+				expectedColors: [][]image.Color{{color1}},
+			},
+			"image 1x1, selection 0,1 with size 1x0": {
+				selectionY: 1, selectionWidth: 1,
+				givenColors:    [][]image.Color{{color1}},
+				expectedColors: [][]image.Color{{color1}},
+			},
+			"image 1x1, selection 0,0 with size 1x0": {
+				selectionWidth: 1,
+				givenColors:    [][]image.Color{{color1}},
+				expectedColors: [][]image.Color{{color1}},
+			},
+			"image 1x1, selection 0,0 with size 0x1": {
+				selectionHeight: 1,
+				givenColors:     [][]image.Color{{color1}},
+				expectedColors:  [][]image.Color{{color1}},
+			},
+			"image 1x1, selection 0,0 with size 2x1": {
+				selectionWidth: 2, selectionHeight: 1,
+				givenColors:    [][]image.Color{{color1}},
+				expectedColors: [][]image.Color{{modif1}},
+			},
+			"image 1x1, selection 0,0 with size 1x2": {
+				selectionWidth: 1, selectionHeight: 2,
+				givenColors:    [][]image.Color{{color1}},
+				expectedColors: [][]image.Color{{modif1}},
+			},
+			"image 2x1, selection 1,0 with size 2x1": {
+				selectionX:     1,
+				selectionWidth: 2, selectionHeight: 1,
+				givenColors:    [][]image.Color{{color1, color2}},
+				expectedColors: [][]image.Color{{color1, modif2}},
+			},
+			"image 1x2, selection 0,1 with size 1x2": {
+				selectionY:     1,
+				selectionWidth: 1, selectionHeight: 2,
+				givenColors: [][]image.Color{
+					{color1},
+					{color2},
+				},
+				expectedColors: [][]image.Color{
+					{color1},
+					{modif2},
+				},
+			},
+			"image 2x2, selection 1,1 with size 1x1": {
+				selectionX: 1, selectionY: 1,
+				selectionWidth: 1, selectionHeight: 1,
+				givenColors: [][]image.Color{
+					{color1, color2},
+					{color3, color4},
+				},
+				expectedColors: [][]image.Color{
+					{color1, color2},
+					{color3, modif4},
+				},
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				var (
+					imageWidth  = len(test.givenColors[0])
+					imageHeight = len(test.givenColors)
+					fakeImage   = newFakeAcceleratedImage()
+					// TODO Test following function!
+					program = fakeImage.NewProgram(func(selection image.AcceleratedImageSelection) {
+						for y := selection.Y; y < selection.Y+selection.Height; y++ {
+							for x := selection.X; x < selection.X+selection.Width; x++ {
+								idx := y*imageWidth + x
+								color := fakeImage.pixels[idx]
+								r, g, b, a := color.R()+colorToAdd.R(), color.G()+colorToAdd.G(), color.B()+colorToAdd.B(), color.A()+colorToAdd.A()
+								fakeImage.pixels[idx] = image.RGBA(r, g, b, a)
+							}
+						}
+					})
+					img, _    = image.New(imageWidth, imageHeight, fakeImage)
+					selection = img.Selection(test.selectionX, test.selectionY).
+							WithSize(test.selectionWidth, test.selectionHeight)
+				)
+				fillImageWithColors(img, test.givenColors)
+				// when
+				err := selection.Modify(program, func(modification image.SelectionModification) {})
+				// then
+				require.NoError(t, err)
+				assertColors(t, img.WholeImageSelection(), test.expectedColors)
+			})
+		}
+	})
+	t.Run("selection passed to AcceleratedImage#Modify should be clamped to image boundaries", func(t *testing.T) {
 		tests := map[string]struct {
 			imageWidth, imageHeight         int
 			selectionX, selectionY          int
@@ -627,7 +742,7 @@ func TestSelection_Modify(t *testing.T) {
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
 				fakeImage := newFakeAcceleratedImage()
-				program := fakeImage.RegisterProgram(func(selection image.AcceleratedImageSelection) {
+				program := fakeImage.NewProgram(func(selection image.AcceleratedImageSelection) {
 					// then
 					assert.True(t, selection.X >= 0, "x>=0")
 					assert.True(t, selection.Y >= 0, "y>=0")
@@ -641,8 +756,17 @@ func TestSelection_Modify(t *testing.T) {
 					WithSize(test.selectionWidth, test.selectionHeight)
 				// when
 				_ = selection.Modify(program, func(modification image.SelectionModification) {})
+				fmt.Println()
 			})
 		}
 	})
+}
 
+func fillImageWithColors(img *image.Image, colors [][]image.Color) {
+	wholeImage := img.WholeImageSelection()
+	for y, row := range colors {
+		for x, color := range row {
+			wholeImage.SetColor(x, y, color)
+		}
+	}
 }
