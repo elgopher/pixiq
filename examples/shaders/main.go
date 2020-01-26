@@ -25,7 +25,7 @@ func main() {
 			panic(err)
 		}
 		loop.Run(window, func(frame *loop.Frame) {
-			selection := frame.Screen().Image().WholeImageSelection()
+			selection := frame.Screen()
 			err = selection.Modify(program, func(drawer image.Drawer) {
 			})
 			if err != nil {
