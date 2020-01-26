@@ -549,7 +549,7 @@ func TestSelection_Modify(t *testing.T) {
 		require.NoError(t, err)
 		assert.True(t, executed)
 	})
-	t.Run("should MODIFY", func(t *testing.T) {
+	t.Run("should run program on each pixel in selection", func(t *testing.T) {
 		var (
 			colorToAdd = image.RGBA(1, 2, 3, 4)
 			color1     = image.RGBA(10, 20, 30, 40)
@@ -557,9 +557,8 @@ func TestSelection_Modify(t *testing.T) {
 			color2     = image.RGBA(50, 60, 70, 80)
 			modif2     = image.RGBA(51, 62, 73, 84)
 			color3     = image.RGBA(90, 100, 110, 120)
-			//modif3     = image.RGBA(91, 102, 113, 124)
-			color4 = image.RGBA(130, 140, 150, 160)
-			modif4 = image.RGBA(131, 142, 153, 164)
+			color4     = image.RGBA(130, 140, 150, 160)
+			modif4     = image.RGBA(131, 142, 153, 164)
 		)
 		tests := map[string]struct {
 			selectionX, selectionY          int
@@ -640,24 +639,14 @@ func TestSelection_Modify(t *testing.T) {
 					imageWidth  = len(test.givenColors[0])
 					imageHeight = len(test.givenColors)
 					fakeImage   = newFakeAcceleratedImage()
-					// TODO Test following function!
-					program = fakeImage.NewProgram(func(selection image.AcceleratedImageSelection) {
-						for y := selection.Y; y < selection.Y+selection.Height; y++ {
-							for x := selection.X; x < selection.X+selection.Width; x++ {
-								idx := y*imageWidth + x
-								color := fakeImage.pixels[idx]
-								r, g, b, a := color.R()+colorToAdd.R(), color.G()+colorToAdd.G(), color.B()+colorToAdd.B(), color.A()+colorToAdd.A()
-								fakeImage.pixels[idx] = image.RGBA(r, g, b, a)
-							}
-						}
-					})
-					img, _    = image.New(imageWidth, imageHeight, fakeImage)
-					selection = img.Selection(test.selectionX, test.selectionY).
+					addColor    = fakeImage.NewAddColorProgram(imageWidth, colorToAdd)
+					img, _      = image.New(imageWidth, imageHeight, fakeImage)
+					selection   = img.Selection(test.selectionX, test.selectionY).
 							WithSize(test.selectionWidth, test.selectionHeight)
 				)
 				fillImageWithColors(img, test.givenColors)
 				// when
-				err := selection.Modify(program, func(modification image.SelectionModification) {})
+				err := selection.Modify(addColor, func(modification image.SelectionModification) {})
 				// then
 				require.NoError(t, err)
 				assertColors(t, img.WholeImageSelection(), test.expectedColors)

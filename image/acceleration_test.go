@@ -47,6 +47,25 @@ func (i *fakeAcceleratedImage) NewProgram(f func(selection image.AcceleratedImag
 	return program
 }
 
+// TODO Test this thing!
+func (i *fakeAcceleratedImage) NewAddColorProgram(imageWidth int, colorToAdd image.Color) image.AcceleratedProgram {
+	return i.NewProgram(func(selection image.AcceleratedImageSelection) {
+		for y := selection.Y; y < selection.Y+selection.Height; y++ {
+			for x := selection.X; x < selection.X+selection.Width; x++ {
+				idx := y*imageWidth + x
+				color := i.pixels[idx]
+				var (
+					r = color.R() + colorToAdd.R()
+					g = color.G() + colorToAdd.G()
+					b = color.B() + colorToAdd.B()
+					a = color.A() + colorToAdd.A()
+				)
+				i.pixels[idx] = image.RGBA(r, g, b, a)
+			}
+		}
+	})
+}
+
 type fakeProgram struct {
 	f func(selection image.AcceleratedImageSelection)
 }
