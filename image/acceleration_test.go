@@ -17,7 +17,7 @@ func newFakeAcceleratedImage() *fakeAcceleratedImage {
 	}
 }
 
-type fakeAcceleratedModification struct {
+type fakeDrawer struct {
 }
 
 func (i *fakeAcceleratedImage) Drawer(program image.AcceleratedProgram, selection image.AcceleratedImageSelection) (image.AcceleratedDrawer, error) {
@@ -26,7 +26,7 @@ func (i *fakeAcceleratedImage) Drawer(program image.AcceleratedProgram, selectio
 		return nil, errors.New("unknown program")
 	}
 	prg.f(selection)
-	return &fakeAcceleratedModification{}, nil
+	return &fakeDrawer{}, nil
 }
 
 func (i *fakeAcceleratedImage) Upload(pixels []image.Color) {
