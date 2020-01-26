@@ -507,7 +507,7 @@ func TestSelection_Modify(t *testing.T) {
 	t.Run("should return error when acceleratedProgram is not given", func(t *testing.T) {
 		var (
 			accelerator = fake.NewAccelerator()
-			img, _      = image.New(1, 1, accelerator.NewImage())
+			img, _      = image.New(1, 1, accelerator.NewImage(1, 1))
 			selection   = img.WholeImageSelection()
 		)
 		// when
@@ -518,7 +518,7 @@ func TestSelection_Modify(t *testing.T) {
 	t.Run("should return error when procedure is not given", func(t *testing.T) {
 		var (
 			accelerator      = fake.NewAccelerator()
-			acceleratedImage = accelerator.NewImage()
+			acceleratedImage = accelerator.NewImage(1, 1)
 			program          = accelerator.NewProgram(func(i *fake.AcceleratedImage, selection image.AcceleratedImageSelection) {})
 			img, _           = image.New(1, 1, acceleratedImage)
 			selection        = img.WholeImageSelection()
@@ -531,7 +531,7 @@ func TestSelection_Modify(t *testing.T) {
 	t.Run("should return error when program has not been created by fake", func(t *testing.T) {
 		var (
 			accelerator      = fake.NewAccelerator()
-			acceleratedImage = accelerator.NewImage()
+			acceleratedImage = accelerator.NewImage(1, 1)
 			img, _           = image.New(1, 1, acceleratedImage)
 			selection        = img.WholeImageSelection()
 		)
@@ -544,7 +544,7 @@ func TestSelection_Modify(t *testing.T) {
 		var (
 			executed         = false
 			accelerator      = fake.NewAccelerator()
-			acceleratedImage = accelerator.NewImage()
+			acceleratedImage = accelerator.NewImage(1, 1)
 			program          = accelerator.NewProgram(func(i *fake.AcceleratedImage, selection image.AcceleratedImageSelection) {})
 			img, _           = image.New(1, 1, acceleratedImage)
 			selection        = img.WholeImageSelection()
@@ -647,8 +647,8 @@ func TestSelection_Modify(t *testing.T) {
 					imageWidth  = len(test.givenColors[0])
 					imageHeight = len(test.givenColors)
 					accelerator = fake.NewAccelerator()
-					addColor    = accelerator.NewAddColorProgram(imageWidth, colorToAdd)
-					fakeImage   = accelerator.NewImage()
+					addColor    = accelerator.NewAddColorProgram(colorToAdd)
+					fakeImage   = accelerator.NewImage(imageWidth, imageHeight)
 					img, _      = image.New(imageWidth, imageHeight, fakeImage)
 					selection   = img.Selection(test.selectionX, test.selectionY).
 							WithSize(test.selectionWidth, test.selectionHeight)
@@ -749,7 +749,7 @@ func TestSelection_Modify(t *testing.T) {
 					assert.True(t, selection.X+selection.Width <= test.imageWidth, "x+width<image.width")
 					assert.True(t, selection.Y+selection.Height <= test.imageHeight, "y+height<image.height")
 				})
-				fakeImage := accelerator.NewImage()
+				fakeImage := accelerator.NewImage(test.imageWidth, test.imageHeight)
 				img, _ := image.New(test.imageWidth, test.imageHeight, fakeImage)
 				selection := img.Selection(test.selectionX, test.selectionY).
 					WithSize(test.selectionWidth, test.selectionHeight)

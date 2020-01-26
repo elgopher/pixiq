@@ -19,9 +19,11 @@ type Accelerator struct {
 	programs map[image.AcceleratedProgram]*program
 }
 
-func (i *Accelerator) NewImage() *AcceleratedImage {
+func (i *Accelerator) NewImage(imageWidth, imageHeight int) *AcceleratedImage {
 	return &AcceleratedImage{
-		programs: i.programs,
+		programs:    i.programs,
+		imageWidth:  imageWidth,
+		imageHeight: imageHeight,
 	}
 }
 
@@ -34,11 +36,11 @@ func (i *Accelerator) NewProgram(f func(img *AcceleratedImage, selection image.A
 // TODO Test
 // NewAddColorProgram creates a new program adding all color components to each
 // pixel in a selection.
-func (i *Accelerator) NewAddColorProgram(imageWidth int, colorToAdd image.Color) image.AcceleratedProgram {
+func (i *Accelerator) NewAddColorProgram(colorToAdd image.Color) image.AcceleratedProgram {
 	return i.NewProgram(func(img *AcceleratedImage, selection image.AcceleratedImageSelection) {
 		for y := selection.Y; y < selection.Y+selection.Height; y++ {
 			for x := selection.X; x < selection.X+selection.Width; x++ {
-				idx := y*imageWidth + x
+				idx := y*img.imageWidth + x
 				color := img.pixels[idx]
 				var (
 					r = color.R() + colorToAdd.R()
@@ -54,8 +56,10 @@ func (i *Accelerator) NewAddColorProgram(imageWidth int, colorToAdd image.Color)
 
 // AcceleratedImage stores pixel data in RAM and uses CPU solely.
 type AcceleratedImage struct {
-	pixels   []image.Color
-	programs map[image.AcceleratedProgram]*program
+	pixels      []image.Color
+	programs    map[image.AcceleratedProgram]*program
+	imageWidth  int
+	imageHeight int
 }
 
 type drawer struct {
