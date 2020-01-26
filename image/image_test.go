@@ -533,7 +533,7 @@ func TestSelection_Modify(t *testing.T) {
 		// then
 		assert.Error(t, err)
 	})
-	t.Run("should immediately execute AcceleratedImage#Modify", func(t *testing.T) {
+	t.Run("should immediately execute AcceleratedImage#NewDrawer", func(t *testing.T) {
 		var (
 			executed  = false
 			fakeImage = newFakeAcceleratedImage()
@@ -653,7 +653,7 @@ func TestSelection_Modify(t *testing.T) {
 			})
 		}
 	})
-	t.Run("selection passed to AcceleratedImage#Modify should be clamped to image boundaries", func(t *testing.T) {
+	t.Run("selection passed to AcceleratedImage#NewDrawer should be clamped to image boundaries", func(t *testing.T) {
 		tests := map[string]struct {
 			imageWidth, imageHeight         int
 			selectionX, selectionY          int
