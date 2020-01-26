@@ -11,7 +11,7 @@ Pixiq users expect:
 
 Pixiq creators can fulfill those goals by:
 
-+ writing automated tests (bearing in mind that 95% of tests should be unit tests)
++ writing automated tests (bearing in mind that 80% of tests should be unit tests)
 + designing the API carefully
   + making proof-of-concepts
   + using Test-Driven Development
