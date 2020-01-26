@@ -506,11 +506,11 @@ func TestSelection_Modify(t *testing.T) {
 		img := newImage(1, 1)
 		selection := img.WholeImageSelection()
 		// when
-		err := selection.Modify(nil, func(modification image.SelectionModification) {})
+		err := selection.Modify(nil, func(drawer image.Drawer) {})
 		// then
 		assert.Error(t, err)
 	})
-	t.Run("should return error when cpuProgram is not given", func(t *testing.T) {
+	t.Run("should return error when procedure is not given", func(t *testing.T) {
 		var (
 			acceleratedImage = newFakeAcceleratedImage()
 			program          = acceleratedImage.NewProgram(func(selection image.AcceleratedImageSelection) {})
@@ -522,14 +522,14 @@ func TestSelection_Modify(t *testing.T) {
 		// then
 		assert.Error(t, err)
 	})
-	t.Run("should return error when cpuProgram has not been created by fake", func(t *testing.T) {
+	t.Run("should return error when program has not been created by fake", func(t *testing.T) {
 		var (
 			acceleratedImage = newFakeAcceleratedImage()
 			img, _           = image.New(1, 1, acceleratedImage)
 			selection        = img.WholeImageSelection()
 		)
 		// when
-		err := selection.Modify(struct{}{}, func(modification image.SelectionModification) {})
+		err := selection.Modify(struct{}{}, func(drawer image.Drawer) {})
 		// then
 		assert.Error(t, err)
 	})
@@ -542,7 +542,7 @@ func TestSelection_Modify(t *testing.T) {
 			selection = img.WholeImageSelection()
 		)
 		// when
-		err := selection.Modify(program, func(modification image.SelectionModification) {
+		err := selection.Modify(program, func(drawer image.Drawer) {
 			executed = true
 		})
 		// then
@@ -646,7 +646,7 @@ func TestSelection_Modify(t *testing.T) {
 				)
 				fillImageWithColors(img, test.givenColors)
 				// when
-				err := selection.Modify(addColor, func(modification image.SelectionModification) {})
+				err := selection.Modify(addColor, func(drawer image.Drawer) {})
 				// then
 				require.NoError(t, err)
 				assertColors(t, img.WholeImageSelection(), test.expectedColors)
@@ -744,7 +744,7 @@ func TestSelection_Modify(t *testing.T) {
 				selection := img.Selection(test.selectionX, test.selectionY).
 					WithSize(test.selectionWidth, test.selectionHeight)
 				// when
-				_ = selection.Modify(program, func(modification image.SelectionModification) {})
+				_ = selection.Modify(program, func(drawer image.Drawer) {})
 				fmt.Println()
 			})
 		}

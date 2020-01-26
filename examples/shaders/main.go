@@ -20,14 +20,13 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		window, err := gl.OpenWindow(640, 360)
+		window, err := gl.OpenWindow(1280, 720)
 		if err != nil {
 			panic(err)
 		}
 		loop.Run(window, func(frame *loop.Frame) {
 			selection := frame.Screen().Image().WholeImageSelection()
-			err = selection.Modify(program, func(modification image.SelectionModification) {
-
+			err = selection.Modify(program, func(drawer image.Drawer) {
 			})
 			if err != nil {
 				panic(err)

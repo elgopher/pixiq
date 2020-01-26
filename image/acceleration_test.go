@@ -20,7 +20,7 @@ func newFakeAcceleratedImage() *fakeAcceleratedImage {
 type fakeAcceleratedModification struct {
 }
 
-func (i *fakeAcceleratedImage) Modify(program image.AcceleratedProgram, selection image.AcceleratedImageSelection) (image.AcceleratedModification, error) {
+func (i *fakeAcceleratedImage) Modify(program image.AcceleratedProgram, selection image.AcceleratedImageSelection) (image.AcceleratedDrawer, error) {
 	prg, ok := i.programs[program]
 	if !ok {
 		return nil, errors.New("unknown program")

@@ -205,7 +205,7 @@ func clone(original *image.Image) *image.Image {
 
 type acceleratedImageStub struct{}
 
-func (a acceleratedImageStub) Modify(image.AcceleratedProgram, image.AcceleratedImageSelection) (image.AcceleratedModification, error) {
+func (a acceleratedImageStub) Modify(image.AcceleratedProgram, image.AcceleratedImageSelection) (image.AcceleratedDrawer, error) {
 	return nil, nil
 }
 

@@ -2,23 +2,27 @@ package image
 
 import "errors"
 
-// AcceleratedImage is an image processed externally (outside the CPU).
+// AcceleratedImage is an image processed by external device (outside the CPU).
+// The mentioned device might be a video card.
 type AcceleratedImage interface {
 	// Upload send pixels colors sorted by coordinates.
 	// First all pixels are sent for y=0, from left to right.
 	Upload(pixels []Color)
 	// Downloads pixels by filling output Color slice
 	Download(output []Color)
-	// Create a modification program using AcceleratedProgram. The results should
-	// be stored in in a given selection.
+	// Create a modification program using AcceleratedProgram. The generated
+	// pixels should be stored in a given selection.
 	// Passed AcceleratedImageSelection is always clamped to image boundaries
 	// TODO Probably it is better to do clamping in OpenGL adapter?
-	Modify(AcceleratedProgram, AcceleratedImageSelection) (AcceleratedModification, error)
+	Modify(AcceleratedProgram, AcceleratedImageSelection) (AcceleratedDrawer, error)
 }
 
-type AcceleratedModification interface {
+// AcceleratedDrawer is for drawing primitives (such as triangles) efficiently
+// on the external device (outside the CPU).
+type AcceleratedDrawer interface {
 }
 
+// AcceleratedImageSelection is a location of a AcceleratedImage
 type AcceleratedImageSelection struct {
 	X, Y, Width, Height int
 }
@@ -240,15 +244,18 @@ func (s Selection) toAcceleratedImageSelection() AcceleratedImageSelection {
 	}
 }
 
-type SelectionModification struct {
+// Drawer is for drawing primitives such as triangles
+type Drawer struct {
 }
 
-func (s Selection) Modify(acceleratedProgram AcceleratedProgram, cpuProgram func(SelectionModification)) error {
+// Modify runs the AcceleratedProgram using the procedure. The results (modified
+// pixels) will be stored in the Selection.
+func (s Selection) Modify(acceleratedProgram AcceleratedProgram, procedure func(Drawer)) error {
 	if acceleratedProgram == nil {
 		return errors.New("nil acceleratedProgram")
 	}
-	if cpuProgram == nil {
-		return errors.New("nil cpuProgram")
+	if procedure == nil {
+		return errors.New("nil procedure")
 	}
 
 	s.image.acceleratedImage.Upload(s.image.pixels)
@@ -256,7 +263,7 @@ func (s Selection) Modify(acceleratedProgram AcceleratedProgram, cpuProgram func
 	if err != nil {
 		return err
 	}
-	cpuProgram(SelectionModification{})
+	procedure(Drawer{})
 	s.image.acceleratedImage.Download(s.image.pixels)
 	return nil
 }

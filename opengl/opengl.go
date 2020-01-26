@@ -230,8 +230,8 @@ type texture struct {
 	runInOpenGLContextThread func(func())
 }
 
-func (t *texture) Modify(image.AcceleratedProgram, image.AcceleratedImageSelection) (image.AcceleratedModification, error) {
-	panic("implement me")
+func (t *texture) Modify(image.AcceleratedProgram, image.AcceleratedImageSelection) (image.AcceleratedDrawer, error) {
+	return nil, nil
 }
 
 func (t *texture) TextureID() uint32 {
