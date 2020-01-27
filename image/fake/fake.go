@@ -8,16 +8,13 @@ import (
 
 // NewAccelerator returns a new instance of Accelerator.
 func NewAccelerator() *Accelerator {
-	return &Accelerator{
-		programs: map[image.AcceleratedProgram]*Program{},
-	}
+	return &Accelerator{}
 }
 
 // Accelerator is a container of accelerated images and programs.
 // It can be used in unit tests as a replacement for a real implementation
 // (such as OpenGL).
 type Accelerator struct {
-	programs map[image.AcceleratedProgram]*Program
 }
 
 type Primitive struct {
@@ -32,25 +29,19 @@ func (p *Primitive) Drawn() bool {
 // NewImage returns a new instance of *AcceleratedImage
 func (i *Accelerator) NewImage(imageWidth, imageHeight int) *AcceleratedImage {
 	img := &AcceleratedImage{
-		programs:    i.programs,
 		imageWidth:  imageWidth,
 		imageHeight: imageHeight,
 	}
 	return img
 }
 
-// NewProgram returns a new instance of program which can be used to create
-// a drawer.
-func (i *Accelerator) NewProgram() *Program {
-	program := &Program{}
-	i.programs[program] = program
-	return program
+func NewProgram() *Program {
+	return &Program{}
 }
 
 // AcceleratedImage stores pixel data in RAM and uses CPU solely.
 type AcceleratedImage struct {
 	pixels      []image.Color
-	programs    map[image.AcceleratedProgram]*Program
 	imageWidth  int
 	imageHeight int
 }
@@ -75,17 +66,17 @@ func (d *drawer) SetSelection(name string, selection image.AcceleratedImageSelec
 }
 
 func (i *AcceleratedImage) Modify(program image.AcceleratedProgram, location image.AcceleratedImageLocation, procedure func(drawer image.AcceleratedDrawer)) error {
-	prg, ok := i.programs[program]
+	fakeProgram, ok := program.(*Program)
 	if !ok {
-		return errors.New("unknown program")
+		return errors.New("cannot execute a program which is not a *fake.Program")
 	}
 	drawer := &drawer{
 		selections:     map[string]image.AcceleratedImageSelection{},
 		targetLocation: location,
 		targetImage:    i,
 	}
-	prg.executed = true
-	prg.drawer = drawer
+	fakeProgram.executed = true
+	fakeProgram.drawer = drawer
 	procedure(drawer)
 	return nil
 }

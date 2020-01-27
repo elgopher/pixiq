@@ -518,7 +518,7 @@ func TestSelection_Modify(t *testing.T) {
 		var (
 			accelerator      = fake.NewAccelerator()
 			acceleratedImage = accelerator.NewImage(1, 1)
-			program          = accelerator.NewProgram()
+			program          = fake.NewProgram()
 			img, _           = image.New(1, 1, acceleratedImage)
 			selection        = img.WholeImageSelection()
 		)
@@ -527,7 +527,7 @@ func TestSelection_Modify(t *testing.T) {
 		// then
 		assert.Error(t, err)
 	})
-	t.Run("should return error when program has not been created by fake", func(t *testing.T) {
+	t.Run("should return error when program is not a fake", func(t *testing.T) {
 		var (
 			accelerator      = fake.NewAccelerator()
 			acceleratedImage = accelerator.NewImage(1, 1)
@@ -544,7 +544,7 @@ func TestSelection_Modify(t *testing.T) {
 			executed         = false
 			accelerator      = fake.NewAccelerator()
 			acceleratedImage = accelerator.NewImage(1, 1)
-			program          = accelerator.NewProgram()
+			program          = fake.NewProgram()
 			img, _           = image.New(1, 1, acceleratedImage)
 			selection        = img.WholeImageSelection()
 		)
@@ -572,7 +572,7 @@ func TestSelection_Modify(t *testing.T) {
 				var (
 					accelerator      = fake.NewAccelerator()
 					acceleratedImage = accelerator.NewImage(4, 4)
-					program          = accelerator.NewProgram()
+					program          = fake.NewProgram()
 					img, _           = image.New(1, 1, acceleratedImage)
 					selection        = img.Selection(test.x, test.y).WithSize(test.width, test.height)
 				)
@@ -597,7 +597,7 @@ func TestSelection_Modify(t *testing.T) {
 		var (
 			accelerator      = fake.NewAccelerator()
 			acceleratedImage = accelerator.NewImage(1, 1)
-			program          = accelerator.NewProgram()
+			program          = fake.NewProgram()
 			img, _           = image.New(1, 1, acceleratedImage)
 			selection        = img.WholeImageSelection()
 			primitive        = &fake.Primitive{}
