@@ -18,7 +18,7 @@ type AcceleratedImage interface {
 // on the external device (outside the CPU).
 type AcceleratedDrawer interface {
 	SetSelection(name string, selection AcceleratedImageSelection)
-	Draw(primitive Primitive, params ...interface{}) error
+	Draw(primitive Primitive, params []interface{}) error
 }
 
 type Primitive interface{}
@@ -245,15 +245,16 @@ func (d Drawer) Draw(primitive Primitive, params ...interface{}) error {
 
 // Modify runs the AcceleratedProgram using the procedure. The results (modified
 // pixels) will be stored in the Selection.
-func (s Selection) Modify(acceleratedProgram AcceleratedProgram, procedure func(Drawer)) error {
-	if acceleratedProgram == nil {
-		return errors.New("nil acceleratedProgram")
+func (s Selection) Modify(program AcceleratedProgram, procedure func(Drawer)) error {
+	if program == nil {
+		return errors.New("nil program")
 	}
 	if procedure == nil {
 		return errors.New("nil procedure")
 	}
 
-	err := s.image.acceleratedImage.Modify(acceleratedProgram, s.toAcceleratedImageLocation(), func(drawer AcceleratedDrawer) {
+	location := s.toAcceleratedImageLocation()
+	err := s.image.acceleratedImage.Modify(program, location, func(drawer AcceleratedDrawer) {
 		procedure(Drawer{drawer: drawer})
 	})
 	if err != nil {

@@ -19,11 +19,16 @@ type Accelerator struct {
 
 type Primitive struct {
 	image.Primitive
-	drawn bool
+	drawn  bool
+	params []interface{}
 }
 
 func (p *Primitive) Drawn() bool {
 	return p.drawn
+}
+
+func (p *Primitive) ParamsPassed() []interface{} {
+	return p.params
 }
 
 // NewImage returns a new instance of *AcceleratedImage
@@ -52,12 +57,13 @@ type drawer struct {
 	targetImage    *AcceleratedImage
 }
 
-func (d *drawer) Draw(primitive image.Primitive, params ...interface{}) error {
+func (d *drawer) Draw(primitive image.Primitive, params []interface{}) error {
 	fakePrimitive, ok := primitive.(*Primitive)
 	if !ok {
 		return errors.New("primitive cannot be drawn")
 	}
 	fakePrimitive.drawn = true
+	fakePrimitive.params = params
 	return nil
 }
 

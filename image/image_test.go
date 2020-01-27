@@ -503,7 +503,7 @@ func assertColors(t *testing.T, selection image.Selection, expectedColorLines []
 }
 
 func TestSelection_Modify(t *testing.T) {
-	t.Run("should return error when acceleratedProgram is not given", func(t *testing.T) {
+	t.Run("should return error when program is nil", func(t *testing.T) {
 		var (
 			accelerator = fake.NewAccelerator()
 			img, _      = image.New(1, 1, accelerator.NewImage(1, 1))
@@ -514,7 +514,7 @@ func TestSelection_Modify(t *testing.T) {
 		// then
 		assert.Error(t, err)
 	})
-	t.Run("should return error when procedure is not given", func(t *testing.T) {
+	t.Run("should return error when procedure is nil", func(t *testing.T) {
 		var (
 			accelerator      = fake.NewAccelerator()
 			acceleratedImage = accelerator.NewImage(1, 1)
@@ -594,22 +594,34 @@ func TestSelection_Modify(t *testing.T) {
 	})
 
 	t.Run("should draw Primitive", func(t *testing.T) {
-		var (
-			accelerator      = fake.NewAccelerator()
-			acceleratedImage = accelerator.NewImage(1, 1)
-			program          = fake.NewProgram()
-			img, _           = image.New(1, 1, acceleratedImage)
-			selection        = img.WholeImageSelection()
-			primitive        = &fake.Primitive{}
-		)
-		// when
-		err := selection.Modify(program, func(drawer image.Drawer) {
-			err := drawer.Draw(primitive)
-			require.NoError(t, err)
-		})
-		// then
-		require.NoError(t, err)
-		assert.True(t, primitive.Drawn())
+		tests := map[string]struct {
+			params []interface{}
+		}{
+			"no params":      {},
+			"one parameter":  {params: []interface{}{"1"}},
+			"two parameters": {params: []interface{}{1, "2"}},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				var (
+					accelerator      = fake.NewAccelerator()
+					acceleratedImage = accelerator.NewImage(1, 1)
+					program          = fake.NewProgram()
+					img, _           = image.New(1, 1, acceleratedImage)
+					selection        = img.WholeImageSelection()
+					primitive        = &fake.Primitive{}
+				)
+				// when
+				err := selection.Modify(program, func(drawer image.Drawer) {
+					err := drawer.Draw(primitive, test.params...)
+					require.NoError(t, err)
+				})
+				// then
+				require.NoError(t, err)
+				assert.True(t, primitive.Drawn())
+				assert.Equal(t, test.params, primitive.ParamsPassed())
+			})
+		}
 	})
 
 }
@@ -649,7 +661,7 @@ func (i acceleratedImageStub) Modify(_ image.AcceleratedProgram, _ image.Acceler
 
 type acceleratedDrawerStub struct{}
 
-func (a acceleratedDrawerStub) Draw(image.Primitive, ...interface{}) error {
+func (a acceleratedDrawerStub) Draw(image.Primitive, []interface{}) error {
 	return nil
 }
 
