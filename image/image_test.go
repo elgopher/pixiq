@@ -624,6 +624,54 @@ func TestSelection_Modify(t *testing.T) {
 		}
 	})
 
+	t.Run("should set selection", func(t *testing.T) {
+		tests := map[string]struct {
+			name                string
+			x, y, width, height int
+		}{
+			"0,0 with size 1x1": {
+				name:  "selection",
+				width: 1, height: 1,
+			},
+			"1,2 with size 3,4": {
+				name: "another",
+				x:    1, y: 2, width: 3, height: 4,
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				var (
+					accelerator      = fake.NewAccelerator()
+					acceleratedImage = accelerator.NewImage(2, 2)
+					program          = fake.NewProgram()
+					img, _           = image.New(2, 2, acceleratedImage)
+					primitive        = &fake.Primitive{}
+					targetSelection  = img.WholeImageSelection()
+				)
+				// when
+				err := targetSelection.Modify(program, func(drawer image.Drawer) {
+					sourceSelection := img.Selection(test.x, test.y).
+						WithSize(test.width, test.height)
+					drawer.SetSelection(test.name, sourceSelection)
+					err := drawer.Draw(primitive)
+					require.NoError(t, err)
+				})
+				// then
+				require.NoError(t, err)
+				assert.Len(t, primitive.SelectionsPassed(), 1)
+				firstSelection := primitive.SelectionsPassed()[0]
+				assert.Equal(t, acceleratedImage, firstSelection.AcceleratedImage())
+				assert.Equal(t, test.name, firstSelection.Name())
+				assert.Equal(t, image.AcceleratedImageLocation{
+					X:      test.x,
+					Y:      test.y,
+					Width:  test.width,
+					Height: test.height,
+				}, firstSelection.Location())
+			})
+		}
+	})
+
 }
 
 type fakeAcceleratedImage struct {

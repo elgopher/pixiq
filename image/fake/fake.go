@@ -19,8 +19,27 @@ type Accelerator struct {
 
 type Primitive struct {
 	image.Primitive
-	drawn  bool
-	params []interface{}
+	drawn      bool
+	params     []interface{}
+	selections []Selection
+}
+
+type Selection struct {
+	name     string
+	location image.AcceleratedImageLocation
+	image    *AcceleratedImage
+}
+
+func (s *Selection) Location() image.AcceleratedImageLocation {
+	return s.location
+}
+
+func (s *Selection) AcceleratedImage() *AcceleratedImage {
+	return s.image
+}
+
+func (s *Selection) Name() string {
+	return s.name
 }
 
 func (p *Primitive) Drawn() bool {
@@ -29,6 +48,10 @@ func (p *Primitive) Drawn() bool {
 
 func (p *Primitive) ParamsPassed() []interface{} {
 	return p.params
+}
+
+func (p *Primitive) SelectionsPassed() []Selection {
+	return p.selections
 }
 
 // NewImage returns a new instance of *AcceleratedImage
@@ -64,6 +87,18 @@ func (d *drawer) Draw(primitive image.Primitive, params []interface{}) error {
 	}
 	fakePrimitive.drawn = true
 	fakePrimitive.params = params
+	for name, selection := range d.selections {
+		fakeAcceleratedImage, ok := selection.AcceleratedImage.(*AcceleratedImage)
+		if !ok {
+			return errors.New("selection's AcceleratedImage is not *fake.AcceleratedImage")
+		}
+		// TODO Take a snapshot of image and export in Selection
+		fakePrimitive.selections = append(fakePrimitive.selections, Selection{
+			name:     name,
+			location: selection.AcceleratedImageLocation,
+			image:    fakeAcceleratedImage,
+		})
+	}
 	return nil
 }
 

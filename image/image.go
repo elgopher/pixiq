@@ -232,7 +232,7 @@ type Drawer struct {
 }
 
 func (d Drawer) SetSelection(name string, selection Selection) {
-	selection.image.acceleratedImage.Upload(selection.image.pixels)
+	//selection.image.acceleratedImage.Upload(selection.image.pixels)
 	d.drawer.SetSelection(name, AcceleratedImageSelection{
 		AcceleratedImageLocation: selection.toAcceleratedImageLocation(),
 		AcceleratedImage:         selection.image.acceleratedImage,
