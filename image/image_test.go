@@ -505,9 +505,8 @@ func assertColors(t *testing.T, selection image.Selection, expectedColorLines []
 func TestSelection_Modify(t *testing.T) {
 	t.Run("should return error when program is nil", func(t *testing.T) {
 		var (
-			accelerator = fake.NewAccelerator()
-			img, _      = image.New(1, 1, accelerator.NewImage(1, 1))
-			selection   = img.WholeImageSelection()
+			img, _    = image.New(1, 1, fake.NewAcceleratedImage(1, 1))
+			selection = img.WholeImageSelection()
 		)
 		// when
 		err := selection.Modify(nil, func(drawer image.Drawer) {})
@@ -516,8 +515,7 @@ func TestSelection_Modify(t *testing.T) {
 	})
 	t.Run("should return error when procedure is nil", func(t *testing.T) {
 		var (
-			accelerator      = fake.NewAccelerator()
-			acceleratedImage = accelerator.NewImage(1, 1)
+			acceleratedImage = fake.NewAcceleratedImage(1, 1)
 			program          = fake.NewProgram()
 			img, _           = image.New(1, 1, acceleratedImage)
 			selection        = img.WholeImageSelection()
@@ -529,8 +527,7 @@ func TestSelection_Modify(t *testing.T) {
 	})
 	t.Run("should return error when program is not a fake", func(t *testing.T) {
 		var (
-			accelerator      = fake.NewAccelerator()
-			acceleratedImage = accelerator.NewImage(1, 1)
+			acceleratedImage = fake.NewAcceleratedImage(1, 1)
 			img, _           = image.New(1, 1, acceleratedImage)
 			selection        = img.WholeImageSelection()
 		)
@@ -542,8 +539,7 @@ func TestSelection_Modify(t *testing.T) {
 	t.Run("should execute procedure", func(t *testing.T) {
 		var (
 			executed         = false
-			accelerator      = fake.NewAccelerator()
-			acceleratedImage = accelerator.NewImage(1, 1)
+			acceleratedImage = fake.NewAcceleratedImage(1, 1)
 			program          = fake.NewProgram()
 			img, _           = image.New(1, 1, acceleratedImage)
 			selection        = img.WholeImageSelection()
@@ -570,8 +566,7 @@ func TestSelection_Modify(t *testing.T) {
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
 				var (
-					accelerator      = fake.NewAccelerator()
-					acceleratedImage = accelerator.NewImage(4, 4)
+					acceleratedImage = fake.NewAcceleratedImage(4, 4)
 					program          = fake.NewProgram()
 					img, _           = image.New(1, 1, acceleratedImage)
 					selection        = img.Selection(test.x, test.y).WithSize(test.width, test.height)
@@ -604,8 +599,7 @@ func TestSelection_Modify(t *testing.T) {
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
 				var (
-					accelerator      = fake.NewAccelerator()
-					acceleratedImage = accelerator.NewImage(1, 1)
+					acceleratedImage = fake.NewAcceleratedImage(1, 1)
 					program          = fake.NewProgram()
 					img, _           = image.New(1, 1, acceleratedImage)
 					selection        = img.WholeImageSelection()
@@ -641,8 +635,7 @@ func TestSelection_Modify(t *testing.T) {
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
 				var (
-					accelerator      = fake.NewAccelerator()
-					acceleratedImage = accelerator.NewImage(2, 2)
+					acceleratedImage = fake.NewAcceleratedImage(2, 2)
 					program          = fake.NewProgram()
 					img, _           = image.New(2, 2, acceleratedImage)
 					primitive        = &fake.Primitive{}
@@ -658,7 +651,7 @@ func TestSelection_Modify(t *testing.T) {
 				})
 				// then
 				require.NoError(t, err)
-				assert.Len(t, primitive.SelectionsPassed(), 1)
+				require.Len(t, primitive.SelectionsPassed(), 1)
 				firstSelection := primitive.SelectionsPassed()[0]
 				assert.Equal(t, acceleratedImage, firstSelection.AcceleratedImage())
 				assert.Equal(t, test.name, firstSelection.Name())
@@ -670,6 +663,30 @@ func TestSelection_Modify(t *testing.T) {
 				}, firstSelection.Location())
 			})
 		}
+	})
+
+	t.Run("should upload selection", func(t *testing.T) {
+		var (
+			program         = fake.NewProgram()
+			img, _          = image.New(1, 1, fake.NewAcceleratedImage(1, 1))
+			primitive       = &fake.Primitive{}
+			targetSelection = img.WholeImageSelection()
+			color           = image.RGBA(1, 2, 3, 4)
+		)
+		targetSelection.SetColor(0, 0, color)
+		// when
+		err := targetSelection.Modify(program, func(drawer image.Drawer) {
+			sourceSelection := img.Selection(0, 0).WithSize(1, 1)
+			drawer.SetSelection("selection", sourceSelection)
+			err := drawer.Draw(primitive)
+			require.NoError(t, err)
+			// then
+			selection := primitive.SelectionsPassed()[0]
+			output := make([]image.Color, 1)
+			selection.AcceleratedImage().Download(output)
+			assert.Equal(t, []image.Color{color}, output)
+		})
+		require.NoError(t, err)
 	})
 
 }

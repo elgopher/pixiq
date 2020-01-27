@@ -6,17 +6,6 @@ import (
 	"github.com/jacekolszak/pixiq/image"
 )
 
-// NewAccelerator returns a new instance of Accelerator.
-func NewAccelerator() *Accelerator {
-	return &Accelerator{}
-}
-
-// Accelerator is a container of accelerated images and programs.
-// It can be used in unit tests as a replacement for a real implementation
-// (such as OpenGL).
-type Accelerator struct {
-}
-
 type Primitive struct {
 	image.Primitive
 	drawn      bool
@@ -54,11 +43,12 @@ func (p *Primitive) SelectionsPassed() []Selection {
 	return p.selections
 }
 
-// NewImage returns a new instance of *AcceleratedImage
-func (i *Accelerator) NewImage(imageWidth, imageHeight int) *AcceleratedImage {
+// NewAcceleratedImage returns a new instance of *AcceleratedImage
+func NewAcceleratedImage(imageWidth, imageHeight int) *AcceleratedImage {
 	img := &AcceleratedImage{
 		imageWidth:  imageWidth,
 		imageHeight: imageHeight,
+		pixels:      make([]image.Color, imageWidth*imageHeight),
 	}
 	return img
 }
