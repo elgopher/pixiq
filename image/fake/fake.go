@@ -9,7 +9,7 @@ import (
 // NewAccelerator returns a new instance of Accelerator.
 func NewAccelerator() *Accelerator {
 	return &Accelerator{
-		programs: map[image.AcceleratedProgram]*program{},
+		programs: map[image.AcceleratedProgram]*Program{},
 	}
 }
 
@@ -17,25 +17,16 @@ func NewAccelerator() *Accelerator {
 // It can be used in unit tests as a replacement for a real implementation
 // (such as OpenGL).
 type Accelerator struct {
-	programs map[image.AcceleratedProgram]*program
+	programs map[image.AcceleratedProgram]*Program
 }
 
-type Primtive struct {
+type Primitive struct {
 	image.Primitive
-	drawn  bool
-	drawer *drawer
+	drawn bool
 }
 
-func (p *Primtive) Drawn() bool {
+func (p *Primitive) Drawn() bool {
 	return p.drawn
-}
-
-func (p *Primtive) TargetLocation() image.AcceleratedImageLocation {
-	return p.drawer.targetLocation
-}
-
-func (p *Primtive) TargetImage() image.AcceleratedImage {
-	return p.drawer.targetImage
 }
 
 // NewImage returns a new instance of *AcceleratedImage
@@ -50,8 +41,8 @@ func (i *Accelerator) NewImage(imageWidth, imageHeight int) *AcceleratedImage {
 
 // NewProgram returns a new instance of program which can be used to create
 // a drawer.
-func (i *Accelerator) NewProgram() image.AcceleratedProgram {
-	program := &program{}
+func (i *Accelerator) NewProgram() *Program {
+	program := &Program{}
 	i.programs[program] = program
 	return program
 }
@@ -59,7 +50,7 @@ func (i *Accelerator) NewProgram() image.AcceleratedProgram {
 // AcceleratedImage stores pixel data in RAM and uses CPU solely.
 type AcceleratedImage struct {
 	pixels      []image.Color
-	programs    map[image.AcceleratedProgram]*program
+	programs    map[image.AcceleratedProgram]*Program
 	imageWidth  int
 	imageHeight int
 }
@@ -71,12 +62,11 @@ type drawer struct {
 }
 
 func (d *drawer) Draw(primitive image.Primitive, params ...interface{}) error {
-	fakePrimitive, ok := primitive.(*Primtive)
+	fakePrimitive, ok := primitive.(*Primitive)
 	if !ok {
 		return errors.New("primitive cannot be drawn")
 	}
 	fakePrimitive.drawn = true
-	fakePrimitive.drawer = d
 	return nil
 }
 
@@ -85,7 +75,7 @@ func (d *drawer) SetSelection(name string, selection image.AcceleratedImageSelec
 }
 
 func (i *AcceleratedImage) Modify(program image.AcceleratedProgram, location image.AcceleratedImageLocation, procedure func(drawer image.AcceleratedDrawer)) error {
-	_, ok := i.programs[program]
+	prg, ok := i.programs[program]
 	if !ok {
 		return errors.New("unknown program")
 	}
@@ -94,6 +84,8 @@ func (i *AcceleratedImage) Modify(program image.AcceleratedProgram, location ima
 		targetLocation: location,
 		targetImage:    i,
 	}
+	prg.executed = true
+	prg.drawer = drawer
 	procedure(drawer)
 	return nil
 }
@@ -112,4 +104,19 @@ func (i *AcceleratedImage) Download(output []image.Color) {
 	}
 }
 
-type program struct{}
+type Program struct {
+	drawer   *drawer
+	executed bool
+}
+
+func (p *Program) Executed() bool {
+	return p.executed
+}
+
+func (p *Program) TargetLocation() image.AcceleratedImageLocation {
+	return p.drawer.targetLocation
+}
+
+func (p *Program) TargetImage() image.AcceleratedImage {
+	return p.drawer.targetImage
+}
