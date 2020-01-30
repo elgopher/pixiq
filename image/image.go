@@ -17,6 +17,7 @@ type AcceleratedImageLocation struct {
 	X, Y, Width, Height int
 }
 
+// AcceleratedImageSelection is same for AcceleratedImage as Selection for *Image
 type AcceleratedImageSelection struct {
 	AcceleratedImageLocation
 	AcceleratedImage
