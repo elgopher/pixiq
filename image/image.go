@@ -7,20 +7,13 @@ import "errors"
 type AcceleratedImage interface {
 	// Upload send pixels colors sorted by coordinates.
 	// First all pixels are sent for y=0, from left to right.
+	//
+	// Implementations must not retain pixels.
 	Upload(pixels []Color)
 	// Downloads pixels by filling output Color slice
+	//
+	// Implementations must not retain output.
 	Download(output []Color)
-}
-
-// AcceleratedImageLocation is a location of a AcceleratedImage
-type AcceleratedImageLocation struct {
-	X, Y, Width, Height int
-}
-
-// AcceleratedImageSelection is same for AcceleratedImage as Selection for *Image
-type AcceleratedImageSelection struct {
-	AcceleratedImageLocation
-	AcceleratedImage
 }
 
 // New creates an Image with specified size given in pixels.
@@ -203,11 +196,30 @@ func (s Selection) SetColor(localX, localY int, color Color) {
 	s.image.pixels[index] = color
 }
 
-func (s Selection) toAcceleratedImageLocation() AcceleratedImageLocation {
-	return AcceleratedImageLocation{
-		X:      s.x,
-		Y:      s.y,
-		Width:  s.width,
-		Height: s.height,
-	}
+// AcceleratedImageLocation is a location of a AcceleratedImage
+type AcceleratedImageLocation struct {
+	X, Y, Width, Height int
+}
+
+// AcceleratedImageSelection is same for AcceleratedImage as Selection for *Image
+type AcceleratedImageSelection struct {
+	AcceleratedImageLocation
+	AcceleratedImage
+}
+
+// AcceleratedCommand is a command executed externally (outside the CPU).
+type AcceleratedCommand interface {
+	// Run should put the results into the output AcceleratedImageSelection.
+	// Before Run is called all selections have been uploaded.
+	//
+	// Implementations must not retain selections.
+	Run(output AcceleratedImageSelection, selections ...AcceleratedImageSelection) error
+}
+
+// Modify runs the AcceleratedCommand and put results into the Selection.
+// This method ensures that all passed selections are uploaded before the command
+// is called. Selections get converted into AcceleratedImageSelection and
+// passed to the command.Run.
+func (s Selection) Modify(command AcceleratedCommand, selections ...Selection) error {
+	return nil
 }

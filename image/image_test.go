@@ -488,6 +488,10 @@ func TestImage_Upload(t *testing.T) {
 	})
 }
 
+func TestSelection_Modify(t *testing.T) {
+
+}
+
 func assertColors(t *testing.T, selection image.Selection, expectedColorLines [][]image.Color) {
 	assert.Equal(t, len(expectedColorLines), selection.Height(), "number of lines should be equal to selection height")
 	for y := 0; y < selection.Height(); y++ {
