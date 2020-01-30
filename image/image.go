@@ -10,18 +10,7 @@ type AcceleratedImage interface {
 	Upload(pixels []Color)
 	// Downloads pixels by filling output Color slice
 	Download(output []Color)
-	// The resulting pixels must be stored in a given selection of the AcceleratedImage.
-	Modify(program AcceleratedProgram, location AcceleratedImageLocation, procedure func(AcceleratedDrawer)) error
 }
-
-// AcceleratedDrawer is for drawing primitives (such as triangles) efficiently
-// on the external device (outside the CPU).
-type AcceleratedDrawer interface {
-	SetSelection(name string, selection AcceleratedImageSelection)
-	Draw(primitive Primitive, params []interface{}) error
-}
-
-type Primitive interface{}
 
 // AcceleratedImageLocation is a location of a AcceleratedImage
 type AcceleratedImageLocation struct {
@@ -31,10 +20,6 @@ type AcceleratedImageLocation struct {
 type AcceleratedImageSelection struct {
 	AcceleratedImageLocation
 	AcceleratedImage
-}
-
-// AcceleratedProgram is a program executed externally (outside the CPU).
-type AcceleratedProgram interface {
 }
 
 // New creates an Image with specified size given in pixels.
@@ -224,42 +209,4 @@ func (s Selection) toAcceleratedImageLocation() AcceleratedImageLocation {
 		Width:  s.width,
 		Height: s.height,
 	}
-}
-
-// Drawer is for drawing primitives such as triangles
-type Drawer struct {
-	drawer AcceleratedDrawer
-}
-
-func (d Drawer) SetSelection(name string, selection Selection) {
-	selection.image.acceleratedImage.Upload(selection.image.pixels)
-	d.drawer.SetSelection(name, AcceleratedImageSelection{
-		AcceleratedImageLocation: selection.toAcceleratedImageLocation(),
-		AcceleratedImage:         selection.image.acceleratedImage,
-	})
-}
-
-func (d Drawer) Draw(primitive Primitive, params ...interface{}) error {
-	return d.drawer.Draw(primitive, params)
-}
-
-// Modify runs the AcceleratedProgram using the procedure. The results (modified
-// pixels) will be stored in the Selection.
-func (s Selection) Modify(program AcceleratedProgram, procedure func(Drawer)) error {
-	if program == nil {
-		return errors.New("nil program")
-	}
-	if procedure == nil {
-		return errors.New("nil procedure")
-	}
-
-	location := s.toAcceleratedImageLocation()
-	err := s.image.acceleratedImage.Modify(program, location, func(drawer AcceleratedDrawer) {
-		procedure(Drawer{drawer: drawer})
-	})
-	if err != nil {
-		return err
-	}
-	//s.image.acceleratedImage.Download(s.image.pixels)
-	return nil
 }

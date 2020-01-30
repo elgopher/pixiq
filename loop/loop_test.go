@@ -207,15 +207,3 @@ type acceleratedImageStub struct{}
 
 func (i acceleratedImageStub) Upload([]image.Color)   {}
 func (i acceleratedImageStub) Download([]image.Color) {}
-func (i acceleratedImageStub) Modify(_ image.AcceleratedProgram, _ image.AcceleratedImageLocation, procedure func(drawer image.AcceleratedDrawer)) error {
-	procedure(acceleratedDrawerStub{})
-	return nil
-}
-
-type acceleratedDrawerStub struct{}
-
-func (a acceleratedDrawerStub) Draw(image.Primitive, ...interface{}) error {
-	return nil
-}
-
-func (a acceleratedDrawerStub) SetSelection(string, image.AcceleratedImageSelection) {}

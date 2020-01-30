@@ -1,14 +1,12 @@
 package image_test
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/jacekolszak/pixiq/image"
-	"github.com/jacekolszak/pixiq/image/fake"
 )
 
 var transparent = image.RGBA(0, 0, 0, 0)
@@ -502,205 +500,12 @@ func assertColors(t *testing.T, selection image.Selection, expectedColorLines []
 	}
 }
 
-func TestSelection_Modify(t *testing.T) {
-	t.Run("should return error when program is nil", func(t *testing.T) {
-		var (
-			img, _    = image.New(1, 1, fake.NewAcceleratedImage(1, 1))
-			selection = img.WholeImageSelection()
-		)
-		// when
-		err := selection.Modify(nil, func(drawer image.Drawer) {})
-		// then
-		assert.Error(t, err)
-	})
-	t.Run("should return error when procedure is nil", func(t *testing.T) {
-		var (
-			acceleratedImage = fake.NewAcceleratedImage(1, 1)
-			program          = fake.NewProgram()
-			img, _           = image.New(1, 1, acceleratedImage)
-			selection        = img.WholeImageSelection()
-		)
-		// when
-		err := selection.Modify(program, nil)
-		// then
-		assert.Error(t, err)
-	})
-	t.Run("should return error when program is not a fake", func(t *testing.T) {
-		var (
-			acceleratedImage = fake.NewAcceleratedImage(1, 1)
-			img, _           = image.New(1, 1, acceleratedImage)
-			selection        = img.WholeImageSelection()
-		)
-		// when
-		err := selection.Modify(struct{}{}, func(drawer image.Drawer) {})
-		// then
-		assert.Error(t, err)
-	})
-	t.Run("should execute procedure", func(t *testing.T) {
-		var (
-			executed         = false
-			acceleratedImage = fake.NewAcceleratedImage(1, 1)
-			program          = fake.NewProgram()
-			img, _           = image.New(1, 1, acceleratedImage)
-			selection        = img.WholeImageSelection()
-		)
-		// when
-		err := selection.Modify(program, func(drawer image.Drawer) {
-			executed = true
-		})
-		// then
-		require.NoError(t, err)
-		assert.True(t, executed)
-	})
-	t.Run("should run program", func(t *testing.T) {
-		tests := map[string]struct {
-			x, y, width, height int
-		}{
-			"selection 0,0 with size 1x1": {
-				x: 0, y: 0, width: 1, height: 1,
-			},
-			"selection 1,2 with size 3x4": {
-				x: 1, y: 2, width: 3, height: 4,
-			},
-		}
-		for name, test := range tests {
-			t.Run(name, func(t *testing.T) {
-				var (
-					acceleratedImage = fake.NewAcceleratedImage(4, 4)
-					program          = fake.NewProgram()
-					img, _           = image.New(1, 1, acceleratedImage)
-					selection        = img.Selection(test.x, test.y).WithSize(test.width, test.height)
-				)
-				// when
-				err := selection.Modify(program, func(drawer image.Drawer) {})
-				// then
-				require.NoError(t, err)
-				assert.True(t, program.Executed())
-				expectedLocation := image.AcceleratedImageLocation{
-					X:      test.x,
-					Y:      test.y,
-					Width:  test.width,
-					Height: test.height,
-				}
-				assert.Equal(t, expectedLocation, program.TargetLocation())
-				assert.Equal(t, acceleratedImage, program.TargetImage())
-			})
-		}
-	})
-
-	t.Run("should draw Primitive", func(t *testing.T) {
-		tests := map[string]struct {
-			params []interface{}
-		}{
-			"no params":      {},
-			"one parameter":  {params: []interface{}{"1"}},
-			"two parameters": {params: []interface{}{1, "2"}},
-		}
-		for name, test := range tests {
-			t.Run(name, func(t *testing.T) {
-				var (
-					acceleratedImage = fake.NewAcceleratedImage(1, 1)
-					program          = fake.NewProgram()
-					img, _           = image.New(1, 1, acceleratedImage)
-					selection        = img.WholeImageSelection()
-					primitive        = &fake.Primitive{}
-				)
-				// when
-				err := selection.Modify(program, func(drawer image.Drawer) {
-					err := drawer.Draw(primitive, test.params...)
-					require.NoError(t, err)
-				})
-				// then
-				require.NoError(t, err)
-				assert.True(t, primitive.Drawn())
-				assert.Equal(t, test.params, primitive.ParamsPassed())
-			})
-		}
-	})
-
-	t.Run("should set selection", func(t *testing.T) {
-		tests := map[string]struct {
-			name                string
-			x, y, width, height int
-		}{
-			"0,0 with size 1x1": {
-				name:  "selection",
-				width: 1, height: 1,
-			},
-			"1,2 with size 3,4": {
-				name: "another",
-				x:    1, y: 2, width: 3, height: 4,
-			},
-		}
-		for name, test := range tests {
-			t.Run(name, func(t *testing.T) {
-				var (
-					acceleratedImage = fake.NewAcceleratedImage(2, 2)
-					program          = fake.NewProgram()
-					img, _           = image.New(2, 2, acceleratedImage)
-					primitive        = &fake.Primitive{}
-					targetSelection  = img.WholeImageSelection()
-				)
-				// when
-				err := targetSelection.Modify(program, func(drawer image.Drawer) {
-					sourceSelection := img.Selection(test.x, test.y).
-						WithSize(test.width, test.height)
-					drawer.SetSelection(test.name, sourceSelection)
-					err := drawer.Draw(primitive)
-					require.NoError(t, err)
-				})
-				// then
-				require.NoError(t, err)
-				require.Len(t, primitive.SelectionsPassed(), 1)
-				firstSelection := primitive.SelectionsPassed()[0]
-				assert.Equal(t, acceleratedImage, firstSelection.AcceleratedImage())
-				assert.Equal(t, test.name, firstSelection.Name())
-				assert.Equal(t, image.AcceleratedImageLocation{
-					X:      test.x,
-					Y:      test.y,
-					Width:  test.width,
-					Height: test.height,
-				}, firstSelection.Location())
-			})
-		}
-	})
-
-	t.Run("should upload selection", func(t *testing.T) {
-		var (
-			program         = fake.NewProgram()
-			img, _          = image.New(1, 1, fake.NewAcceleratedImage(1, 1))
-			primitive       = &fake.Primitive{}
-			targetSelection = img.WholeImageSelection()
-			color           = image.RGBA(1, 2, 3, 4)
-		)
-		targetSelection.SetColor(0, 0, color)
-		// when
-		err := targetSelection.Modify(program, func(drawer image.Drawer) {
-			sourceSelection := img.Selection(0, 0).WithSize(1, 1)
-			drawer.SetSelection("selection", sourceSelection)
-			err := drawer.Draw(primitive)
-			require.NoError(t, err)
-			// then
-			selection := primitive.SelectionsPassed()[0]
-			output := make([]image.Color, 1)
-			selection.AcceleratedImage().Download(output)
-			assert.Equal(t, []image.Color{color}, output)
-		})
-		require.NoError(t, err)
-	})
-
-}
-
 type fakeAcceleratedImage struct {
 	pixels []image.Color
 }
 
 func newFakeAcceleratedImage() *fakeAcceleratedImage {
 	return &fakeAcceleratedImage{}
-}
-
-func (i fakeAcceleratedImage) Modify(p image.AcceleratedProgram, location image.AcceleratedImageLocation, procedure func(drawer image.AcceleratedDrawer)) error {
-	return errors.New("unknown program")
 }
 
 func (i *fakeAcceleratedImage) Upload(pixels []image.Color) {
@@ -719,15 +524,3 @@ type acceleratedImageStub struct{}
 
 func (i acceleratedImageStub) Upload([]image.Color)   {}
 func (i acceleratedImageStub) Download([]image.Color) {}
-func (i acceleratedImageStub) Modify(_ image.AcceleratedProgram, _ image.AcceleratedImageLocation, procedure func(drawer image.AcceleratedDrawer)) error {
-	procedure(acceleratedDrawerStub{})
-	return nil
-}
-
-type acceleratedDrawerStub struct{}
-
-func (a acceleratedDrawerStub) Draw(image.Primitive, []interface{}) error {
-	return nil
-}
-
-func (a acceleratedDrawerStub) SetSelection(string, image.AcceleratedImageSelection) {}
