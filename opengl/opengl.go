@@ -230,13 +230,6 @@ type texture struct {
 	runInOpenGLContextThread func(func())
 }
 
-// Please note that for performance reasons the procedure may be executed asynchronously.
-// For example multiple procedures for the same program targeting same texture might
-// be executed in a single batch.
-func (t *texture) Modify(p image.AcceleratedProgram, loc image.AcceleratedImageLocation, procedure func(drawer image.AcceleratedDrawer)) error {
-	return nil
-}
-
 func (t *texture) TextureID() uint32 {
 	return t.id
 }
