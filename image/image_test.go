@@ -1,6 +1,7 @@
 package image_test
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -489,7 +490,30 @@ func TestImage_Upload(t *testing.T) {
 }
 
 func TestSelection_Modify(t *testing.T) {
-
+	t.Run("should return error when command nil", func(t *testing.T) {
+		img, _ := image.New(1, 1, newFakeAcceleratedImage())
+		selection := img.WholeImageSelection()
+		// when
+		err := selection.Modify(nil)
+		assert.Error(t, err)
+	})
+	t.Run("should execute command", func(t *testing.T) {
+		img, _ := image.New(1, 1, newFakeAcceleratedImage())
+		selection := img.WholeImageSelection()
+		command := &acceleratedCommandMock{}
+		// when
+		err := selection.Modify(command)
+		assert.NoError(t, err)
+		assert.True(t, command.executed)
+	})
+	t.Run("should return error when command returned error", func(t *testing.T) {
+		img, _ := image.New(1, 1, newFakeAcceleratedImage())
+		selection := img.WholeImageSelection()
+		command := &failingCommand{}
+		// when
+		err := selection.Modify(command)
+		assert.Error(t, err)
+	})
 }
 
 func assertColors(t *testing.T, selection image.Selection, expectedColorLines [][]image.Color) {
@@ -528,3 +552,19 @@ type acceleratedImageStub struct{}
 
 func (i acceleratedImageStub) Upload([]image.Color)   {}
 func (i acceleratedImageStub) Download([]image.Color) {}
+
+type acceleratedCommandMock struct {
+	executed bool
+}
+
+func (a *acceleratedCommandMock) Run(output image.AcceleratedImageSelection, selections ...image.AcceleratedImageSelection) error {
+	a.executed = true
+	return nil
+}
+
+type failingCommand struct {
+}
+
+func (f failingCommand) Run(output image.AcceleratedImageSelection, selections ...image.AcceleratedImageSelection) error {
+	return errors.New("command failed")
+}

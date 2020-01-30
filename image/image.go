@@ -221,5 +221,8 @@ type AcceleratedCommand interface {
 // is called. Selections get converted into AcceleratedImageSelection and
 // passed to the command.Run.
 func (s Selection) Modify(command AcceleratedCommand, selections ...Selection) error {
-	return nil
+	if command == nil {
+		return errors.New("nil command")
+	}
+	return command.Run(AcceleratedImageSelection{})
 }
