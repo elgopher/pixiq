@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/loop"
 	"github.com/jacekolszak/pixiq/opengl"
 )
@@ -16,7 +15,7 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		program, err := gl.LinkProgram(vertexShader, fragmentShader)
+		_, err = gl.LinkProgram(vertexShader, fragmentShader)
 		if err != nil {
 			panic(err)
 		}
@@ -25,9 +24,6 @@ func main() {
 			panic(err)
 		}
 		loop.Run(window, func(frame *loop.Frame) {
-			selection := frame.Screen()
-			err = selection.Modify(program, func(drawer image.Drawer) {
-			})
 			if err != nil {
 				panic(err)
 			}
