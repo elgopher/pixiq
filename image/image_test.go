@@ -504,7 +504,7 @@ func TestSelection_Modify(t *testing.T) {
 		// when
 		err := selection.Modify(command)
 		assert.NoError(t, err)
-		assert.True(t, command.executed)
+		assert.Equal(t, 1, command.timesExecuted)
 	})
 	t.Run("should return error when command returned error", func(t *testing.T) {
 		img, _ := image.New(1, 1, newFakeAcceleratedImage())
@@ -513,6 +513,40 @@ func TestSelection_Modify(t *testing.T) {
 		// when
 		err := selection.Modify(command)
 		assert.Error(t, err)
+	})
+	t.Run("should pass AcceleratedImageSelection to command.Run", func(t *testing.T) {
+		tests := map[string]struct {
+			x, y, width, height int
+		}{
+			"selection 0,1 with size 2x3":   {x: 0, y: 1, width: 2, height: 3},
+			"selection -1,-2 with size 1x2": {x: -1, y: -2, width: 1, height: 2},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				var (
+					acceleratedImage = newFakeAcceleratedImage()
+					img, _           = image.New(0, 0, acceleratedImage)
+					selection        = img.
+								Selection(test.x, test.y).
+								WithSize(test.width, test.height)
+					command = &acceleratedCommandMock{}
+				)
+				// when
+				err := selection.Modify(command)
+				// then
+				require.NoError(t, err)
+				assert.Equal(t, image.AcceleratedImageSelection{
+					AcceleratedImageLocation: image.AcceleratedImageLocation{
+						X:      test.x,
+						Y:      test.y,
+						Width:  test.width,
+						Height: test.height,
+					},
+					AcceleratedImage: acceleratedImage,
+				}, command.lastOutput)
+			})
+		}
+
 	})
 }
 
@@ -554,11 +588,13 @@ func (i acceleratedImageStub) Upload([]image.Color)   {}
 func (i acceleratedImageStub) Download([]image.Color) {}
 
 type acceleratedCommandMock struct {
-	executed bool
+	timesExecuted int
+	lastOutput    image.AcceleratedImageSelection
 }
 
 func (a *acceleratedCommandMock) Run(output image.AcceleratedImageSelection, selections ...image.AcceleratedImageSelection) error {
-	a.executed = true
+	a.timesExecuted += 1
+	a.lastOutput = output
 	return nil
 }
 

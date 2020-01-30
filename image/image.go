@@ -224,5 +224,13 @@ func (s Selection) Modify(command AcceleratedCommand, selections ...Selection) e
 	if command == nil {
 		return errors.New("nil command")
 	}
-	return command.Run(AcceleratedImageSelection{})
+	return command.Run(AcceleratedImageSelection{
+		AcceleratedImageLocation: AcceleratedImageLocation{
+			X:      s.x,
+			Y:      s.y,
+			Width:  s.width,
+			Height: s.height,
+		},
+		AcceleratedImage: s.image.acceleratedImage,
+	})
 }
