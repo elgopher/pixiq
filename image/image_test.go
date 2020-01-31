@@ -546,7 +546,73 @@ func TestSelection_Modify(t *testing.T) {
 				}, command.lastOutput)
 			})
 		}
-
+	})
+	t.Run("should convert passed selections", func(t *testing.T) {
+		var (
+			acceleratedImage1 = newFakeAcceleratedImage()
+			acceleratedImage2 = newFakeAcceleratedImage()
+			img1, _           = image.New(0, 0, acceleratedImage1)
+			img2, _           = image.New(0, 0, acceleratedImage1)
+			command           = &acceleratedCommandMock{}
+			output            = img1.WholeImageSelection()
+		)
+		tests := map[string]struct {
+			selections []image.Selection
+			expected   []image.AcceleratedImageSelection
+		}{
+			"no selections": {},
+			"1 selection": {
+				selections: []image.Selection{
+					img2.Selection(0, 1).WithSize(2, 3),
+				},
+				expected: []image.AcceleratedImageSelection{
+					{
+						AcceleratedImageLocation: image.AcceleratedImageLocation{
+							X:      0,
+							Y:      1,
+							Width:  2,
+							Height: 3,
+						},
+						AcceleratedImage: acceleratedImage2,
+					},
+				},
+			},
+			"2 selections": {
+				selections: []image.Selection{
+					img1.Selection(1, 2).WithSize(3, 4),
+					img2.Selection(5, 6).WithSize(7, 8),
+				},
+				expected: []image.AcceleratedImageSelection{
+					{
+						AcceleratedImageLocation: image.AcceleratedImageLocation{
+							X:      1,
+							Y:      2,
+							Width:  3,
+							Height: 4,
+						},
+						AcceleratedImage: acceleratedImage1,
+					},
+					{
+						AcceleratedImageLocation: image.AcceleratedImageLocation{
+							X:      5,
+							Y:      6,
+							Width:  7,
+							Height: 8,
+						},
+						AcceleratedImage: acceleratedImage2,
+					},
+				},
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				// when
+				err := output.Modify(command, test.selections...)
+				// then
+				require.NoError(t, err)
+				assert.Equal(t, test.expected, command.lastSelections)
+			})
+		}
 	})
 }
 
@@ -588,19 +654,21 @@ func (i acceleratedImageStub) Upload([]image.Color)   {}
 func (i acceleratedImageStub) Download([]image.Color) {}
 
 type acceleratedCommandMock struct {
-	timesExecuted int
-	lastOutput    image.AcceleratedImageSelection
+	timesExecuted  int
+	lastOutput     image.AcceleratedImageSelection
+	lastSelections []image.AcceleratedImageSelection
 }
 
-func (a *acceleratedCommandMock) Run(output image.AcceleratedImageSelection, selections ...image.AcceleratedImageSelection) error {
+func (a *acceleratedCommandMock) Run(output image.AcceleratedImageSelection, selections []image.AcceleratedImageSelection) error {
 	a.timesExecuted += 1
 	a.lastOutput = output
+	a.lastSelections = selections
 	return nil
 }
 
 type failingCommand struct {
 }
 
-func (f failingCommand) Run(output image.AcceleratedImageSelection, selections ...image.AcceleratedImageSelection) error {
+func (f failingCommand) Run(output image.AcceleratedImageSelection, selections []image.AcceleratedImageSelection) error {
 	return errors.New("command failed")
 }

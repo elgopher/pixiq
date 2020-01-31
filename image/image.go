@@ -213,7 +213,7 @@ type AcceleratedCommand interface {
 	// Before Run is called all selections have been uploaded.
 	//
 	// Implementations must not retain selections.
-	Run(output AcceleratedImageSelection, selections ...AcceleratedImageSelection) error
+	Run(output AcceleratedImageSelection, selections []AcceleratedImageSelection) error
 }
 
 // Modify runs the AcceleratedCommand and put results into the Selection.
@@ -224,7 +224,15 @@ func (s Selection) Modify(command AcceleratedCommand, selections ...Selection) e
 	if command == nil {
 		return errors.New("nil command")
 	}
-	return command.Run(AcceleratedImageSelection{
+	var convertedSelections []AcceleratedImageSelection
+	for _, selection := range selections {
+		convertedSelections = append(convertedSelections, selection.toAcceleratedImageSelection())
+	}
+	return command.Run(s.toAcceleratedImageSelection(), convertedSelections)
+}
+
+func (s Selection) toAcceleratedImageSelection() AcceleratedImageSelection {
+	return AcceleratedImageSelection{
 		AcceleratedImageLocation: AcceleratedImageLocation{
 			X:      s.x,
 			Y:      s.y,
@@ -232,5 +240,5 @@ func (s Selection) Modify(command AcceleratedCommand, selections ...Selection) e
 			Height: s.height,
 		},
 		AcceleratedImage: s.image.acceleratedImage,
-	})
+	}
 }
