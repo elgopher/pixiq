@@ -17,6 +17,22 @@ type AcceleratedImage interface {
 	Download(output []Color)
 }
 
+// AcceleratedFragmentPixels contains pixel slice which can be uploaded
+// to AcceleratedImage or be used as an output for downloaded pixels.
+type AcceleratedSelectionPixels struct {
+	AcceleratedImageLocation
+	// Pixels has pixel colors sorted by coordinates.
+	// Pixels are sent for first line first, from left to right.
+	// Pixels slice is always big enough to hold input/output pixels.
+	Pixels []Color
+	// StartPosition is an index of the first color in Pixels slice.
+	// It must be >= 0.
+	StartingPosition int
+	// Stride is a row length (total number of pixels in a row despite the location)
+	// It must be >= 0.
+	Stride int
+}
+
 // New creates an Image with specified size given in pixels.
 // Will panic if AcceleratedImage is nil
 // Will return error if width and height are negative
