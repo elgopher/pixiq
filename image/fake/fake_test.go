@@ -39,17 +39,21 @@ func TestNewAcceleratedImage(t *testing.T) {
 }
 
 func TestAcceleratedImage_Download(t *testing.T) {
+	white := image.RGB(255, 255, 255)
 	t.Run("should download not uploaded image", func(t *testing.T) {
 		tests := map[string]struct {
 			width, height int
+			given         []image.Color
 			expected      []image.Color
 		}{
 			"0x0": {
 				width: 0, height: 0,
+				given:    []image.Color{},
 				expected: []image.Color{},
 			},
 			"1x2": {
 				width: 1, height: 2,
+				given:    []image.Color{white, white},
 				expected: []image.Color{image.Transparent, image.Transparent},
 			},
 		}

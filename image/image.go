@@ -5,13 +5,22 @@ import "errors"
 // AcceleratedImage is an image processed by external device (outside the CPU).
 // The mentioned device might be a video card.
 type AcceleratedImage interface {
-	// Upload send pixels colors sorted by coordinates.
-	// First all pixels are sent for y=0, from left to right.
+	// Upload transfers pixels from RAM to external memory (such as VRAM).
 	//
-	// Implementations must not retain pixels.
+	// Pixels must have pixel colors sorted by coordinates.
+	// Pixels are sent for first line first, from left to right.
+	// Pixels slice holds all image pixels.
+	//
+	// Implementations must not retain pixels slice and make a copy instead.
 	Upload(pixels []Color)
-	// Downloads pixels by filling output Color slice. If the image has not been
-	// uploaded before then Download should fill output with Transparent color.
+	// Download transfers pixels from external memory (such as VRAM) to RAM.
+	//
+	// Output will have pixel colors sorted by coordinates.
+	// Pixels are sent for first line first, from left to right.
+	// Output must be of size width * height.
+	//
+	// If the image has not been uploaded before then Download should fill
+	// output with Transparent color.
 	//
 	// Implementations must not retain output.
 	Download(output []Color)

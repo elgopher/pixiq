@@ -6,7 +6,11 @@ import (
 	"github.com/jacekolszak/pixiq/image"
 )
 
-// NewAcceleratedImage returns a new instance of *AcceleratedImage
+// NewAcceleratedImage returns a new instance of *AcceleratedImage which can be
+// used in unit tests.
+//
+// It is a fake implementation of image.AcceleratedImage which stores
+// pixel colors in RAM.
 func NewAcceleratedImage(width, height int) (*AcceleratedImage, error) {
 	if width < 0 {
 		return nil, errors.New("negative width")
