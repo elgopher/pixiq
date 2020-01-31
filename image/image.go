@@ -10,7 +10,8 @@ type AcceleratedImage interface {
 	//
 	// Implementations must not retain pixels.
 	Upload(pixels []Color)
-	// Downloads pixels by filling output Color slice
+	// Downloads pixels by filling output Color slice. If the image has not been
+	// uploaded before then Download should fill output with Transparent color.
 	//
 	// Implementations must not retain output.
 	Download(output []Color)

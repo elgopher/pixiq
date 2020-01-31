@@ -1,17 +1,25 @@
 package fake
 
 import (
+	"errors"
+
 	"github.com/jacekolszak/pixiq/image"
 )
 
 // NewAcceleratedImage returns a new instance of *AcceleratedImage
-func NewAcceleratedImage(imageWidth, imageHeight int) *AcceleratedImage {
-	img := &AcceleratedImage{
-		imageWidth:  imageWidth,
-		imageHeight: imageHeight,
-		pixels:      make([]image.Color, imageWidth*imageHeight),
+func NewAcceleratedImage(width, height int) (*AcceleratedImage, error) {
+	if width < 0 {
+		return nil, errors.New("negative width")
 	}
-	return img
+	if height < 0 {
+		return nil, errors.New("negative height")
+	}
+	img := &AcceleratedImage{
+		imageWidth:  width,
+		imageHeight: height,
+		pixels:      make([]image.Color, width*height),
+	}
+	return img, nil
 }
 
 // AcceleratedImage stores pixel data in RAM and uses CPU solely.
