@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/jacekolszak/pixiq/image"
+	"github.com/jacekolszak/pixiq/image/fake"
 )
 
 var transparent = image.RGBA(0, 0, 0, 0)
@@ -552,7 +553,7 @@ func TestSelection_Modify(t *testing.T) {
 			acceleratedImage1 = newFakeAcceleratedImage()
 			acceleratedImage2 = newFakeAcceleratedImage()
 			img1, _           = image.New(0, 0, acceleratedImage1)
-			img2, _           = image.New(0, 0, acceleratedImage1)
+			img2, _           = image.New(0, 0, acceleratedImage2)
 			command           = &acceleratedCommandMock{}
 			output            = img1.WholeImageSelection()
 		)
@@ -613,6 +614,24 @@ func TestSelection_Modify(t *testing.T) {
 				assert.Equal(t, test.expected, command.lastSelections)
 			})
 		}
+	})
+	t.Run("should upload passed selections", func(t *testing.T) {
+		var (
+			white                = image.RGB(255, 255, 255)
+			acceleratedImage1, _ = fake.NewAcceleratedImage(1, 1)
+			acceleratedImage2, _ = fake.NewAcceleratedImage(1, 1)
+			img1, _              = image.New(1, 1, acceleratedImage1)
+			img2, _              = image.New(1, 1, acceleratedImage2)
+			command              = &acceleratedCommandMock{}
+			output               = img1.WholeImageSelection()
+		)
+		img2.WholeImageSelection().SetColor(0, 0, white)
+		// when
+		err := output.Modify(command, img2.Selection(0, 0).WithSize(1, 1))
+		// then
+		require.NoError(t, err)
+		// TODO Test pixel colors in acceleratedImage (in the begiinning of the
+		// AcceleratedCommand
 	})
 }
 

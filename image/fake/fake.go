@@ -19,18 +19,18 @@ func NewAcceleratedImage(width, height int) (*AcceleratedImage, error) {
 		return nil, errors.New("negative height")
 	}
 	img := &AcceleratedImage{
-		imageWidth:  width,
-		imageHeight: height,
-		pixels:      make([]image.Color, width*height),
+		width:  width,
+		height: height,
+		pixels: make([]image.Color, width*height),
 	}
 	return img, nil
 }
 
 // AcceleratedImage stores pixel data in RAM and uses CPU solely.
 type AcceleratedImage struct {
-	pixels      []image.Color
-	imageWidth  int
-	imageHeight int
+	pixels []image.Color
+	width  int
+	height int
 }
 
 // Upload send pixels to a container in RAM
@@ -45,4 +45,16 @@ func (i *AcceleratedImage) Download(output []image.Color) {
 	for j := 0; j < len(output); j++ {
 		output[j] = i.pixels[j]
 	}
+}
+
+// TODO Experimental (not tested, POC)
+func (i *AcceleratedImage) PixelTable() [][]image.Color {
+	table := make([][]image.Color, i.height)
+	for y := 0; y < i.height; y++ {
+		table[y] = make([]image.Color, i.width)
+		for x := 0; x < i.width; x++ {
+			table[y][x] = i.pixels[y*i.width+x]
+		}
+	}
+	return table
 }
