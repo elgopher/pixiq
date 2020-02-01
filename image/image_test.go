@@ -447,27 +447,27 @@ func TestSelection_SetColor(t *testing.T) {
 func TestImage_Upload(t *testing.T) {
 	t.Run("should upload pixels", func(t *testing.T) {
 		t.Run("0x0", func(t *testing.T) {
-			acceleratedImage := newFakeAcceleratedImage()
+			acceleratedImage, _ := fake.NewAcceleratedImage(0, 0)
 			img, _ := image.New(0, 0, acceleratedImage)
 			// when
 			img.Upload()
 			// then
-			require.NotNil(t, acceleratedImage.pixels)
-			assert.Len(t, acceleratedImage.pixels, 0)
+			require.NotNil(t, acceleratedImage.Pixels)
+			assert.Len(t, acceleratedImage.Pixels, 0)
 		})
 		t.Run("1x1", func(t *testing.T) {
-			acceleratedImage := newFakeAcceleratedImage()
+			acceleratedImage, _ := fake.NewAcceleratedImage(1, 1)
 			img, _ := image.New(1, 1, acceleratedImage)
 			color := image.RGBA(10, 20, 30, 40)
 			img.Selection(0, 0).SetColor(0, 0, color)
 			// when
 			img.Upload()
 			// then
-			require.Len(t, acceleratedImage.pixels, 1)
-			assert.Equal(t, color, acceleratedImage.pixels[0])
+			require.Len(t, acceleratedImage.Pixels, 1)
+			assert.Equal(t, color, acceleratedImage.Pixels[0])
 		})
 		t.Run("2x2", func(t *testing.T) {
-			acceleratedImage := newFakeAcceleratedImage()
+			acceleratedImage, _ := fake.NewAcceleratedImage(2, 2)
 			img, _ := image.New(2, 2, acceleratedImage)
 			color1 := image.RGBA(10, 20, 30, 40)
 			color2 := image.RGBA(50, 50, 60, 70)
@@ -481,25 +481,27 @@ func TestImage_Upload(t *testing.T) {
 			// when
 			img.Upload()
 			// then
-			require.Len(t, acceleratedImage.pixels, 4)
-			assert.Equal(t, color1, acceleratedImage.pixels[0])
-			assert.Equal(t, color2, acceleratedImage.pixels[1])
-			assert.Equal(t, color3, acceleratedImage.pixels[2])
-			assert.Equal(t, color4, acceleratedImage.pixels[3])
+			require.Len(t, acceleratedImage.Pixels, 4)
+			assert.Equal(t, color1, acceleratedImage.Pixels[0])
+			assert.Equal(t, color2, acceleratedImage.Pixels[1])
+			assert.Equal(t, color3, acceleratedImage.Pixels[2])
+			assert.Equal(t, color4, acceleratedImage.Pixels[3])
 		})
 	})
 }
 
 func TestSelection_Modify(t *testing.T) {
 	t.Run("should return error when command nil", func(t *testing.T) {
-		img, _ := image.New(1, 1, newFakeAcceleratedImage())
+		acceleratedImage, _ := fake.NewAcceleratedImage(1, 1)
+		img, _ := image.New(1, 1, acceleratedImage)
 		selection := img.WholeImageSelection()
 		// when
 		err := selection.Modify(nil)
 		assert.Error(t, err)
 	})
 	t.Run("should execute command", func(t *testing.T) {
-		img, _ := image.New(1, 1, newFakeAcceleratedImage())
+		acceleratedImage, _ := fake.NewAcceleratedImage(1, 1)
+		img, _ := image.New(1, 1, acceleratedImage)
 		selection := img.WholeImageSelection()
 		command := &acceleratedCommandMock{}
 		// when
@@ -508,7 +510,8 @@ func TestSelection_Modify(t *testing.T) {
 		assert.Equal(t, 1, command.timesExecuted)
 	})
 	t.Run("should return error when command returned error", func(t *testing.T) {
-		img, _ := image.New(1, 1, newFakeAcceleratedImage())
+		acceleratedImage, _ := fake.NewAcceleratedImage(1, 1)
+		img, _ := image.New(1, 1, acceleratedImage)
 		selection := img.WholeImageSelection()
 		command := &failingCommand{}
 		// when
@@ -525,9 +528,9 @@ func TestSelection_Modify(t *testing.T) {
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
 				var (
-					acceleratedImage = newFakeAcceleratedImage()
-					img, _           = image.New(0, 0, acceleratedImage)
-					selection        = img.
+					acceleratedImage, _ = fake.NewAcceleratedImage(0, 0)
+					img, _              = image.New(0, 0, acceleratedImage)
+					selection           = img.
 								Selection(test.x, test.y).
 								WithSize(test.width, test.height)
 					command = &acceleratedCommandMock{}
@@ -550,12 +553,12 @@ func TestSelection_Modify(t *testing.T) {
 	})
 	t.Run("should convert passed selections", func(t *testing.T) {
 		var (
-			acceleratedImage1 = newFakeAcceleratedImage()
-			acceleratedImage2 = newFakeAcceleratedImage()
-			img1, _           = image.New(0, 0, acceleratedImage1)
-			img2, _           = image.New(0, 0, acceleratedImage2)
-			command           = &acceleratedCommandMock{}
-			output            = img1.WholeImageSelection()
+			acceleratedImage1, _ = fake.NewAcceleratedImage(0, 0)
+			acceleratedImage2, _ = fake.NewAcceleratedImage(0, 0)
+			img1, _              = image.New(0, 0, acceleratedImage1)
+			img2, _              = image.New(0, 0, acceleratedImage2)
+			command              = &acceleratedCommandMock{}
+			output               = img1.WholeImageSelection()
 		)
 		tests := map[string]struct {
 			selections []image.Selection
@@ -687,6 +690,33 @@ func TestSelection_Modify(t *testing.T) {
 		assert.Equal(t, []image.Color{color}, uploadedPixels0)
 		assert.Equal(t, []image.Color{color00, color10, color01, color11}, uploadedPixels1)
 	})
+
+	t.Run("should download pixels", func(t *testing.T) {
+		var (
+			color00 = image.RGB(0, 0, 255)
+			color10 = image.RGB(255, 0, 255)
+			color01 = image.RGB(0, 255, 255)
+			color11 = image.RGB(255, 255, 255)
+			//
+			targetAcceleratedImage, _ = fake.NewAcceleratedImage(2, 2)
+			targetImage, _            = image.New(2, 2, targetAcceleratedImage)
+			//
+			command = &acceleratedCommandMock{
+				command: func(image.AcceleratedImageSelection, []image.AcceleratedImageSelection) {
+					targetAcceleratedImage.Upload([]image.Color{color00, color10, color01, color11})
+				},
+			}
+			outputSelection = targetImage.WholeImageSelection()
+		)
+		// when
+		err := outputSelection.Modify(command)
+		//then
+		require.NoError(t, err)
+		assert.Equal(t, color00, outputSelection.Color(0, 0))
+		assert.Equal(t, color10, outputSelection.Color(1, 0))
+		assert.Equal(t, color01, outputSelection.Color(0, 1))
+		assert.Equal(t, color11, outputSelection.Color(1, 1))
+	})
 }
 
 func assertColors(t *testing.T, selection image.Selection, expectedColorLines [][]image.Color) {
@@ -698,26 +728,6 @@ func assertColors(t *testing.T, selection image.Selection, expectedColorLines []
 			color := selection.Color(x, y)
 			assert.Equal(t, expectedColorLine[x], color, "position (%d,%d)", x, y)
 		}
-	}
-}
-
-type fakeAcceleratedImage struct {
-	pixels []image.Color
-}
-
-func newFakeAcceleratedImage() *fakeAcceleratedImage {
-	return &fakeAcceleratedImage{}
-}
-
-func (i *fakeAcceleratedImage) Upload(pixels []image.Color) {
-	i.pixels = make([]image.Color, len(pixels))
-	// copy pixels to ensure that Upload method has been called
-	copy(i.pixels, pixels)
-}
-
-func (i *fakeAcceleratedImage) Download(output []image.Color) {
-	for j := 0; j < len(output); j++ {
-		output[j] = i.pixels[j]
 	}
 }
 

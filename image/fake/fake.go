@@ -21,14 +21,15 @@ func NewAcceleratedImage(width, height int) (*AcceleratedImage, error) {
 	img := &AcceleratedImage{
 		width:  width,
 		height: height,
-		pixels: make([]image.Color, width*height),
+		Pixels: make([]image.Color, width*height),
 	}
 	return img, nil
 }
 
 // AcceleratedImage stores pixel data in RAM and uses CPU solely.
 type AcceleratedImage struct {
-	pixels []image.Color
+	// Hide the instance variable
+	Pixels []image.Color
 	width  int
 	height int
 }
@@ -38,9 +39,9 @@ func (i *AcceleratedImage) Upload(pixels []image.Color) {
 	if len(pixels) != i.width*i.height {
 		panic("pixels slice is not of length width*height")
 	}
-	i.pixels = make([]image.Color, len(pixels))
+	i.Pixels = make([]image.Color, len(pixels))
 	// copy pixels to ensure that Upload method has been called
-	copy(i.pixels, pixels)
+	copy(i.Pixels, pixels)
 }
 
 // Download fills output slice with image colors
@@ -49,6 +50,6 @@ func (i *AcceleratedImage) Download(output []image.Color) {
 		panic("pixels slice is not of length width*height")
 	}
 	for j := 0; j < len(output); j++ {
-		output[j] = i.pixels[j]
+		output[j] = i.Pixels[j]
 	}
 }

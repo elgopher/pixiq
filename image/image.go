@@ -244,7 +244,11 @@ func (s Selection) Modify(command AcceleratedCommand, selections ...Selection) e
 		selection.image.acceleratedImage.Upload(selection.image.pixels)
 		convertedSelections = append(convertedSelections, selection.toAcceleratedImageSelection())
 	}
-	return command.Run(s.toAcceleratedImageSelection(), convertedSelections)
+	if err := command.Run(s.toAcceleratedImageSelection(), convertedSelections); err != nil {
+		return err
+	}
+	s.image.acceleratedImage.Download(s.image.pixels)
+	return nil
 }
 
 func (s Selection) toAcceleratedImageSelection() AcceleratedImageSelection {
