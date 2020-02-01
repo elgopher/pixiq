@@ -168,29 +168,24 @@ func (g *OpenGL) NewImage(width, height int) (*image.Image, error) {
 	if height < 0 {
 		return nil, errors.New("negative height")
 	}
-	acceleratedImage, err := g.NewAcceleratedImage(width, height)
+	acceleratedImage, err := g.NewTexture(width, height)
 	if err != nil {
 		return nil, err
 	}
 	return image.New(width, height, acceleratedImage)
 }
 
-// TODO Rename to NewTexture and return *Texture instead
-// NewAcceleratedImage returns an OpenGL-accelerated implementation of image.AcceleratedImage
+// NewTexture returns an OpenGL-accelerated implementation of image.AcceleratedImage
 // Will return error if width or height are negative or image of these dimensions
 // cannot be created on a video card. (For instance when dimensions are not
 // a power of two)
-func (g *OpenGL) NewAcceleratedImage(width, height int) (image.AcceleratedImage, error) {
+func (g *OpenGL) NewTexture(width, height int) (*Texture, error) {
 	if width < 0 {
 		return nil, errors.New("negative width")
 	}
 	if height < 0 {
 		return nil, errors.New("negative height")
 	}
-	return g.newTexture(width, height)
-}
-
-func (g *OpenGL) newTexture(width, height int) (*texture, error) {
 	var id uint32
 	var err error
 	g.runInOpenGLContextThread(func() {
@@ -217,7 +212,7 @@ func (g *OpenGL) newTexture(width, height int) (*texture, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &texture{
+	return &Texture{
 		id:                       id,
 		width:                    width,
 		height:                   height,
@@ -225,17 +220,17 @@ func (g *OpenGL) newTexture(width, height int) (*texture, error) {
 	}, nil
 }
 
-type texture struct {
+type Texture struct {
 	id                       uint32
 	width, height            int
 	runInOpenGLContextThread func(func())
 }
 
-func (t *texture) TextureID() uint32 {
+func (t *Texture) TextureID() uint32 {
 	return t.id
 }
 
-func (t *texture) Upload(pixels []image.Color) {
+func (t *Texture) Upload(pixels []image.Color) {
 	t.runInOpenGLContextThread(func() {
 		gl.BindTexture(gl.TEXTURE_2D, t.id)
 		gl.TexSubImage2D(
@@ -252,7 +247,7 @@ func (t *texture) Upload(pixels []image.Color) {
 	})
 }
 
-func (t *texture) Download(output []image.Color) {
+func (t *Texture) Download(output []image.Color) {
 	t.runInOpenGLContextThread(func() {
 		gl.BindTexture(gl.TEXTURE_2D, t.id)
 		gl.GetTexImage(
@@ -275,7 +270,7 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 	}
 	// FIXME: EventBuffer size should be configurable
 	keyboardEvents := internal.NewKeyboardEvents(keyboard.NewEventBuffer(32))
-	screenTexture, err := g.newTexture(width, height)
+	screenTexture, err := g.NewTexture(width, height)
 	if err != nil {
 		return nil, err
 	}

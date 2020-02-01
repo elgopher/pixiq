@@ -20,7 +20,7 @@ type Window struct {
 	requestedHeight int
 	zoom            int
 	screenImage     *image.Image
-	screenTexture   *texture
+	screenTexture   *Texture
 }
 
 // Draw draws a screen image to the invisible buffer. It will be shown in window

@@ -24,7 +24,9 @@ func main() {
 			panic(err)
 		}
 		loop.Run(window, func(frame *loop.Frame) {
-			if err != nil {
+			screen := frame.Screen()
+			// TODO Create a GL command here when the API is ready
+			if err := screen.Modify(nil); err != nil {
 				panic(err)
 			}
 		})
