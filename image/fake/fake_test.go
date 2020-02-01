@@ -127,4 +127,51 @@ func TestAcceleratedImage_Upload(t *testing.T) {
 			})
 		}
 	})
+	t.Run("should upload colors", func(t *testing.T) {
+		var (
+			color0 = image.RGB(0, 0, 0)
+			color1 = image.RGB(1, 1, 1)
+		)
+		tests := map[string]struct {
+			width, height int
+			colors        []image.Color
+		}{
+			"0x0": {
+				width: 0, height: 0,
+				colors: []image.Color{},
+			},
+			"1x1": {
+				width: 1, height: 1,
+				colors: []image.Color{color0},
+			},
+			"1x2": {
+				width: 1, height: 2,
+				colors: []image.Color{color0, color1},
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				img, _ := fake.NewAcceleratedImage(test.width, test.height)
+				// when
+				img.Upload(test.colors)
+				// then
+				output := make([]image.Color, len(test.colors))
+				img.Download(output)
+				assert.Equal(t, test.colors, output)
+			})
+		}
+	})
+	t.Run("should copy colors", func(t *testing.T) {
+		color0 := image.RGB(0, 0, 0)
+		color1 := image.RGB(1, 1, 1)
+		img, _ := fake.NewAcceleratedImage(1, 1)
+		input := []image.Color{color0}
+		// when
+		img.Upload(input)
+		input[0] = color1
+		// then
+		output := make([]image.Color, 1)
+		img.Download(output)
+		assert.Equal(t, []image.Color{color0}, output)
+	})
 }
