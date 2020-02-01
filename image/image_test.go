@@ -452,8 +452,7 @@ func TestImage_Upload(t *testing.T) {
 			// when
 			img.Upload()
 			// then
-			require.NotNil(t, acceleratedImage.Pixels)
-			assert.Len(t, acceleratedImage.Pixels, 0)
+			assert.Equal(t, [][]image.Color{}, acceleratedImage.PixelsTable())
 		})
 		t.Run("1x1", func(t *testing.T) {
 			acceleratedImage, _ := fake.NewAcceleratedImage(1, 1)
@@ -463,8 +462,7 @@ func TestImage_Upload(t *testing.T) {
 			// when
 			img.Upload()
 			// then
-			require.Len(t, acceleratedImage.Pixels, 1)
-			assert.Equal(t, color, acceleratedImage.Pixels[0])
+			assert.Equal(t, [][]image.Color{{color}}, acceleratedImage.PixelsTable())
 		})
 		t.Run("2x2", func(t *testing.T) {
 			acceleratedImage, _ := fake.NewAcceleratedImage(2, 2)
@@ -481,11 +479,11 @@ func TestImage_Upload(t *testing.T) {
 			// when
 			img.Upload()
 			// then
-			require.Len(t, acceleratedImage.Pixels, 4)
-			assert.Equal(t, color1, acceleratedImage.Pixels[0])
-			assert.Equal(t, color2, acceleratedImage.Pixels[1])
-			assert.Equal(t, color3, acceleratedImage.Pixels[2])
-			assert.Equal(t, color4, acceleratedImage.Pixels[3])
+			table := [][]image.Color{
+				{color1, color2},
+				{color3, color4},
+			}
+			assert.Equal(t, table, acceleratedImage.PixelsTable())
 		})
 	})
 }

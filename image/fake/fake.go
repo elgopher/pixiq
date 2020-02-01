@@ -21,7 +21,7 @@ func NewAcceleratedImage(width, height int) (*AcceleratedImage, error) {
 	img := &AcceleratedImage{
 		width:  width,
 		height: height,
-		Pixels: make([]image.Color, width*height),
+		pixels: make([]image.Color, width*height),
 	}
 	return img, nil
 }
@@ -29,7 +29,7 @@ func NewAcceleratedImage(width, height int) (*AcceleratedImage, error) {
 // AcceleratedImage stores pixel data in RAM and uses CPU solely.
 type AcceleratedImage struct {
 	// Hide the instance variable
-	Pixels []image.Color
+	pixels []image.Color
 	width  int
 	height int
 }
@@ -40,7 +40,7 @@ func (i *AcceleratedImage) Upload(pixels []image.Color) {
 		panic("pixels slice is not of length width*height")
 	}
 	// copy pixels to ensure that Upload method has been called
-	copy(i.Pixels, pixels)
+	copy(i.pixels, pixels)
 }
 
 // Download fills output slice with image colors
@@ -49,6 +49,20 @@ func (i *AcceleratedImage) Download(output []image.Color) {
 		panic("output slice is not of length width*height")
 	}
 	for j := 0; j < len(output); j++ {
-		output[j] = i.Pixels[j]
+		output[j] = i.pixels[j]
 	}
+}
+
+// PixelsTable returns a copy of pixels in a form of 2D slice: first dimension
+// is a row, second dimension is a pixel in the row.
+func (i *AcceleratedImage) PixelsTable() [][]image.Color {
+	table := make([][]image.Color, i.height)
+	for row := 0; row < i.height; row++ {
+		table[row] = make([]image.Color, i.width)
+		for cell := 0; cell < i.width; cell++ {
+			idx := row*i.width + cell
+			table[row][cell] = i.pixels[idx]
+		}
+	}
+	return table
 }

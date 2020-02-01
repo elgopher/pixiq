@@ -175,3 +175,51 @@ func TestAcceleratedImage_Upload(t *testing.T) {
 		assert.Equal(t, []image.Color{color0}, output)
 	})
 }
+
+func TestAcceleratedImage_PixelsTable(t *testing.T) {
+	t.Run("should return 2d slice", func(t *testing.T) {
+		color0 := image.RGB(0, 0, 0)
+		color1 := image.RGB(1, 1, 1)
+		tests := map[string]struct {
+			width, height int
+			pixels        []image.Color
+			expectedTable [][]image.Color
+		}{
+			"0x0": {
+				width: 0, height: 0,
+				pixels:        []image.Color{},
+				expectedTable: [][]image.Color{},
+			},
+			"1x1": {
+				width: 1, height: 1,
+				pixels:        []image.Color{color0},
+				expectedTable: [][]image.Color{{color0}},
+			},
+			"1x2": {
+				width: 1, height: 2,
+				pixels: []image.Color{color0, color1},
+				expectedTable: [][]image.Color{
+					{color0},
+					{color1},
+				},
+			},
+			"2x1": {
+				width: 2, height: 1,
+				pixels: []image.Color{color0, color1},
+				expectedTable: [][]image.Color{
+					{color0, color1},
+				},
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				acceleratedImage, _ := fake.NewAcceleratedImage(test.width, test.height)
+				acceleratedImage.Upload(test.pixels)
+				// when
+				table := acceleratedImage.PixelsTable()
+				// then
+				assert.Equal(t, test.expectedTable, table)
+			})
+		}
+	})
+}
