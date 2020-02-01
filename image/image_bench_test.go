@@ -10,7 +10,7 @@ func BenchmarkSelection_SetColor(b *testing.B) {
 	b.StopTimer()
 	var (
 		color     = image.RGBA(10, 20, 30, 40)
-		img, _    = image.New(1920, 1080, &fakeAcceleratedImage{})
+		img, _    = image.New(1920, 1080, acceleratedImageStub{})
 		selection = img.WholeImageSelection()
 		height    = selection.Height()
 		width     = selection.Width()
@@ -28,7 +28,7 @@ func BenchmarkSelection_SetColor(b *testing.B) {
 func BenchmarkSelection_Color(b *testing.B) {
 	b.StopTimer()
 	var (
-		img, _    = image.New(1920, 1080, &fakeAcceleratedImage{})
+		img, _    = image.New(1920, 1080, acceleratedImageStub{})
 		selection = img.WholeImageSelection()
 		height    = selection.Height()
 		width     = selection.Width()
@@ -40,5 +40,18 @@ func BenchmarkSelection_Color(b *testing.B) {
 				selection.Color(x, y)
 			}
 		}
+	}
+}
+
+// Must be 0 allocs/op
+func BenchmarkSelection(b *testing.B) {
+	b.StopTimer()
+	var (
+		img, _    = image.New(1, 1, acceleratedImageStub{})
+		selection = img.WholeImageSelection()
+	)
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		selection.Selection(0, 0).WithSize(1, 1)
 	}
 }

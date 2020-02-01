@@ -205,8 +205,5 @@ func clone(original *image.Image) *image.Image {
 
 type acceleratedImageStub struct{}
 
-func (a acceleratedImageStub) Upload(pixels []image.Color) {
-}
-
-func (a acceleratedImageStub) Download(output []image.Color) {
-}
+func (i acceleratedImageStub) Upload([]image.Color)   {}
+func (i acceleratedImageStub) Download([]image.Color) {}
