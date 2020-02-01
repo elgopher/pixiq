@@ -9,7 +9,7 @@ type AcceleratedImage interface {
 	//
 	// Pixels must have pixel colors sorted by coordinates.
 	// Pixels are sent for first line first, from left to right.
-	// Pixels slice holds all image pixels.
+	// Pixels slice holds all image pixels and therefore must have size width*height
 	//
 	// Implementations must not retain pixels slice and make a copy instead.
 	Upload(pixels []Color)
@@ -17,29 +17,13 @@ type AcceleratedImage interface {
 	//
 	// Output will have pixel colors sorted by coordinates.
 	// Pixels are sent for first line first, from left to right.
-	// Output must be of size width * height.
+	// Output must be of size width*height.
 	//
 	// If the image has not been uploaded before then Download should fill
 	// output with Transparent color.
 	//
 	// Implementations must not retain output.
 	Download(output []Color)
-}
-
-// AcceleratedFragmentPixels contains pixel slice which can be uploaded
-// to AcceleratedImage or be used as an output for downloaded pixels.
-type AcceleratedSelectionPixels struct {
-	AcceleratedImageLocation
-	// Pixels has pixel colors sorted by coordinates.
-	// Pixels are sent for first line first, from left to right.
-	// Pixels slice is always big enough to hold input/output pixels.
-	Pixels []Color
-	// StartPosition is an index of the first color in Pixels slice.
-	// It must be >= 0.
-	StartingPosition int
-	// Stride is a row length (total number of pixels in a row despite the location)
-	// It must be >= 0.
-	Stride int
 }
 
 // New creates an Image with specified size given in pixels.
@@ -235,8 +219,13 @@ type AcceleratedImageSelection struct {
 
 // AcceleratedCommand is a command executed externally (outside the CPU).
 type AcceleratedCommand interface {
-	// Run should put the results into the output AcceleratedImageSelection.
-	// Before Run is called all selections have been uploaded.
+	// Run should put the results into the output selection of AcceleratedImage,
+	// so that next time AcceleratedImage.Download is called modified pixels are
+	// downloaded.
+	//
+	// Run might return error when output or selections cannot be used. Usually
+	// the reason for that is they were not created in a given context (such
+	// as OpenGL context).
 	//
 	// Implementations must not retain selections.
 	Run(output AcceleratedImageSelection, selections []AcceleratedImageSelection) error
@@ -252,6 +241,7 @@ func (s Selection) Modify(command AcceleratedCommand, selections ...Selection) e
 	}
 	var convertedSelections []AcceleratedImageSelection
 	for _, selection := range selections {
+		selection.image.acceleratedImage.Upload(selection.image.pixels)
 		convertedSelections = append(convertedSelections, selection.toAcceleratedImageSelection())
 	}
 	return command.Run(s.toAcceleratedImageSelection(), convertedSelections)

@@ -175,6 +175,7 @@ func (g *OpenGL) NewImage(width, height int) (*image.Image, error) {
 	return image.New(width, height, acceleratedImage)
 }
 
+// TODO Rename to NewTexture and return *Texture instead
 // NewAcceleratedImage returns an OpenGL-accelerated implementation of image.AcceleratedImage
 // Will return error if width or height are negative or image of these dimensions
 // cannot be created on a video card. (For instance when dimensions are not

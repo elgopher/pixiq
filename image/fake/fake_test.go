@@ -68,4 +68,63 @@ func TestAcceleratedImage_Download(t *testing.T) {
 			})
 		}
 	})
+	t.Run("should panic when output slice is not of width*height length", func(t *testing.T) {
+		tests := map[string]struct {
+			width, height int
+			inputLength   int
+		}{
+			"1x1, input length 0": {
+				width: 1, height: 1,
+				inputLength: 0,
+			},
+			"1x1, input length 2": {
+				width: 1, height: 1,
+				inputLength: 2,
+			},
+			"1x2, input length 1": {
+				width: 1, height: 2,
+				inputLength: 1,
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				img, _ := fake.NewAcceleratedImage(test.width, test.height)
+				output := make([]image.Color, test.inputLength)
+				assert.Panics(t, func() {
+					img.Download(output)
+				})
+			})
+		}
+	})
+}
+
+func TestAcceleratedImage_Upload(t *testing.T) {
+	t.Run("should panic when input slice is not of width*height length", func(t *testing.T) {
+		tests := map[string]struct {
+			width, height int
+			inputLength   int
+		}{
+			"1x1, input length 0": {
+				width: 1, height: 1,
+				inputLength: 0,
+			},
+			"1x1, input length 2": {
+				width: 1, height: 1,
+				inputLength: 2,
+			},
+			"1x2, input length 1": {
+				width: 1, height: 2,
+				inputLength: 1,
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				img, _ := fake.NewAcceleratedImage(test.width, test.height)
+				input := make([]image.Color, test.inputLength)
+				assert.Panics(t, func() {
+					img.Upload(input)
+				})
+			})
+		}
+	})
 }

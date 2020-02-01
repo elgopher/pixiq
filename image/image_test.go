@@ -544,7 +544,7 @@ func TestSelection_Modify(t *testing.T) {
 						Height: test.height,
 					},
 					AcceleratedImage: acceleratedImage,
-				}, command.lastOutput)
+				}, command.output)
 			})
 		}
 	})
@@ -611,27 +611,81 @@ func TestSelection_Modify(t *testing.T) {
 				err := output.Modify(command, test.selections...)
 				// then
 				require.NoError(t, err)
-				assert.Equal(t, test.expected, command.lastSelections)
+				assert.Equal(t, test.expected, command.selections)
 			})
 		}
 	})
-	t.Run("should upload passed selections", func(t *testing.T) {
+	t.Run("should upload passed selection", func(t *testing.T) {
 		var (
-			white                = image.RGB(255, 255, 255)
-			acceleratedImage1, _ = fake.NewAcceleratedImage(1, 1)
-			acceleratedImage2, _ = fake.NewAcceleratedImage(1, 1)
-			img1, _              = image.New(1, 1, acceleratedImage1)
-			img2, _              = image.New(1, 1, acceleratedImage2)
-			command              = &acceleratedCommandMock{}
-			output               = img1.WholeImageSelection()
+			color00                   = image.RGB(0, 0, 255)
+			color10                   = image.RGB(255, 0, 255)
+			color01                   = image.RGB(0, 255, 255)
+			color11                   = image.RGB(255, 255, 255)
+			targetAcceleratedImage, _ = fake.NewAcceleratedImage(1, 1)
+			targetImage, _            = image.New(1, 1, targetAcceleratedImage)
+			sourceAcceleratedImage, _ = fake.NewAcceleratedImage(2, 2)
+			sourceImage, _            = image.New(2, 2, sourceAcceleratedImage)
+			uploadedPixels            = make([]image.Color, 4)
+			command                   = &acceleratedCommandMock{
+				command: func(output image.AcceleratedImageSelection, selections []image.AcceleratedImageSelection) {
+					source := selections[0].AcceleratedImage
+					source.Download(uploadedPixels)
+				},
+			}
+			outputSelection = targetImage.WholeImageSelection()
+			sourceSelection = sourceImage.WholeImageSelection()
 		)
-		img2.WholeImageSelection().SetColor(0, 0, white)
+		sourceSelection.SetColor(0, 0, color00)
+		sourceSelection.SetColor(1, 0, color10)
+		sourceSelection.SetColor(0, 1, color01)
+		sourceSelection.SetColor(1, 1, color11)
 		// when
-		err := output.Modify(command, img2.Selection(0, 0).WithSize(1, 1))
+		err := outputSelection.Modify(command, sourceSelection)
 		// then
 		require.NoError(t, err)
-		// TODO Test pixel colors in acceleratedImage (in the begiinning of the
-		// AcceleratedCommand
+		assert.Equal(t, []image.Color{color00, color10, color01, color11}, uploadedPixels)
+	})
+
+	t.Run("should upload passed selections", func(t *testing.T) {
+		var (
+			color   = image.RGB(100, 100, 100)
+			color00 = image.RGB(0, 0, 255)
+			color10 = image.RGB(255, 0, 255)
+			color01 = image.RGB(0, 255, 255)
+			color11 = image.RGB(255, 255, 255)
+			//
+			targetAcceleratedImage, _ = fake.NewAcceleratedImage(1, 1)
+			targetImage, _            = image.New(1, 1, targetAcceleratedImage)
+			//
+			sourceAcceleratedImage0, _ = fake.NewAcceleratedImage(1, 1)
+			sourceImage0, _            = image.New(1, 1, sourceAcceleratedImage0)
+			uploadedPixels0            = make([]image.Color, 1)
+			//
+			sourceAcceleratedImage1, _ = fake.NewAcceleratedImage(2, 2)
+			sourceImage1, _            = image.New(2, 2, sourceAcceleratedImage1)
+			uploadedPixels1            = make([]image.Color, 4)
+			//
+			command = &acceleratedCommandMock{
+				command: func(output image.AcceleratedImageSelection, selections []image.AcceleratedImageSelection) {
+					selections[0].AcceleratedImage.Download(uploadedPixels0)
+					selections[1].AcceleratedImage.Download(uploadedPixels1)
+				},
+			}
+			outputSelection  = targetImage.WholeImageSelection()
+			source0Selection = sourceImage0.WholeImageSelection()
+			source1Selection = sourceImage1.WholeImageSelection()
+		)
+		source0Selection.SetColor(0, 0, color)
+		source1Selection.SetColor(0, 0, color00)
+		source1Selection.SetColor(1, 0, color10)
+		source1Selection.SetColor(0, 1, color01)
+		source1Selection.SetColor(1, 1, color11)
+		// when
+		err := outputSelection.Modify(command, source0Selection, source1Selection)
+		// then
+		require.NoError(t, err)
+		assert.Equal(t, []image.Color{color}, uploadedPixels0)
+		assert.Equal(t, []image.Color{color00, color10, color01, color11}, uploadedPixels1)
 	})
 }
 
@@ -673,15 +727,19 @@ func (i acceleratedImageStub) Upload([]image.Color)   {}
 func (i acceleratedImageStub) Download([]image.Color) {}
 
 type acceleratedCommandMock struct {
-	timesExecuted  int
-	lastOutput     image.AcceleratedImageSelection
-	lastSelections []image.AcceleratedImageSelection
+	timesExecuted int
+	output        image.AcceleratedImageSelection
+	selections    []image.AcceleratedImageSelection
+	command       func(output image.AcceleratedImageSelection, selections []image.AcceleratedImageSelection)
 }
 
 func (a *acceleratedCommandMock) Run(output image.AcceleratedImageSelection, selections []image.AcceleratedImageSelection) error {
 	a.timesExecuted += 1
-	a.lastOutput = output
-	a.lastSelections = selections
+	a.output = output
+	a.selections = selections
+	if a.command != nil {
+		a.command(output, selections)
+	}
 	return nil
 }
 

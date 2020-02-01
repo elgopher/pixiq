@@ -35,6 +35,9 @@ type AcceleratedImage struct {
 
 // Upload send pixels to a container in RAM
 func (i *AcceleratedImage) Upload(pixels []image.Color) {
+	if len(pixels) != i.width*i.height {
+		panic("pixels slice is not of length width*height")
+	}
 	i.pixels = make([]image.Color, len(pixels))
 	// copy pixels to ensure that Upload method has been called
 	copy(i.pixels, pixels)
@@ -42,19 +45,10 @@ func (i *AcceleratedImage) Upload(pixels []image.Color) {
 
 // Download fills output slice with image colors
 func (i *AcceleratedImage) Download(output []image.Color) {
+	if len(output) != i.width*i.height {
+		panic("pixels slice is not of length width*height")
+	}
 	for j := 0; j < len(output); j++ {
 		output[j] = i.pixels[j]
 	}
-}
-
-// TODO Experimental (not tested, POC)
-func (i *AcceleratedImage) PixelTable() [][]image.Color {
-	table := make([][]image.Color, i.height)
-	for y := 0; y < i.height; y++ {
-		table[y] = make([]image.Color, i.width)
-		for x := 0; x < i.width; x++ {
-			table[y][x] = i.pixels[y*i.width+x]
-		}
-	}
-	return table
 }
