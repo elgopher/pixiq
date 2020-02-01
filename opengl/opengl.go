@@ -220,16 +220,20 @@ func (g *OpenGL) NewTexture(width, height int) (*Texture, error) {
 	}, nil
 }
 
+// Texture is an image.AcceleratedImage implementation storing pixels
+// on a video card VRAM.
 type Texture struct {
 	id                       uint32
 	width, height            int
 	runInOpenGLContextThread func(func())
 }
 
+// TextureID returns the ID of texture
 func (t *Texture) TextureID() uint32 {
 	return t.id
 }
 
+// Upload send pixels to texture
 func (t *Texture) Upload(pixels []image.Color) {
 	t.runInOpenGLContextThread(func() {
 		gl.BindTexture(gl.TEXTURE_2D, t.id)
@@ -247,6 +251,7 @@ func (t *Texture) Upload(pixels []image.Color) {
 	})
 }
 
+// Download gets pixels pixels from texture
 func (t *Texture) Download(output []image.Color) {
 	t.runInOpenGLContextThread(func() {
 		gl.BindTexture(gl.TEXTURE_2D, t.id)
