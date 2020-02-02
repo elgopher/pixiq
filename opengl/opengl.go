@@ -390,6 +390,24 @@ type Program struct {
 	*program
 }
 
+func (p Program) AcceleratedCommand(command OpenGLCommand) (*AcceleratedCommand, error) {
+	if command == nil {
+		return nil, errors.New("nil command")
+	}
+	return &AcceleratedCommand{}, nil
+}
+
+type OpenGLCommand interface {
+	RunGL(selections []image.AcceleratedImageSelection)
+}
+
+type AcceleratedCommand struct {
+}
+
+func (a *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selections []image.AcceleratedImageSelection) error {
+	return nil
+}
+
 // WindowOption is an option used when opening the window.
 type WindowOption func(window *Window)
 

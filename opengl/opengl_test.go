@@ -398,11 +398,11 @@ func TestOpenGL_CompileVertexShader(t *testing.T) {
 		tests := map[string]string{
 			"GLSL 1.10": "void main() {}",
 			"minimal": `
-#version 330 core
-void main() {
-	gl_Position = vec4(0., 0., 0., 0.);
-}
-`,
+				#version 330 core
+				void main() {
+					gl_Position = vec4(0., 0., 0., 0.);
+				}
+				`,
 		}
 		for name, source := range tests {
 			t.Run(name, func(t *testing.T) {
@@ -444,9 +444,9 @@ func TestOpenGL_CompileFragmentShader(t *testing.T) {
 		tests := map[string]string{
 			"GLSL 1.10": "void main() {}",
 			"minimal": `
-#version 330 core
-void main() {}
-`,
+				#version 330 core
+				void main() {}
+				`,
 		}
 		for name, source := range tests {
 			t.Run(name, func(t *testing.T) {
@@ -492,14 +492,14 @@ func TestOpenGL_LinkProgram(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
 		vertexShader, err := openGL.CompileVertexShader(`
-#version 330 core
-void noMain() {}
-`)
+								#version 330 core
+								void noMain() {}
+								`)
 		require.NoError(t, err)
 		fragmentShader, err := openGL.CompileFragmentShader(`
-#version 330 core
-void noMainEither() {}
-`)
+								#version 330 core
+								void noMainEither() {}
+								`)
 		require.NoError(t, err)
 		// when
 		program, err := openGL.LinkProgram(vertexShader, fragmentShader)
@@ -511,19 +511,61 @@ void noMainEither() {}
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
 		vertexShader, _ := openGL.CompileVertexShader(`
-#version 330 core
-void main() {
-	gl_Position = vec4(0., 0., 0., 0.);
-}
-`)
+								#version 330 core
+								void main() {
+									gl_Position = vec4(0., 0., 0., 0.);
+								}
+								`)
 		fragmentShader, _ := openGL.CompileFragmentShader(`
-#version 330 core
-void main() {}
-`)
+								#version 330 core
+								void main() {}
+								`)
 		// when
 		program, err := openGL.LinkProgram(vertexShader, fragmentShader)
 		// then
 		require.NoError(t, err)
 		assert.NotNil(t, program)
 	})
+}
+
+func TestProgram_AcceleratedCommand(t *testing.T) {
+	t.Run("should return error when passed command is nil", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		program := workingProgram(openGL)
+		// when
+		cmd, err := program.AcceleratedCommand(nil)
+		assert.Error(t, err)
+		assert.Nil(t, cmd)
+	})
+	t.Run("should return command", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		program := workingProgram(openGL)
+		// when
+		cmd, err := program.AcceleratedCommand(&commandMock{})
+		require.NoError(t, err)
+		assert.NotNil(t, cmd)
+	})
+}
+
+func workingProgram(openGL *opengl.OpenGL) *opengl.Program {
+	vertexShader, _ := openGL.CompileVertexShader(`
+								#version 330 core
+								void main() {
+									gl_Position = vec4(0., 0., 0., 0.);
+								}
+								`)
+	fragmentShader, _ := openGL.CompileFragmentShader(`
+								#version 330 core
+								void main() {}
+								`)
+	program, _ := openGL.LinkProgram(vertexShader, fragmentShader)
+	return program
+}
+
+type commandMock struct {
+}
+
+func (f commandMock) RunGL(selections []image.AcceleratedImageSelection) {
 }
