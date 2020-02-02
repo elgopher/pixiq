@@ -618,6 +618,57 @@ func TestSelection_Modify(t *testing.T) {
 			})
 		}
 	})
+	t.Run("should convert selections in next call with different number of arguments", func(t *testing.T) {
+		var (
+			acceleratedImage1, _ = fake.NewAcceleratedImage(0, 0)
+			acceleratedImage2, _ = fake.NewAcceleratedImage(0, 0)
+			img1, _              = image.New(0, 0, acceleratedImage1)
+			img2, _              = image.New(0, 0, acceleratedImage2)
+			selection1           = img1.WholeImageSelection()
+			selection2           = img2.WholeImageSelection()
+			command              = &acceleratedCommandMock{}
+			output               = img1.WholeImageSelection()
+		)
+		tests := map[string]struct {
+			selectionsFirst  []image.Selection
+			selectionsSecond []image.Selection
+			expected         []image.AcceleratedImageSelection
+		}{
+			"1, then 0": {
+				selectionsFirst:  []image.Selection{selection1},
+				selectionsSecond: []image.Selection{},
+				expected:         []image.AcceleratedImageSelection{},
+			},
+			"0, then 1": {
+				selectionsFirst:  []image.Selection{},
+				selectionsSecond: []image.Selection{selection1},
+				expected:         []image.AcceleratedImageSelection{{AcceleratedImage: acceleratedImage1}},
+			},
+			"2, then 1": {
+				selectionsFirst:  []image.Selection{selection1, selection2},
+				selectionsSecond: []image.Selection{selection2},
+				expected:         []image.AcceleratedImageSelection{{AcceleratedImage: acceleratedImage2}},
+			},
+			"1, then 2": {
+				selectionsFirst:  []image.Selection{selection1},
+				selectionsSecond: []image.Selection{selection2, selection1},
+				expected: []image.AcceleratedImageSelection{
+					{AcceleratedImage: acceleratedImage2},
+					{AcceleratedImage: acceleratedImage1},
+				},
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				_ = output.Modify(command, test.selectionsFirst...)
+				// when
+				err := output.Modify(command, test.selectionsSecond...)
+				// then
+				require.NoError(t, err)
+				assert.Equal(t, test.expected, command.selections)
+			})
+		}
+	})
 	t.Run("should upload passed selection", func(t *testing.T) {
 		var (
 			color00                   = image.RGB(0, 0, 255)
