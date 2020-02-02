@@ -235,6 +235,9 @@ func (t *Texture) TextureID() uint32 {
 
 // Upload send pixels to texture
 func (t *Texture) Upload(pixels []image.Color) {
+	if len(pixels) == 0 {
+		return
+	}
 	t.runInOpenGLContextThread(func() {
 		gl.BindTexture(gl.TEXTURE_2D, t.id)
 		gl.TexSubImage2D(
@@ -253,6 +256,9 @@ func (t *Texture) Upload(pixels []image.Color) {
 
 // Download gets pixels pixels from texture
 func (t *Texture) Download(output []image.Color) {
+	if len(output) == 0 {
+		return
+	}
 	t.runInOpenGLContextThread(func() {
 		gl.BindTexture(gl.TEXTURE_2D, t.id)
 		gl.GetTexImage(
