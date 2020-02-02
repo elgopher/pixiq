@@ -141,6 +141,11 @@ func TestTexture_Upload(t *testing.T) {
 			width, height int
 			inputColors   []image.Color
 		}{
+			"0x0": {
+				width:       0,
+				height:      0,
+				inputColors: []image.Color{},
+			},
 			"1x1": {
 				width:       1,
 				height:      1,
