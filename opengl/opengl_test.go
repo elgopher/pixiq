@@ -1,6 +1,7 @@
 package opengl_test
 
 import (
+	"errors"
 	"os"
 	"testing"
 
@@ -549,6 +550,53 @@ func TestProgram_AcceleratedCommand(t *testing.T) {
 	})
 }
 
+func TestAcceleratedCommand_Run(t *testing.T) {
+	t.Run("should execute command", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		program := workingProgram(openGL)
+		texture, _ := openGL.NewTexture(1, 1)
+		output := image.AcceleratedImageSelection{
+			AcceleratedImage: texture,
+		}
+		tests := map[string]struct {
+			selections []image.AcceleratedImageSelection
+		}{
+			"empty selections": {
+				selections: []image.AcceleratedImageSelection{},
+			},
+			"one selection": {
+				selections: []image.AcceleratedImageSelection{{}},
+			},
+			"two selections": {
+				selections: []image.AcceleratedImageSelection{{}, {}},
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				command := &commandMock{}
+				acceleratedCommand, _ := program.AcceleratedCommand(command)
+				// when
+				err := acceleratedCommand.Run(output, test.selections)
+				// then
+				require.NoError(t, err)
+				assert.Equal(t, 1, command.executionCount)
+				assert.Equal(t, test.selections, command.selections)
+				assert.NotNil(t, command.drawer)
+			})
+		}
+	})
+	t.Run("should return error when command returned error", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		program := workingProgram(openGL)
+		command, _ := program.AcceleratedCommand(&failingCommand{})
+		// when
+		err := command.Run(image.AcceleratedImageSelection{}, []image.AcceleratedImageSelection{})
+		assert.Error(t, err)
+	})
+}
+
 func workingProgram(openGL *opengl.OpenGL) *opengl.Program {
 	vertexShader, _ := openGL.CompileVertexShader(`
 								#version 330 core
@@ -565,7 +613,20 @@ func workingProgram(openGL *opengl.OpenGL) *opengl.Program {
 }
 
 type commandMock struct {
+	executionCount int
+	selections     []image.AcceleratedImageSelection
+	drawer         *opengl.Drawer
 }
 
-func (f commandMock) RunGL(selections []image.AcceleratedImageSelection) {
+func (f *commandMock) RunGL(drawer *opengl.Drawer, selections []image.AcceleratedImageSelection) error {
+	f.executionCount++
+	f.selections = selections
+	f.drawer = drawer
+	return nil
+}
+
+type failingCommand struct{}
+
+func (f *failingCommand) RunGL(drawer *opengl.Drawer, selections []image.AcceleratedImageSelection) error {
+	return errors.New("command failed")
 }

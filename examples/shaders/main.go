@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/loop"
 	"github.com/jacekolszak/pixiq/opengl"
 )
@@ -15,7 +16,7 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		_, err = gl.LinkProgram(vertexShader, fragmentShader)
+		program, err := gl.LinkProgram(vertexShader, fragmentShader)
 		if err != nil {
 			panic(err)
 		}
@@ -23,10 +24,13 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
+		cmd, err := program.AcceleratedCommand(&command{})
+		if err != nil {
+			panic(err)
+		}
 		loop.Run(window, func(frame *loop.Frame) {
 			screen := frame.Screen()
-			// TODO Create a GL command here when the API is ready
-			if err := screen.Modify(nil); err != nil {
+			if err := screen.Modify(cmd); err != nil {
 				panic(err)
 			}
 		})
@@ -60,3 +64,11 @@ void main() {
 	color = texture(tex, position);
 }
 `
+
+type command struct {
+}
+
+func (c command) RunGL(drawer *opengl.Drawer, selections []image.AcceleratedImageSelection) error {
+	// TODO Finish when OpenGL API is ready
+	return nil
+}
