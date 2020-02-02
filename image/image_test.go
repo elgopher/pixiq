@@ -562,7 +562,9 @@ func TestSelection_Modify(t *testing.T) {
 			selections []image.Selection
 			expected   []image.AcceleratedImageSelection
 		}{
-			"no selections": {},
+			"no selections": {
+				expected: []image.AcceleratedImageSelection{},
+			},
 			"1 selection": {
 				selections: []image.Selection{
 					img2.Selection(0, 1).WithSize(2, 3),

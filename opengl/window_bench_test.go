@@ -7,7 +7,6 @@ import (
 )
 
 func BenchmarkWindow_Draw(b *testing.B) {
-	b.StopTimer()
 	openGL, err := opengl.New(mainThreadLoop)
 	if err != nil {
 		panic(err)
@@ -16,7 +15,7 @@ func BenchmarkWindow_Draw(b *testing.B) {
 	if err != nil {
 		panic(err)
 	}
-	b.StartTimer()
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		win.Draw()
 	}
