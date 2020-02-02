@@ -44,6 +44,7 @@ func New(width, height int, acceleratedImage AcceleratedImage) (*Image, error) {
 		height:           height,
 		pixels:           make([]Color, width*height),
 		acceleratedImage: acceleratedImage,
+		selectionsCache:  make([]AcceleratedImageSelection, 0, 4),
 	}, nil
 }
 
@@ -58,6 +59,7 @@ type Image struct {
 	height           int
 	pixels           []Color
 	acceleratedImage AcceleratedImage
+	selectionsCache  []AcceleratedImageSelection
 }
 
 // Width returns the number of pixels in a row.
@@ -239,7 +241,7 @@ func (s Selection) Modify(command AcceleratedCommand, selections ...Selection) e
 	if command == nil {
 		return errors.New("nil command")
 	}
-	var convertedSelections []AcceleratedImageSelection
+	convertedSelections := s.image.selectionsCache[:0]
 	for _, selection := range selections {
 		selection.image.acceleratedImage.Upload(selection.image.pixels)
 		convertedSelections = append(convertedSelections, selection.toAcceleratedImageSelection())

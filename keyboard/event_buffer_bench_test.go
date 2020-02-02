@@ -8,10 +8,9 @@ import (
 
 // Should be 0 allocs/op
 func BenchmarkKeyboardEvents(b *testing.B) {
-	b.StopTimer()
 	const size = 8
 	events := keyboard.NewEventBuffer(size)
-	b.StartTimer()
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < size*2; j++ {
 			events.Add(keyboard.NewPressedEvent(keyboard.A))

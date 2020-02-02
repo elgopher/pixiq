@@ -10,13 +10,12 @@ import (
 )
 
 func BenchmarkScreenLoops_Loop(b *testing.B) {
-	b.StopTimer()
 	img, err := image.New(1, 1, &acceleratedImageStub{})
 	require.NoError(b, err)
 	var (
 		screen = &noopScreen{image: img}
 	)
-	b.StartTimer()
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		frameNumber := 0
 		loop.Run(screen, func(frame *loop.Frame) {
