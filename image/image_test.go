@@ -538,13 +538,13 @@ func TestSelection_Modify(t *testing.T) {
 				// then
 				require.NoError(t, err)
 				assert.Equal(t, image.AcceleratedImageSelection{
-					AcceleratedImageLocation: image.AcceleratedImageLocation{
+					Location: image.AcceleratedImageLocation{
 						X:      test.x,
 						Y:      test.y,
 						Width:  test.width,
 						Height: test.height,
 					},
-					AcceleratedImage: acceleratedImage,
+					Image: acceleratedImage,
 				}, command.output)
 			})
 		}
@@ -571,13 +571,13 @@ func TestSelection_Modify(t *testing.T) {
 				},
 				expected: []image.AcceleratedImageSelection{
 					{
-						AcceleratedImageLocation: image.AcceleratedImageLocation{
+						Location: image.AcceleratedImageLocation{
 							X:      0,
 							Y:      1,
 							Width:  2,
 							Height: 3,
 						},
-						AcceleratedImage: acceleratedImage2,
+						Image: acceleratedImage2,
 					},
 				},
 			},
@@ -588,22 +588,22 @@ func TestSelection_Modify(t *testing.T) {
 				},
 				expected: []image.AcceleratedImageSelection{
 					{
-						AcceleratedImageLocation: image.AcceleratedImageLocation{
+						Location: image.AcceleratedImageLocation{
 							X:      1,
 							Y:      2,
 							Width:  3,
 							Height: 4,
 						},
-						AcceleratedImage: acceleratedImage1,
+						Image: acceleratedImage1,
 					},
 					{
-						AcceleratedImageLocation: image.AcceleratedImageLocation{
+						Location: image.AcceleratedImageLocation{
 							X:      5,
 							Y:      6,
 							Width:  7,
 							Height: 8,
 						},
-						AcceleratedImage: acceleratedImage2,
+						Image: acceleratedImage2,
 					},
 				},
 			},
@@ -642,19 +642,19 @@ func TestSelection_Modify(t *testing.T) {
 			"0, then 1": {
 				selectionsFirst:  []image.Selection{},
 				selectionsSecond: []image.Selection{selection1},
-				expected:         []image.AcceleratedImageSelection{{AcceleratedImage: acceleratedImage1}},
+				expected:         []image.AcceleratedImageSelection{{Image: acceleratedImage1}},
 			},
 			"2, then 1": {
 				selectionsFirst:  []image.Selection{selection1, selection2},
 				selectionsSecond: []image.Selection{selection2},
-				expected:         []image.AcceleratedImageSelection{{AcceleratedImage: acceleratedImage2}},
+				expected:         []image.AcceleratedImageSelection{{Image: acceleratedImage2}},
 			},
 			"1, then 2": {
 				selectionsFirst:  []image.Selection{selection1},
 				selectionsSecond: []image.Selection{selection2, selection1},
 				expected: []image.AcceleratedImageSelection{
-					{AcceleratedImage: acceleratedImage2},
-					{AcceleratedImage: acceleratedImage1},
+					{Image: acceleratedImage2},
+					{Image: acceleratedImage1},
 				},
 			},
 		}
@@ -682,7 +682,7 @@ func TestSelection_Modify(t *testing.T) {
 			uploadedPixels            = make([]image.Color, 4)
 			command                   = &acceleratedCommandMock{
 				command: func(output image.AcceleratedImageSelection, selections []image.AcceleratedImageSelection) {
-					source := selections[0].AcceleratedImage
+					source := selections[0].Image
 					source.Download(uploadedPixels)
 				},
 			}
@@ -721,8 +721,8 @@ func TestSelection_Modify(t *testing.T) {
 			//
 			command = &acceleratedCommandMock{
 				command: func(output image.AcceleratedImageSelection, selections []image.AcceleratedImageSelection) {
-					selections[0].AcceleratedImage.Download(uploadedPixels0)
-					selections[1].AcceleratedImage.Download(uploadedPixels1)
+					selections[0].Image.Download(uploadedPixels0)
+					selections[1].Image.Download(uploadedPixels1)
 				},
 			}
 			outputSelection  = targetImage.WholeImageSelection()

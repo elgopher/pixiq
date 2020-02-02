@@ -557,7 +557,7 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 		program := workingProgram(openGL)
 		texture, _ := openGL.NewTexture(1, 1)
 		output := image.AcceleratedImageSelection{
-			AcceleratedImage: texture,
+			Image: texture,
 		}
 		tests := map[string]struct {
 			selections []image.AcceleratedImageSelection

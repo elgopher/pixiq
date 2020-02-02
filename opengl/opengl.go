@@ -370,7 +370,7 @@ func (g *OpenGL) LinkProgram(vertexShader *VertexShader, fragmentShader *Fragmen
 	if err != nil {
 		return nil, err
 	}
-	return &Program{program: program}, err
+	return &Program{program: program, runInOpenGLContextThread: g.runInOpenGLContextThread}, err
 }
 
 // FragmentShader is a part of an OpenGL program which transforms each fragment
@@ -388,13 +388,19 @@ type VertexShader struct {
 // Program is shaders linked together
 type Program struct {
 	*program
+	runInOpenGLContextThread func(func())
 }
 
-func (p Program) AcceleratedCommand(command Command) (*AcceleratedCommand, error) {
+func (p *Program) AcceleratedCommand(command Command) (*AcceleratedCommand, error) {
 	if command == nil {
 		return nil, errors.New("nil command")
 	}
-	return &AcceleratedCommand{command: command}, nil
+	acceleratedCommand := &AcceleratedCommand{
+		command:                  command,
+		runInOpenGLContextThread: p.runInOpenGLContextThread,
+		program:                  p,
+	}
+	return acceleratedCommand, nil
 }
 
 type Command interface {
@@ -402,14 +408,35 @@ type Command interface {
 }
 
 type Drawer struct {
+	program *Program
+}
+
+func (d *Drawer) BindTexture(name string, image image.AcceleratedImage) {
+	// bind texture
+	// gl.Uniform1i
+}
+
+func (d *Drawer) DrawTriangles() {
+	polygon := newScreenPolygon(d.program.vertexPositionLocation, d.program.texturePositionLocation)
+	polygon.draw()
 }
 
 type AcceleratedCommand struct {
-	command Command
+	command                  Command
+	program                  *Program
+	runInOpenGLContextThread func(func())
 }
 
 func (a *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selections []image.AcceleratedImageSelection) error {
-	return a.command.RunGL(&Drawer{}, selections)
+	var err error
+	a.runInOpenGLContextThread(func() {
+		// create FB, bind, use program
+		// set viewport
+		drawer := &Drawer{program: a.program}
+		err = a.command.RunGL(drawer, selections)
+		// save to texture
+	})
+	return err
 }
 
 // WindowOption is an option used when opening the window.

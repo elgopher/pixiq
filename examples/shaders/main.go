@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+
 	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/loop"
 	"github.com/jacekolszak/pixiq/opengl"
@@ -30,7 +32,7 @@ func main() {
 		}
 		loop.Run(window, func(frame *loop.Frame) {
 			screen := frame.Screen()
-			if err := screen.Modify(cmd); err != nil {
+			if err := screen.Modify(cmd, screen); err != nil {
 				panic(err)
 			}
 		})
@@ -69,6 +71,11 @@ type command struct {
 }
 
 func (c command) RunGL(drawer *opengl.Drawer, selections []image.AcceleratedImageSelection) error {
+	if len(selections) != 1 {
+		return errors.New("invalid number of selections")
+	}
+	drawer.BindTexture("tex", selections[0].Image)
+	drawer.DrawTriangles()
 	// TODO Finish when OpenGL API is ready
 	return nil
 }

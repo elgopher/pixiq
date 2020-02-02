@@ -215,8 +215,8 @@ type AcceleratedImageLocation struct {
 
 // AcceleratedImageSelection is same for AcceleratedImage as Selection for *Image
 type AcceleratedImageSelection struct {
-	AcceleratedImageLocation
-	AcceleratedImage
+	Location AcceleratedImageLocation
+	Image    AcceleratedImage
 }
 
 // AcceleratedCommand is a command executed externally (outside the CPU).
@@ -255,12 +255,12 @@ func (s Selection) Modify(command AcceleratedCommand, selections ...Selection) e
 
 func (s Selection) toAcceleratedImageSelection() AcceleratedImageSelection {
 	return AcceleratedImageSelection{
-		AcceleratedImageLocation: AcceleratedImageLocation{
+		Location: AcceleratedImageLocation{
 			X:      s.x,
 			Y:      s.y,
 			Width:  s.width,
 			Height: s.height,
 		},
-		AcceleratedImage: s.image.acceleratedImage,
+		Image: s.image.acceleratedImage,
 	}
 }
