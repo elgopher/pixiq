@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"runtime"
 	"time"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
@@ -373,6 +374,67 @@ func (g *OpenGL) LinkProgram(vertexShader *VertexShader, fragmentShader *Fragmen
 	return &Program{program: program, runInOpenGLContextThread: g.runInOpenGLContextThread}, err
 }
 
+func (g *OpenGL) NewFloatVertexBuffer(size int) (*FloatVertexBuffer, error) {
+	if size < 0 {
+		return nil, errors.New("negative size")
+	}
+	var id uint32
+	g.runInOpenGLContextThread(func() {
+		gl.GenBuffers(1, &id)
+		gl.BindBuffer(gl.ARRAY_BUFFER, id)
+		gl.BufferData(gl.ARRAY_BUFFER, size*4, gl.Ptr(nil), gl.STATIC_DRAW)
+	})
+	vb := &FloatVertexBuffer{
+		id:                       id,
+		size:                     size,
+		runInOpenGLContextThread: g.runInOpenGLContextThread,
+	}
+	runtime.SetFinalizer(vb, (*FloatVertexBuffer).Delete)
+	return vb, nil
+}
+
+type FloatVertexBuffer struct {
+	id                       uint32
+	size                     int
+	runInOpenGLContextThread func(func())
+	deleted                  bool
+}
+
+func (b *FloatVertexBuffer) Size() int {
+	return b.size
+}
+
+// TODO Finish this
+func (b *FloatVertexBuffer) Download(offset int, output []float32) error {
+	if b.deleted {
+		return errors.New("deleted buffer")
+	}
+	b.runInOpenGLContextThread(func() {
+		gl.BindBuffer(gl.ARRAY_BUFFER, b.id)
+		gl.GetBufferSubData(gl.ARRAY_BUFFER, 0, len(output)*4, gl.Ptr(output))
+	})
+	return nil
+}
+
+func (b *FloatVertexBuffer) Delete() {
+	b.runInOpenGLContextThread(func() {
+		gl.DeleteBuffers(1, &b.id)
+	})
+	b.deleted = true
+}
+
+// TODO Finish this
+func (b *FloatVertexBuffer) Upload(offset int, data []float32) error {
+	if b.size < len(data) {
+		return errors.New("FloatVertexBuffer is to small to store data")
+	}
+	b.runInOpenGLContextThread(func() {
+		gl.BindBuffer(gl.ARRAY_BUFFER, b.id)
+		gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(data)*4, gl.Ptr(data))
+	})
+	return nil
+}
+
 // FragmentShader is a part of an OpenGL program which transforms each fragment
 // (pixel) color into another one
 type FragmentShader struct {
@@ -404,19 +466,19 @@ func (p *Program) AcceleratedCommand(command Command) (*AcceleratedCommand, erro
 }
 
 type Command interface {
-	RunGL(drawer *Drawer, selections []image.AcceleratedImageSelection) error
+	RunGL(renderer *Renderer, selections []image.AcceleratedImageSelection) error
 }
 
-type Drawer struct {
+type Renderer struct {
 	program *Program
 }
 
-func (d *Drawer) BindTexture(name string, image image.AcceleratedImage) {
+func (d *Renderer) BindTexture(name string, image image.AcceleratedImage) {
 	// bind texture
 	// gl.Uniform1i
 }
 
-func (d *Drawer) DrawTriangles() {
+func (d *Renderer) DrawTriangles() {
 	polygon := newScreenPolygon(d.program.vertexPositionLocation, d.program.texturePositionLocation)
 	polygon.draw()
 }
@@ -432,8 +494,8 @@ func (a *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selecti
 	a.runInOpenGLContextThread(func() {
 		// create FB, bind, use program
 		// set viewport
-		drawer := &Drawer{program: a.program}
-		err = a.command.RunGL(drawer, selections)
+		renderer := &Renderer{program: a.program}
+		err = a.command.RunGL(renderer, selections)
 		// save to texture
 	})
 	return err

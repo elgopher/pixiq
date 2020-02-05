@@ -582,7 +582,7 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 				require.NoError(t, err)
 				assert.Equal(t, 1, command.executionCount)
 				assert.Equal(t, test.selections, command.selections)
-				assert.NotNil(t, command.drawer)
+				assert.NotNil(t, command.renderer)
 			})
 		}
 	})
@@ -596,6 +596,120 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 		assert.Error(t, err)
 	})
 }
+
+func TestOpenGL_NewFloatVertexBuffer(t *testing.T) {
+	t.Run("should return error when size is negative", func(t *testing.T) {
+		tests := map[string]int{
+			"size -1": -1,
+			"size -2": -2,
+		}
+		for name, size := range tests {
+			t.Run(name, func(t *testing.T) {
+				openGL, _ := opengl.New(mainThreadLoop)
+				defer openGL.Destroy()
+				// when
+				buffer, err := openGL.NewFloatVertexBuffer(size)
+				// then
+				assert.Error(t, err)
+				assert.Nil(t, buffer)
+			})
+		}
+	})
+	t.Run("should create FloatVertexBuffer", func(t *testing.T) {
+		tests := map[string]int{
+			"size 0": 0,
+			"size 1": 1,
+		}
+		for name, size := range tests {
+			t.Run(name, func(t *testing.T) {
+				openGL, _ := opengl.New(mainThreadLoop)
+				defer openGL.Destroy()
+				// when
+				buffer, err := openGL.NewFloatVertexBuffer(size)
+				// then
+				require.NoError(t, err)
+				assert.NotNil(t, buffer)
+				// and
+				assert.Equal(t, size, buffer.Size())
+			})
+		}
+	})
+}
+
+func TestFloatVertexBuffer_Upload(t *testing.T) {
+	// TODO Finish this
+	t.Run("should return error when trying to upload slice bigger than size", func(t *testing.T) {
+		tests := map[string]struct {
+			size int
+			data []float32
+		}{
+			"size 0, data len 1": {
+				data: []float32{1},
+			},
+			"size 1, data len 2": {
+				data: []float32{1, 2},
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				openGL, _ := opengl.New(mainThreadLoop)
+				defer openGL.Destroy()
+				buffer, _ := openGL.NewFloatVertexBuffer(test.size)
+				// when
+				err := buffer.Upload(0, test.data)
+				assert.Error(t, err)
+			})
+		}
+	})
+	// TODO Finish this
+	t.Run("should upload data", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		buffer, _ := openGL.NewFloatVertexBuffer(1)
+		input := []float32{1}
+		// when
+		err := buffer.Upload(0, input)
+		// then
+		require.NoError(t, err)
+		// and
+		output := make([]float32, 1)
+		err = buffer.Download(0, output)
+		require.NoError(t, err)
+		assert.Equal(t, input, output)
+	})
+}
+
+//
+//func TestFloatVertexBuffer_Download(t *testing.T) {
+//	t.Run("should download data", func(t *testing.T) {
+//		tests := map[string][]float32{
+//			"1 element":  {1.0},
+//			"2 elements": {1.0, 2.0},
+//		}
+//		for name, data := range tests {
+//			t.Run(name, func(t *testing.T) {
+//				openGL, _ := opengl.New(mainThreadLoop)
+//				defer openGL.Destroy()
+//				buffer, _ := openGL.NewFloatVertexBuffer(data)
+//				// when
+//				output := make([]float32, len(data))
+//				err := buffer.Download(output)
+//				// then
+//				require.NoError(t, err)
+//				assert.Equal(t, data, output)
+//			})
+//		}
+//	})
+//	t.Run("should return error for deleted buffer", func(t *testing.T) {
+//		openGL, _ := opengl.New(mainThreadLoop)
+//		defer openGL.Destroy()
+//		buffer, _ := openGL.NewFloatVertexBuffer([]float32{1.0})
+//		buffer.Delete()
+//		// when
+//		err := buffer.Download(make([]float32, 1))
+//		assert.Error(t, err)
+//	})
+//}
 
 func workingProgram(openGL *opengl.OpenGL) *opengl.Program {
 	vertexShader, _ := openGL.CompileVertexShader(`
@@ -615,18 +729,18 @@ func workingProgram(openGL *opengl.OpenGL) *opengl.Program {
 type commandMock struct {
 	executionCount int
 	selections     []image.AcceleratedImageSelection
-	drawer         *opengl.Drawer
+	renderer       *opengl.Renderer
 }
 
-func (f *commandMock) RunGL(drawer *opengl.Drawer, selections []image.AcceleratedImageSelection) error {
+func (f *commandMock) RunGL(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
 	f.executionCount++
 	f.selections = selections
-	f.drawer = drawer
+	f.renderer = renderer
 	return nil
 }
 
 type failingCommand struct{}
 
-func (f *failingCommand) RunGL(drawer *opengl.Drawer, selections []image.AcceleratedImageSelection) error {
+func (f *failingCommand) RunGL(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
 	return errors.New("command failed")
 }

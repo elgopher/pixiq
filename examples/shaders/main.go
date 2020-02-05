@@ -30,6 +30,21 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
+		vertices := []float32{
+			-1, -1, 0, 1, // (x,y) -> (u,v), that is: vertexPosition -> texturePosition
+			1, -1, 1, 1,
+			1, 1, 1, 0,
+			-1, -1, 0, 1,
+			1, 1, 1, 0,
+			-1, 1, 0, 0,
+		}
+		buffer, err := gl.NewFloatVertexBuffer(len(vertices))
+		if err != nil {
+			panic(err)
+		}
+		if err := buffer.Upload(0, vertices); err != nil {
+			panic(err)
+		}
 		loop.Run(window, func(frame *loop.Frame) {
 			screen := frame.Screen()
 			if err := screen.Modify(cmd, screen); err != nil {
@@ -70,12 +85,12 @@ void main() {
 type command struct {
 }
 
-func (c command) RunGL(drawer *opengl.Drawer, selections []image.AcceleratedImageSelection) error {
+func (c command) RunGL(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
 	if len(selections) != 1 {
 		return errors.New("invalid number of selections")
 	}
-	drawer.BindTexture("tex", selections[0].Image)
-	drawer.DrawTriangles()
+	renderer.BindTexture("tex", selections[0].Image)
+	renderer.DrawTriangles()
 	// TODO Finish when OpenGL API is ready
 	return nil
 }
