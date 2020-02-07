@@ -637,17 +637,27 @@ func TestOpenGL_NewFloatVertexBuffer(t *testing.T) {
 }
 
 func TestFloatVertexBuffer_Upload(t *testing.T) {
-	// TODO Finish this
 	t.Run("should return error when trying to upload slice bigger than size", func(t *testing.T) {
 		tests := map[string]struct {
-			size int
-			data []float32
+			offset int
+			size   int
+			data   []float32
 		}{
-			"size 0, data len 1": {
+			"size 0, offset 0, data len 1": {
 				data: []float32{1},
 			},
-			"size 1, data len 2": {
+			"size 1, offset 0, data len 2": {
+				size: 1,
 				data: []float32{1, 2},
+			},
+			"size 0, offset 1, data len 1": {
+				offset: 1,
+				data:   []float32{1},
+			},
+			"size 1, offset 1, data len 1": {
+				size:   1,
+				offset: 1,
+				data:   []float32{1},
 			},
 		}
 		for name, test := range tests {
@@ -655,28 +665,61 @@ func TestFloatVertexBuffer_Upload(t *testing.T) {
 				openGL, _ := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
 				buffer, _ := openGL.NewFloatVertexBuffer(test.size)
+				defer buffer.Delete()
 				// when
-				err := buffer.Upload(0, test.data)
+				err := buffer.Upload(test.offset, test.data)
 				assert.Error(t, err)
 			})
 		}
 	})
-	// TODO Finish this
-	t.Run("should upload data", func(t *testing.T) {
+	t.Run("should return error when offset is negative", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
 		buffer, _ := openGL.NewFloatVertexBuffer(1)
-		input := []float32{1}
+		defer buffer.Delete()
 		// when
-		err := buffer.Upload(0, input)
-		// then
-		require.NoError(t, err)
-		// and
-		output := make([]float32, 1)
-		err = buffer.Download(0, output)
-		require.NoError(t, err)
-		assert.Equal(t, input, output)
+		err := buffer.Upload(-1, []float32{1})
+		assert.Error(t, err)
 	})
+	t.Run("should upload data", func(t *testing.T) {
+		tests := map[string]struct {
+			size     int
+			offset   int
+			input    []float32
+			expected []float32
+		}{
+			"offset 0": {
+				size:     1,
+				offset:   0,
+				input:    []float32{1},
+				expected: []float32{1},
+			},
+			"offset 1": {
+				size:     2,
+				offset:   1,
+				input:    []float32{1},
+				expected: []float32{0, 1},
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				openGL, _ := opengl.New(mainThreadLoop)
+				defer openGL.Destroy()
+				buffer, _ := openGL.NewFloatVertexBuffer(test.size)
+				defer buffer.Delete()
+				// when
+				err := buffer.Upload(test.offset, test.input)
+				// then
+				require.NoError(t, err)
+				// and
+				output := make([]float32, test.size)
+				err = buffer.Download(0, output)
+				require.NoError(t, err)
+				assert.InDeltaSlice(t, test.expected, output, 1e-36)
+			})
+		}
+	})
+
 }
 
 //
@@ -741,6 +784,6 @@ func (f *commandMock) RunGL(renderer *opengl.Renderer, selections []image.Accele
 
 type failingCommand struct{}
 
-func (f *failingCommand) RunGL(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
+func (f *failingCommand) RunGL(*opengl.Renderer, []image.AcceleratedImageSelection) error {
 	return errors.New("command failed")
 }

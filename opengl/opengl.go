@@ -423,14 +423,16 @@ func (b *FloatVertexBuffer) Delete() {
 	b.deleted = true
 }
 
-// TODO Finish this
 func (b *FloatVertexBuffer) Upload(offset int, data []float32) error {
-	if b.size < len(data) {
+	if offset < 0 {
+		return errors.New("negative offset")
+	}
+	if b.size < len(data)+offset {
 		return errors.New("FloatVertexBuffer is to small to store data")
 	}
 	b.runInOpenGLContextThread(func() {
 		gl.BindBuffer(gl.ARRAY_BUFFER, b.id)
-		gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(data)*4, gl.Ptr(data))
+		gl.BufferSubData(gl.ARRAY_BUFFER, offset*4, len(data)*4, gl.Ptr(data))
 	})
 	return nil
 }
