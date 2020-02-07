@@ -169,18 +169,18 @@ func (g *OpenGL) NewImage(width, height int) (*image.Image, error) {
 	if height < 0 {
 		return nil, errors.New("negative height")
 	}
-	acceleratedImage, err := g.NewTexture(width, height)
+	acceleratedImage, err := g.NewAcceleratedImage(width, height)
 	if err != nil {
 		return nil, err
 	}
 	return image.New(width, height, acceleratedImage)
 }
 
-// NewTexture returns an OpenGL-accelerated implementation of image.AcceleratedImage
+// NewAcceleratedImage returns an OpenGL-accelerated implementation of image.AcceleratedImage
 // Will return error if width or height are negative or image of these dimensions
 // cannot be created on a video card. (For instance when dimensions are not
 // a power of two)
-func (g *OpenGL) NewTexture(width, height int) (*Texture, error) {
+func (g *OpenGL) NewAcceleratedImage(width, height int) (*AcceleratedImage, error) {
 	if width < 0 {
 		return nil, errors.New("negative width")
 	}
@@ -213,7 +213,7 @@ func (g *OpenGL) NewTexture(width, height int) (*Texture, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Texture{
+	return &AcceleratedImage{
 		id:                       id,
 		width:                    width,
 		height:                   height,
@@ -221,21 +221,22 @@ func (g *OpenGL) NewTexture(width, height int) (*Texture, error) {
 	}, nil
 }
 
-// Texture is an image.AcceleratedImage implementation storing pixels
+// AcceleratedImage is an image.AcceleratedImage implementation storing pixels
 // on a video card VRAM.
-type Texture struct {
+type AcceleratedImage struct {
 	id                       uint32
 	width, height            int
 	runInOpenGLContextThread func(func())
 }
 
+// Deprecated
 // TextureID returns the ID of texture
-func (t *Texture) TextureID() uint32 {
+func (t *AcceleratedImage) TextureID() uint32 {
 	return t.id
 }
 
-// Upload send pixels to texture
-func (t *Texture) Upload(pixels []image.Color) {
+// Upload send pixels to video card
+func (t *AcceleratedImage) Upload(pixels []image.Color) {
 	if len(pixels) == 0 {
 		return
 	}
@@ -255,8 +256,8 @@ func (t *Texture) Upload(pixels []image.Color) {
 	})
 }
 
-// Download gets pixels pixels from texture
-func (t *Texture) Download(output []image.Color) {
+// Download gets pixels pixels from video card
+func (t *AcceleratedImage) Download(output []image.Color) {
 	if len(output) == 0 {
 		return
 	}
@@ -282,22 +283,22 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 	}
 	// FIXME: EventBuffer size should be configurable
 	keyboardEvents := internal.NewKeyboardEvents(keyboard.NewEventBuffer(32))
-	screenTexture, err := g.NewTexture(width, height)
+	screenAcceleratedImage, err := g.NewAcceleratedImage(width, height)
 	if err != nil {
 		return nil, err
 	}
-	screenImage, err := image.New(width, height, screenTexture)
+	screenImage, err := image.New(width, height, screenAcceleratedImage)
 	if err != nil {
 		return nil, err
 	}
 	win := &Window{
-		mainThreadLoop:  g.mainThreadLoop,
-		keyboardEvents:  keyboardEvents,
-		requestedWidth:  width,
-		requestedHeight: height,
-		screenTexture:   screenTexture,
-		screenImage:     screenImage,
-		zoom:            1,
+		mainThreadLoop:         g.mainThreadLoop,
+		keyboardEvents:         keyboardEvents,
+		requestedWidth:         width,
+		requestedHeight:        height,
+		screenAcceleratedImage: screenAcceleratedImage,
+		screenImage:            screenImage,
+		zoom:                   1,
 	}
 	g.mainThreadLoop.Execute(func() {
 		win.glfwWindow, err = createWindow(g.mainThreadLoop, g.mainWindow)
