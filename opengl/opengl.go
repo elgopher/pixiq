@@ -54,17 +54,17 @@ func New(mainThreadLoop *MainThreadLoop) (*OpenGL, error) {
 	if err != nil {
 		return nil, err
 	}
-	runInOpenGLContextThread := func(job func()) {
+	runInOpenGLThread := func(job func()) {
 		mainThreadLoop.Execute(func() {
 			mainThreadLoop.bind(mainWindow)
 			job()
 		})
 	}
 	openGL := &OpenGL{
-		mainThreadLoop:           mainThreadLoop,
-		runInOpenGLContextThread: runInOpenGLContextThread,
-		stopPollingEvents:        make(chan struct{}),
-		mainWindow:               mainWindow,
+		mainThreadLoop:    mainThreadLoop,
+		runInOpenGLThread: runInOpenGLThread,
+		stopPollingEvents: make(chan struct{}),
+		mainWindow:        mainWindow,
 	}
 	go openGL.startPollingEvents(openGL.stopPollingEvents)
 	return openGL, nil
@@ -114,10 +114,10 @@ func createWindow(mainThreadLoop *MainThreadLoop, share *glfw.Window) (*glfw.Win
 // OpenGL provides method for creating OpenGL-accelerated image.Image and opening
 // windows.
 type OpenGL struct {
-	mainThreadLoop           *MainThreadLoop
-	runInOpenGLContextThread func(func())
-	stopPollingEvents        chan struct{}
-	mainWindow               *glfw.Window
+	mainThreadLoop    *MainThreadLoop
+	runInOpenGLThread func(func())
+	stopPollingEvents chan struct{}
+	mainWindow        *glfw.Window
 }
 
 // Destroy cleans all the OpenGL resources associated with this instance.
@@ -126,7 +126,7 @@ type OpenGL struct {
 // OpenGL contexts.
 func (g *OpenGL) Destroy() {
 	g.stopPollingEvents <- struct{}{}
-	g.runInOpenGLContextThread(func() {
+	g.runInOpenGLThread(func() {
 		g.mainWindow.Destroy()
 	})
 }
@@ -189,7 +189,7 @@ func (g *OpenGL) NewAcceleratedImage(width, height int) (*AcceleratedImage, erro
 	}
 	var id uint32
 	var err error
-	g.runInOpenGLContextThread(func() {
+	g.runInOpenGLThread(func() {
 		gl.GenTextures(1, &id)
 		gl.BindTexture(gl.TEXTURE_2D, id)
 		gl.TexImage2D(
@@ -214,19 +214,19 @@ func (g *OpenGL) NewAcceleratedImage(width, height int) (*AcceleratedImage, erro
 		return nil, err
 	}
 	return &AcceleratedImage{
-		id:                       id,
-		width:                    width,
-		height:                   height,
-		runInOpenGLContextThread: g.runInOpenGLContextThread,
+		id:                id,
+		width:             width,
+		height:            height,
+		runInOpenGLThread: g.runInOpenGLThread,
 	}, nil
 }
 
 // AcceleratedImage is an image.AcceleratedImage implementation storing pixels
 // on a video card VRAM.
 type AcceleratedImage struct {
-	id                       uint32
-	width, height            int
-	runInOpenGLContextThread func(func())
+	id                uint32
+	width, height     int
+	runInOpenGLThread func(func())
 }
 
 // Deprecated
@@ -240,7 +240,7 @@ func (t *AcceleratedImage) Upload(pixels []image.Color) {
 	if len(pixels) == 0 {
 		return
 	}
-	t.runInOpenGLContextThread(func() {
+	t.runInOpenGLThread(func() {
 		gl.BindTexture(gl.TEXTURE_2D, t.id)
 		gl.TexSubImage2D(
 			gl.TEXTURE_2D,
@@ -261,7 +261,7 @@ func (t *AcceleratedImage) Download(output []image.Color) {
 	if len(output) == 0 {
 		return
 	}
-	t.runInOpenGLContextThread(func() {
+	t.runInOpenGLThread(func() {
 		gl.BindTexture(gl.TEXTURE_2D, t.id)
 		gl.GetTexImage(
 			gl.TEXTURE_2D,
@@ -333,7 +333,7 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 func (g *OpenGL) CompileFragmentShader(sourceCode string) (*FragmentShader, error) {
 	var shader *shader
 	var err error
-	g.runInOpenGLContextThread(func() {
+	g.runInOpenGLThread(func() {
 		shader, err = compileFragmentShader(sourceCode)
 	})
 	if err != nil {
@@ -346,7 +346,7 @@ func (g *OpenGL) CompileFragmentShader(sourceCode string) (*FragmentShader, erro
 func (g *OpenGL) CompileVertexShader(sourceCode string) (*VertexShader, error) {
 	var shader *shader
 	var err error
-	g.runInOpenGLContextThread(func() {
+	g.runInOpenGLThread(func() {
 		shader, err = compileVertexShader(sourceCode)
 	})
 	if err != nil {
@@ -366,45 +366,50 @@ func (g *OpenGL) LinkProgram(vertexShader *VertexShader, fragmentShader *Fragmen
 	}
 	var program *program
 	var err error
-	g.runInOpenGLContextThread(func() {
+	g.runInOpenGLThread(func() {
 		program, err = linkProgram(vertexShader.shader, fragmentShader.shader)
 	})
 	if err != nil {
 		return nil, err
 	}
-	return &Program{program: program, runInOpenGLContextThread: g.runInOpenGLContextThread}, err
+	return &Program{program: program, runInOpenGLThread: g.runInOpenGLThread}, err
 }
 
+// NewFloatVertexBuffer creates an OpenGL's Vertex Buffer Object (VBO) containing only float32 numbers.
 func (g *OpenGL) NewFloatVertexBuffer(size int) (*FloatVertexBuffer, error) {
 	if size < 0 {
 		return nil, errors.New("negative size")
 	}
 	var id uint32
-	g.runInOpenGLContextThread(func() {
+	g.runInOpenGLThread(func() {
 		gl.GenBuffers(1, &id)
 		gl.BindBuffer(gl.ARRAY_BUFFER, id)
 		gl.BufferData(gl.ARRAY_BUFFER, size*4, gl.Ptr(nil), gl.STATIC_DRAW)
 	})
 	vb := &FloatVertexBuffer{
-		id:                       id,
-		size:                     size,
-		runInOpenGLContextThread: g.runInOpenGLContextThread,
+		id:                id,
+		size:              size,
+		runInOpenGLThread: g.runInOpenGLThread,
 	}
 	runtime.SetFinalizer(vb, (*FloatVertexBuffer).Delete)
 	return vb, nil
 }
 
+// FloatVertexBuffer is a struct representing OpenGL's Vertex Buffer Object (VBO) containing only float32 numbers.
 type FloatVertexBuffer struct {
-	id                       uint32
-	size                     int
-	runInOpenGLContextThread func(func())
-	deleted                  bool
+	id                uint32
+	size              int
+	runInOpenGLThread func(func())
+	deleted           bool
 }
 
+// Size is the number of float values defined during creation time.
 func (b *FloatVertexBuffer) Size() int {
 	return b.size
 }
 
+// Download gets data starting at a given offset in VRAM and put them into slice. Whole output slice will be filled with data,
+// unless output slice is bigger then the vertex buffer.
 func (b *FloatVertexBuffer) Download(offset int, output []float32) error {
 	if b.deleted {
 		return errors.New("deleted buffer")
@@ -419,20 +424,26 @@ func (b *FloatVertexBuffer) Download(offset int, output []float32) error {
 	if size+offset > b.size {
 		size = b.size - offset
 	}
-	b.runInOpenGLContextThread(func() {
+	b.runInOpenGLThread(func() {
 		gl.BindBuffer(gl.ARRAY_BUFFER, b.id)
 		gl.GetBufferSubData(gl.ARRAY_BUFFER, offset*4, size*4, gl.Ptr(output))
 	})
 	return nil
 }
 
+// Delete should be called whenever you don't plan to use vertex buffer anymore. It is often not enough just passing the
+// object to the Garbage Collector. The reason is you never known when the GC will collect the trash and it might be too
+// late when it will.
 func (b *FloatVertexBuffer) Delete() {
-	b.runInOpenGLContextThread(func() {
+	b.runInOpenGLThread(func() {
 		gl.DeleteBuffers(1, &b.id)
 	})
 	b.deleted = true
 }
 
+// Upload sends data to the vertex buffer. All slice data will be inserted starting at a given offset position.
+//
+// Returns error when vertex buffer is too small to hold the data or offset is negative.
 func (b *FloatVertexBuffer) Upload(offset int, data []float32) error {
 	if offset < 0 {
 		return errors.New("negative offset")
@@ -440,7 +451,7 @@ func (b *FloatVertexBuffer) Upload(offset int, data []float32) error {
 	if b.size < len(data)+offset {
 		return errors.New("FloatVertexBuffer is to small to store data")
 	}
-	b.runInOpenGLContextThread(func() {
+	b.runInOpenGLThread(func() {
 		gl.BindBuffer(gl.ARRAY_BUFFER, b.id)
 		gl.BufferSubData(gl.ARRAY_BUFFER, offset*4, len(data)*4, gl.Ptr(data))
 	})
@@ -462,7 +473,7 @@ type VertexShader struct {
 // Program is shaders linked together
 type Program struct {
 	*program
-	runInOpenGLContextThread func(func())
+	runInOpenGLThread func(func())
 }
 
 func (p *Program) AcceleratedCommand(command Command) (*AcceleratedCommand, error) {
@@ -470,9 +481,9 @@ func (p *Program) AcceleratedCommand(command Command) (*AcceleratedCommand, erro
 		return nil, errors.New("nil command")
 	}
 	acceleratedCommand := &AcceleratedCommand{
-		command:                  command,
-		runInOpenGLContextThread: p.runInOpenGLContextThread,
-		program:                  p,
+		command:           command,
+		runInOpenGLThread: p.runInOpenGLThread,
+		program:           p,
 	}
 	return acceleratedCommand, nil
 }
@@ -496,14 +507,14 @@ func (d *Renderer) DrawTriangles() {
 }
 
 type AcceleratedCommand struct {
-	command                  Command
-	program                  *Program
-	runInOpenGLContextThread func(func())
+	command           Command
+	program           *Program
+	runInOpenGLThread func(func())
 }
 
 func (a *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selections []image.AcceleratedImageSelection) error {
 	var err error
-	a.runInOpenGLContextThread(func() {
+	a.runInOpenGLThread(func() {
 		// create FB, bind, use program
 		// set viewport
 		renderer := &Renderer{program: a.program}
