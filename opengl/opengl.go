@@ -228,8 +228,8 @@ type AcceleratedImage struct {
 	runInOpenGLThread func(func())
 }
 
-// Deprecated
 // TextureID returns the ID of texture
+// Deprecated - will be removed in next release
 func (t *AcceleratedImage) TextureID() uint32 {
 	return t.id
 }
@@ -390,7 +390,6 @@ func (g *OpenGL) NewFloatVertexBuffer(size int) (*FloatVertexBuffer, error) {
 		size:              size,
 		runInOpenGLThread: g.runInOpenGLThread,
 	}
-	//runtime.SetFinalizer(vb, (*FloatVertexBuffer).Delete)
 	return vb, nil
 }
 
@@ -430,7 +429,8 @@ func (b *FloatVertexBuffer) Download(offset int, output []float32) error {
 	return nil
 }
 
-// Delete should be called whenever you don't plan to use vertex buffer anymore.
+// Delete should be called whenever you don't plan to use vertex buffer anymore. Vertex Buffer is external resource
+// (like file for example) and must be deleted manually
 func (b *FloatVertexBuffer) Delete() {
 	b.runInOpenGLThread(func() {
 		gl.DeleteBuffers(1, &b.id)
@@ -491,6 +491,7 @@ func (p *Program) AcceleratedCommand(command Command) (*AcceleratedCommand, erro
 }
 
 type Command interface {
+	// Implementations must not retain renderer and selections.
 	RunGL(renderer *Renderer, selections []image.AcceleratedImageSelection) error
 }
 
@@ -508,6 +509,7 @@ func (d *Renderer) DrawTriangles() {
 	polygon.draw()
 }
 
+// AcceleratedCommand is an image.AcceleratedCommand implementation.
 type AcceleratedCommand struct {
 	command           Command
 	program           *Program
@@ -516,13 +518,11 @@ type AcceleratedCommand struct {
 
 func (a *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selections []image.AcceleratedImageSelection) error {
 	var err error
-	a.runInOpenGLThread(func() {
-		// create FB, bind, use program
-		// set viewport
-		renderer := &Renderer{program: a.program}
-		err = a.command.RunGL(renderer, selections)
-		// save to texture
-	})
+	// create FB, bind, use program
+	// set viewport
+	renderer := &Renderer{program: a.program}
+	err = a.command.RunGL(renderer, selections)
+	// save to texture
 	return err
 }
 

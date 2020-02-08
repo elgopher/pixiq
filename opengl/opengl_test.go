@@ -595,6 +595,22 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 		err := command.Run(image.AcceleratedImageSelection{}, []image.AcceleratedImageSelection{})
 		assert.Error(t, err)
 	})
+	t.Run("vertex buffer can be used inside command", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		program := workingProgram(openGL)
+		command, _ := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
+			buffer, err := openGL.NewFloatVertexBuffer(1)
+			require.NoError(t, err)
+			values := []float32{1}
+			require.NoError(t, buffer.Upload(0, values))
+			require.NoError(t, buffer.Download(0, values))
+			buffer.Delete()
+			return nil
+		}})
+		// when
+		_ = command.Run(image.AcceleratedImageSelection{}, []image.AcceleratedImageSelection{})
+	})
 }
 
 func TestOpenGL_NewFloatVertexBuffer(t *testing.T) {
@@ -833,4 +849,13 @@ type failingCommand struct{}
 
 func (f *failingCommand) RunGL(*opengl.Renderer, []image.AcceleratedImageSelection) error {
 	return errors.New("command failed")
+}
+
+type command struct {
+	runGL func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error
+}
+
+func (c *command) RunGL(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
+	return c.runGL(renderer, selections)
+
 }
