@@ -26,10 +26,6 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		cmd, err := program.AcceleratedCommand(&command{})
-		if err != nil {
-			panic(err)
-		}
 		vertices := []float32{
 			-1, -1, 0, 1, // (x,y) -> (u,v), that is: vertexPosition -> texturePosition
 			1, -1, 1, 1,
@@ -45,6 +41,30 @@ func main() {
 		if err := buffer.Upload(0, vertices); err != nil {
 			panic(err)
 		}
+		array, err := gl.NewVertexArray(opengl.VertexLayout{opengl.Float2, opengl.Float2})
+		if err != nil {
+			panic(err)
+		}
+		xy := opengl.VertexBufferPointer{
+			Stride: 0,
+			Offset: 4,
+			Buffer: buffer,
+		}
+		if err := array.Set(0, xy); err != nil {
+			panic(err)
+		}
+		uv := opengl.VertexBufferPointer{
+			Stride: 2,
+			Offset: 4,
+			Buffer: buffer,
+		}
+		if err := array.Set(1, uv); err != nil {
+			panic(err)
+		}
+		cmd, err := program.AcceleratedCommand(&command{vertexArray: array})
+		if err != nil {
+			panic(err)
+		}
 		loop.Run(window, func(frame *loop.Frame) {
 			screen := frame.Screen()
 			if err := screen.Modify(cmd, screen); err != nil {
@@ -57,8 +77,8 @@ func main() {
 const vertexShaderSrc = `
 #version 330 core
 
-in vec2 vertexPosition;
-in vec2 texturePosition;
+layout(location = 0) in vec2 vertexPosition;
+layout(location = 1) in vec2 texturePosition;
 
 out vec2 position;
 
@@ -83,6 +103,7 @@ void main() {
 `
 
 type command struct {
+	vertexArray *opengl.VertexArray
 }
 
 func (c command) RunGL(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
@@ -90,7 +111,7 @@ func (c command) RunGL(renderer *opengl.Renderer, selections []image.Accelerated
 		return errors.New("invalid number of selections")
 	}
 	renderer.BindTexture("tex", selections[0].Image)
-	renderer.DrawTriangles()
+	renderer.DrawArrays(c.vertexArray) // +mode, +first, +count
 	// TODO Finish when OpenGL API is ready
 	return nil
 }

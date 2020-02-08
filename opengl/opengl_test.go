@@ -817,6 +817,162 @@ func TestFloatVertexBuffer_Download(t *testing.T) {
 	})
 }
 
+func TestOpenGL_NewVertexArray(t *testing.T) {
+	t.Run("should return error", func(t *testing.T) {
+		tests := map[string]struct {
+			layout opengl.VertexLayout
+		}{
+			"nil layout": {
+				layout: nil,
+			},
+			"empty layout": {
+				layout: opengl.VertexLayout{},
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				openGL, _ := opengl.New(mainThreadLoop)
+				defer openGL.Destroy()
+				// when
+				vao, err := openGL.NewVertexArray(test.layout)
+				// then
+				assert.Error(t, err)
+				assert.Nil(t, vao)
+			})
+		}
+	})
+	t.Run("should create vertex array", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		// when
+		vao, err := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float})
+		// then
+		require.NoError(t, err)
+		assert.NotNil(t, vao)
+		// cleanup
+		vao.Delete()
+	})
+}
+
+func TestVertexArray_Set(t *testing.T) {
+	t.Run("should return error when offset is negative", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		vao, _ := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float})
+		defer vao.Delete()
+		buffer, _ := openGL.NewFloatVertexBuffer(1)
+		defer buffer.Delete()
+		pointer := opengl.VertexBufferPointer{
+			Buffer: buffer,
+			Offset: -1,
+			Stride: 1,
+		}
+		// when
+		err := vao.Set(0, pointer)
+		// then
+		assert.Error(t, err)
+	})
+	t.Run("should return error when stride is negative", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		vao, _ := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float})
+		defer vao.Delete()
+		buffer, _ := openGL.NewFloatVertexBuffer(1)
+		defer buffer.Delete()
+		pointer := opengl.VertexBufferPointer{
+			Buffer: buffer,
+			Offset: 0,
+			Stride: -1,
+		}
+		// when
+		err := vao.Set(0, pointer)
+		// then
+		assert.Error(t, err)
+	})
+	t.Run("should return error when location is negative", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		vao, _ := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float})
+		defer vao.Delete()
+		buffer, _ := openGL.NewFloatVertexBuffer(1)
+		defer buffer.Delete()
+		pointer := opengl.VertexBufferPointer{
+			Buffer: buffer,
+			Offset: 0,
+			Stride: 1,
+		}
+		// when
+		err := vao.Set(-1, pointer)
+		// then
+		assert.Error(t, err)
+	})
+	t.Run("should return error when location is higher than number of arguments", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		vao, _ := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float})
+		defer vao.Delete()
+		buffer, _ := openGL.NewFloatVertexBuffer(1)
+		defer buffer.Delete()
+		pointer := opengl.VertexBufferPointer{
+			Buffer: buffer,
+			Offset: 0,
+			Stride: 1,
+		}
+		// when
+		err := vao.Set(1, pointer)
+		// then
+		assert.Error(t, err)
+	})
+	t.Run("should return error when buffer is nil", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		vao, _ := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float})
+		defer vao.Delete()
+		pointer := opengl.VertexBufferPointer{
+			Buffer: nil,
+			Offset: 0,
+			Stride: 1,
+		}
+		// when
+		err := vao.Set(0, pointer)
+		// then
+		assert.Error(t, err)
+	})
+	t.Run("should return error when buffer was not created by context", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		vao, _ := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float})
+		defer vao.Delete()
+		vertexBufferNotCreatedInContext := &opengl.FloatVertexBuffer{}
+		pointer := opengl.VertexBufferPointer{
+			Buffer: vertexBufferNotCreatedInContext,
+			Offset: 0,
+			Stride: 1,
+		}
+		// when
+		err := vao.Set(0, pointer)
+		// then
+		assert.Error(t, err)
+	})
+	t.Run("should set", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		vao, _ := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float})
+		defer vao.Delete()
+		buffer, _ := openGL.NewFloatVertexBuffer(1)
+		defer buffer.Delete()
+		pointer := opengl.VertexBufferPointer{
+			Buffer: buffer,
+			Offset: 0,
+			Stride: 1,
+		}
+		// when
+		err := vao.Set(0, pointer)
+		// then
+		assert.NoError(t, err)
+	})
+}
+
 func workingProgram(openGL *opengl.OpenGL) *opengl.Program {
 	vertexShader, _ := openGL.CompileVertexShader(`
 								#version 330 core

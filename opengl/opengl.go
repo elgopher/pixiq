@@ -64,6 +64,7 @@ func New(mainThreadLoop *MainThreadLoop) (*OpenGL, error) {
 		runInOpenGLThread: runInOpenGLThread,
 		stopPollingEvents: make(chan struct{}),
 		mainWindow:        mainWindow,
+		vertexBufferIDs:   map[*FloatVertexBuffer]uint32{},
 	}
 	go openGL.startPollingEvents(openGL.stopPollingEvents)
 	return openGL, nil
@@ -117,6 +118,7 @@ type OpenGL struct {
 	runInOpenGLThread func(func())
 	stopPollingEvents chan struct{}
 	mainWindow        *glfw.Window
+	vertexBufferIDs   map[*FloatVertexBuffer]uint32
 }
 
 // Destroy cleans all the OpenGL resources associated with this instance.
@@ -383,14 +385,94 @@ func (g *OpenGL) NewFloatVertexBuffer(size int) (*FloatVertexBuffer, error) {
 	g.runInOpenGLThread(func() {
 		gl.GenBuffers(1, &id)
 		gl.BindBuffer(gl.ARRAY_BUFFER, id)
-		gl.BufferData(gl.ARRAY_BUFFER, size*4, gl.Ptr(nil), gl.STATIC_DRAW)
+		gl.BufferData(gl.ARRAY_BUFFER, size*4, gl.Ptr(nil), gl.STATIC_DRAW) // FIXME: Parametrize usage
 	})
 	vb := &FloatVertexBuffer{
 		id:                id,
 		size:              size,
 		runInOpenGLThread: g.runInOpenGLThread,
 	}
+	g.vertexBufferIDs[vb] = id
 	return vb, nil
+}
+
+type VertexLayout []Type
+
+type Type struct {
+	components int32
+	xtype      uint32
+}
+
+var (
+	Float  = Type{components: 1, xtype: gl.FLOAT}
+	Float2 = Type{components: 2, xtype: gl.FLOAT}
+)
+
+func (g *OpenGL) NewVertexArray(layout VertexLayout) (*VertexArray, error) {
+	if len(layout) == 0 {
+		return nil, errors.New("empty layout")
+	}
+	var id uint32
+	g.runInOpenGLThread(func() {
+		// TODO: not tested at all
+		gl.GenVertexArrays(1, &id)
+		for i := 0; i < len(layout); i++ {
+			gl.EnableVertexAttribArray(uint32(i))
+		}
+	})
+	return &VertexArray{
+		id:                id,
+		layout:            layout,
+		runInOpenGLThread: g.runInOpenGLThread,
+		vertexBufferIDs:   g.vertexBufferIDs,
+	}, nil
+}
+
+type VertexArray struct {
+	id                uint32
+	runInOpenGLThread func(func())
+	layout            VertexLayout
+	vertexBufferIDs   map[*FloatVertexBuffer]uint32
+}
+
+func (a *VertexArray) Delete() {
+}
+
+type VertexBufferPointer struct {
+	Buffer *FloatVertexBuffer
+	Offset int
+	Stride int
+}
+
+func (a *VertexArray) Set(location int, pointer VertexBufferPointer) error {
+	if pointer.Offset < 0 {
+		return errors.New("negative pointer offset")
+	}
+	if pointer.Stride < 0 {
+		return errors.New("negative pointer stride")
+	}
+	if pointer.Buffer == nil {
+		return errors.New("nil pointer buffer")
+	}
+	if location < 0 {
+		return errors.New("negative location")
+	}
+	if location >= len(a.layout) {
+		return errors.New("location out-of-bounds")
+	}
+	bufferId, ok := a.vertexBufferIDs[pointer.Buffer]
+	if !ok {
+		return errors.New("vertex buffer has not been created in this context")
+	}
+	a.runInOpenGLThread(func() {
+		// TODO: not tested at all
+		gl.BindVertexArray(a.id)
+		gl.BindBuffer(gl.ARRAY_BUFFER, bufferId)
+		typ := a.layout[location]
+		components := typ.components
+		gl.VertexAttribPointer(uint32(location), components, typ.xtype, false, int32(pointer.Stride*4), gl.PtrOffset(int(components*4)))
+	})
+	return nil
 }
 
 // FloatVertexBuffer is a struct representing OpenGL's Vertex Buffer Object (VBO) containing only float32 numbers.
@@ -504,9 +586,7 @@ func (d *Renderer) BindTexture(name string, image image.AcceleratedImage) {
 	// gl.Uniform1i
 }
 
-func (d *Renderer) DrawTriangles() {
-	polygon := newScreenPolygon(d.program.vertexPositionLocation, d.program.texturePositionLocation)
-	polygon.draw()
+func (d *Renderer) DrawArrays(array *VertexArray) {
 }
 
 // AcceleratedCommand is an image.AcceleratedCommand implementation.
