@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"runtime"
 	"time"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
@@ -391,7 +390,7 @@ func (g *OpenGL) NewFloatVertexBuffer(size int) (*FloatVertexBuffer, error) {
 		size:              size,
 		runInOpenGLThread: g.runInOpenGLThread,
 	}
-	runtime.SetFinalizer(vb, (*FloatVertexBuffer).Delete)
+	//runtime.SetFinalizer(vb, (*FloatVertexBuffer).Delete)
 	return vb, nil
 }
 
@@ -431,9 +430,7 @@ func (b *FloatVertexBuffer) Download(offset int, output []float32) error {
 	return nil
 }
 
-// Delete should be called whenever you don't plan to use vertex buffer anymore. It is often not enough just passing the
-// object to the Garbage Collector. The reason is you never known when the GC will collect the trash and it might be too
-// late when it will.
+// Delete should be called whenever you don't plan to use vertex buffer anymore.
 func (b *FloatVertexBuffer) Delete() {
 	b.runInOpenGLThread(func() {
 		gl.DeleteBuffers(1, &b.id)
@@ -451,11 +448,16 @@ func (b *FloatVertexBuffer) Upload(offset int, data []float32) error {
 	if b.size < len(data)+offset {
 		return errors.New("FloatVertexBuffer is to small to store data")
 	}
+	var err error
 	b.runInOpenGLThread(func() {
 		gl.BindBuffer(gl.ARRAY_BUFFER, b.id)
 		gl.BufferSubData(gl.ARRAY_BUFFER, offset*4, len(data)*4, gl.Ptr(data))
+		e := gl.GetError()
+		if e != gl.NO_ERROR {
+			err = fmt.Errorf("gl error: %d", e)
+		}
 	})
-	return nil
+	return err
 }
 
 // FragmentShader is a part of an OpenGL program which transforms each fragment

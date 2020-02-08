@@ -715,7 +715,7 @@ func TestFloatVertexBuffer_Upload(t *testing.T) {
 				output := make([]float32, test.size)
 				err = buffer.Download(0, output)
 				require.NoError(t, err)
-				assert.InDeltaSlice(t, test.expected, output, 1e-11)
+				assert.InDeltaSlice(t, test.expected, output, 1e-35)
 			})
 		}
 	})
@@ -789,7 +789,7 @@ func TestFloatVertexBuffer_Download(t *testing.T) {
 				err := buffer.Download(test.offset, test.output)
 				// then
 				require.NoError(t, err)
-				assert.InDeltaSlice(t, test.expectedOutput, test.output, 1e-11)
+				assert.InDeltaSlice(t, test.expectedOutput, test.output, 1e-35)
 			})
 		}
 	})
