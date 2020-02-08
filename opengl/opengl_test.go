@@ -611,6 +611,76 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 		// when
 		_ = command.Run(image.AcceleratedImageSelection{}, []image.AcceleratedImageSelection{})
 	})
+	t.Run("vertex array can be used inside command", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		program := workingProgram(openGL)
+		command, _ := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
+			array, err := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float})
+			require.NoError(t, err)
+			defer array.Delete()
+			buffer, _ := openGL.NewFloatVertexBuffer(1)
+			defer buffer.Delete()
+			err = array.Set(0, opengl.VertexBufferPointer{
+				Buffer: buffer,
+				Offset: 0,
+				Stride: 1,
+			})
+			require.NoError(t, err)
+			return nil
+		}})
+		// when
+		_ = command.Run(image.AcceleratedImageSelection{}, []image.AcceleratedImageSelection{})
+	})
+	t.Run("can't bind texture without name", func(t *testing.T) {
+		names := []string{"", " ", "  ", "\n", "\t"}
+		for _, name := range names {
+			t.Run(name, func(t *testing.T) {
+				openGL, _ := opengl.New(mainThreadLoop)
+				defer openGL.Destroy()
+				img, _ := openGL.NewAcceleratedImage(1, 1)
+				program := workingProgram(openGL)
+				command, _ := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
+					return renderer.BindTexture(name, img)
+				}})
+				// when
+				err := command.Run(image.AcceleratedImageSelection{}, []image.AcceleratedImageSelection{})
+				// then
+				assert.Error(t, err)
+			})
+		}
+	})
+	t.Run("can't bind texture not specified in program", func(t *testing.T) {
+		names := []string{"foo", "bar"}
+		for _, name := range names {
+			t.Run(name, func(t *testing.T) {
+				openGL, _ := opengl.New(mainThreadLoop)
+				defer openGL.Destroy()
+				img, _ := openGL.NewAcceleratedImage(1, 1)
+				program := workingProgram(openGL)
+				command, _ := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
+					return renderer.BindTexture(name, img)
+				}})
+				// when
+				err := command.Run(image.AcceleratedImageSelection{}, []image.AcceleratedImageSelection{})
+				// then
+				assert.Error(t, err)
+			})
+		}
+	})
+	t.Run("can bind texture", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		img, _ := openGL.NewAcceleratedImage(1, 1)
+		program := workingProgram(openGL)
+		command, _ := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
+			return renderer.BindTexture("vertexPosition", img)
+		}})
+		// when
+		err := command.Run(image.AcceleratedImageSelection{}, []image.AcceleratedImageSelection{})
+		// then
+		assert.NoError(t, err)
+	})
 }
 
 func TestOpenGL_NewFloatVertexBuffer(t *testing.T) {
@@ -976,6 +1046,7 @@ func TestVertexArray_Set(t *testing.T) {
 func workingProgram(openGL *opengl.OpenGL) *opengl.Program {
 	vertexShader, _ := openGL.CompileVertexShader(`
 								#version 330 core
+								layout(location = 0) in vec2 vertexPosition;
 								void main() {
 									gl_Position = vec4(0., 0., 0., 0.);
 								}

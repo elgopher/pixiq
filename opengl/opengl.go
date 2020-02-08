@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
@@ -373,7 +374,11 @@ func (g *OpenGL) LinkProgram(vertexShader *VertexShader, fragmentShader *Fragmen
 	if err != nil {
 		return nil, err
 	}
-	return &Program{program: program, runInOpenGLThread: g.runInOpenGLThread}, err
+	return &Program{
+		program:           program,
+		runInOpenGLThread: g.runInOpenGLThread,
+		uniformNames:      program.uniformNames(),
+	}, err
 }
 
 // NewFloatVertexBuffer creates an OpenGL's Vertex Buffer Object (VBO) containing only float32 numbers.
@@ -406,6 +411,8 @@ type Type struct {
 var (
 	Float  = Type{components: 1, xtype: gl.FLOAT}
 	Float2 = Type{components: 2, xtype: gl.FLOAT}
+	Float3 = Type{components: 3, xtype: gl.FLOAT}
+	Float4 = Type{components: 4, xtype: gl.FLOAT}
 )
 
 func (g *OpenGL) NewVertexArray(layout VertexLayout) (*VertexArray, error) {
@@ -557,6 +564,7 @@ type VertexShader struct {
 // Program is shaders linked together
 type Program struct {
 	*program
+	uniformNames      map[string]int32
 	runInOpenGLThread func(func())
 }
 
@@ -564,6 +572,7 @@ func (p *Program) AcceleratedCommand(command Command) (*AcceleratedCommand, erro
 	if command == nil {
 		return nil, errors.New("nil command")
 	}
+
 	acceleratedCommand := &AcceleratedCommand{
 		command:           command,
 		runInOpenGLThread: p.runInOpenGLThread,
@@ -572,21 +581,55 @@ func (p *Program) AcceleratedCommand(command Command) (*AcceleratedCommand, erro
 	return acceleratedCommand, nil
 }
 
+func (p *Program) attributeLocation(name string) (int32, error) {
+	location, ok := p.uniformNames[name]
+	if !ok {
+		return 0, errors.New("not exiting uniform attribute name")
+	}
+	return location, nil
+}
+
 type Command interface {
 	// Implementations must not retain renderer and selections.
 	RunGL(renderer *Renderer, selections []image.AcceleratedImageSelection) error
 }
 
 type Renderer struct {
-	program *Program
+	program           *Program
+	runInOpenGLThread func(func())
 }
 
-func (d *Renderer) BindTexture(name string, image image.AcceleratedImage) {
+func (r *Renderer) BindTexture(name string, image image.AcceleratedImage) error {
+	trimmed := strings.TrimSpace(name)
+	if trimmed == "" {
+		return errors.New("empty texture name")
+	}
+	_, err := r.program.attributeLocation(name)
+	if err != nil {
+		return err
+	}
+	// check if image exists in context
+	r.runInOpenGLThread(func() {
+	})
 	// bind texture
 	// gl.Uniform1i
+	return nil
 }
 
-func (d *Renderer) DrawArrays(array *VertexArray) {
+type Mode struct {
+	glMode uint32
+}
+
+var Triangles = Mode{
+	glMode: gl.TRIANGLES,
+}
+
+func (r *Renderer) DrawArrays(array *VertexArray, mode Mode, first, count int) {
+	r.runInOpenGLThread(func() {
+		// TODO: Not tested at all
+		gl.BindVertexArray(array.id)
+		gl.DrawArrays(mode.glMode, int32(first), int32(count))
+	})
 }
 
 // AcceleratedCommand is an image.AcceleratedCommand implementation.
@@ -600,7 +643,7 @@ func (a *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selecti
 	var err error
 	// create FB, bind, use program
 	// set viewport
-	renderer := &Renderer{program: a.program}
+	renderer := &Renderer{program: a.program, runInOpenGLThread: a.runInOpenGLThread}
 	err = a.command.RunGL(renderer, selections)
 	// save to texture
 	return err
