@@ -54,12 +54,10 @@ func linkProgram(shaders ...*shader) (*program, error) {
 		}
 		return nil, fmt.Errorf("error linking program: %s", string(infoLog))
 	}
-	vertePositionLocation := gl.GetAttribLocation(programID, gl.Str("vertexPosition\x00"))
-	texturePositionLocation := gl.GetAttribLocation(programID, gl.Str("texturePosition\x00"))
 	return &program{
 		id:                      programID,
-		vertexPositionLocation:  vertePositionLocation,
-		texturePositionLocation: texturePositionLocation,
+		vertexPositionLocation:  0,
+		texturePositionLocation: 1,
 	}, nil
 }
 
@@ -106,8 +104,8 @@ func (s *shader) delete() {
 const vertexShaderSrc = `
 #version 330 core
 
-in vec2 vertexPosition;
-in vec2 texturePosition;
+layout(location = 0) in vec2 vertexPosition;
+layout(location = 1) in vec2 texturePosition;
 
 out vec2 position;
 
