@@ -405,14 +405,23 @@ func (b *FloatVertexBuffer) Size() int {
 	return b.size
 }
 
-// TODO Finish this
 func (b *FloatVertexBuffer) Download(offset int, output []float32) error {
 	if b.deleted {
 		return errors.New("deleted buffer")
 	}
+	if offset < 0 {
+		return errors.New("negative offset")
+	}
+	if len(output) == 0 {
+		return nil
+	}
+	size := len(output)
+	if size+offset > b.size {
+		size = b.size - offset
+	}
 	b.runInOpenGLContextThread(func() {
 		gl.BindBuffer(gl.ARRAY_BUFFER, b.id)
-		gl.GetBufferSubData(gl.ARRAY_BUFFER, 0, len(output)*4, gl.Ptr(output))
+		gl.GetBufferSubData(gl.ARRAY_BUFFER, offset*4, size*4, gl.Ptr(output))
 	})
 	return nil
 }

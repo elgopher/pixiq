@@ -722,37 +722,78 @@ func TestFloatVertexBuffer_Upload(t *testing.T) {
 
 }
 
-//
-//func TestFloatVertexBuffer_Download(t *testing.T) {
-//	t.Run("should download data", func(t *testing.T) {
-//		tests := map[string][]float32{
-//			"1 element":  {1.0},
-//			"2 elements": {1.0, 2.0},
-//		}
-//		for name, data := range tests {
-//			t.Run(name, func(t *testing.T) {
-//				openGL, _ := opengl.New(mainThreadLoop)
-//				defer openGL.Destroy()
-//				buffer, _ := openGL.NewFloatVertexBuffer(data)
-//				// when
-//				output := make([]float32, len(data))
-//				err := buffer.Download(output)
-//				// then
-//				require.NoError(t, err)
-//				assert.Equal(t, data, output)
-//			})
-//		}
-//	})
-//	t.Run("should return error for deleted buffer", func(t *testing.T) {
-//		openGL, _ := opengl.New(mainThreadLoop)
-//		defer openGL.Destroy()
-//		buffer, _ := openGL.NewFloatVertexBuffer([]float32{1.0})
-//		buffer.Delete()
-//		// when
-//		err := buffer.Download(make([]float32, 1))
-//		assert.Error(t, err)
-//	})
-//}
+func TestFloatVertexBuffer_Download(t *testing.T) {
+	t.Run("should return error when offset is negative", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		buffer, _ := openGL.NewFloatVertexBuffer(1)
+		defer buffer.Delete()
+		output := make([]float32, 1)
+		// when
+		err := buffer.Download(-1, output)
+		assert.Error(t, err)
+	})
+	t.Run("should download data", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		tests := map[string]struct {
+			input          []float32
+			offset         int
+			output         []float32
+			expectedOutput []float32
+		}{
+			"empty output slice": {
+				input:          []float32{1},
+				output:         make([]float32, 0),
+				expectedOutput: []float32{},
+			},
+			"nil output slice": {
+				input:          []float32{1},
+				output:         nil,
+				expectedOutput: nil,
+			},
+			"one element slice": {
+				input:          []float32{1},
+				output:         make([]float32, 1),
+				expectedOutput: []float32{1},
+			},
+			"two elements slice": {
+				input:          []float32{1, 2},
+				output:         make([]float32, 2),
+				expectedOutput: []float32{1, 2},
+			},
+			"output slice bigger than buffer": {
+				input:          []float32{1},
+				output:         make([]float32, 2),
+				expectedOutput: []float32{1, 0},
+			},
+			"offset: 1": {
+				offset:         1,
+				input:          []float32{1, 2},
+				output:         make([]float32, 1),
+				expectedOutput: []float32{2},
+			},
+			"output slice bigger than remaining buffer": {
+				offset:         1,
+				input:          []float32{1, 2},
+				output:         make([]float32, 2),
+				expectedOutput: []float32{2, 0},
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				buffer, _ := openGL.NewFloatVertexBuffer(len(test.input))
+				defer buffer.Delete()
+				_ = buffer.Upload(0, test.input)
+				// when
+				err := buffer.Download(test.offset, test.output)
+				// then
+				require.NoError(t, err)
+				assert.InDeltaSlice(t, test.expectedOutput, test.output, 1e-35)
+			})
+		}
+	})
+}
 
 func workingProgram(openGL *opengl.OpenGL) *opengl.Program {
 	vertexShader, _ := openGL.CompileVertexShader(`
