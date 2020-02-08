@@ -694,11 +694,17 @@ func TestFloatVertexBuffer_Upload(t *testing.T) {
 				input:    []float32{1},
 				expected: []float32{1},
 			},
+			"offset 0, size 2": {
+				size:     2,
+				offset:   0,
+				input:    []float32{1, 2},
+				expected: []float32{1, 2},
+			},
 			"offset 1": {
 				size:     2,
 				offset:   1,
 				input:    []float32{1},
-				expected: []float32{0, 1},
+				expected: []float32{1},
 			},
 		}
 		for name, test := range tests {
@@ -712,8 +718,8 @@ func TestFloatVertexBuffer_Upload(t *testing.T) {
 				// then
 				require.NoError(t, err)
 				// and
-				output := make([]float32, test.size)
-				err = buffer.Download(0, output)
+				output := make([]float32, len(test.expected))
+				err = buffer.Download(test.offset, output)
 				require.NoError(t, err)
 				assert.InDeltaSlice(t, test.expected, output, 1e-35)
 			})
