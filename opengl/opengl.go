@@ -371,7 +371,9 @@ func (g *OpenGL) LinkProgram(vertexShader *VertexShader, fragmentShader *Fragmen
 	var uniformNames = map[string]int32{}
 	g.runInOpenGLThread(func() {
 		program, err = linkProgram(vertexShader.shader, fragmentShader.shader)
-		uniformNames = program.uniformNames()
+		if err == nil {
+			uniformNames = program.uniformNames()
+		}
 	})
 	if err != nil {
 		return nil, err
