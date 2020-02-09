@@ -607,21 +607,21 @@ type Renderer struct {
 	textureIDs        textureIDs
 }
 
-func (r *Renderer) BindTexture(textureUnit int, uniformName string, image image.AcceleratedImage) error {
+func (r *Renderer) BindTexture(textureUnit int, uniformAttributeName string, image image.AcceleratedImage) error {
 	if textureUnit < 0 {
 		return errors.New("negative textureUnit")
 	}
-	trimmed := strings.TrimSpace(uniformName)
+	trimmed := strings.TrimSpace(uniformAttributeName)
 	if trimmed == "" {
-		return errors.New("empty texture uniformName")
+		return errors.New("empty uniformAttributeName")
 	}
-	textureLocation, err := r.program.uniformAttributeLocation(uniformName)
+	textureLocation, err := r.program.uniformAttributeLocation(uniformAttributeName)
 	if err != nil {
 		return err
 	}
 	textureID, ok := r.textureIDs[image]
 	if !ok {
-		return errors.New("AcceleratedImage has not been created in this OpenGL context")
+		return errors.New("image has not been created in this OpenGL context")
 	}
 	r.runInOpenGLThread(func() {
 		// TODO: not tested at all
