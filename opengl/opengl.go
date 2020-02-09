@@ -372,11 +372,11 @@ func (g *OpenGL) LinkProgram(vertexShader *VertexShader, fragmentShader *Fragmen
 	}
 	var program *program
 	var err error
-	var uniformNames = map[string]int32{}
+	var uniformLocations = map[string]int32{}
 	g.runInOpenGLThread(func() {
 		program, err = linkProgram(vertexShader.shader, fragmentShader.shader)
 		if err == nil {
-			uniformNames = program.uniformNames()
+			uniformLocations = program.uniformAttributeLocations()
 		}
 	})
 	if err != nil {
@@ -385,7 +385,7 @@ func (g *OpenGL) LinkProgram(vertexShader *VertexShader, fragmentShader *Fragmen
 	return &Program{
 		program:           program,
 		runInOpenGLThread: g.runInOpenGLThread,
-		uniformNames:      uniformNames,
+		uniformLocations:  uniformLocations,
 		textureIDs:        g.textureIDs,
 	}, err
 }
@@ -569,7 +569,7 @@ type VertexShader struct {
 // Program is shaders linked together
 type Program struct {
 	*program
-	uniformNames      map[string]int32
+	uniformLocations  map[string]int32
 	runInOpenGLThread func(func())
 	textureIDs        textureIDs
 }
@@ -588,8 +588,8 @@ func (p *Program) AcceleratedCommand(command Command) (*AcceleratedCommand, erro
 	return acceleratedCommand, nil
 }
 
-func (p *Program) attributeLocation(name string) (int32, error) {
-	location, ok := p.uniformNames[name]
+func (p *Program) uniformAttributeLocation(name string) (int32, error) {
+	location, ok := p.uniformLocations[name]
 	if !ok {
 		return 0, errors.New("not existing uniform attribute name")
 	}
@@ -615,7 +615,7 @@ func (r *Renderer) BindTexture(textureUnit int, uniformName string, image image.
 	if trimmed == "" {
 		return errors.New("empty texture uniformName")
 	}
-	textureLocation, err := r.program.attributeLocation(uniformName)
+	textureLocation, err := r.program.uniformAttributeLocation(uniformName)
 	if err != nil {
 		return err
 	}

@@ -37,19 +37,19 @@ func (p *program) use() {
 	gl.UseProgram(p.id)
 }
 
-func (p *program) uniformNames() map[string]int32 {
-	names := map[string]int32{}
+func (p *program) uniformAttributeLocations() map[string]int32 {
+	locationsByName := map[string]int32{}
 	var count, bufSize, length, nameMaxLength int32
 	var xtype uint32
 	gl.GetProgramiv(p.id, gl.ACTIVE_UNIFORM_MAX_LENGTH, &nameMaxLength)
 	name := make([]byte, nameMaxLength)
 	gl.GetProgramiv(p.id, gl.ACTIVE_UNIFORMS, &count)
-	for i := int32(0); i < count; i++ {
-		gl.GetActiveUniform(p.id, uint32(i), nameMaxLength, &bufSize, &length, &xtype, &name[0])
+	for location := int32(0); location < count; location++ {
+		gl.GetActiveUniform(p.id, uint32(location), nameMaxLength, &bufSize, &length, &xtype, &name[0])
 		goName := gl.GoStr(&name[0])
-		names[goName] = i
+		locationsByName[goName] = location
 	}
-	return names
+	return locationsByName
 }
 
 func linkProgram(shaders ...*shader) (*program, error) {
