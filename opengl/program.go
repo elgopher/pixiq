@@ -46,7 +46,8 @@ func (p *program) uniformNames() map[string]int32 {
 	gl.GetProgramiv(p.id, gl.ACTIVE_UNIFORMS, &count)
 	for i := int32(0); i < count; i++ {
 		gl.GetActiveUniform(p.id, uint32(i), nameMaxSize, &length, &size, &xtype, &name[0])
-		names[string(name)] = i
+		goName := gl.GoStr(&name[0])
+		names[goName] = i
 	}
 	return names
 }

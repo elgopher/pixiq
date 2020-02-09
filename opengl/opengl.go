@@ -368,8 +368,10 @@ func (g *OpenGL) LinkProgram(vertexShader *VertexShader, fragmentShader *Fragmen
 	}
 	var program *program
 	var err error
+	var uniformNames = map[string]int32{}
 	g.runInOpenGLThread(func() {
 		program, err = linkProgram(vertexShader.shader, fragmentShader.shader)
+		uniformNames = program.uniformNames()
 	})
 	if err != nil {
 		return nil, err
@@ -377,7 +379,7 @@ func (g *OpenGL) LinkProgram(vertexShader *VertexShader, fragmentShader *Fragmen
 	return &Program{
 		program:           program,
 		runInOpenGLThread: g.runInOpenGLThread,
-		uniformNames:      program.uniformNames(),
+		uniformNames:      uniformNames,
 	}, err
 }
 
@@ -584,7 +586,7 @@ func (p *Program) AcceleratedCommand(command Command) (*AcceleratedCommand, erro
 func (p *Program) attributeLocation(name string) (int32, error) {
 	location, ok := p.uniformNames[name]
 	if !ok {
-		return 0, errors.New("not exiting uniform attribute name")
+		return 0, errors.New("not existing uniform attribute name")
 	}
 	return location, nil
 }
