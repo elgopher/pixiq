@@ -65,11 +65,18 @@ func New(mainThreadLoop *MainThreadLoop) (*OpenGL, error) {
 		runInOpenGLThread: runInOpenGLThread,
 		stopPollingEvents: make(chan struct{}),
 		mainWindow:        mainWindow,
-		vertexBufferIDs:   map[*FloatVertexBuffer]uint32{},
+		vertexBufferIDs:   vertexBufferIDs{},
+		textureIDs:        textureIDs{},
 	}
 	go openGL.startPollingEvents(openGL.stopPollingEvents)
 	return openGL, nil
 }
+
+// vertexBufferIDs contains all vertex buffer identifiers in OpenGL context
+type vertexBufferIDs map[*FloatVertexBuffer]uint32
+
+// textureIDs contains all texture identifiers in OpenGL context
+type textureIDs map[image.AcceleratedImage]uint32
 
 // RunOrDie is a shorthand method for starting MainThreadLoop and creating
 // OpenGL instance. It runs the given callback function and blocks. It was created
@@ -119,7 +126,8 @@ type OpenGL struct {
 	runInOpenGLThread func(func())
 	stopPollingEvents chan struct{}
 	mainWindow        *glfw.Window
-	vertexBufferIDs   map[*FloatVertexBuffer]uint32
+	vertexBufferIDs   vertexBufferIDs
+	textureIDs        textureIDs
 }
 
 // Destroy cleans all the OpenGL resources associated with this instance.
@@ -215,12 +223,14 @@ func (g *OpenGL) NewAcceleratedImage(width, height int) (*AcceleratedImage, erro
 	if err != nil {
 		return nil, err
 	}
-	return &AcceleratedImage{
+	img := &AcceleratedImage{
 		id:                id,
 		width:             width,
 		height:            height,
 		runInOpenGLThread: g.runInOpenGLThread,
-	}, nil
+	}
+	g.textureIDs[img] = id
+	return img, nil
 }
 
 // AcceleratedImage is an image.AcceleratedImage implementation storing pixels
@@ -229,12 +239,6 @@ type AcceleratedImage struct {
 	id                uint32
 	width, height     int
 	runInOpenGLThread func(func())
-}
-
-// TextureID returns the ID of texture
-// Deprecated - will be removed in next release
-func (t *AcceleratedImage) TextureID() uint32 {
-	return t.id
 }
 
 // Upload send pixels to video card
@@ -382,6 +386,7 @@ func (g *OpenGL) LinkProgram(vertexShader *VertexShader, fragmentShader *Fragmen
 		program:           program,
 		runInOpenGLThread: g.runInOpenGLThread,
 		uniformNames:      uniformNames,
+		textureIDs:        g.textureIDs,
 	}, err
 }
 
@@ -443,7 +448,7 @@ type VertexArray struct {
 	id                uint32
 	runInOpenGLThread func(func())
 	layout            VertexLayout
-	vertexBufferIDs   map[*FloatVertexBuffer]uint32
+	vertexBufferIDs   vertexBufferIDs
 }
 
 func (a *VertexArray) Delete() {
@@ -471,14 +476,14 @@ func (a *VertexArray) Set(location int, pointer VertexBufferPointer) error {
 	if location >= len(a.layout) {
 		return errors.New("location out-of-bounds")
 	}
-	bufferId, ok := a.vertexBufferIDs[pointer.Buffer]
+	bufferID, ok := a.vertexBufferIDs[pointer.Buffer]
 	if !ok {
 		return errors.New("vertex buffer has not been created in this context")
 	}
 	a.runInOpenGLThread(func() {
 		// TODO: not tested at all
 		gl.BindVertexArray(a.id)
-		gl.BindBuffer(gl.ARRAY_BUFFER, bufferId)
+		gl.BindBuffer(gl.ARRAY_BUFFER, bufferID)
 		typ := a.layout[location]
 		components := typ.components
 		gl.VertexAttribPointer(uint32(location), components, typ.xtype, false, int32(pointer.Stride*4), gl.PtrOffset(int(components*4)))
@@ -570,6 +575,7 @@ type Program struct {
 	*program
 	uniformNames      map[string]int32
 	runInOpenGLThread func(func())
+	textureIDs        textureIDs
 }
 
 func (p *Program) AcceleratedCommand(command Command) (*AcceleratedCommand, error) {
@@ -581,6 +587,7 @@ func (p *Program) AcceleratedCommand(command Command) (*AcceleratedCommand, erro
 		command:           command,
 		runInOpenGLThread: p.runInOpenGLThread,
 		program:           p,
+		textureIDs:        p.textureIDs,
 	}
 	return acceleratedCommand, nil
 }
@@ -601,22 +608,31 @@ type Command interface {
 type Renderer struct {
 	program           *Program
 	runInOpenGLThread func(func())
+	textureIDs        textureIDs
 }
 
-func (r *Renderer) BindTexture(name string, image image.AcceleratedImage) error {
-	trimmed := strings.TrimSpace(name)
-	if trimmed == "" {
-		return errors.New("empty texture name")
+func (r *Renderer) BindTexture(textureUnit int, uniformName string, image image.AcceleratedImage) error {
+	if textureUnit < 0 {
+		return errors.New("negative textureUnit")
 	}
-	_, err := r.program.attributeLocation(name)
+	trimmed := strings.TrimSpace(uniformName)
+	if trimmed == "" {
+		return errors.New("empty texture uniformName")
+	}
+	textureLocation, err := r.program.attributeLocation(uniformName)
 	if err != nil {
 		return err
 	}
-	// check if image exists in context
+	textureID, ok := r.textureIDs[image]
+	if !ok {
+		return errors.New("AcceleratedImage has not been created in this OpenGL context")
+	}
 	r.runInOpenGLThread(func() {
+		// TODO: not tested at all
+		gl.Uniform1i(textureLocation, int32(textureUnit))
+		gl.ActiveTexture(uint32(gl.TEXTURE0 + textureUnit))
+		gl.BindTexture(gl.TEXTURE_2D, textureID)
 	})
-	// bind texture
-	// gl.Uniform1i
 	return nil
 }
 
@@ -641,13 +657,18 @@ type AcceleratedCommand struct {
 	command           Command
 	program           *Program
 	runInOpenGLThread func(func())
+	textureIDs        textureIDs
 }
 
 func (a *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selections []image.AcceleratedImageSelection) error {
 	var err error
 	// create FB, bind, use program
 	// set viewport
-	renderer := &Renderer{program: a.program, runInOpenGLThread: a.runInOpenGLThread}
+	renderer := &Renderer{
+		program:           a.program,
+		runInOpenGLThread: a.runInOpenGLThread,
+		textureIDs:        a.textureIDs,
+	}
 	err = a.command.RunGL(renderer, selections)
 	// save to texture
 	return err

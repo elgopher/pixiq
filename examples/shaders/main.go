@@ -110,7 +110,7 @@ func (c command) RunGL(renderer *opengl.Renderer, selections []image.Accelerated
 	if len(selections) != 1 {
 		return errors.New("invalid number of selections")
 	}
-	if err := renderer.BindTexture("tex", selections[0].Image); err != nil {
+	if err := renderer.BindTexture(0, "tex", selections[0].Image); err != nil {
 		return err
 	}
 	renderer.DrawArrays(c.vertexArray, opengl.Triangles, 0, 6)

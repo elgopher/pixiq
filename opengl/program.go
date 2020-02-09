@@ -39,13 +39,13 @@ func (p *program) use() {
 
 func (p *program) uniformNames() map[string]int32 {
 	names := map[string]int32{}
-	var count, length, size int32
+	var count, bufSize, length, nameMaxLength int32
 	var xtype uint32
-	nameMaxSize := int32(64)
-	name := make([]byte, nameMaxSize)
+	gl.GetProgramiv(p.id, gl.ACTIVE_UNIFORM_MAX_LENGTH, &nameMaxLength)
+	name := make([]byte, nameMaxLength)
 	gl.GetProgramiv(p.id, gl.ACTIVE_UNIFORMS, &count)
 	for i := int32(0); i < count; i++ {
-		gl.GetActiveUniform(p.id, uint32(i), nameMaxSize, &length, &size, &xtype, &name[0])
+		gl.GetActiveUniform(p.id, uint32(i), nameMaxLength, &bufSize, &length, &xtype, &name[0])
 		goName := gl.GoStr(&name[0])
 		names[goName] = i
 	}

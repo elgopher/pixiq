@@ -632,7 +632,10 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 		// when
 		_ = command.Run(image.AcceleratedImageSelection{}, []image.AcceleratedImageSelection{})
 	})
-	t.Run("can't bind texture without name", func(t *testing.T) {
+}
+
+func TestRenderer_BindTexture(t *testing.T) {
+	t.Run("can't bind texture without uniformName", func(t *testing.T) {
 		names := []string{"", " ", "  ", "\n", "\t"}
 		for _, name := range names {
 			t.Run(name, func(t *testing.T) {
@@ -641,16 +644,16 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 				img, _ := openGL.NewAcceleratedImage(1, 1)
 				program := workingProgram(t, openGL)
 				command, _ := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
-					return renderer.BindTexture(name, img)
+					// when
+					return renderer.BindTexture(0, name, img)
 				}})
-				// when
 				err := command.Run(image.AcceleratedImageSelection{}, []image.AcceleratedImageSelection{})
 				// then
 				assert.Error(t, err)
 			})
 		}
 	})
-	t.Run("can't bind texture not specified in program", func(t *testing.T) {
+	t.Run("can't bind texture with uniformName not specified in program", func(t *testing.T) {
 		names := []string{"foo", "bar"}
 		for _, name := range names {
 			t.Run(name, func(t *testing.T) {
@@ -659,14 +662,42 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 				img, _ := openGL.NewAcceleratedImage(1, 1)
 				program := workingProgram(t, openGL)
 				command, _ := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
-					return renderer.BindTexture(name, img)
+					// when
+					return renderer.BindTexture(0, name, img)
 				}})
-				// when
 				err := command.Run(image.AcceleratedImageSelection{}, []image.AcceleratedImageSelection{})
 				// then
 				assert.Error(t, err)
 			})
 		}
+	})
+	t.Run("can't bind texture created in a different context", func(t *testing.T) {
+		openGL1, _ := opengl.New(mainThreadLoop)
+		defer openGL1.Destroy()
+		openGL2, _ := opengl.New(mainThreadLoop)
+		defer openGL2.Destroy()
+		img, _ := openGL2.NewAcceleratedImage(1, 1)
+		program := workingProgram(t, openGL1)
+		command, _ := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
+			// when
+			return renderer.BindTexture(0, "tex", img)
+		}})
+		err := command.Run(image.AcceleratedImageSelection{}, []image.AcceleratedImageSelection{})
+		// then
+		assert.Error(t, err)
+	})
+	t.Run("can't bind texture with negative texture unit", func(t *testing.T) {
+		openGL1, _ := opengl.New(mainThreadLoop)
+		defer openGL1.Destroy()
+		img, _ := openGL1.NewAcceleratedImage(1, 1)
+		program := workingProgram(t, openGL1)
+		command, _ := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
+			// when
+			return renderer.BindTexture(-1, "tex", img)
+		}})
+		err := command.Run(image.AcceleratedImageSelection{}, []image.AcceleratedImageSelection{})
+		// then
+		assert.Error(t, err)
 	})
 	t.Run("can bind texture", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
@@ -674,10 +705,10 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 		img, _ := openGL.NewAcceleratedImage(1, 1)
 		program := workingProgram(t, openGL)
 		glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
-			return renderer.BindTexture("tex", img)
+			// when
+			return renderer.BindTexture(0, "tex", img)
 		}}
 		command, _ := program.AcceleratedCommand(glCommand)
-		// when
 		err := command.Run(image.AcceleratedImageSelection{}, []image.AcceleratedImageSelection{})
 		// then
 		assert.NoError(t, err)
