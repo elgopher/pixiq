@@ -550,10 +550,6 @@ func (b *FloatVertexBuffer) Upload(offset int, data []float32) error {
 	b.runInOpenGLThread(func() {
 		gl.BindBuffer(gl.ARRAY_BUFFER, b.id)
 		gl.BufferSubData(gl.ARRAY_BUFFER, offset*4, len(data)*4, gl.Ptr(data))
-		e := gl.GetError()
-		if e != gl.NO_ERROR {
-			err = fmt.Errorf("gl error: %d", e)
-		}
 	})
 	return err
 }
