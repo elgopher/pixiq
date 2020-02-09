@@ -46,22 +46,24 @@ func main() {
 			panic(err)
 		}
 		xy := opengl.VertexBufferPointer{
-			Stride: 0,
-			Offset: 4,
+			Offset: 0,
+			Stride: 4,
 			Buffer: buffer,
 		}
 		if err := array.Set(0, xy); err != nil {
 			panic(err)
 		}
 		uv := opengl.VertexBufferPointer{
-			Stride: 2,
-			Offset: 4,
+			Offset: 2,
+			Stride: 4,
 			Buffer: buffer,
 		}
 		if err := array.Set(1, uv); err != nil {
 			panic(err)
 		}
-		cmd, err := program.AcceleratedCommand(&command{vertexArray: array})
+		cmd, err := program.AcceleratedCommand(&command{
+			vertexArray: array,
+		})
 		if err != nil {
 			panic(err)
 		}
@@ -114,6 +116,5 @@ func (c command) RunGL(renderer *opengl.Renderer, selections []image.Accelerated
 		return err
 	}
 	renderer.DrawArrays(c.vertexArray, opengl.Triangles, 0, 6)
-	// TODO Finish when OpenGL API is ready
 	return nil
 }

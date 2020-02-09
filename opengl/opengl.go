@@ -657,16 +657,17 @@ type AcceleratedCommand struct {
 }
 
 func (a *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selections []image.AcceleratedImageSelection) error {
+	// TODO Implement
 	var err error
-	// create FB, bind, use program
-	// set viewport
+	a.runInOpenGLThread(func() {
+		a.program.use()
+	})
 	renderer := &Renderer{
 		program:           a.program,
 		runInOpenGLThread: a.runInOpenGLThread,
 		textureIDs:        a.textureIDs,
 	}
 	err = a.command.RunGL(renderer, selections)
-	// save to texture
 	return err
 }
 
