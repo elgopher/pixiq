@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/loop"
 	"github.com/jacekolszak/pixiq/opengl"
@@ -24,11 +25,12 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
+		// xy -> uv
 		vertices := []float32{
-			-1, -1, 1, 1, 0, // (x, y) -> color(rgb)
-			1, -1, 0, 1, 1,
-			1, 1, 1, 0, 1,
-			-1, 1, 0, 0, 0,
+			-1, -1, 0, 0, // top-left
+			1, -1, 1, 0, // top-right
+			1, 1, 1, 1, // bottom-right
+			-1, 1, 0, 1, // bottom-left
 		}
 		buffer, err := gl.NewFloatVertexBuffer(len(vertices))
 		if err != nil {
@@ -41,12 +43,12 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		xy := opengl.VertexBufferPointer{Offset: 0, Stride: 5, Buffer: buffer}
+		xy := opengl.VertexBufferPointer{Offset: 0, Stride: 4, Buffer: buffer}
 		if err := array.Set(0, xy); err != nil {
 			panic(err)
 		}
-		color := opengl.VertexBufferPointer{Offset: 2, Stride: 5, Buffer: buffer}
-		if err := array.Set(1, color); err != nil {
+		uv := opengl.VertexBufferPointer{Offset: 2, Stride: 4, Buffer: buffer}
+		if err := array.Set(1, uv); err != nil {
 			panic(err)
 		}
 		cmd, err := program.AcceleratedCommand(&command{
@@ -55,9 +57,18 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
+		sampledImage, err := gl.NewImage(2, 2)
+		if err != nil {
+			panic(err)
+		}
+		selection := sampledImage.WholeImageSelection()
+		selection.SetColor(0, 0, image.RGB(255, 0, 0))
+		selection.SetColor(1, 0, image.RGB(0, 255, 0))
+		selection.SetColor(0, 1, image.RGB(0, 0, 255))
+		selection.SetColor(1, 1, image.RGB(255, 255, 255))
 		loop.Run(window, func(frame *loop.Frame) {
 			screen := frame.Screen()
-			if err := screen.Modify(cmd); err != nil {
+			if err := screen.Modify(cmd, selection); err != nil {
 				panic(err)
 			}
 		})
@@ -67,24 +78,25 @@ func main() {
 const vertexShaderSrc = `
 	#version 330 core
 	
-	layout(location = 0) in vec2 vertexPosition;
-	layout(location = 1) in vec3 vertexColor;
-	out vec4 interpolatedColor;
+	layout(location = 0) in vec2 xy;
+	layout(location = 1) in vec2 uv;
+	out vec2 interpolatedUV;
 	
 	void main() {
-		gl_Position = vec4(vertexPosition, 0.0, 1.0);
-		interpolatedColor = vec4(vertexColor, 1.0);
+		gl_Position = vec4(xy, 0.0, 1.0);
+		interpolatedUV = uv;
 	}
 `
 
 const fragmentShaderSrc = `
 	#version 330 core
 	
-	in vec4 interpolatedColor;
+	uniform sampler2D tex;
+	in vec2 interpolatedUV;
 	out vec4 color;
 	
 	void main() {
-		color = interpolatedColor;
+		color = texture(tex, interpolatedUV);
 	}
 `
 
@@ -93,6 +105,12 @@ type command struct {
 }
 
 func (c command) RunGL(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
+	if len(selections) != 1 {
+		return errors.New("invalid number of selections")
+	}
+	if err := renderer.BindTexture(0, "tex", selections[0].Image); err != nil {
+		return err
+	}
 	renderer.DrawArrays(c.vertexArray, opengl.TriangleFan, 0, 4)
 	return nil
 }
