@@ -26,10 +26,10 @@ func main() {
 		}
 		// xy -> rgb
 		vertices := []float32{
-			-1, -1, 1, 1, 0, // top-left  -> yellow
-			1, -1, 0, 1, 1, // top-right -> cyan
-			1, 1, 1, 0, 1, // bottom-right -> magenta
 			-1, 1, 0, 0, 0, // bottom-left -> black
+			1, 1, 1, 0, 1, // bottom-right -> magenta
+			1, -1, 0, 1, 1, // top-right -> cyan
+			-1, -1, 1, 1, 0, // top-left  -> yellow
 		}
 		buffer, err := gl.NewFloatVertexBuffer(len(vertices))
 		if err != nil {

@@ -27,10 +27,10 @@ func main() {
 		}
 		// xy -> uv
 		vertices := []float32{
-			-1, -1, 0, 1, // top-left
-			1, -1, 1, 1, // top-right
-			1, 1, 1, 0, // bottom-right
-			-1, 1, 0, 0, // bottom-left
+			-1, 1, 0, 1, // bottom-left
+			1, 1, 1, 1, // bottom-right
+			1, -1, 1, 0, // top-right
+			-1, -1, 0, 0, // top-left
 		}
 		buffer, err := gl.NewFloatVertexBuffer(len(vertices))
 		if err != nil {
@@ -62,10 +62,10 @@ func main() {
 			panic(err)
 		}
 		selection := sampledImage.WholeImageSelection()
-		selection.SetColor(0, 0, image.RGB(255, 255, 0))
+		selection.SetColor(0, 0, image.RGB(255, 0, 0))
 		selection.SetColor(1, 0, image.RGB(0, 255, 0))
-		selection.SetColor(0, 1, image.RGB(255, 0, 0))
-		selection.SetColor(1, 1, image.RGB(255, 140, 0))
+		selection.SetColor(0, 1, image.RGB(0, 0, 255))
+		selection.SetColor(1, 1, image.RGB(255, 255, 255))
 		loop.Run(window, func(frame *loop.Frame) {
 			screen := frame.Screen()
 			if err := screen.Modify(cmd, selection); err != nil {
