@@ -642,9 +642,13 @@ type Mode struct {
 }
 
 var (
-	Triangles = Mode{glMode: gl.TRIANGLES}
-	Points    = Mode{glMode: gl.POINTS}
-	Lines     = Mode{glMode: gl.LINES}
+	Points        = Mode{glMode: gl.POINTS}
+	LineStrip     = Mode{glMode: gl.LINE_STRIP}
+	LineLoop      = Mode{glMode: gl.LINE_LOOP}
+	Lines         = Mode{glMode: gl.LINES}
+	TriangleStrip = Mode{glMode: gl.TRIANGLE_STRIP}
+	TriangleFan   = Mode{glMode: gl.TRIANGLE_FAN}
+	Triangles     = Mode{glMode: gl.TRIANGLES}
 )
 
 func (r *Renderer) DrawArrays(array *VertexArray, mode Mode, first, count int) {

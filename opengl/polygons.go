@@ -15,8 +15,6 @@ func newScreenPolygon(vertexPositionLocation int32, texturePositionLocation int3
 		-1, -1, 0, 1, // (x,y) -> (u,v), that is: vertexPosition -> texturePosition
 		1, -1, 1, 1,
 		1, 1, 1, 0,
-		-1, -1, 0, 1,
-		1, 1, 1, 0,
 		-1, 1, 0, 0,
 	}
 	gl.BufferData(gl.ARRAY_BUFFER, len(data)*4, gl.Ptr(data), gl.STATIC_DRAW)
@@ -50,5 +48,5 @@ type screenPolygon struct {
 
 func (p *screenPolygon) draw() {
 	gl.BindVertexArray(p.vertexArrayID)
-	gl.DrawArrays(gl.TRIANGLES, 0, 6)
+	gl.DrawArrays(gl.TRIANGLE_FAN, 0, 4)
 }

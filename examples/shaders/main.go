@@ -20,17 +20,15 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		window, err := gl.OpenWindow(20, 10, opengl.Zoom(32))
+		window, err := gl.OpenWindow(200, 200, opengl.Zoom(2))
 		if err != nil {
 			panic(err)
 		}
 		vertices := []float32{
-			-1, -1, // x, y
-			1, -1,
-			1, 1,
-			-1, -1,
-			1, 1,
-			-1, 1,
+			-1, -1, 1, 1, 0, // (x, y) -> color(rgb)
+			1, -1, 0, 1, 1,
+			1, 1, 1, 0, 1,
+			-1, 1, 0, 0, 0,
 		}
 		buffer, err := gl.NewFloatVertexBuffer(len(vertices))
 		if err != nil {
@@ -39,12 +37,16 @@ func main() {
 		if err := buffer.Upload(0, vertices); err != nil {
 			panic(err)
 		}
-		array, err := gl.NewVertexArray(opengl.VertexLayout{opengl.Float2})
+		array, err := gl.NewVertexArray(opengl.VertexLayout{opengl.Float2, opengl.Float3})
 		if err != nil {
 			panic(err)
 		}
-		xy := opengl.VertexBufferPointer{Offset: 0, Stride: 2, Buffer: buffer}
+		xy := opengl.VertexBufferPointer{Offset: 0, Stride: 5, Buffer: buffer}
 		if err := array.Set(0, xy); err != nil {
+			panic(err)
+		}
+		color := opengl.VertexBufferPointer{Offset: 2, Stride: 5, Buffer: buffer}
+		if err := array.Set(1, color); err != nil {
 			panic(err)
 		}
 		cmd, err := program.AcceleratedCommand(&command{
@@ -66,19 +68,23 @@ const vertexShaderSrc = `
 	#version 330 core
 	
 	layout(location = 0) in vec2 vertexPosition;
+	layout(location = 1) in vec3 vertexColor;
+	out vec4 interpolatedColor;
 	
 	void main() {
 		gl_Position = vec4(vertexPosition, 0.0, 1.0);
+		interpolatedColor = vec4(vertexColor, 1.0);
 	}
 `
 
 const fragmentShaderSrc = `
 	#version 330 core
 	
+	in vec4 interpolatedColor;
 	out vec4 color;
 	
 	void main() {
-		color = vec4(1.,0.,0.,1.);
+		color = interpolatedColor;
 	}
 `
 
@@ -87,6 +93,6 @@ type command struct {
 }
 
 func (c command) RunGL(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
-	renderer.DrawArrays(c.vertexArray, opengl.Triangles, 0, 6)
+	renderer.DrawArrays(c.vertexArray, opengl.TriangleFan, 0, 4)
 	return nil
 }
