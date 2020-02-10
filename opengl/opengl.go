@@ -640,9 +640,12 @@ var Triangles = Mode{
 	glMode: gl.TRIANGLES,
 }
 
+var Points = Mode{
+	glMode: gl.POINTS,
+}
+
 func (r *Renderer) DrawArrays(array *VertexArray, mode Mode, first, count int) {
 	r.runInOpenGLThread(func() {
-		// TODO: Not tested at all
 		gl.BindVertexArray(array.id)
 		gl.DrawArrays(mode.glMode, int32(first), int32(count))
 	})
@@ -680,7 +683,7 @@ func (c *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selecti
 		gl.FramebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, outputTextureID, 0)
 		loc := output.Location
 		gl.Scissor(int32(loc.X), int32(loc.Y), int32(loc.Width), int32(loc.Height))
-		//gl.Viewport(int32(loc.X), int32(loc.Y), int32(loc.Width), int32(loc.Height))
+		gl.Viewport(int32(loc.X), int32(loc.Y), int32(loc.Width), int32(loc.Height))
 	})
 	renderer := &Renderer{
 		program:           c.program,
