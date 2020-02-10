@@ -20,7 +20,7 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		window, err := gl.OpenWindow(10, 10, opengl.Zoom(32))
+		window, err := gl.OpenWindow(20, 10, opengl.Zoom(32))
 		if err != nil {
 			panic(err)
 		}
@@ -87,6 +87,6 @@ type command struct {
 }
 
 func (c command) RunGL(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
-	renderer.DrawArrays(c.vertexArray, opengl.Points, 0, 6)
+	renderer.DrawArrays(c.vertexArray, opengl.Triangles, 0, 6)
 	return nil
 }

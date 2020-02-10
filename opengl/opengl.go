@@ -430,6 +430,7 @@ func (g *OpenGL) NewVertexArray(layout VertexLayout) (*VertexArray, error) {
 	g.runInOpenGLThread(func() {
 		// TODO: not tested at all
 		gl.GenVertexArrays(1, &id)
+		gl.BindVertexArray(id)
 		for i := 0; i < len(layout); i++ {
 			gl.EnableVertexAttribArray(uint32(i))
 		}
