@@ -839,7 +839,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 								#version 330 core
 								layout(location = 0) in vec4 vertexPosition;
 								void main() {
-									gl_Position = vec4(vertexPosition.x-1, vertexPosition.y-2, vertexPosition.z-3, vertexPosition.w-4);
+									gl_Position = vec4(vertexPosition.x-1, vertexPosition.y-2, vertexPosition.z-3, vertexPosition.w-3);
 								}
 								`,
 				typ:  opengl.Float4,
@@ -958,7 +958,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 								#version 330 core
 								out vec4 color;
 								void main() {
-									color = vec4(1.0, 0.9, 0.8, 0.7);
+									color = vec4(1.0, 0.89, 0.8, 0.7);
 								}
 								`)
 		require.NoError(t, err)
@@ -985,7 +985,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 		}, []image.AcceleratedImageSelection{})
 		// then
 		require.NoError(t, err)
-		assertColors(t, []image.Color{image.RGBA(255, 229, 204, 178), image.RGBA(255, 229, 204, 178)}, img)
+		assertColors(t, []image.Color{image.RGBA(255, 227, 204, 178), image.RGBA(255, 227, 204, 178)}, img)
 	})
 }
 
