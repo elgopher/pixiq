@@ -316,9 +316,7 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 		if err != nil {
 			return
 		}
-		win.screenPolygon = newScreenPolygon(
-			win.program.vertexPositionLocation,
-			win.program.texturePositionLocation)
+		win.screenPolygon = newScreenPolygon(0, 1)
 		for _, option := range options {
 			if option == nil {
 				log.Println("nil option given when opening the window")
@@ -486,7 +484,7 @@ func (a *VertexArray) Set(location int, pointer VertexBufferPointer) error {
 		gl.BindBuffer(gl.ARRAY_BUFFER, bufferID)
 		typ := a.layout[location]
 		components := typ.components
-		gl.VertexAttribPointer(uint32(location), components, typ.xtype, false, int32(pointer.Stride*4), gl.PtrOffset(int(components*4)))
+		gl.VertexAttribPointer(uint32(location), components, typ.xtype, false, int32(pointer.Stride*4), gl.PtrOffset(pointer.Offset*4))
 	})
 	return nil
 }
@@ -636,13 +634,11 @@ type Mode struct {
 	glMode uint32
 }
 
-var Triangles = Mode{
-	glMode: gl.TRIANGLES,
-}
-
-var Points = Mode{
-	glMode: gl.POINTS,
-}
+var (
+	Triangles = Mode{glMode: gl.TRIANGLES}
+	Points    = Mode{glMode: gl.POINTS}
+	Lines     = Mode{glMode: gl.LINES}
+)
 
 func (r *Renderer) DrawArrays(array *VertexArray, mode Mode, first, count int) {
 	r.runInOpenGLThread(func() {

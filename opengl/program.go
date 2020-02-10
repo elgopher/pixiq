@@ -28,9 +28,7 @@ func compileProgram(vertexShaderSrc, fragmentShaderSrc string) (*program, error)
 }
 
 type program struct {
-	id                      uint32
-	vertexPositionLocation  int32
-	texturePositionLocation int32
+	id uint32
 }
 
 func (p *program) use() {
@@ -70,9 +68,7 @@ func linkProgram(shaders ...*shader) (*program, error) {
 		return nil, fmt.Errorf("error linking program: %s", string(infoLog))
 	}
 	return &program{
-		id:                      programID,
-		vertexPositionLocation:  0,
-		texturePositionLocation: 1,
+		id: programID,
 	}, nil
 }
 
