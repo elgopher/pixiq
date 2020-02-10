@@ -395,7 +395,7 @@ func TestOpenGL_CompileVertexShader(t *testing.T) {
 			"minimal": `
 				#version 330 core
 				void main() {
-					gl_Position = vec4(0., 0., 0., 0.);
+					gl_Position = vec4(0, 0, 0, 0);
 				}
 				`,
 		}
@@ -508,7 +508,7 @@ func TestOpenGL_LinkProgram(t *testing.T) {
 		vertexShader, _ := openGL.CompileVertexShader(`
 								#version 330 core
 								void main() {
-									gl_Position = vec4(0., 0., 0., 0.);
+									gl_Position = vec4(0, 0, 0, 0);
 								}
 								`)
 		fragmentShader, _ := openGL.CompileFragmentShader(`
@@ -795,40 +795,137 @@ func TestRenderer_Clear(t *testing.T) {
 }
 
 func TestRenderer_DrawArrays(t *testing.T) {
-	t.Run("should draw point", func(t *testing.T) {
+	t.Run("should draw point using one vertex attribute", func(t *testing.T) {
+		tests := map[string]struct {
+			vertexShaderSrc string
+			typ             opengl.Type
+			data            []float32
+		}{
+			"float": {
+				vertexShaderSrc: `
+								#version 330 core
+								layout(location = 0) in float vertexPosition;
+								void main() {
+									gl_Position = vec4(vertexPosition - 1, 0, 0, 1);
+								}
+								`,
+				typ:  opengl.Float,
+				data: []float32{1},
+			},
+			"float2": {
+				vertexShaderSrc: `
+								#version 330 core
+								layout(location = 0) in vec2 vertexPosition;
+								void main() {
+									gl_Position = vec4(vertexPosition.x-1, vertexPosition.y-2, 0, 1);
+								}
+								`,
+				typ:  opengl.Float2,
+				data: []float32{1, 2},
+			},
+			"float3": {
+				vertexShaderSrc: `
+								#version 330 core
+								layout(location = 0) in vec3 vertexPosition;
+								void main() {
+									gl_Position = vec4(vertexPosition.x-1, vertexPosition.y-2, vertexPosition.z-3, 1);
+								}
+								`,
+				typ:  opengl.Float3,
+				data: []float32{1, 2, 3},
+			},
+			"float4": {
+				vertexShaderSrc: `
+								#version 330 core
+								layout(location = 0) in vec4 vertexPosition;
+								void main() {
+									gl_Position = vec4(vertexPosition.x-1, vertexPosition.y-2, vertexPosition.z-3, vertexPosition.w-4);
+								}
+								`,
+				typ:  opengl.Float4,
+				data: []float32{1, 2, 3, 4},
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				openGL, _ := opengl.New(mainThreadLoop)
+				defer openGL.Destroy()
+				img, _ := openGL.NewAcceleratedImage(1, 1)
+				img.Upload(make([]image.Color, 1))
+				vertexShader, err := openGL.CompileVertexShader(test.vertexShaderSrc)
+				require.NoError(t, err)
+				fragmentShader, err := openGL.CompileFragmentShader(`
+								#version 330 core
+								out vec4 color;
+								void main() {
+									color = vec4(0.2, 0.4, 0.6, 0.8);
+								}
+								`)
+				require.NoError(t, err)
+				program, err := openGL.LinkProgram(vertexShader, fragmentShader)
+				require.NoError(t, err)
+				array, err := openGL.NewVertexArray(opengl.VertexLayout{test.typ})
+				require.NoError(t, err)
+				buffer, err := openGL.NewFloatVertexBuffer(len(test.data))
+				require.NoError(t, err)
+				err = buffer.Upload(0, test.data)
+				require.NoError(t, err)
+				vertexPosition := opengl.VertexBufferPointer{Buffer: buffer, Stride: len(test.data)}
+				err = array.Set(0, vertexPosition)
+				require.NoError(t, err)
+				glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
+					// when
+					renderer.DrawArrays(array, opengl.Points, 0, 1)
+					return nil
+				}}
+				command, _ := program.AcceleratedCommand(glCommand)
+				err = command.Run(image.AcceleratedImageSelection{
+					Location: image.AcceleratedImageLocation{Width: 1, Height: 1},
+					Image:    img,
+				}, []image.AcceleratedImageSelection{})
+				// then
+				require.NoError(t, err)
+				assertColors(t, []image.Color{image.RGBA(51, 102, 153, 204)}, img)
+			})
+		}
+	})
+	t.Run("should draw point using 2 vertex attributes", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
 		img, _ := openGL.NewAcceleratedImage(1, 1)
 		img.Upload(make([]image.Color, 1))
 		vertexShader, err := openGL.CompileVertexShader(`
 								#version 330 core
-								layout(location = 0) in vec2 vertexPosition;
+								layout(location = 0) in float vertexPositionX;
+								layout(location = 1) in vec3 vertexColor;
+								out vec4 interpolatedColor;
 								void main() {
-									gl_Position = vec4(vertexPosition, 0., 1.);
+									gl_Position = vec4(vertexPositionX, 0, 0, 1);
+									interpolatedColor = vec4(vertexColor, 1.);
 								}
 								`)
 		require.NoError(t, err)
 		fragmentShader, err := openGL.CompileFragmentShader(`
 								#version 330 core
+								in vec4 interpolatedColor;
 								out vec4 color;
 								void main() {
-									color = vec4(1.,0.,0.,1.);
+									color = interpolatedColor;
 								}
 								`)
 		require.NoError(t, err)
 		program, err := openGL.LinkProgram(vertexShader, fragmentShader)
 		require.NoError(t, err)
-		array, err := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float2})
+		array, err := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float, opengl.Float3})
 		require.NoError(t, err)
-		buffer, err := openGL.NewFloatVertexBuffer(2)
+		buffer, err := openGL.NewFloatVertexBuffer(4)
 		require.NoError(t, err)
-		err = buffer.Upload(0, []float32{0, 0})
+		err = buffer.Upload(0, []float32{0, 0.2, 0.4, 0.6})
 		require.NoError(t, err)
-		err = array.Set(0, opengl.VertexBufferPointer{
-			Buffer: buffer,
-			Offset: 0,
-			Stride: 2,
-		})
+		vertexPositionX := opengl.VertexBufferPointer{Buffer: buffer, Offset: 0, Stride: 4}
+		err = array.Set(0, vertexPositionX)
+		vertexColor := opengl.VertexBufferPointer{Buffer: buffer, Offset: 1, Stride: 4}
+		err = array.Set(1, vertexColor)
 		require.NoError(t, err)
 		glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
 			// when
@@ -842,7 +939,53 @@ func TestRenderer_DrawArrays(t *testing.T) {
 		}, []image.AcceleratedImageSelection{})
 		// then
 		require.NoError(t, err)
-		assertColors(t, []image.Color{image.RGB(255, 0, 0)}, img)
+		assertColors(t, []image.Color{image.RGB(51, 102, 153)}, img)
+	})
+	t.Run("should draw two points", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		img, _ := openGL.NewAcceleratedImage(2, 1)
+		img.Upload(make([]image.Color, 2))
+		vertexShader, err := openGL.CompileVertexShader(`
+								#version 330 core
+								layout(location = 0) in vec2 vertexPosition;
+								void main() {
+									gl_Position = vec4(vertexPosition, 0, 1);
+								}
+								`)
+		require.NoError(t, err)
+		fragmentShader, err := openGL.CompileFragmentShader(`
+								#version 330 core
+								out vec4 color;
+								void main() {
+									color = vec4(1.0, 0.9, 0.8, 0.7);
+								}
+								`)
+		require.NoError(t, err)
+		program, err := openGL.LinkProgram(vertexShader, fragmentShader)
+		require.NoError(t, err)
+		array, err := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float, opengl.Float3})
+		require.NoError(t, err)
+		buffer, err := openGL.NewFloatVertexBuffer(4)
+		require.NoError(t, err)
+		err = buffer.Upload(0, []float32{0, 0, 1, 0})
+		require.NoError(t, err)
+		vertexPositionX := opengl.VertexBufferPointer{Buffer: buffer, Offset: 0, Stride: 2}
+		err = array.Set(0, vertexPositionX)
+		require.NoError(t, err)
+		glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
+			// when
+			renderer.DrawArrays(array, opengl.Points, 0, 2)
+			return nil
+		}}
+		command, _ := program.AcceleratedCommand(glCommand)
+		err = command.Run(image.AcceleratedImageSelection{
+			Location: image.AcceleratedImageLocation{Width: 2, Height: 1},
+			Image:    img,
+		}, []image.AcceleratedImageSelection{})
+		// then
+		require.NoError(t, err)
+		assertColors(t, []image.Color{image.RGBA(255, 229, 204, 178), image.RGBA(255, 229, 204, 178)}, img)
 	})
 }
 
@@ -892,7 +1035,7 @@ func TestRenderer_BindTexture(t *testing.T) {
 		defer openGL2.Destroy()
 		output, _ := openGL1.NewAcceleratedImage(1, 1)
 		tex, _ := openGL2.NewAcceleratedImage(1, 1)
-		program := workingProgram(t, openGL1) // TODO It's better to have a shader here
+		program := workingProgram(t, openGL1)
 		command, _ := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
 			// when
 			return renderer.BindTexture(0, "tex", tex)
@@ -920,7 +1063,7 @@ func TestRenderer_BindTexture(t *testing.T) {
 		defer openGL.Destroy()
 		output, _ := openGL.NewAcceleratedImage(1, 1)
 		tex, _ := openGL.NewAcceleratedImage(1, 1)
-		program := workingProgram(t, openGL)
+		program := workingProgram(t, openGL) // TODO It's better to have a shader here
 		glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
 			// when
 			return renderer.BindTexture(0, "tex", tex)
@@ -1302,7 +1445,7 @@ func workingProgram(t *testing.T, openGL *opengl.OpenGL) *opengl.Program {
 	vertexShader, err := openGL.CompileVertexShader(`
 								#version 330 core
 								void main() {
-									gl_Position = vec4(0., 0., 0., 0.);
+									gl_Position = vec4(0, 0, 0, 0);
 								}
 								`)
 	require.NoError(t, err)

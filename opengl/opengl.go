@@ -434,7 +434,6 @@ func (g *OpenGL) NewVertexArray(layout VertexLayout) (*VertexArray, error) {
 	}
 	var id uint32
 	g.runInOpenGLThread(func() {
-		// TODO: not tested at all
 		gl.GenVertexArrays(1, &id)
 		gl.BindVertexArray(id)
 		for i := 0; i < len(layout); i++ {
@@ -486,7 +485,6 @@ func (a *VertexArray) Set(location int, pointer VertexBufferPointer) error {
 		return errors.New("vertex buffer has not been created in this context")
 	}
 	a.runInOpenGLThread(func() {
-		// TODO: not tested at all
 		gl.BindVertexArray(a.id)
 		gl.BindBuffer(gl.ARRAY_BUFFER, bufferID)
 		typ := a.layout[location]
