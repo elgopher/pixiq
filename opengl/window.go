@@ -33,7 +33,7 @@ func (w *Window) Draw() {
 		width, height := w.glfwWindow.GetFramebufferSize()
 		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 		gl.Viewport(0, 0, int32(width), int32(height))
-		gl.BindTexture(gl.TEXTURE_2D, w.screenAcceleratedImage.id)
+		gl.BindTexture(gl.TEXTURE_2D, w.screenAcceleratedImage.textureID)
 		w.screenPolygon.draw()
 	})
 }

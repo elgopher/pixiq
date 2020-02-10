@@ -66,7 +66,7 @@ func New(mainThreadLoop *MainThreadLoop) (*OpenGL, error) {
 		stopPollingEvents: make(chan struct{}),
 		mainWindow:        mainWindow,
 		vertexBufferIDs:   vertexBufferIDs{},
-		textureIDs:        textureIDs{},
+		allImages:         allImages{},
 	}
 	go openGL.startPollingEvents(openGL.stopPollingEvents)
 	return openGL, nil
@@ -75,8 +75,7 @@ func New(mainThreadLoop *MainThreadLoop) (*OpenGL, error) {
 // vertexBufferIDs contains all vertex buffer identifiers in OpenGL context
 type vertexBufferIDs map[*FloatVertexBuffer]uint32
 
-// textureIDs contains all texture identifiers in OpenGL context
-type textureIDs map[image.AcceleratedImage]uint32
+type allImages map[image.AcceleratedImage]*AcceleratedImage
 
 // RunOrDie is a shorthand method for starting MainThreadLoop and creating
 // OpenGL instance. It runs the given callback function and blocks. It was created
@@ -127,7 +126,7 @@ type OpenGL struct {
 	stopPollingEvents chan struct{}
 	mainWindow        *glfw.Window
 	vertexBufferIDs   vertexBufferIDs
-	textureIDs        textureIDs
+	allImages         allImages
 }
 
 // Destroy cleans all the OpenGL resources associated with this instance.
@@ -198,6 +197,7 @@ func (g *OpenGL) NewAcceleratedImage(width, height int) (*AcceleratedImage, erro
 		return nil, errors.New("negative height")
 	}
 	var id uint32
+	var frameBufferID uint32
 	var err error
 	g.runInOpenGLThread(func() {
 		gl.GenTextures(1, &id)
@@ -219,24 +219,30 @@ func (g *OpenGL) NewAcceleratedImage(width, height int) (*AcceleratedImage, erro
 		}
 		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
 		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+
+		gl.GenFramebuffers(1, &frameBufferID)
+		gl.BindFramebuffer(gl.FRAMEBUFFER, frameBufferID)
+		gl.FramebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, id, 0)
 	})
 	if err != nil {
 		return nil, err
 	}
 	img := &AcceleratedImage{
-		id:                id,
+		textureID:         id,
+		frameBufferID:     frameBufferID,
 		width:             width,
 		height:            height,
 		runInOpenGLThread: g.runInOpenGLThread,
 	}
-	g.textureIDs[img] = id
+	g.allImages[img] = img
 	return img, nil
 }
 
 // AcceleratedImage is an image.AcceleratedImage implementation storing pixels
 // on a video card VRAM.
 type AcceleratedImage struct {
-	id                uint32
+	textureID         uint32
+	frameBufferID     uint32
 	width, height     int
 	runInOpenGLThread func(func())
 }
@@ -247,7 +253,7 @@ func (t *AcceleratedImage) Upload(pixels []image.Color) {
 		return
 	}
 	t.runInOpenGLThread(func() {
-		gl.BindTexture(gl.TEXTURE_2D, t.id)
+		gl.BindTexture(gl.TEXTURE_2D, t.textureID)
 		gl.TexSubImage2D(
 			gl.TEXTURE_2D,
 			0,
@@ -268,7 +274,7 @@ func (t *AcceleratedImage) Download(output []image.Color) {
 		return
 	}
 	t.runInOpenGLThread(func() {
-		gl.BindTexture(gl.TEXTURE_2D, t.id)
+		gl.BindTexture(gl.TEXTURE_2D, t.textureID)
 		gl.GetTexImage(
 			gl.TEXTURE_2D,
 			0,
@@ -384,7 +390,7 @@ func (g *OpenGL) LinkProgram(vertexShader *VertexShader, fragmentShader *Fragmen
 		program:           program,
 		runInOpenGLThread: g.runInOpenGLThread,
 		uniformLocations:  uniformLocations,
-		textureIDs:        g.textureIDs,
+		allImages:         g.allImages,
 	}, err
 }
 
@@ -570,7 +576,7 @@ type Program struct {
 	*program
 	uniformLocations  map[string]int32
 	runInOpenGLThread func(func())
-	textureIDs        textureIDs
+	allImages         allImages
 }
 
 func (p *Program) AcceleratedCommand(command Command) (*AcceleratedCommand, error) {
@@ -582,7 +588,7 @@ func (p *Program) AcceleratedCommand(command Command) (*AcceleratedCommand, erro
 		command:           command,
 		runInOpenGLThread: p.runInOpenGLThread,
 		program:           p,
-		textureIDs:        p.textureIDs,
+		allImages:         p.allImages,
 	}
 	return acceleratedCommand, nil
 }
@@ -603,7 +609,7 @@ type Command interface {
 type Renderer struct {
 	program           *Program
 	runInOpenGLThread func(func())
-	textureIDs        textureIDs
+	allImages         allImages
 }
 
 func (r *Renderer) BindTexture(textureUnit int, uniformAttributeName string, image image.AcceleratedImage) error {
@@ -618,7 +624,7 @@ func (r *Renderer) BindTexture(textureUnit int, uniformAttributeName string, ima
 	if err != nil {
 		return err
 	}
-	textureID, ok := r.textureIDs[image]
+	img, ok := r.allImages[image]
 	if !ok {
 		return errors.New("image has not been created in this OpenGL context")
 	}
@@ -626,7 +632,7 @@ func (r *Renderer) BindTexture(textureUnit int, uniformAttributeName string, ima
 		// TODO: not tested at all
 		gl.Uniform1i(textureLocation, int32(textureUnit))
 		gl.ActiveTexture(uint32(gl.TEXTURE0 + textureUnit))
-		gl.BindTexture(gl.TEXTURE_2D, textureID)
+		gl.BindTexture(gl.TEXTURE_2D, img.textureID)
 	})
 	return nil
 }
@@ -665,19 +671,22 @@ type AcceleratedCommand struct {
 	command           Command
 	program           *Program
 	runInOpenGLThread func(func())
-	textureIDs        textureIDs
+	allImages         allImages
 }
 
 func (c *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selections []image.AcceleratedImageSelection) error {
-	var err error
-	var frameBuffer uint32
+	if output.Image == nil {
+		return errors.New("nil output Image")
+	}
+	img, ok := c.allImages[output.Image]
+	if !ok {
+		return errors.New("output image created in a different OpenGL context than program")
+	}
 	c.runInOpenGLThread(func() {
+		// TODO partially tested
 		c.program.use()
 		gl.Enable(gl.SCISSOR_TEST)
-		gl.GenFramebuffers(1, &frameBuffer)
-		gl.BindFramebuffer(gl.FRAMEBUFFER, frameBuffer)
-		outputTextureID := c.textureIDs[output.Image]
-		gl.FramebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, outputTextureID, 0)
+		gl.BindFramebuffer(gl.FRAMEBUFFER, img.frameBufferID)
 		loc := output.Location
 		gl.Scissor(int32(loc.X), int32(loc.Y), int32(loc.Width), int32(loc.Height))
 		gl.Viewport(int32(loc.X), int32(loc.Y), int32(loc.Width), int32(loc.Height))
@@ -685,13 +694,9 @@ func (c *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selecti
 	renderer := &Renderer{
 		program:           c.program,
 		runInOpenGLThread: c.runInOpenGLThread,
-		textureIDs:        c.textureIDs,
+		allImages:         c.allImages,
 	}
-	err = c.command.RunGL(renderer, selections)
-	c.runInOpenGLThread(func() {
-		gl.DeleteBuffers(1, &frameBuffer)
-	})
-	return err
+	return c.command.RunGL(renderer, selections)
 }
 
 // WindowOption is an option used when opening the window.
