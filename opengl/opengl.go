@@ -648,6 +648,18 @@ func (r *Renderer) DrawArrays(array *VertexArray, mode Mode, first, count int) {
 	})
 }
 
+func (r *Renderer) Clear(color image.Color) {
+	r.runInOpenGLThread(func() {
+		// TODO Move to image.Color
+		r := float32(color.R()) / 255.0
+		g := float32(color.G()) / 255.0
+		b := float32(color.B()) / 255.0
+		a := float32(color.A()) / 255.0
+		gl.ClearColor(r, g, b, a)
+		gl.Clear(gl.COLOR_BUFFER_BIT)
+	})
+}
+
 // AcceleratedCommand is an image.AcceleratedCommand implementation.
 type AcceleratedCommand struct {
 	command           Command
@@ -656,18 +668,29 @@ type AcceleratedCommand struct {
 	textureIDs        textureIDs
 }
 
-func (a *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selections []image.AcceleratedImageSelection) error {
-	// TODO Implement
+func (c *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selections []image.AcceleratedImageSelection) error {
 	var err error
-	a.runInOpenGLThread(func() {
-		a.program.use()
+	var frameBuffer uint32
+	c.runInOpenGLThread(func() {
+		c.program.use()
+		gl.Enable(gl.SCISSOR_TEST)
+		gl.GenFramebuffers(1, &frameBuffer)
+		gl.BindFramebuffer(gl.FRAMEBUFFER, frameBuffer)
+		outputTextureID := c.textureIDs[output.Image]
+		gl.FramebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, outputTextureID, 0)
+		loc := output.Location
+		gl.Scissor(int32(loc.X), int32(loc.Y), int32(loc.Width), int32(loc.Height))
+		//gl.Viewport(int32(loc.X), int32(loc.Y), int32(loc.Width), int32(loc.Height))
 	})
 	renderer := &Renderer{
-		program:           a.program,
-		runInOpenGLThread: a.runInOpenGLThread,
-		textureIDs:        a.textureIDs,
+		program:           c.program,
+		runInOpenGLThread: c.runInOpenGLThread,
+		textureIDs:        c.textureIDs,
 	}
-	err = a.command.RunGL(renderer, selections)
+	err = c.command.RunGL(renderer, selections)
+	c.runInOpenGLThread(func() {
+		gl.DeleteBuffers(1, &frameBuffer)
+	})
 	return err
 }
 

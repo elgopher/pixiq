@@ -178,9 +178,7 @@ func TestTexture_Upload(t *testing.T) {
 				// when
 				img.Upload(test.inputColors)
 				// then
-				output := make([]image.Color, len(test.inputColors))
-				img.Download(output)
-				assert.Equal(t, test.inputColors, output)
+				assertColors(t, test.inputColors, img)
 			})
 		}
 	})
@@ -199,12 +197,8 @@ func TestTexture_Upload(t *testing.T) {
 		img1.Upload([]image.Color{color1})
 		img2.Upload([]image.Color{color2})
 		// then
-		output := make([]image.Color, 1)
-		img1.Download(output)
-		assert.Equal(t, []image.Color{color1}, output)
-		// and
-		img2.Download(output)
-		assert.Equal(t, []image.Color{color2}, output)
+		assertColors(t, []image.Color{color1}, img1)
+		assertColors(t, []image.Color{color2}, img2)
 	})
 }
 
@@ -632,6 +626,147 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 		// when
 		_ = command.Run(image.AcceleratedImageSelection{}, []image.AcceleratedImageSelection{})
 	})
+	t.Run("clear image fragment with color", func(t *testing.T) {
+		color := image.RGBA(1, 2, 3, 4)
+		tests := map[string]struct {
+			width, height  int
+			location       image.AcceleratedImageLocation
+			expectedColors []image.Color
+		}{
+			"empty location": {
+				width: 1, height: 1,
+				location:       image.AcceleratedImageLocation{},
+				expectedColors: []image.Color{image.Transparent},
+			},
+			"x out of bounds": {
+				width: 1, height: 1,
+				location:       image.AcceleratedImageLocation{X: 1, Width: 1, Height: 1},
+				expectedColors: []image.Color{image.Transparent},
+			},
+			"y out of bounds": {
+				width: 1, height: 1,
+				location:       image.AcceleratedImageLocation{Y: 1, Width: 1, Height: 1},
+				expectedColors: []image.Color{image.Transparent},
+			},
+			"whole image": {
+				width: 1, height: 1,
+				location:       image.AcceleratedImageLocation{Width: 1, Height: 1},
+				expectedColors: []image.Color{color},
+			},
+			"top left corner": {
+				width: 2, height: 2,
+				location:       image.AcceleratedImageLocation{Width: 1, Height: 1},
+				expectedColors: []image.Color{color, image.Transparent, image.Transparent, image.Transparent},
+			},
+			"top row": {
+				width: 2, height: 2,
+				location:       image.AcceleratedImageLocation{Width: 2, Height: 1},
+				expectedColors: []image.Color{color, color, image.Transparent, image.Transparent},
+			},
+			"left column": {
+				width: 2, height: 2,
+				location:       image.AcceleratedImageLocation{Width: 1, Height: 2},
+				expectedColors: []image.Color{color, image.Transparent, color, image.Transparent},
+			},
+			"top right corner": {
+				width: 2, height: 2,
+				location:       image.AcceleratedImageLocation{X: 1, Width: 1, Height: 1},
+				expectedColors: []image.Color{image.Transparent, color, image.Transparent, image.Transparent},
+			},
+			"bottom left corner": {
+				width: 2, height: 2,
+				location:       image.AcceleratedImageLocation{Y: 1, Width: 1, Height: 1},
+				expectedColors: []image.Color{image.Transparent, image.Transparent, color, image.Transparent},
+			},
+			"bottom right corner": {
+				width: 2, height: 2,
+				location:       image.AcceleratedImageLocation{X: 1, Y: 1, Width: 1, Height: 1},
+				expectedColors: []image.Color{image.Transparent, image.Transparent, image.Transparent, color},
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				openGL, _ := opengl.New(mainThreadLoop)
+				defer openGL.Destroy()
+				img, _ := openGL.NewAcceleratedImage(test.width, test.height)
+				img.Upload(make([]image.Color, test.width*test.height))
+				program := workingProgram(t, openGL)
+				glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
+					renderer.Clear(color)
+					return nil
+				}}
+				command, _ := program.AcceleratedCommand(glCommand)
+				// when
+				err := command.Run(image.AcceleratedImageSelection{
+					Location: test.location,
+					Image:    img,
+				}, []image.AcceleratedImageSelection{})
+				// then
+				require.NoError(t, err)
+				assertColors(t, test.expectedColors, img)
+			})
+		}
+	})
+	t.Run("should not change the image pixels when command does not do anything", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		img, _ := openGL.NewAcceleratedImage(2, 1)
+		pixels := []image.Color{image.RGB(1, 2, 3), image.RGB(4, 5, 6)}
+		img.Upload(pixels)
+		program := workingProgram(t, openGL)
+		glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
+			return nil
+		}}
+		command, _ := program.AcceleratedCommand(glCommand)
+		// when
+		err := command.Run(image.AcceleratedImageSelection{
+			Location: image.AcceleratedImageLocation{
+				X:      0,
+				Y:      0,
+				Width:  1,
+				Height: 1,
+			},
+			Image: img,
+		}, []image.AcceleratedImageSelection{})
+		// then
+		require.NoError(t, err)
+		assertColors(t, pixels, img)
+	})
+}
+
+func TestRenderer_Clear(t *testing.T) {
+	tests := map[string]struct {
+		color image.Color
+	}{
+		"1": {
+			color: image.RGBA(1, 2, 3, 4),
+		},
+		"2": {
+			color: image.RGBA(5, 6, 7, 8),
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			openGL, _ := opengl.New(mainThreadLoop)
+			defer openGL.Destroy()
+			img, _ := openGL.NewAcceleratedImage(1, 1)
+			img.Upload(make([]image.Color, 1))
+			program := workingProgram(t, openGL)
+			glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
+				renderer.Clear(test.color)
+				return nil
+			}}
+			command, _ := program.AcceleratedCommand(glCommand)
+			// when
+			err := command.Run(image.AcceleratedImageSelection{
+				Location: image.AcceleratedImageLocation{Width: 1, Height: 1},
+				Image:    img,
+			}, []image.AcceleratedImageSelection{})
+			// then
+			require.NoError(t, err)
+			assertColors(t, []image.Color{test.color}, img)
+		})
+	}
 }
 
 func TestRenderer_BindTexture(t *testing.T) {
@@ -713,6 +848,12 @@ func TestRenderer_BindTexture(t *testing.T) {
 		// then
 		assert.NoError(t, err)
 	})
+}
+
+func assertColors(t *testing.T, expected []image.Color, img *opengl.AcceleratedImage) {
+	output := make([]image.Color, len(expected))
+	img.Download(output)
+	assert.Equal(t, expected, output)
 }
 
 func TestOpenGL_NewFloatVertexBuffer(t *testing.T) {
