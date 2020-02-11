@@ -104,8 +104,8 @@ func createWindow(mainThreadLoop *MainThreadLoop, share *glfw.Window) (*glfw.Win
 	glfw.WindowHint(glfw.Visible, glfw.False)
 	glfw.WindowHint(glfw.CocoaRetinaFramebuffer, glfw.False)
 	// FIXME: For some reason XVFB does not change the frame buffer size after
-	// resizing the window to higher values. That's why the window created
-	// here has size equal to the biggest window used in integration tests
+	// resizing the window to higher values than initial ones. That's why the window
+	// created here has size equal to the biggest window used in integration tests
 	// See: TestWindow_Draw() in opengl_test.go
 	win, err := glfw.CreateWindow(3, 3, "OpenGL Pixiq Window", nil, share)
 	if err != nil {
@@ -322,7 +322,7 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 		if err != nil {
 			return
 		}
-		win.screenPolygon = newScreenPolygon(0, 1)
+		win.screenPolygon = newScreenPolygon()
 		for _, option := range options {
 			if option == nil {
 				log.Println("nil option given when opening the window")
