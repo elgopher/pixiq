@@ -480,8 +480,8 @@ func TestImage_Upload(t *testing.T) {
 			img.Upload()
 			// then
 			table := [][]image.Color{
-				{color1, color2},
 				{color3, color4},
+				{color1, color2},
 			}
 			assert.Equal(t, table, acceleratedImage.PixelsTable())
 		})
@@ -697,7 +697,7 @@ func TestSelection_Modify(t *testing.T) {
 		err := outputSelection.Modify(command, sourceSelection)
 		// then
 		require.NoError(t, err)
-		assert.Equal(t, []image.Color{color00, color10, color01, color11}, uploadedPixels)
+		assert.Equal(t, []image.Color{color01, color11, color00, color10}, uploadedPixels)
 	})
 
 	t.Run("should upload passed selections", func(t *testing.T) {
@@ -739,7 +739,7 @@ func TestSelection_Modify(t *testing.T) {
 		// then
 		require.NoError(t, err)
 		assert.Equal(t, []image.Color{color}, uploadedPixels0)
-		assert.Equal(t, []image.Color{color00, color10, color01, color11}, uploadedPixels1)
+		assert.Equal(t, []image.Color{color01, color11, color00, color10}, uploadedPixels1)
 	})
 
 	t.Run("should download pixels", func(t *testing.T) {
@@ -754,7 +754,7 @@ func TestSelection_Modify(t *testing.T) {
 			//
 			command = &acceleratedCommandMock{
 				command: func(image.AcceleratedImageSelection, []image.AcceleratedImageSelection) {
-					targetAcceleratedImage.Upload([]image.Color{color00, color10, color01, color11})
+					targetAcceleratedImage.Upload([]image.Color{color01, color11, color00, color10})
 				},
 			}
 			outputSelection = targetImage.WholeImageSelection()

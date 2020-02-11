@@ -12,10 +12,10 @@ func newScreenPolygon(vertexPositionLocation int32, texturePositionLocation int3
 	gl.GenBuffers(1, &vertexBufferID)
 	gl.BindBuffer(gl.ARRAY_BUFFER, vertexBufferID)
 	data := []float32{
-		-1, -1, 0, 1, // (x,y) -> (u,v), that is: vertexPosition -> texturePosition
-		1, -1, 1, 1,
-		1, 1, 1, 0,
-		-1, 1, 0, 0,
+		-1, 1, 0, 1, // (x,y) -> (u,v), that is: vertexPosition -> texturePosition
+		1, 1, 1, 1,
+		1, -1, 1, 0,
+		-1, -1, 0, 0,
 	}
 	gl.BufferData(gl.ARRAY_BUFFER, len(data)*4, gl.Ptr(data), gl.STATIC_DRAW)
 	const stride int32 = 4 * 4

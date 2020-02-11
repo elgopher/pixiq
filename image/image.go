@@ -8,7 +8,7 @@ type AcceleratedImage interface {
 	// Upload transfers pixels from RAM to external memory (such as VRAM).
 	//
 	// Pixels must have pixel colors sorted by coordinates.
-	// Pixels are sent for first line first, from left to right.
+	// Pixels are send for last line first, from left to right.
 	// Pixels slice holds all image pixels and therefore must have size width*height
 	//
 	// Implementations must not retain pixels slice and make a copy instead.
@@ -16,7 +16,7 @@ type AcceleratedImage interface {
 	// Download transfers pixels from external memory (such as VRAM) to RAM.
 	//
 	// Output will have pixel colors sorted by coordinates.
-	// Pixels are sent for first line first, from left to right.
+	// Pixels are send for last line first, from left to right.
 	// Output must be of size width*height.
 	//
 	// If the image has not been uploaded before then Download should fill
@@ -42,6 +42,7 @@ func New(width, height int, acceleratedImage AcceleratedImage) (*Image, error) {
 	return &Image{
 		width:            width,
 		height:           height,
+		heightMinusOne:   height - 1,
 		pixels:           make([]Color, width*height),
 		acceleratedImage: acceleratedImage,
 		selectionsCache:  make([]AcceleratedImageSelection, 0, 4),
@@ -57,6 +58,7 @@ func New(width, height int, acceleratedImage AcceleratedImage) (*Image, error) {
 type Image struct {
 	width            int
 	height           int
+	heightMinusOne   int
 	pixels           []Color
 	acceleratedImage AcceleratedImage
 	selectionsCache  []AcceleratedImageSelection
@@ -170,7 +172,7 @@ func (s Selection) Color(localX, localY int) Color {
 	if x < 0 {
 		return Transparent
 	}
-	y := localY + s.y
+	y := s.image.heightMinusOne - localY - s.y
 	if y < 0 {
 		return Transparent
 	}
@@ -194,7 +196,7 @@ func (s Selection) SetColor(localX, localY int, color Color) {
 	if x < 0 {
 		return
 	}
-	y := localY + s.y
+	y := s.image.heightMinusOne - localY - s.y
 	if y < 0 {
 		return
 	}

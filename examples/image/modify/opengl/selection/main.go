@@ -27,10 +27,10 @@ func main() {
 		}
 		// xy -> st
 		vertices := []float32{
-			-1, 1, 0, 1, // bottom-left
-			1, 1, 1, 1, // bottom-right
-			1, -1, 1, 0, // top-right
-			-1, -1, 0, 0, // top-left
+			-1, 1, 0, 1, // top-left
+			1, 1, 1, 1, // top-right
+			1, -1, 1, 0, // bottom-right
+			-1, -1, 0, 0, // bottom-left
 		}
 		buffer, err := gl.NewFloatVertexBuffer(len(vertices))
 		if err != nil {
