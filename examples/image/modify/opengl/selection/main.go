@@ -25,7 +25,7 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		// xy -> uv
+		// xy -> st
 		vertices := []float32{
 			-1, 1, 0, 1, // bottom-left
 			1, 1, 1, 1, // bottom-right
@@ -47,8 +47,8 @@ func main() {
 		if err := array.Set(0, xy); err != nil {
 			panic(err)
 		}
-		uv := opengl.VertexBufferPointer{Offset: 2, Stride: 4, Buffer: buffer}
-		if err := array.Set(1, uv); err != nil {
+		st := opengl.VertexBufferPointer{Offset: 2, Stride: 4, Buffer: buffer}
+		if err := array.Set(1, st); err != nil {
 			panic(err)
 		}
 		cmd, err := program.AcceleratedCommand(&command{
@@ -79,12 +79,12 @@ const vertexShaderSrc = `
 	#version 330 core
 	
 	layout(location = 0) in vec2 xy;
-	layout(location = 1) in vec2 uv;
-	out vec2 interpolatedUV;
+	layout(location = 1) in vec2 st;
+	out vec2 interpolatedST;
 	
 	void main() {
 		gl_Position = vec4(xy, 0.0, 1.0);
-		interpolatedUV = uv;
+		interpolatedST = st;
 	}
 `
 
@@ -92,11 +92,11 @@ const fragmentShaderSrc = `
 	#version 330 core
 	
 	uniform sampler2D tex;
-	in vec2 interpolatedUV;
+	in vec2 interpolatedST;
 	out vec4 color;
 	
 	void main() {
-		color = texture(tex, interpolatedUV);
+		color = texture(tex, interpolatedST);
 	}
 `
 
