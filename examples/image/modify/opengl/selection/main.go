@@ -64,8 +64,8 @@ func main() {
 		selection := sampledImage.WholeImageSelection()
 		selection.SetColor(0, 0, image.RGB(255, 0, 0))
 		selection.SetColor(1, 0, image.RGB(0, 255, 0))
-		selection.SetColor(0, 1, image.RGB(0, 0, 255))
-		selection.SetColor(1, 1, image.RGB(255, 255, 255))
+		selection.SetColor(0, 1, image.RGB(255, 255, 255))
+		selection.SetColor(1, 1, image.RGB(0, 0, 255))
 		loop.Run(window, func(frame *loop.Frame) {
 			screen := frame.Screen()
 			if err := screen.Modify(cmd, selection); err != nil {
