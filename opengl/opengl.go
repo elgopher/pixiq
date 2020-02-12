@@ -627,7 +627,6 @@ func (r *Renderer) BindTexture(textureUnit int, uniformAttributeName string, ima
 		return errors.New("image has not been created in this OpenGL context")
 	}
 	r.runInOpenGLThread(func() {
-		// TODO: not tested at all
 		gl.Uniform1i(textureLocation, int32(textureUnit))
 		gl.ActiveTexture(uint32(gl.TEXTURE0 + textureUnit))
 		gl.BindTexture(gl.TEXTURE_2D, img.textureID)
