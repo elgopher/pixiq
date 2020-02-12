@@ -658,12 +658,7 @@ func (r *Renderer) DrawArrays(array *VertexArray, mode Mode, first, count int) {
 
 func (r *Renderer) Clear(color image.Color) {
 	r.runInOpenGLThread(func() {
-		// TODO Move to image.Color
-		r := float32(color.R()) / 255.0
-		g := float32(color.G()) / 255.0
-		b := float32(color.B()) / 255.0
-		a := float32(color.A()) / 255.0
-		gl.ClearColor(r, g, b, a)
+		gl.ClearColor(color.RGBAf())
 		gl.Clear(gl.COLOR_BUFFER_BIT)
 	})
 }

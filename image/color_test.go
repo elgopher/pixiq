@@ -87,3 +87,41 @@ func TestRGBAi(t *testing.T) {
 	})
 
 }
+
+func TestColor_RGBAf(t *testing.T) {
+	t.Run("should convert to floats", func(t *testing.T) {
+		tests := map[string]struct {
+			color         image.Color
+			expectedRed   float32
+			expectedGreen float32
+			expectedBlue  float32
+			expectedAlpha float32
+		}{
+			"0.0, 0.2, 0.4, 0.6": {
+				color:         image.RGBA(0, 51, 102, 153),
+				expectedRed:   0.0,
+				expectedGreen: 0.2,
+				expectedBlue:  0.4,
+				expectedAlpha: 0.6,
+			},
+			"0.8, 0.898, 0.95, 1": {
+				color:         image.RGBA(204, 229, 242, 255),
+				expectedRed:   0.8,
+				expectedGreen: 0.898,
+				expectedBlue:  0.95,
+				expectedAlpha: 1.0,
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				// when
+				r, g, b, a := test.color.RGBAf()
+				const delta = 0.00196 // smaller than 0.5/255
+				assert.InDelta(t, test.expectedRed, r, delta)
+				assert.InDelta(t, test.expectedGreen, g, delta)
+				assert.InDelta(t, test.expectedBlue, b, delta)
+				assert.InDelta(t, test.expectedAlpha, a, delta)
+			})
+		}
+	})
+}
