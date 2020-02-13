@@ -571,7 +571,18 @@ func TestRenderer_BindTexture(t *testing.T) {
 				defer openGL.Destroy()
 				output, _ := openGL.NewAcceleratedImage(1, 1)
 				tex, _ := openGL.NewAcceleratedImage(1, 1)
-				program := workingProgram(t, openGL) // TODO It's better to have a shader here
+				program := compileProgram(t, openGL,
+					`#version 330 core
+						void main() {
+							gl_Position = vec4(0, 0, 0, 0);
+						}`,
+					`#version 330 core
+						 uniform sampler2D tex;
+						 out vec4 color;
+						 void main() {
+						 	color = texture(tex, vec2(0,0));
+						 }`,
+				)
 				command, _ := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
 					// when
 					return renderer.BindTexture(0, name, tex)
@@ -617,7 +628,18 @@ func TestRenderer_BindTexture(t *testing.T) {
 		defer openGL.Destroy()
 		output, _ := openGL.NewAcceleratedImage(1, 1)
 		tex, _ := openGL.NewAcceleratedImage(1, 1)
-		program := workingProgram(t, openGL) // TODO It's better to have a shader here
+		program := compileProgram(t, openGL,
+			`#version 330 core
+						void main() {
+							gl_Position = vec4(0, 0, 0, 0);
+						}`,
+			`#version 330 core
+						 uniform sampler2D tex;
+						 out vec4 color;
+						 void main() {
+						 	color = texture(tex, vec2(0,0));
+						 }`,
+		)
 		glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
 			// when
 			return renderer.BindTexture(0, "tex", tex)
