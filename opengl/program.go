@@ -35,7 +35,7 @@ func (p *program) use() {
 	gl.UseProgram(p.id)
 }
 
-func (p *program) uniformAttributeLocations() map[string]int32 {
+func (p *program) activeUniformLocations() map[string]int32 {
 	locationsByName := map[string]int32{}
 	var count, bufSize, length, nameMaxLength int32
 	var xtype uint32
@@ -48,6 +48,25 @@ func (p *program) uniformAttributeLocations() map[string]int32 {
 		locationsByName[goName] = location
 	}
 	return locationsByName
+}
+
+type attribute struct {
+	typ  Type
+	name string
+}
+
+func (p *program) attributes() []attribute {
+	var count, bufSize, length, nameMaxLength int32
+	var xtype uint32
+	gl.GetProgramiv(p.id, gl.ACTIVE_ATTRIBUTE_MAX_LENGTH, &nameMaxLength)
+	name := make([]byte, nameMaxLength)
+	gl.GetProgramiv(p.id, gl.ACTIVE_ATTRIBUTES, &count)
+	attributes := make([]attribute, count)
+	for location := int32(0); location < count; location++ {
+		gl.GetActiveAttrib(p.id, uint32(location), nameMaxLength, &bufSize, &length, &xtype, &name[0])
+		attributes[location] = attribute{typ: valueOf(xtype), name: gl.GoStr(&name[0])}
+	}
+	return attributes
 }
 
 func linkProgram(shaders ...*shader) (*program, error) {

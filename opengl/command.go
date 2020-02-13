@@ -2,9 +2,12 @@ package opengl
 
 import (
 	"errors"
-	"github.com/go-gl/gl/v3.3-core/gl"
-	"github.com/jacekolszak/pixiq/image"
+	"fmt"
 	"strings"
+
+	"github.com/go-gl/gl/v3.3-core/gl"
+
+	"github.com/jacekolszak/pixiq/image"
 )
 
 type Command interface {
@@ -56,11 +59,30 @@ var (
 	Triangles     = Mode{glMode: gl.TRIANGLES}
 )
 
-func (r *Renderer) DrawArrays(array *VertexArray, mode Mode, first, count int) {
+func (r *Renderer) DrawArrays(array *VertexArray, mode Mode, first, count int) error {
+	if err := r.validateAttributeTypes(array); err != nil {
+		return err
+	}
 	r.runInOpenGLThread(func() {
 		gl.BindVertexArray(array.id)
 		gl.DrawArrays(mode.glMode, int32(first), int32(count))
 	})
+	return nil
+}
+
+func (r *Renderer) validateAttributeTypes(array *VertexArray) error {
+	attributesLen := len(array.layout)
+	if len(r.program.attributes) < attributesLen {
+		attributesLen = len(r.program.attributes)
+	}
+	for i := 0; i < attributesLen; i++ {
+		attr := r.program.attributes[i]
+		vertexArrayType := array.layout[i]
+		if attr.typ != vertexArrayType {
+			return fmt.Errorf("shader attribute %s with location %d has type %v, which is different than %v in the vertex array", attr.name, i, attr.typ, vertexArrayType)
+		}
+	}
+	return nil
 }
 
 func (r *Renderer) Clear(color image.Color) {

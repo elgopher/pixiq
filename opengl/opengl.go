@@ -72,7 +72,7 @@ func New(mainThreadLoop *MainThreadLoop) (*OpenGL, error) {
 }
 
 // vertexBufferIDs contains all vertex buffer identifiers in OpenGL context
-type vertexBufferIDs map[*FloatVertexBuffer]uint32
+type vertexBufferIDs map[VertexBuffer]uint32
 
 type allImages map[image.AcceleratedImage]*AcceleratedImage
 
@@ -373,13 +373,17 @@ func (g *OpenGL) LinkProgram(vertexShader *VertexShader, fragmentShader *Fragmen
 	if fragmentShader == nil {
 		return nil, errors.New("nil fragmentShader")
 	}
-	var program *program
-	var err error
-	var uniformLocations = map[string]int32{}
+	var (
+		program          *program
+		err              error
+		uniformLocations map[string]int32
+		attributes       []attribute
+	)
 	g.runInOpenGLThread(func() {
 		program, err = linkProgram(vertexShader.shader, fragmentShader.shader)
 		if err == nil {
-			uniformLocations = program.uniformAttributeLocations()
+			uniformLocations = program.activeUniformLocations()
+			attributes = program.attributes()
 		}
 	})
 	if err != nil {
@@ -389,6 +393,7 @@ func (g *OpenGL) LinkProgram(vertexShader *VertexShader, fragmentShader *Fragmen
 		program:           program,
 		runInOpenGLThread: g.runInOpenGLThread,
 		uniformLocations:  uniformLocations,
+		attributes:        attributes,
 		allImages:         g.allImages,
 	}, err
 }
@@ -418,13 +423,32 @@ type VertexLayout []Type
 type Type struct {
 	components int32
 	xtype      uint32
+	name       string
+}
+
+func valueOf(xtype uint32) Type {
+	switch xtype {
+	case gl.FLOAT:
+		return Float
+	case gl.FLOAT_VEC2:
+		return Vec2
+	case gl.FLOAT_VEC3:
+		return Vec3
+	case gl.FLOAT_VEC4:
+		return Vec4
+	}
+	panic("not supported type")
+}
+
+func (t Type) String() string {
+	return t.name
 }
 
 var (
-	Float = Type{components: 1, xtype: gl.FLOAT}
-	Vec2  = Type{components: 2, xtype: gl.FLOAT}
-	Vec3  = Type{components: 3, xtype: gl.FLOAT}
-	Vec4  = Type{components: 4, xtype: gl.FLOAT}
+	Float = Type{components: 1, xtype: gl.FLOAT, name: "Float"}
+	Vec2  = Type{components: 2, xtype: gl.FLOAT, name: "Vec2"}
+	Vec3  = Type{components: 3, xtype: gl.FLOAT, name: "Vec3"}
+	Vec4  = Type{components: 4, xtype: gl.FLOAT, name: "Vec4"}
 )
 
 func (g *OpenGL) NewVertexArray(layout VertexLayout) (*VertexArray, error) {
@@ -458,9 +482,13 @@ func (a *VertexArray) Delete() {
 }
 
 type VertexBufferPointer struct {
-	Buffer *FloatVertexBuffer
+	Buffer VertexBuffer
 	Offset int
 	Stride int
+}
+
+type VertexBuffer interface {
+	ID() uint32
 }
 
 func (a *VertexArray) Set(location int, pointer VertexBufferPointer) error {
@@ -556,6 +584,10 @@ func (b *FloatVertexBuffer) Upload(offset int, data []float32) error {
 	return err
 }
 
+func (b *FloatVertexBuffer) ID() uint32 {
+	return b.id
+}
+
 // FragmentShader is a part of an OpenGL program which transforms each fragment
 // (pixel) color into another one
 type FragmentShader struct {
@@ -574,6 +606,7 @@ type Program struct {
 	uniformLocations  map[string]int32
 	runInOpenGLThread func(func())
 	allImages         allImages
+	attributes        []attribute
 }
 
 func (p *Program) AcceleratedCommand(command Command) (*AcceleratedCommand, error) {

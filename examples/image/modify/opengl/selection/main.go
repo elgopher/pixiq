@@ -2,6 +2,8 @@ package main
 
 import (
 	"errors"
+	"fmt"
+
 	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/loop"
 	"github.com/jacekolszak/pixiq/opengl"
@@ -39,7 +41,7 @@ func main() {
 		if err := buffer.Upload(0, vertices); err != nil {
 			panic(err)
 		}
-		array, err := gl.NewVertexArray(opengl.VertexLayout{opengl.Vec2, opengl.Vec3})
+		array, err := gl.NewVertexArray(opengl.VertexLayout{opengl.Vec2, opengl.Vec2})
 		if err != nil {
 			panic(err)
 		}
@@ -109,8 +111,10 @@ func (c command) RunGL(renderer *opengl.Renderer, selections []image.Accelerated
 		return errors.New("invalid number of selections")
 	}
 	if err := renderer.BindTexture(0, "tex", selections[0].Image); err != nil {
-		return err
+		return fmt.Errorf("error binding texture: %v", err)
 	}
-	renderer.DrawArrays(c.vertexArray, opengl.TriangleFan, 0, 4)
+	if err := renderer.DrawArrays(c.vertexArray, opengl.TriangleFan, 0, 4); err != nil {
+		return fmt.Errorf("error drawing arrays: %v", err)
+	}
 	return nil
 }

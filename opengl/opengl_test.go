@@ -587,6 +587,15 @@ func TestOpenGL_NewFloatVertexBuffer(t *testing.T) {
 			})
 		}
 	})
+	t.Run("two buffers should have different IDs", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		// when
+		buffer1, _ := openGL.NewFloatVertexBuffer(1)
+		buffer2, _ := openGL.NewFloatVertexBuffer(1)
+		// then
+		assert.NotEqual(t, buffer1.ID(), buffer2.ID())
+	})
 }
 
 func TestFloatVertexBuffer_Upload(t *testing.T) {

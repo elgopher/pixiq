@@ -93,7 +93,6 @@ type command struct {
 	vertexArray *opengl.VertexArray
 }
 
-func (c command) RunGL(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
-	renderer.DrawArrays(c.vertexArray, opengl.TriangleFan, 0, 4)
-	return nil
+func (c command) RunGL(renderer *opengl.Renderer, _ []image.AcceleratedImageSelection) error {
+	return renderer.DrawArrays(c.vertexArray, opengl.TriangleFan, 0, 4)
 }
