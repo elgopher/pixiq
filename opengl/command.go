@@ -96,7 +96,8 @@ func (r *Renderer) Clear(color image.Color) {
 	})
 }
 
-// AcceleratedCommand is an image.AcceleratedCommand implementation.
+// AcceleratedCommand is an image.AcceleratedCommand implementation. It delegates
+// the drawing to Command.
 type AcceleratedCommand struct {
 	command           Command
 	program           *Program

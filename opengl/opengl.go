@@ -418,8 +418,10 @@ func (g *OpenGL) NewFloatVertexBuffer(size int) (*FloatVertexBuffer, error) {
 	return vb, nil
 }
 
+// VertexLayout defines data types of VertexArray locations.
 type VertexLayout []Type
 
+// Type is a kind of OpenGL's attribute.
 type Type struct {
 	components int32
 	xtype      uint32
@@ -445,12 +447,22 @@ func (t Type) String() string {
 }
 
 var (
+	// Float is single-precision floating point number.
+	// Equivalent of Go's float32.
 	Float = Type{components: 1, xtype: gl.FLOAT, name: "Float"}
-	Vec2  = Type{components: 2, xtype: gl.FLOAT, name: "Vec2"}
-	Vec3  = Type{components: 3, xtype: gl.FLOAT, name: "Vec3"}
-	Vec4  = Type{components: 4, xtype: gl.FLOAT, name: "Vec4"}
+	// Vec2 is a vector of two single-precision floating point numbers.
+	// Equivalent of Go's [2]float32.
+	Vec2 = Type{components: 2, xtype: gl.FLOAT, name: "Vec2"}
+	// Vec3 is a vector of three single-precision floating point numbers.
+	// Equivalent of Go's [3]float32.
+	Vec3 = Type{components: 3, xtype: gl.FLOAT, name: "Vec3"}
+	// Vec4 is a vector of four single-precision floating point numbers.
+	// Equivalent of Go's [4]float32.
+	Vec4 = Type{components: 4, xtype: gl.FLOAT, name: "Vec4"}
 )
 
+// NewVertexArray creates a new instance of VertexArray. All vertex attributes
+// specified in layout will be enabled.
 func (g *OpenGL) NewVertexArray(layout VertexLayout) (*VertexArray, error) {
 	if len(layout) == 0 {
 		return nil, errors.New("empty layout")
@@ -499,6 +511,7 @@ type VertexBuffer interface {
 	ID() uint32
 }
 
+// Sets a location of VertexArray pointing to VertexBuffer slice.
 func (a *VertexArray) Set(location int, pointer VertexBufferPointer) error {
 	if pointer.Offset < 0 {
 		return errors.New("negative pointer offset")
@@ -618,6 +631,7 @@ type Program struct {
 	attributes        map[int32]attribute
 }
 
+// AcceleratedCommand returns a potentially cached instance of *AcceleratedCommand.
 func (p *Program) AcceleratedCommand(command Command) (*AcceleratedCommand, error) {
 	if command == nil {
 		return nil, errors.New("nil command")
