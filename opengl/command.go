@@ -87,7 +87,6 @@ func (c *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selecti
 		return errors.New("output image created in a different OpenGL context than program")
 	}
 	c.runInOpenGLThread(func() {
-		// TODO partially tested
 		c.program.use()
 		gl.Enable(gl.SCISSOR_TEST)
 		gl.BindFramebuffer(gl.FRAMEBUFFER, img.frameBufferID)

@@ -39,7 +39,7 @@ func main() {
 		if err := buffer.Upload(0, vertices); err != nil {
 			panic(err)
 		}
-		array, err := gl.NewVertexArray(opengl.VertexLayout{opengl.Float2, opengl.Float3})
+		array, err := gl.NewVertexArray(opengl.VertexLayout{opengl.Vec2, opengl.Vec3})
 		if err != nil {
 			panic(err)
 		}

@@ -276,7 +276,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 				typ:  opengl.Float,
 				data: []float32{1},
 			},
-			"float2": {
+			"vec2": {
 				vertexShaderSrc: `
 								#version 330 core
 								layout(location = 0) in vec2 vertexPosition;
@@ -284,10 +284,10 @@ func TestRenderer_DrawArrays(t *testing.T) {
 									gl_Position = vec4(vertexPosition.x-1, vertexPosition.y-2, 0, 1);
 								}
 								`,
-				typ:  opengl.Float2,
+				typ:  opengl.Vec2,
 				data: []float32{1, 2},
 			},
-			"float3": {
+			"vec3": {
 				vertexShaderSrc: `
 								#version 330 core
 								layout(location = 0) in vec3 vertexPosition;
@@ -295,10 +295,10 @@ func TestRenderer_DrawArrays(t *testing.T) {
 									gl_Position = vec4(vertexPosition.x-1, vertexPosition.y-2, vertexPosition.z-3, 1);
 								}
 								`,
-				typ:  opengl.Float3,
+				typ:  opengl.Vec3,
 				data: []float32{1, 2, 3},
 			},
-			"float4": {
+			"vec4": {
 				vertexShaderSrc: `
 								#version 330 core
 								layout(location = 0) in vec4 vertexPosition;
@@ -306,7 +306,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 									gl_Position = vec4(vertexPosition.x-1, vertexPosition.y-2, vertexPosition.z-3, vertexPosition.w-3);
 								}
 								`,
-				typ:  opengl.Float4,
+				typ:  opengl.Vec4,
 				data: []float32{1, 2, 3, 4},
 			},
 		}
@@ -380,7 +380,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 		require.NoError(t, err)
 		program, err := openGL.LinkProgram(vertexShader, fragmentShader)
 		require.NoError(t, err)
-		array, err := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float, opengl.Float3})
+		array, err := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float, opengl.Vec3})
 		require.NoError(t, err)
 		buffer, err := openGL.NewFloatVertexBuffer(4)
 		require.NoError(t, err)
@@ -405,6 +405,96 @@ func TestRenderer_DrawArrays(t *testing.T) {
 		require.NoError(t, err)
 		assertColors(t, []image.Color{image.RGB(51, 102, 153)}, img)
 	})
+	t.Run("should draw triangle fan with location specified", func(t *testing.T) {
+		color := image.RGBA(51, 102, 153, 204)
+		tests := map[string]struct {
+			width, height  int
+			outputLocation image.AcceleratedImageLocation
+			expectedColors []image.Color
+		}{
+			"X:1": {
+				outputLocation: image.AcceleratedImageLocation{X: 1, Width: 1, Height: 1},
+				width:          2, height: 1,
+				expectedColors: []image.Color{image.Transparent, color},
+			},
+			"Y:1": {
+				outputLocation: image.AcceleratedImageLocation{Y: 1, Width: 1, Height: 1},
+				width:          1, height: 2,
+				expectedColors: []image.Color{image.Transparent, color},
+			},
+			"Width:2": {
+				outputLocation: image.AcceleratedImageLocation{Width: 2, Height: 1},
+				width:          2, height: 1,
+				expectedColors: []image.Color{color, color},
+			},
+			"Width:3": {
+				outputLocation: image.AcceleratedImageLocation{Width: 3, Height: 1},
+				width:          3, height: 1,
+				expectedColors: []image.Color{color, color, color},
+			},
+			"Height:2": {
+				outputLocation: image.AcceleratedImageLocation{Width: 1, Height: 2},
+				width:          1, height: 2,
+				expectedColors: []image.Color{color, color},
+			},
+			"Height:3": {
+				outputLocation: image.AcceleratedImageLocation{Width: 1, Height: 3},
+				width:          1, height: 3,
+				expectedColors: []image.Color{color, color, color},
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				openGL, _ := opengl.New(mainThreadLoop)
+				defer openGL.Destroy()
+				img, _ := openGL.NewAcceleratedImage(test.width, test.height)
+				img.Upload(make([]image.Color, test.width*test.height))
+				program := compileProgram(t, openGL,
+					`
+								#version 330 core
+								layout(location = 0) in vec2 vertexPosition;
+								void main() {
+									gl_Position = vec4(vertexPosition, 0, 1);
+								}
+								`,
+					`
+								#version 330 core
+								out vec4 color;
+								void main() {
+									color = vec4(0.2, 0.4, 0.6, 0.8);
+								}
+								`,
+				)
+				array, err := openGL.NewVertexArray(opengl.VertexLayout{opengl.Vec2})
+				require.NoError(t, err)
+				buffer, err := openGL.NewFloatVertexBuffer(8)
+				require.NoError(t, err)
+				err = buffer.Upload(0, []float32{
+					-1, 1, // top-left
+					1, 1, // top-right
+					1, -1, // bottom-right
+					-1, -1}, // bottom-left
+				)
+				require.NoError(t, err)
+				vertexPosition := opengl.VertexBufferPointer{Buffer: buffer, Stride: 2}
+				err = array.Set(0, vertexPosition)
+				require.NoError(t, err)
+				glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
+					// when
+					renderer.DrawArrays(array, opengl.TriangleFan, 0, 4)
+					return nil
+				}}
+				command, _ := program.AcceleratedCommand(glCommand)
+				err = command.Run(image.AcceleratedImageSelection{
+					Location: test.outputLocation,
+					Image:    img,
+				}, []image.AcceleratedImageSelection{})
+				// then
+				require.NoError(t, err)
+				assertColors(t, test.expectedColors, img)
+			})
+		}
+	})
 	t.Run("should draw two points", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
@@ -428,7 +518,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 		require.NoError(t, err)
 		program, err := openGL.LinkProgram(vertexShader, fragmentShader)
 		require.NoError(t, err)
-		array, err := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float, opengl.Float3})
+		array, err := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float, opengl.Vec3})
 		require.NoError(t, err)
 		buffer, err := openGL.NewFloatVertexBuffer(4)
 		require.NoError(t, err)
@@ -561,7 +651,7 @@ func TestRenderer_BindTexture(t *testing.T) {
 					color = texture(tex, vec2(0.0, 0.0));
 				}
 				`)
-		array, err := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float2, opengl.Float2})
+		array, err := openGL.NewVertexArray(opengl.VertexLayout{opengl.Vec2, opengl.Vec2})
 		require.NoError(t, err)
 		buffer, err := openGL.NewFloatVertexBuffer(2)
 		require.NoError(t, err)
@@ -615,7 +705,7 @@ func TestRenderer_BindTexture(t *testing.T) {
 					color = texture(tex1, vec2(0.0, 0.0)) + texture(tex2, vec2(0.0, 0.0));
 				}
 				`)
-		array, err := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float2, opengl.Float2})
+		array, err := openGL.NewVertexArray(opengl.VertexLayout{opengl.Vec2, opengl.Vec2})
 		require.NoError(t, err)
 		buffer, err := openGL.NewFloatVertexBuffer(2)
 		require.NoError(t, err)

@@ -421,10 +421,10 @@ type Type struct {
 }
 
 var (
-	Float  = Type{components: 1, xtype: gl.FLOAT}
-	Float2 = Type{components: 2, xtype: gl.FLOAT}
-	Float3 = Type{components: 3, xtype: gl.FLOAT}
-	Float4 = Type{components: 4, xtype: gl.FLOAT}
+	Float = Type{components: 1, xtype: gl.FLOAT}
+	Vec2  = Type{components: 2, xtype: gl.FLOAT}
+	Vec3  = Type{components: 3, xtype: gl.FLOAT}
+	Vec4  = Type{components: 4, xtype: gl.FLOAT}
 )
 
 func (g *OpenGL) NewVertexArray(layout VertexLayout) (*VertexArray, error) {
