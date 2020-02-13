@@ -55,6 +55,7 @@ type Mode struct {
 }
 
 var (
+	// https://www.khronos.org/opengl/wiki/Primitive
 	Points        = Mode{glMode: gl.POINTS}
 	LineStrip     = Mode{glMode: gl.LINE_STRIP}
 	LineLoop      = Mode{glMode: gl.LINE_LOOP}
@@ -105,6 +106,7 @@ type AcceleratedCommand struct {
 	allImages         allImages
 }
 
+// Implements image.AcceleratedCommand#Run.
 func (c *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selections []image.AcceleratedImageSelection) error {
 	if output.Image == nil {
 		return errors.New("nil output Image")

@@ -483,6 +483,9 @@ func (g *OpenGL) NewVertexArray(layout VertexLayout) (*VertexArray, error) {
 	}, nil
 }
 
+// VertexArray is a thin abstraction for OpenGL's Vertex Array Object.
+//
+// https://www.khronos.org/opengl/wiki/Vertex_Specification#Vertex_Array_Object
 type VertexArray struct {
 	id                uint32
 	runInOpenGLThread func(func())
