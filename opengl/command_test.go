@@ -628,48 +628,72 @@ func TestRenderer_DrawArrays(t *testing.T) {
 			})
 		}
 	})
-	t.Run("should not return error when vertex array and shader have different len of attributes", func(t *testing.T) {
-		// TODO Add test for case when len(vao) < len(program)
-		openGL, _ := opengl.New(mainThreadLoop)
-		defer openGL.Destroy()
-		img, _ := openGL.NewAcceleratedImage(1, 1)
-		img.Upload(make([]image.Color, 2))
-		vertexShader, err := openGL.CompileVertexShader(`
-								#version 330 core
-								layout(location = 0) in vec4 vertexPosition;
-								void main() {
-									gl_Position = vertexPosition; 
-								}
-								`)
-		require.NoError(t, err)
-		fragmentShader, err := openGL.CompileFragmentShader(`
+	t.Run("should not return error when vertex array and program have different len of attributes", func(t *testing.T) {
+		tests := map[string]struct {
+			vertexShaderSrc string
+			layout          opengl.VertexLayout
+		}{
+			"len(vertex array) > len(shader)": {
+				vertexShaderSrc: `
+					#version 330 core
+					layout(location = 0) in vec4 vertexPosition;
+					void main() {
+						gl_Position = vertexPosition;
+					}
+					`,
+				layout: opengl.VertexLayout{opengl.Vec4, opengl.Vec4},
+			},
+			"len(vertex array) < len(shader)": {
+				vertexShaderSrc: `
+					#version 330 core
+					layout(location = 0) in vec4 vertexPosition1;
+					layout(location = 1) in vec4 vertexPosition2;
+					void main() {
+						gl_Position = vertexPosition1 + vertexPosition2; 
+					}
+					`,
+				layout: opengl.VertexLayout{opengl.Vec4},
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				openGL, _ := opengl.New(mainThreadLoop)
+				defer openGL.Destroy()
+				img, _ := openGL.NewAcceleratedImage(1, 1)
+				img.Upload(make([]image.Color, 2))
+				vertexShader, err := openGL.CompileVertexShader(test.vertexShaderSrc)
+				require.NoError(t, err)
+				fragmentShader, err := openGL.CompileFragmentShader(`
 								#version 330 core
 								void main() {}
 								`)
-		require.NoError(t, err)
-		program, err := openGL.LinkProgram(vertexShader, fragmentShader)
-		require.NoError(t, err)
-		array, err := openGL.NewVertexArray(opengl.VertexLayout{opengl.Vec4, opengl.Vec4})
-		require.NoError(t, err)
-		buffer, err := openGL.NewFloatVertexBuffer(10)
-		require.NoError(t, err)
-		err = buffer.Upload(0, []float32{0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
-		require.NoError(t, err)
-		vertexPositionX := opengl.VertexBufferPointer{Buffer: buffer, Offset: 0, Stride: 10}
-		vertexPositionY := opengl.VertexBufferPointer{Buffer: buffer, Offset: 4, Stride: 10}
-		err = array.Set(0, vertexPositionX)
-		err = array.Set(1, vertexPositionY)
-		glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
-			// when
-			return renderer.DrawArrays(array, opengl.Points, 0, 1)
-		}}
-		command, _ := program.AcceleratedCommand(glCommand)
-		err = command.Run(image.AcceleratedImageSelection{
-			Location: image.AcceleratedImageLocation{Width: 1, Height: 1},
-			Image:    img,
-		}, []image.AcceleratedImageSelection{})
-		// then
-		assert.NoError(t, err)
+				require.NoError(t, err)
+				program, err := openGL.LinkProgram(vertexShader, fragmentShader)
+				require.NoError(t, err)
+				array, err := openGL.NewVertexArray(test.layout)
+				require.NoError(t, err)
+				buffer, err := openGL.NewFloatVertexBuffer(8)
+				require.NoError(t, err)
+				err = buffer.Upload(0, []float32{0, 0, 0, 0, 0, 0, 0, 0})
+				require.NoError(t, err)
+				for location, _ := range test.layout {
+					err = array.Set(location, opengl.VertexBufferPointer{Buffer: buffer, Offset: location * 4, Stride: 8})
+					require.NoError(t, err)
+				}
+				glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
+					// when
+					return renderer.DrawArrays(array, opengl.Points, 0, 1)
+				}}
+				command, _ := program.AcceleratedCommand(glCommand)
+				err = command.Run(image.AcceleratedImageSelection{
+					Location: image.AcceleratedImageLocation{Width: 1, Height: 1},
+					Image:    img,
+				}, []image.AcceleratedImageSelection{})
+				// then
+				assert.NoError(t, err)
+			})
+		}
+
 	})
 }
 
