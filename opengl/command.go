@@ -71,15 +71,12 @@ func (r *Renderer) DrawArrays(array *VertexArray, mode Mode, first, count int) e
 }
 
 func (r *Renderer) validateAttributeTypes(array *VertexArray) error {
-	attributesLen := len(array.layout)
-	if len(r.program.attributes) < attributesLen {
-		attributesLen = len(r.program.attributes)
-	}
-	for i := 0; i < attributesLen; i++ {
-		attr := r.program.attributes[i]
-		vertexArrayType := array.layout[i]
-		if attr.typ != vertexArrayType {
-			return fmt.Errorf("shader attribute %s with location %d has type %v, which is different than %v in the vertex array", attr.name, i, attr.typ, vertexArrayType)
+	for i := 0; i < len(array.layout); i++ {
+		if attr, ok := r.program.attributes[int32(i)]; ok {
+			vertexArrayType := array.layout[i]
+			if attr.typ != vertexArrayType {
+				return fmt.Errorf("shader attribute %s with location %d has type %v, which is different than %v in the vertex array", attr.name, i, attr.typ, vertexArrayType)
+			}
 		}
 	}
 	return nil

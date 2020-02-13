@@ -377,7 +377,7 @@ func (g *OpenGL) LinkProgram(vertexShader *VertexShader, fragmentShader *Fragmen
 		program          *program
 		err              error
 		uniformLocations map[string]int32
-		attributes       []attribute
+		attributes       map[int32]attribute
 	)
 	g.runInOpenGLThread(func() {
 		program, err = linkProgram(vertexShader.shader, fragmentShader.shader)
@@ -606,7 +606,7 @@ type Program struct {
 	uniformLocations  map[string]int32
 	runInOpenGLThread func(func())
 	allImages         allImages
-	attributes        []attribute
+	attributes        map[int32]attribute
 }
 
 func (p *Program) AcceleratedCommand(command Command) (*AcceleratedCommand, error) {

@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/loop"
@@ -13,19 +14,19 @@ func main() {
 	opengl.RunOrDie(func(gl *opengl.OpenGL) {
 		vertexShader, err := gl.CompileVertexShader(vertexShaderSrc)
 		if err != nil {
-			panic(err)
+			log.Panicf("CompileVertexShader failed: %v", err)
 		}
 		fragmentShader, err := gl.CompileFragmentShader(fragmentShaderSrc)
 		if err != nil {
-			panic(err)
+			log.Panicf("CompileFragmentShader failed: %v", err)
 		}
 		program, err := gl.LinkProgram(vertexShader, fragmentShader)
 		if err != nil {
-			panic(err)
+			log.Panicf("LinkProgram failed: %v", err)
 		}
 		window, err := gl.OpenWindow(200, 200, opengl.Zoom(2))
 		if err != nil {
-			panic(err)
+			log.Panicf("OpenWindow failed: %v", err)
 		}
 		// xy -> st
 		vertices := []float32{
@@ -36,32 +37,32 @@ func main() {
 		}
 		buffer, err := gl.NewFloatVertexBuffer(len(vertices))
 		if err != nil {
-			panic(err)
+			log.Panicf("NewFloatVertexBuffer failed: %v", err)
 		}
 		if err := buffer.Upload(0, vertices); err != nil {
-			panic(err)
+			log.Panicf("Upload failed: %v", err)
 		}
 		array, err := gl.NewVertexArray(opengl.VertexLayout{opengl.Vec2, opengl.Vec2})
 		if err != nil {
-			panic(err)
+			log.Panicf("NewVertexArray failed: %v", err)
 		}
 		xy := opengl.VertexBufferPointer{Offset: 0, Stride: 4, Buffer: buffer}
 		if err := array.Set(0, xy); err != nil {
-			panic(err)
+			log.Panicf("VertexBufferPointer failed: %v", err)
 		}
 		st := opengl.VertexBufferPointer{Offset: 2, Stride: 4, Buffer: buffer}
 		if err := array.Set(1, st); err != nil {
-			panic(err)
+			log.Panicf("VertexBufferPointer failed: %v", err)
 		}
 		cmd, err := program.AcceleratedCommand(&command{
 			vertexArray: array,
 		})
 		if err != nil {
-			panic(err)
+			log.Panicf("AcceleratedCommand failed: %v", err)
 		}
 		sampledImage, err := gl.NewImage(2, 2)
 		if err != nil {
-			panic(err)
+			log.Panicf("NewImage failed: %v", err)
 		}
 		selection := sampledImage.WholeImageSelection()
 		selection.SetColor(0, 0, image.RGB(255, 0, 0))
@@ -71,7 +72,7 @@ func main() {
 		loop.Run(window, func(frame *loop.Frame) {
 			screen := frame.Screen()
 			if err := screen.Modify(cmd, selection); err != nil {
-				panic(err)
+				log.Panicf("Modify failed: %v", err)
 			}
 		})
 	})

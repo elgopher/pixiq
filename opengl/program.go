@@ -55,16 +55,18 @@ type attribute struct {
 	name string
 }
 
-func (p *program) attributes() []attribute {
+func (p *program) attributes() map[int32]attribute {
 	var count, bufSize, length, nameMaxLength int32
 	var xtype uint32
 	gl.GetProgramiv(p.id, gl.ACTIVE_ATTRIBUTE_MAX_LENGTH, &nameMaxLength)
 	name := make([]byte, nameMaxLength)
 	gl.GetProgramiv(p.id, gl.ACTIVE_ATTRIBUTES, &count)
-	attributes := make([]attribute, count)
-	for location := int32(0); location < count; location++ {
-		gl.GetActiveAttrib(p.id, uint32(location), nameMaxLength, &bufSize, &length, &xtype, &name[0])
-		attributes[location] = attribute{typ: valueOf(xtype), name: gl.GoStr(&name[0])}
+	attributes := map[int32]attribute{}
+	for i := int32(0); i < count; i++ {
+		gl.GetActiveAttrib(p.id, uint32(i), nameMaxLength, &bufSize, &length, &xtype, &name[0])
+		location := gl.GetAttribLocation(p.id, &name[0])
+		attributes[location] = attribute{typ: valueOf(xtype),
+			name: gl.GoStr(&name[0])}
 	}
 	return attributes
 }
@@ -122,7 +124,7 @@ func compileShader(xtype uint32, src string) (*shader, error) {
 		if logLen > 0 {
 			gl.GetShaderInfoLog(shaderID, logLen, nil, &infoLog[0])
 		}
-		return nil, fmt.Errorf("error compiling shader: %s", string(infoLog))
+		return nil, fmt.Errorf("gl.CompileShader failed: %s", string(infoLog))
 	}
 	return &shader{id: shaderID}, nil
 }
