@@ -10,17 +10,21 @@ import (
 	"github.com/jacekolszak/pixiq/image"
 )
 
+// Command is a procedure drawing primitives (such as triangles) in the AcceleratedImage.
 type Command interface {
 	// Implementations must not retain renderer and selections.
 	RunGL(renderer *Renderer, selections []image.AcceleratedImageSelection) error
 }
 
+// Renderer is an API for drawing primitives
 type Renderer struct {
 	program           *Program
 	runInOpenGLThread func(func())
 	allImages         allImages
 }
 
+// BindTexture assigns image.AcceleratedImage to a given textureUnit and uniform attribute.
+// The bounded texture can be sampled in a fragment shader.
 func (r *Renderer) BindTexture(textureUnit int, uniformAttributeName string, image image.AcceleratedImage) error {
 	if textureUnit < 0 {
 		return errors.New("negative textureUnit")
@@ -45,6 +49,7 @@ func (r *Renderer) BindTexture(textureUnit int, uniformAttributeName string, ima
 	return nil
 }
 
+// Mode defines which primitives will be drawn.
 type Mode struct {
 	glMode uint32
 }
@@ -59,6 +64,7 @@ var (
 	Triangles     = Mode{glMode: gl.TRIANGLES}
 )
 
+// DrawArrays draws primitives (such as triangles) using vertices defined in VertexArray.
 func (r *Renderer) DrawArrays(array *VertexArray, mode Mode, first, count int) error {
 	if err := r.validateAttributeTypes(array); err != nil {
 		return err
@@ -82,6 +88,7 @@ func (r *Renderer) validateAttributeTypes(array *VertexArray) error {
 	return nil
 }
 
+// Clear clears the selection with a given color.
 func (r *Renderer) Clear(color image.Color) {
 	r.runInOpenGLThread(func() {
 		gl.ClearColor(color.RGBAf())

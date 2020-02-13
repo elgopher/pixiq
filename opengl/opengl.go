@@ -478,16 +478,24 @@ type VertexArray struct {
 	vertexBufferIDs   vertexBufferIDs
 }
 
+// Delete should be called whenever you don't plan to use VertexArray anymore.
+// VertexArray is an external resource (like file for example) and must be deleted manually.
 func (a *VertexArray) Delete() {
+	a.runInOpenGLThread(func() {
+		gl.DeleteVertexArrays(1, &a.id)
+	})
 }
 
+// VertexBufferPointer is a slice of VertexBuffer
 type VertexBufferPointer struct {
 	Buffer VertexBuffer
 	Offset int
 	Stride int
 }
 
+// VertexBuffer contains data about vertices.
 type VertexBuffer interface {
+	// ID returns OpenGL identifier/name.
 	ID() uint32
 }
 
@@ -584,6 +592,7 @@ func (b *FloatVertexBuffer) Upload(offset int, data []float32) error {
 	return err
 }
 
+// ID returns OpenGL identifier/name.
 func (b *FloatVertexBuffer) ID() uint32 {
 	return b.id
 }
