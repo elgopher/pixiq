@@ -5,6 +5,7 @@ import (
 	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/loop"
 	"github.com/jacekolszak/pixiq/opengl"
+	"log"
 )
 
 // This example shows how too use two separate OpenGL instances. Each contains its
@@ -22,12 +23,12 @@ func main() {
 func startOpenGL(mainThreadLoop *opengl.MainThreadLoop, title string, color image.Color) {
 	gl, err := opengl.New(mainThreadLoop)
 	if err != nil {
-		panic(err)
+		log.Panicf("%s New failed: %v", title, err)
 	}
 	defer gl.Destroy()
 	win, err := gl.OpenWindow(2, 1, opengl.Zoom(100), opengl.Title(title))
 	if err != nil {
-		panic(err)
+		log.Panicf("%s OpenWindow failed: %v", title, err)
 	}
 	defer win.Close()
 	loop.Run(win, func(frame *loop.Frame) {
