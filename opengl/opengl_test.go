@@ -55,6 +55,7 @@ func TestOpenGL_NewImage(t *testing.T) {
 		img, err := openGL.NewImage(-1, 0)
 		// then
 		require.Error(t, err)
+		assert.True(t, opengl.IsClientError(err))
 		assert.Nil(t, img)
 	})
 	t.Run("should return error for negative height", func(t *testing.T) {
@@ -65,6 +66,7 @@ func TestOpenGL_NewImage(t *testing.T) {
 		img, err := openGL.NewImage(0, -1)
 		// then
 		require.Error(t, err)
+		assert.True(t, opengl.IsClientError(err))
 		assert.Nil(t, img)
 	})
 	t.Run("should create Image", func(t *testing.T) {
@@ -107,6 +109,7 @@ func TestOpenGL_NewTexture(t *testing.T) {
 		img, err := openGL.NewAcceleratedImage(-1, 0)
 		// then
 		require.Error(t, err)
+		assert.True(t, opengl.IsClientError(err))
 		assert.Nil(t, img)
 	})
 	t.Run("should return error for negative height", func(t *testing.T) {
@@ -117,6 +120,7 @@ func TestOpenGL_NewTexture(t *testing.T) {
 		img, err := openGL.NewAcceleratedImage(0, -1)
 		// then
 		require.Error(t, err)
+		assert.True(t, opengl.IsClientError(err))
 		assert.Nil(t, img)
 	})
 	t.Run("should create AcceleratedImage", func(t *testing.T) {
@@ -471,6 +475,7 @@ func TestOpenGL_LinkProgram(t *testing.T) {
 		program, err := openGL.LinkProgram(nil, fragmentShader)
 		// then
 		assert.Error(t, err)
+		assert.True(t, opengl.IsClientError(err))
 		assert.Nil(t, program)
 	})
 	t.Run("should return error when fragment shader is nil", func(t *testing.T) {
@@ -481,6 +486,7 @@ func TestOpenGL_LinkProgram(t *testing.T) {
 		program, err := openGL.LinkProgram(vertexShader, nil)
 		// then
 		assert.Error(t, err)
+		assert.True(t, opengl.IsClientError(err))
 		assert.Nil(t, program)
 	})
 	t.Run("should return error", func(t *testing.T) {
@@ -554,6 +560,7 @@ func TestOpenGL_NewFloatVertexBuffer(t *testing.T) {
 				buffer, err := openGL.NewFloatVertexBuffer(size)
 				// then
 				assert.Error(t, err)
+				assert.True(t, opengl.IsClientError(err))
 				assert.Nil(t, buffer)
 			})
 		}
@@ -621,6 +628,7 @@ func TestFloatVertexBuffer_Upload(t *testing.T) {
 				// when
 				err := buffer.Upload(test.offset, test.data)
 				assert.Error(t, err)
+				assert.True(t, opengl.IsClientError(err))
 			})
 		}
 	})
@@ -632,6 +640,7 @@ func TestFloatVertexBuffer_Upload(t *testing.T) {
 		// when
 		err := buffer.Upload(-1, []float32{1})
 		assert.Error(t, err)
+		assert.True(t, opengl.IsClientError(err))
 	})
 	t.Run("should upload data", func(t *testing.T) {
 		tests := map[string]struct {
@@ -690,6 +699,7 @@ func TestFloatVertexBuffer_Download(t *testing.T) {
 		// when
 		err := buffer.Download(-1, output)
 		assert.Error(t, err)
+		assert.True(t, opengl.IsClientError(err))
 	})
 	t.Run("should download data", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
@@ -806,7 +816,8 @@ func TestVertexArray_Set(t *testing.T) {
 		// when
 		err := vao.Set(0, pointer)
 		// then
-		assert.Error(t, err)
+		require.Error(t, err)
+		assert.True(t, opengl.IsClientError(err))
 	})
 	t.Run("should return error when stride is negative", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
@@ -823,7 +834,8 @@ func TestVertexArray_Set(t *testing.T) {
 		// when
 		err := vao.Set(0, pointer)
 		// then
-		assert.Error(t, err)
+		require.Error(t, err)
+		assert.True(t, opengl.IsClientError(err))
 	})
 	t.Run("should return error when location is negative", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
@@ -840,7 +852,8 @@ func TestVertexArray_Set(t *testing.T) {
 		// when
 		err := vao.Set(-1, pointer)
 		// then
-		assert.Error(t, err)
+		require.Error(t, err)
+		assert.True(t, opengl.IsClientError(err))
 	})
 	t.Run("should return error when location is higher than number of arguments", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
@@ -857,7 +870,8 @@ func TestVertexArray_Set(t *testing.T) {
 		// when
 		err := vao.Set(1, pointer)
 		// then
-		assert.Error(t, err)
+		require.Error(t, err)
+		assert.True(t, opengl.IsClientError(err))
 	})
 	t.Run("should return error when buffer is nil", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
@@ -872,7 +886,8 @@ func TestVertexArray_Set(t *testing.T) {
 		// when
 		err := vao.Set(0, pointer)
 		// then
-		assert.Error(t, err)
+		require.Error(t, err)
+		assert.True(t, opengl.IsClientError(err))
 	})
 	t.Run("should return error when buffer was not created by context", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
@@ -888,7 +903,8 @@ func TestVertexArray_Set(t *testing.T) {
 		// when
 		err := vao.Set(0, pointer)
 		// then
-		assert.Error(t, err)
+		require.Error(t, err)
+		assert.True(t, opengl.IsClientError(err))
 	})
 	t.Run("should set", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)

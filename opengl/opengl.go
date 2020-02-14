@@ -172,10 +172,10 @@ func (g *OpenGL) startPollingEvents(stop <-chan struct{}) {
 // a power of two)
 func (g *OpenGL) NewImage(width, height int) (*image.Image, error) {
 	if width < 0 {
-		return nil, errors.New("negative width")
+		return nil, illegalArgumentError("negative width")
 	}
 	if height < 0 {
-		return nil, errors.New("negative height")
+		return nil, illegalArgumentError("negative height")
 	}
 	acceleratedImage, err := g.NewAcceleratedImage(width, height)
 	if err != nil {
@@ -190,10 +190,10 @@ func (g *OpenGL) NewImage(width, height int) (*image.Image, error) {
 // a power of two)
 func (g *OpenGL) NewAcceleratedImage(width, height int) (*AcceleratedImage, error) {
 	if width < 0 {
-		return nil, errors.New("negative width")
+		return nil, illegalArgumentError("negative width")
 	}
 	if height < 0 {
-		return nil, errors.New("negative height")
+		return nil, illegalArgumentError("negative height")
 	}
 	var id uint32
 	var frameBufferID uint32
@@ -368,10 +368,10 @@ func (g *OpenGL) CompileVertexShader(sourceCode string) (*VertexShader, error) {
 // in image.Modify
 func (g *OpenGL) LinkProgram(vertexShader *VertexShader, fragmentShader *FragmentShader) (*Program, error) {
 	if vertexShader == nil {
-		return nil, errors.New("nil vertexShader")
+		return nil, illegalArgumentError("nil vertexShader")
 	}
 	if fragmentShader == nil {
-		return nil, errors.New("nil fragmentShader")
+		return nil, illegalArgumentError("nil fragmentShader")
 	}
 	var (
 		program          *program
@@ -401,7 +401,7 @@ func (g *OpenGL) LinkProgram(vertexShader *VertexShader, fragmentShader *Fragmen
 // NewFloatVertexBuffer creates an OpenGL's Vertex Buffer Object (VBO) containing only float32 numbers.
 func (g *OpenGL) NewFloatVertexBuffer(size int) (*FloatVertexBuffer, error) {
 	if size < 0 {
-		return nil, errors.New("negative size")
+		return nil, illegalArgumentError("negative size")
 	}
 	var id uint32
 	g.runInOpenGLThread(func() {
@@ -514,26 +514,50 @@ type VertexBuffer interface {
 	ID() uint32
 }
 
+// IsClientError returns true if the error returned by opengl package methods
+// are due to improper use of API.
+func IsClientError(error error) bool {
+	if _, ok := error.(illegalArgumentError); ok {
+		return true
+	}
+	if _, ok := error.(illegalStateError); ok {
+		return true
+	}
+	return false
+}
+
+type illegalArgumentError string
+
+func (e illegalArgumentError) Error() string {
+	return string(e)
+}
+
+type illegalStateError string
+
+func (e illegalStateError) Error() string {
+	return string(e)
+}
+
 // Set sets a location of VertexArray pointing to VertexBuffer slice.
 func (a *VertexArray) Set(location int, pointer VertexBufferPointer) error {
 	if pointer.Offset < 0 {
-		return errors.New("negative pointer offset")
+		return illegalArgumentError("negative pointer offset")
 	}
 	if pointer.Stride < 0 {
-		return errors.New("negative pointer stride")
+		return illegalArgumentError("negative pointer stride")
 	}
 	if pointer.Buffer == nil {
-		return errors.New("nil pointer buffer")
+		return illegalArgumentError("nil pointer buffer")
 	}
 	if location < 0 {
-		return errors.New("negative location")
+		return illegalArgumentError("negative location")
 	}
 	if location >= len(a.layout) {
-		return errors.New("location out-of-bounds")
+		return illegalArgumentError("location out-of-bounds")
 	}
 	bufferID, ok := a.vertexBufferIDs[pointer.Buffer]
 	if !ok {
-		return errors.New("vertex buffer has not been created in this context")
+		return illegalStateError("vertex buffer has not been created in this context")
 	}
 	a.runInOpenGLThread(func() {
 		gl.BindVertexArray(a.id)
@@ -565,7 +589,7 @@ func (b *FloatVertexBuffer) Download(offset int, output []float32) error {
 		return errors.New("deleted buffer")
 	}
 	if offset < 0 {
-		return errors.New("negative offset")
+		return illegalArgumentError("negative offset")
 	}
 	if len(output) == 0 {
 		return nil
@@ -595,10 +619,10 @@ func (b *FloatVertexBuffer) Delete() {
 // Returns error when vertex buffer is too small to hold the data or offset is negative.
 func (b *FloatVertexBuffer) Upload(offset int, data []float32) error {
 	if offset < 0 {
-		return errors.New("negative offset")
+		return illegalArgumentError("negative offset")
 	}
 	if b.size < len(data)+offset {
-		return errors.New("FloatVertexBuffer is to small to store data")
+		return illegalArgumentError("FloatVertexBuffer is to small to store data")
 	}
 	var err error
 	b.runInOpenGLThread(func() {
