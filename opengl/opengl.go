@@ -212,7 +212,7 @@ func (g *OpenGL) NewAcceleratedImage(width, height int) (*AcceleratedImage, erro
 			gl.Ptr(nil),
 		)
 		if gle := gl.GetError(); gle != gl.NO_ERROR {
-			err = glError{"glTexImage2D", gle}
+			err = glError{method: "glTexImage2D", code: gle}
 			return
 		}
 		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
@@ -409,7 +409,7 @@ func (g *OpenGL) NewFloatVertexBuffer(size int) (*FloatVertexBuffer, error) {
 		gl.BindBuffer(gl.ARRAY_BUFFER, id)
 		gl.BufferData(gl.ARRAY_BUFFER, size*4, gl.Ptr(nil), gl.STATIC_DRAW) // FIXME: Parametrize usage
 		if errorCode := gl.GetError(); errorCode != gl.NO_ERROR {
-			err = glError{"glBufferData", errorCode}
+			err = glError{method: "glBufferData", code: errorCode}
 		}
 	})
 	if err != nil {
@@ -536,7 +536,7 @@ type glError struct {
 }
 
 func (g glError) Error() string {
-	return fmt.Sprintf("gl error: %d", g.code)
+	return fmt.Sprintf("%s failed: %d", g.method, g.code)
 }
 
 func (g glError) isOutOfMemory() bool {

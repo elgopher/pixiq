@@ -124,7 +124,7 @@ func compileShader(xtype uint32, src string) (*shader, error) {
 		if logLen > 0 {
 			gl.GetShaderInfoLog(shaderID, logLen, nil, &infoLog[0])
 		}
-		return nil, fmt.Errorf("gl.CompileShader failed: %s", string(infoLog))
+		return nil, fmt.Errorf("glCompileShader failed: %s", string(infoLog))
 	}
 	return &shader{id: shaderID}, nil
 }

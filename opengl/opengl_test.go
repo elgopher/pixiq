@@ -98,7 +98,7 @@ func TestOpenGL_NewImage(t *testing.T) {
 	})
 }
 
-func TestOpenGL_NewTexture(t *testing.T) {
+func TestOpenGL_NewAcceleratedImage(t *testing.T) {
 	t.Run("should return error for negative width", func(t *testing.T) {
 		openGL, err := opengl.New(mainThreadLoop)
 		require.NoError(t, err)
