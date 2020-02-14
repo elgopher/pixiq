@@ -57,19 +57,33 @@ type Mode struct {
 }
 
 var (
-	// Points draws points using GL_POINTS. See https://www.khronos.org/opengl/wiki/Primitive#Point_primitives
+	// Points draws points using GL_POINTS.
+	//
+	// See https://www.khronos.org/opengl/wiki/Primitive#Point_primitives
 	Points = Mode{glMode: gl.POINTS}
-	// LineStrip draws lines using GL_LINE_STRIP. See https://www.khronos.org/opengl/wiki/Primitive#Line_primitives
+	// LineStrip draws lines using GL_LINE_STRIP.
+	//
+	// See https://www.khronos.org/opengl/wiki/Primitive#Line_primitives
 	LineStrip = Mode{glMode: gl.LINE_STRIP}
-	// LineLoop draws lines using GL_LINE_LOOP. See https://www.khronos.org/opengl/wiki/Primitive#Line_primitives
+	// LineLoop draws lines using GL_LINE_LOOP.
+	//
+	// See https://www.khronos.org/opengl/wiki/Primitive#Line_primitives
 	LineLoop = Mode{glMode: gl.LINE_LOOP}
-	// Lines draws lines using GL_LINES. See https://www.khronos.org/opengl/wiki/Primitive#Line_primitives
+	// Lines draws lines using GL_LINES.
+	//
+	// See https://www.khronos.org/opengl/wiki/Primitive#Line_primitives
 	Lines = Mode{glMode: gl.LINES}
-	// TriangleStrip draws triangles using GL_TRIANGLE_STRIP. See https://www.khronos.org/opengl/wiki/Primitive#Triangle_primitives
+	// TriangleStrip draws triangles using GL_TRIANGLE_STRIP.
+	//
+	// See https://www.khronos.org/opengl/wiki/Primitive#Triangle_primitives
 	TriangleStrip = Mode{glMode: gl.TRIANGLE_STRIP}
-	// TriangleFan draws triangles using GL_TRIANGLE_FAN. See https://www.khronos.org/opengl/wiki/Primitive#Triangle_primitives
+	// TriangleFan draws triangles using GL_TRIANGLE_FAN.
+	//
+	// See https://www.khronos.org/opengl/wiki/Primitive#Triangle_primitives
 	TriangleFan = Mode{glMode: gl.TRIANGLE_FAN}
-	// Triangles draws triangles using GL_TRIANGLES. See https://www.khronos.org/opengl/wiki/Primitive#Triangle_primitives
+	// Triangles draws triangles using GL_TRIANGLES.
+	//
+	// See https://www.khronos.org/opengl/wiki/Primitive#Triangle_primitives
 	Triangles = Mode{glMode: gl.TRIANGLES}
 )
 
