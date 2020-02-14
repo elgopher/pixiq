@@ -211,8 +211,8 @@ func (g *OpenGL) NewAcceleratedImage(width, height int) (*AcceleratedImage, erro
 			gl.UNSIGNED_BYTE,
 			gl.Ptr(nil),
 		)
-		if glError := gl.GetError(); glError != gl.NO_ERROR {
-			err = fmt.Errorf("OpenGL texture creation failed: %d", glError)
+		if gle := gl.GetError(); gle != gl.NO_ERROR {
+			err = glError{"glTexImage2D", gle}
 			return
 		}
 		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
@@ -403,11 +403,18 @@ func (g *OpenGL) NewFloatVertexBuffer(size int) (*FloatVertexBuffer, error) {
 		return nil, illegalArgumentError("negative size")
 	}
 	var id uint32
+	var err error
 	g.runInOpenGLThread(func() {
 		gl.GenBuffers(1, &id)
 		gl.BindBuffer(gl.ARRAY_BUFFER, id)
 		gl.BufferData(gl.ARRAY_BUFFER, size*4, gl.Ptr(nil), gl.STATIC_DRAW) // FIXME: Parametrize usage
+		if errorCode := gl.GetError(); errorCode != gl.NO_ERROR {
+			err = glError{"glBufferData", errorCode}
+		}
 	})
+	if err != nil {
+		return nil, err
+	}
 	vb := &FloatVertexBuffer{
 		id:                id,
 		size:              size,
@@ -513,18 +520,27 @@ type VertexBuffer interface {
 	ID() uint32
 }
 
-// IsClientError returns true if the error returned by opengl package methods
-// are due to improper use of API, such as illegal argument was passed
-// or the object on which the method was executed was in illegal state to handle
-// this call.
-func IsClientError(error error) bool {
-	if _, ok := error.(illegalArgumentError); ok {
-		return true
-	}
-	if _, ok := error.(illegalStateError); ok {
-		return true
+// IsOutOfMemory returns true if the OpenGL driver returned out-of-memory error.
+// This error is not recoverable. Once you get it - you have to destroy the whole
+// OpenGL context and start a new one.
+func IsOutOfMemory(err error) bool {
+	if glErr, ok := err.(glError); ok {
+		return glErr.isOutOfMemory()
 	}
 	return false
+}
+
+type glError struct {
+	method string
+	code   uint32
+}
+
+func (g glError) Error() string {
+	return fmt.Sprintf("gl error: %d", g.code)
+}
+
+func (g glError) isOutOfMemory() bool {
+	return g.code == gl.OUT_OF_MEMORY
 }
 
 type illegalArgumentError string

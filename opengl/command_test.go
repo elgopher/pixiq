@@ -63,8 +63,7 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 		command := program.AcceleratedCommand(&emptyCommand{})
 		// when
 		err := command.Run(image.AcceleratedImageSelection{}, []image.AcceleratedImageSelection{})
-		require.Error(t, err)
-		assert.True(t, opengl.IsClientError(err))
+		assertClientError(t, err)
 	})
 	t.Run("should return error when output image and program were created in different OpenGL contexts", func(t *testing.T) {
 		imageContext, _ := opengl.New(mainThreadLoop)
@@ -78,8 +77,7 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 		err := command.Run(image.AcceleratedImageSelection{
 			Image: img,
 		}, []image.AcceleratedImageSelection{})
-		assert.Error(t, err)
-		assert.True(t, opengl.IsClientError(err))
+		assertClientError(t, err)
 	})
 	t.Run("vertex buffer can be used inside command", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
@@ -724,8 +722,7 @@ func TestRenderer_BindTexture(t *testing.T) {
 				}})
 				err := command.Run(image.AcceleratedImageSelection{Image: output}, []image.AcceleratedImageSelection{})
 				// then
-				assert.Error(t, err)
-				assert.True(t, opengl.IsClientError(err))
+				assertClientError(t, err)
 			})
 		}
 	})
@@ -755,8 +752,7 @@ func TestRenderer_BindTexture(t *testing.T) {
 				}})
 				err := command.Run(image.AcceleratedImageSelection{Image: output}, []image.AcceleratedImageSelection{})
 				// then
-				assert.Error(t, err)
-				assert.True(t, opengl.IsClientError(err))
+				assertClientError(t, err)
 			})
 		}
 	})
@@ -774,8 +770,7 @@ func TestRenderer_BindTexture(t *testing.T) {
 		}})
 		err := command.Run(image.AcceleratedImageSelection{Image: output}, []image.AcceleratedImageSelection{})
 		// then
-		assert.Error(t, err)
-		assert.True(t, opengl.IsClientError(err))
+		assertClientError(t, err)
 	})
 	t.Run("can't bind texture with negative texture unit", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
@@ -789,8 +784,7 @@ func TestRenderer_BindTexture(t *testing.T) {
 		}})
 		err := command.Run(image.AcceleratedImageSelection{Image: output}, []image.AcceleratedImageSelection{})
 		// then
-		require.Error(t, err)
-		assert.True(t, opengl.IsClientError(err))
+		assertClientError(t, err)
 	})
 	t.Run("can bind texture", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
