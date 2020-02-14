@@ -701,6 +701,17 @@ func TestFloatVertexBuffer_Download(t *testing.T) {
 		assert.Error(t, err)
 		assert.True(t, opengl.IsClientError(err))
 	})
+	t.Run("should return error when buffer has been deleted", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		buffer, _ := openGL.NewFloatVertexBuffer(1)
+		buffer.Delete()
+		output := make([]float32, 1)
+		// when
+		err := buffer.Download(-1, output)
+		assert.Error(t, err)
+		assert.True(t, opengl.IsClientError(err))
+	})
 	t.Run("should download data", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()

@@ -1,7 +1,6 @@
 package opengl
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -27,7 +26,7 @@ type Renderer struct {
 // The bounded texture can be sampled in a fragment shader.
 func (r *Renderer) BindTexture(textureUnit int, uniformAttributeName string, image image.AcceleratedImage) error {
 	if textureUnit < 0 {
-		return errors.New("negative textureUnit")
+		return illegalArgumentError("negative textureUnit")
 	}
 	trimmed := strings.TrimSpace(uniformAttributeName)
 	if trimmed == "" {
@@ -39,7 +38,7 @@ func (r *Renderer) BindTexture(textureUnit int, uniformAttributeName string, ima
 	}
 	img, ok := r.allImages[image]
 	if !ok {
-		return errors.New("image has not been created in this OpenGL context")
+		return illegalArgumentError("image has not been created in this OpenGL context")
 	}
 	r.runInOpenGLThread(func() {
 		gl.Uniform1i(textureLocation, int32(textureUnit))
@@ -136,11 +135,11 @@ func (c *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selecti
 		return nil
 	}
 	if output.Image == nil {
-		return errors.New("nil output Image")
+		return illegalArgumentError("nil output Image")
 	}
 	img, ok := c.allImages[output.Image]
 	if !ok {
-		return errors.New("output image created in a different OpenGL context than program")
+		return illegalStateError("output image created in a different OpenGL context than program")
 	}
 	c.runInOpenGLThread(func() {
 		c.program.use()

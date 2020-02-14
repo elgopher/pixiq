@@ -6,7 +6,6 @@
 package opengl
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -588,7 +587,7 @@ func (b *FloatVertexBuffer) Size() int {
 // unless output slice is bigger then the vertex buffer.
 func (b *FloatVertexBuffer) Download(offset int, output []float32) error {
 	if b.deleted {
-		return errors.New("deleted buffer")
+		return illegalStateError("deleted buffer")
 	}
 	if offset < 0 {
 		return illegalArgumentError("negative offset")
