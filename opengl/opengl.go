@@ -514,7 +514,7 @@ type VertexBuffer interface {
 	ID() uint32
 }
 
-// Sets a location of VertexArray pointing to VertexBuffer slice.
+// Set sets a location of VertexArray pointing to VertexBuffer slice.
 func (a *VertexArray) Set(location int, pointer VertexBufferPointer) error {
 	if pointer.Offset < 0 {
 		return errors.New("negative pointer offset")
@@ -548,9 +548,9 @@ func (a *VertexArray) Set(location int, pointer VertexBufferPointer) error {
 // FloatVertexBuffer is a struct representing OpenGL's Vertex Buffer Object (VBO) containing only float32 numbers.
 type FloatVertexBuffer struct {
 	id                uint32
+	deleted           bool
 	size              int
 	runInOpenGLThread func(func())
-	deleted           bool
 }
 
 // Size is the number of float values defined during creation time.

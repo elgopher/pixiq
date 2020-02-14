@@ -50,22 +50,32 @@ func (r *Renderer) BindTexture(textureUnit int, uniformAttributeName string, ima
 }
 
 // Mode defines which primitives will be drawn.
+//
+// See https://www.khronos.org/opengl/wiki/Primitive
 type Mode struct {
 	glMode uint32
 }
 
 var (
-	// https://www.khronos.org/opengl/wiki/Primitive
-	Points        = Mode{glMode: gl.POINTS}
-	LineStrip     = Mode{glMode: gl.LINE_STRIP}
-	LineLoop      = Mode{glMode: gl.LINE_LOOP}
-	Lines         = Mode{glMode: gl.LINES}
+	// Points draws points using GL_POINTS. See https://www.khronos.org/opengl/wiki/Primitive#Point_primitives
+	Points = Mode{glMode: gl.POINTS}
+	// LineStrip draws lines using GL_LINE_STRIP. See https://www.khronos.org/opengl/wiki/Primitive#Line_primitives
+	LineStrip = Mode{glMode: gl.LINE_STRIP}
+	// LineLoop draws lines using GL_LINE_LOOP. See https://www.khronos.org/opengl/wiki/Primitive#Line_primitives
+	LineLoop = Mode{glMode: gl.LINE_LOOP}
+	// Lines draws lines using GL_LINES. See https://www.khronos.org/opengl/wiki/Primitive#Line_primitives
+	Lines = Mode{glMode: gl.LINES}
+	// TriangleStrip draws triangles using GL_TRIANGLE_STRIP. See https://www.khronos.org/opengl/wiki/Primitive#Triangle_primitives
 	TriangleStrip = Mode{glMode: gl.TRIANGLE_STRIP}
-	TriangleFan   = Mode{glMode: gl.TRIANGLE_FAN}
-	Triangles     = Mode{glMode: gl.TRIANGLES}
+	// TriangleFan draws triangles using GL_TRIANGLE_FAN. See https://www.khronos.org/opengl/wiki/Primitive#Triangle_primitives
+	TriangleFan = Mode{glMode: gl.TRIANGLE_FAN}
+	// Triangles draws triangles using GL_TRIANGLES. See https://www.khronos.org/opengl/wiki/Primitive#Triangle_primitives
+	Triangles = Mode{glMode: gl.TRIANGLES}
 )
 
 // DrawArrays draws primitives (such as triangles) using vertices defined in VertexArray.
+//
+// Before primitive is drawn this method validates if
 func (r *Renderer) DrawArrays(array *VertexArray, mode Mode, first, count int) error {
 	if err := r.validateAttributeTypes(array); err != nil {
 		return err
@@ -106,7 +116,7 @@ type AcceleratedCommand struct {
 	allImages         allImages
 }
 
-// Implements image.AcceleratedCommand#Run.
+// Run implements image.AcceleratedCommand#Run.
 func (c *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selections []image.AcceleratedImageSelection) error {
 	if output.Image == nil {
 		return errors.New("nil output Image")

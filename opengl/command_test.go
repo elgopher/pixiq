@@ -389,6 +389,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 		require.NoError(t, err)
 		vertexPositionX := opengl.VertexBufferPointer{Buffer: buffer, Offset: 0, Stride: 4}
 		err = array.Set(0, vertexPositionX)
+		require.NoError(t, err)
 		vertexColor := opengl.VertexBufferPointer{Buffer: buffer, Offset: 1, Stride: 4}
 		err = array.Set(1, vertexColor)
 		require.NoError(t, err)
@@ -610,7 +611,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 				err = buffer.Upload(0, []float32{0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
 				require.NoError(t, err)
 				vertexPosition := opengl.VertexBufferPointer{Buffer: buffer, Offset: 0, Stride: 10}
-				for i, _ := range test.layout {
+				for i := range test.layout {
 					err = array.Set(i, vertexPosition)
 					require.NoError(t, err)
 				}
@@ -676,7 +677,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 				require.NoError(t, err)
 				err = buffer.Upload(0, []float32{0, 0, 0, 0, 0, 0, 0, 0})
 				require.NoError(t, err)
-				for location, _ := range test.layout {
+				for location := range test.layout {
 					err = array.Set(location, opengl.VertexBufferPointer{Buffer: buffer, Offset: location * 4, Stride: 8})
 					require.NoError(t, err)
 				}
