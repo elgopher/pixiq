@@ -783,6 +783,7 @@ func TestOpenGL_NewVertexArray(t *testing.T) {
 				vao, err := openGL.NewVertexArray(test.layout)
 				// then
 				assert.Error(t, err)
+				assert.True(t, opengl.IsClientError(err))
 				assert.Nil(t, vao)
 			})
 		}

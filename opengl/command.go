@@ -31,11 +31,11 @@ func (r *Renderer) BindTexture(textureUnit int, uniformAttributeName string, ima
 	}
 	trimmed := strings.TrimSpace(uniformAttributeName)
 	if trimmed == "" {
-		return errors.New("empty uniformAttributeName")
+		return illegalArgumentError("empty uniformAttributeName")
 	}
-	textureLocation, err := r.program.uniformAttributeLocation(uniformAttributeName)
-	if err != nil {
-		return err
+	textureLocation, ok := r.program.uniformLocations[uniformAttributeName]
+	if !ok {
+		return illegalArgumentError("not existing uniform attribute name")
 	}
 	img, ok := r.allImages[image]
 	if !ok {

@@ -723,6 +723,7 @@ func TestRenderer_BindTexture(t *testing.T) {
 				err := command.Run(image.AcceleratedImageSelection{Image: output}, []image.AcceleratedImageSelection{})
 				// then
 				assert.Error(t, err)
+				assert.True(t, opengl.IsClientError(err))
 			})
 		}
 	})
@@ -753,6 +754,7 @@ func TestRenderer_BindTexture(t *testing.T) {
 				err := command.Run(image.AcceleratedImageSelection{Image: output}, []image.AcceleratedImageSelection{})
 				// then
 				assert.Error(t, err)
+				assert.True(t, opengl.IsClientError(err))
 			})
 		}
 	})

@@ -465,7 +465,7 @@ var (
 // specified in layout will be enabled.
 func (g *OpenGL) NewVertexArray(layout VertexLayout) (*VertexArray, error) {
 	if len(layout) == 0 {
-		return nil, errors.New("empty layout")
+		return nil, illegalArgumentError("empty layout")
 	}
 	var id uint32
 	g.runInOpenGLThread(func() {
@@ -515,7 +515,9 @@ type VertexBuffer interface {
 }
 
 // IsClientError returns true if the error returned by opengl package methods
-// are due to improper use of API.
+// are due to improper use of API, such as illegal argument was passed
+// or the object on which the method was executed was in illegal state to handle
+// this call.
 func IsClientError(error error) bool {
 	if _, ok := error.(illegalArgumentError); ok {
 		return true
@@ -666,14 +668,6 @@ func (p *Program) AcceleratedCommand(command Command) *AcceleratedCommand {
 		program:           p,
 		allImages:         p.allImages,
 	}
-}
-
-func (p *Program) uniformAttributeLocation(name string) (int32, error) {
-	location, ok := p.uniformLocations[name]
-	if !ok {
-		return 0, errors.New("not existing uniform attribute name")
-	}
-	return location, nil
 }
 
 // WindowOption is an option used when opening the window.
