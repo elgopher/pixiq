@@ -16,7 +16,7 @@ func main() {
 			buffer  = makeVertexBuffer(gl)
 			array   = makeVertexArray(gl, buffer)
 			program = compileProgram(gl)
-			cmd     = makeAcceleratedCommand(program, array)
+			cmd     = program.AcceleratedCommand(&drawSelection{vertexArray: array})
 			window  = openWindow(gl)
 		)
 		sampledImage, err := gl.NewImage(2, 2)
@@ -113,21 +113,11 @@ func compileProgram(gl *opengl.OpenGL) *opengl.Program {
 	return program
 }
 
-func makeAcceleratedCommand(program *opengl.Program, array *opengl.VertexArray) *opengl.AcceleratedCommand {
-	cmd, err := program.AcceleratedCommand(&command{
-		vertexArray: array,
-	})
-	if err != nil {
-		log.Panicf("AcceleratedCommand failed: %v", err)
-	}
-	return cmd
-}
-
-type command struct {
+type drawSelection struct {
 	vertexArray *opengl.VertexArray
 }
 
-func (c command) RunGL(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
+func (c drawSelection) RunGL(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
 	if len(selections) != 1 {
 		return errors.New("invalid number of selections")
 	}

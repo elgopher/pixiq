@@ -35,7 +35,7 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
 				command := &commandMock{}
-				acceleratedCommand, _ := program.AcceleratedCommand(command)
+				acceleratedCommand := program.AcceleratedCommand(command)
 				// when
 				err := acceleratedCommand.Run(output, test.selections)
 				// then
@@ -51,7 +51,7 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 		defer openGL.Destroy()
 		img, _ := openGL.NewAcceleratedImage(1, 1)
 		program := workingProgram(t, openGL)
-		command, _ := program.AcceleratedCommand(&failingCommand{})
+		command := program.AcceleratedCommand(&failingCommand{})
 		// when
 		err := command.Run(image.AcceleratedImageSelection{Image: img}, []image.AcceleratedImageSelection{})
 		assert.Error(t, err)
@@ -60,7 +60,7 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
 		program := workingProgram(t, openGL)
-		command, _ := program.AcceleratedCommand(&emptyCommand{})
+		command := program.AcceleratedCommand(&emptyCommand{})
 		// when
 		err := command.Run(image.AcceleratedImageSelection{}, []image.AcceleratedImageSelection{})
 		assert.Error(t, err)
@@ -72,7 +72,7 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 		defer programContext.Destroy()
 		img, _ := imageContext.NewAcceleratedImage(1, 1)
 		program := workingProgram(t, programContext)
-		command, _ := program.AcceleratedCommand(&emptyCommand{})
+		command := program.AcceleratedCommand(&emptyCommand{})
 		// when
 		err := command.Run(image.AcceleratedImageSelection{
 			Image: img,
@@ -84,7 +84,7 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 		defer openGL.Destroy()
 		program := workingProgram(t, openGL)
 		output, _ := openGL.NewAcceleratedImage(1, 1)
-		command, _ := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
+		command := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
 			buffer, err := openGL.NewFloatVertexBuffer(1)
 			require.NoError(t, err)
 			values := []float32{1}
@@ -102,7 +102,7 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 		defer openGL.Destroy()
 		program := workingProgram(t, openGL)
 		output, _ := openGL.NewAcceleratedImage(1, 1)
-		command, _ := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
+		command := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
 			array, err := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float})
 			require.NoError(t, err)
 			defer array.Delete()
@@ -189,7 +189,7 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 					renderer.Clear(color)
 					return nil
 				}}
-				command, _ := program.AcceleratedCommand(glCommand)
+				command := program.AcceleratedCommand(glCommand)
 				// when
 				err := command.Run(image.AcceleratedImageSelection{
 					Location: test.location,
@@ -202,26 +202,34 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 		}
 	})
 	t.Run("should not change the image pixels when command does not do anything", func(t *testing.T) {
-		openGL, _ := opengl.New(mainThreadLoop)
-		defer openGL.Destroy()
-		img, _ := openGL.NewAcceleratedImage(2, 1)
-		pixels := []image.Color{image.RGB(1, 2, 3), image.RGB(4, 5, 6)}
-		img.Upload(pixels)
-		program := workingProgram(t, openGL)
-		command, _ := program.AcceleratedCommand(&emptyCommand{})
-		// when
-		err := command.Run(image.AcceleratedImageSelection{
-			Location: image.AcceleratedImageLocation{
-				X:      0,
-				Y:      0,
-				Width:  1,
-				Height: 1,
-			},
-			Image: img,
-		}, []image.AcceleratedImageSelection{})
-		// then
-		require.NoError(t, err)
-		assertColors(t, pixels, img)
+		commands := map[string]opengl.Command{
+			"nil":   nil,
+			"empty": &emptyCommand{},
+		}
+		for name, command := range commands {
+			t.Run(name, func(t *testing.T) {
+				openGL, _ := opengl.New(mainThreadLoop)
+				defer openGL.Destroy()
+				img, _ := openGL.NewAcceleratedImage(2, 1)
+				pixels := []image.Color{image.RGB(1, 2, 3), image.RGB(4, 5, 6)}
+				img.Upload(pixels)
+				program := workingProgram(t, openGL)
+				command := program.AcceleratedCommand(command)
+				// when
+				err := command.Run(image.AcceleratedImageSelection{
+					Location: image.AcceleratedImageLocation{
+						X:      0,
+						Y:      0,
+						Width:  1,
+						Height: 1,
+					},
+					Image: img,
+				}, []image.AcceleratedImageSelection{})
+				// then
+				require.NoError(t, err)
+				assertColors(t, pixels, img)
+			})
+		}
 	})
 }
 
@@ -248,7 +256,7 @@ func TestRenderer_Clear(t *testing.T) {
 				renderer.Clear(test.color)
 				return nil
 			}}
-			command, _ := program.AcceleratedCommand(glCommand)
+			command := program.AcceleratedCommand(glCommand)
 			err := command.Run(image.AcceleratedImageSelection{
 				Location: image.AcceleratedImageLocation{Width: 1, Height: 1},
 				Image:    img,
@@ -343,7 +351,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 					// when
 					return renderer.DrawArrays(array, opengl.Points, 0, 1)
 				}}
-				command, _ := program.AcceleratedCommand(glCommand)
+				command := program.AcceleratedCommand(glCommand)
 				err = command.Run(image.AcceleratedImageSelection{
 					Location: image.AcceleratedImageLocation{Width: 1, Height: 1},
 					Image:    img,
@@ -397,7 +405,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 			// when
 			return renderer.DrawArrays(array, opengl.Points, 0, 1)
 		}}
-		command, _ := program.AcceleratedCommand(glCommand)
+		command := program.AcceleratedCommand(glCommand)
 		err = command.Run(image.AcceleratedImageSelection{
 			Location: image.AcceleratedImageLocation{Width: 1, Height: 1},
 			Image:    img,
@@ -484,7 +492,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 					// when
 					return renderer.DrawArrays(array, opengl.TriangleFan, 0, 4)
 				}}
-				command, _ := program.AcceleratedCommand(glCommand)
+				command := program.AcceleratedCommand(glCommand)
 				err = command.Run(image.AcceleratedImageSelection{
 					Location: test.outputLocation,
 					Image:    img,
@@ -531,7 +539,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 			// when
 			return renderer.DrawArrays(array, opengl.Points, 0, 2)
 		}}
-		command, _ := program.AcceleratedCommand(glCommand)
+		command := program.AcceleratedCommand(glCommand)
 		err = command.Run(image.AcceleratedImageSelection{
 			Location: image.AcceleratedImageLocation{Width: 2, Height: 1},
 			Image:    img,
@@ -619,7 +627,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 					// when
 					return renderer.DrawArrays(array, opengl.Points, 0, 1)
 				}}
-				command, _ := program.AcceleratedCommand(glCommand)
+				command := program.AcceleratedCommand(glCommand)
 				err = command.Run(image.AcceleratedImageSelection{
 					Location: image.AcceleratedImageLocation{Width: 1, Height: 1},
 					Image:    img,
@@ -685,7 +693,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 					// when
 					return renderer.DrawArrays(array, opengl.Points, 0, 1)
 				}}
-				command, _ := program.AcceleratedCommand(glCommand)
+				command := program.AcceleratedCommand(glCommand)
 				err = command.Run(image.AcceleratedImageSelection{
 					Location: image.AcceleratedImageLocation{Width: 1, Height: 1},
 					Image:    img,
@@ -708,7 +716,7 @@ func TestRenderer_BindTexture(t *testing.T) {
 				output, _ := openGL.NewAcceleratedImage(1, 1)
 				tex, _ := openGL.NewAcceleratedImage(1, 1)
 				program := workingProgram(t, openGL)
-				command, _ := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
+				command := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
 					// when
 					return renderer.BindTexture(0, name, tex)
 				}})
@@ -738,7 +746,7 @@ func TestRenderer_BindTexture(t *testing.T) {
 						 	color = texture(tex, vec2(0,0));
 						 }`,
 				)
-				command, _ := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
+				command := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
 					// when
 					return renderer.BindTexture(0, name, tex)
 				}})
@@ -756,7 +764,7 @@ func TestRenderer_BindTexture(t *testing.T) {
 		output, _ := openGL1.NewAcceleratedImage(1, 1)
 		tex, _ := openGL2.NewAcceleratedImage(1, 1)
 		program := workingProgram(t, openGL1)
-		command, _ := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
+		command := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
 			// when
 			return renderer.BindTexture(0, "tex", tex)
 		}})
@@ -770,7 +778,7 @@ func TestRenderer_BindTexture(t *testing.T) {
 		output, _ := openGL.NewAcceleratedImage(1, 1)
 		tex, _ := openGL.NewAcceleratedImage(1, 1)
 		program := workingProgram(t, openGL)
-		command, _ := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
+		command := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
 			// when
 			return renderer.BindTexture(-1, "tex", tex)
 		}})
@@ -799,7 +807,7 @@ func TestRenderer_BindTexture(t *testing.T) {
 			// when
 			return renderer.BindTexture(0, "tex", tex)
 		}}
-		command, _ := program.AcceleratedCommand(glCommand)
+		command := program.AcceleratedCommand(glCommand)
 		err := command.Run(image.AcceleratedImageSelection{Image: output}, []image.AcceleratedImageSelection{})
 		// then
 		assert.NoError(t, err)
@@ -845,7 +853,7 @@ func TestRenderer_BindTexture(t *testing.T) {
 			}
 			return renderer.DrawArrays(array, opengl.Points, 0, 1)
 		}}
-		command, _ := program.AcceleratedCommand(glCommand)
+		command := program.AcceleratedCommand(glCommand)
 		err = command.Run(image.AcceleratedImageSelection{
 			Location: image.AcceleratedImageLocation{Width: 1, Height: 1},
 			Image:    img,
@@ -902,7 +910,7 @@ func TestRenderer_BindTexture(t *testing.T) {
 			}
 			return renderer.DrawArrays(array, opengl.Points, 0, 1)
 		}}
-		command, _ := program.AcceleratedCommand(glCommand)
+		command := program.AcceleratedCommand(glCommand)
 		err = command.Run(image.AcceleratedImageSelection{
 			Location: image.AcceleratedImageLocation{Width: 1, Height: 1},
 			Image:    img,

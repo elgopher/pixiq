@@ -635,18 +635,13 @@ type Program struct {
 }
 
 // AcceleratedCommand returns a potentially cached instance of *AcceleratedCommand.
-func (p *Program) AcceleratedCommand(command Command) (*AcceleratedCommand, error) {
-	if command == nil {
-		return nil, errors.New("nil command")
-	}
-
-	acceleratedCommand := &AcceleratedCommand{
+func (p *Program) AcceleratedCommand(command Command) *AcceleratedCommand {
+	return &AcceleratedCommand{
 		command:           command,
 		runInOpenGLThread: p.runInOpenGLThread,
 		program:           p,
 		allImages:         p.allImages,
 	}
-	return acceleratedCommand, nil
 }
 
 func (p *Program) uniformAttributeLocation(name string) (int32, error) {

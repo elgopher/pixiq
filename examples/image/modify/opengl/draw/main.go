@@ -13,7 +13,7 @@ func main() {
 			buffer  = makeVertexBuffer(gl)
 			array   = makeVertexArray(gl, buffer)
 			program = compileProgram(gl)
-			cmd     = makeAcceleratedCommand(program, array)
+			cmd     = program.AcceleratedCommand(&drawColorfulRectangle{vertexArray: array})
 			window  = openWindow(gl)
 		)
 		loop.Run(window, func(frame *loop.Frame) {
@@ -23,6 +23,14 @@ func main() {
 			}
 		})
 	})
+}
+
+type drawColorfulRectangle struct {
+	vertexArray *opengl.VertexArray
+}
+
+func (c drawColorfulRectangle) RunGL(renderer *opengl.Renderer, _ []image.AcceleratedImageSelection) error {
+	return renderer.DrawArrays(c.vertexArray, opengl.TriangleFan, 0, 4)
 }
 
 func makeVertexBuffer(gl *opengl.OpenGL) *opengl.FloatVertexBuffer {
@@ -97,22 +105,6 @@ func compileProgram(gl *opengl.OpenGL) *opengl.Program {
 		log.Panicf("LinkProgram failed: %v", err)
 	}
 	return program
-}
-
-func makeAcceleratedCommand(program *opengl.Program, array *opengl.VertexArray) *opengl.AcceleratedCommand {
-	cmd, err := program.AcceleratedCommand(&command{vertexArray: array})
-	if err != nil {
-		log.Panicf("AcceleratedCommand failed: %v", err)
-	}
-	return cmd
-}
-
-type command struct {
-	vertexArray *opengl.VertexArray
-}
-
-func (c command) RunGL(renderer *opengl.Renderer, _ []image.AcceleratedImageSelection) error {
-	return renderer.DrawArrays(c.vertexArray, opengl.TriangleFan, 0, 4)
 }
 
 func openWindow(gl *opengl.OpenGL) *opengl.Window {

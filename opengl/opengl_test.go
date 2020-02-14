@@ -524,22 +524,12 @@ func TestOpenGL_LinkProgram(t *testing.T) {
 }
 
 func TestProgram_AcceleratedCommand(t *testing.T) {
-	t.Run("should return error when passed command is nil", func(t *testing.T) {
-		openGL, _ := opengl.New(mainThreadLoop)
-		defer openGL.Destroy()
-		program := workingProgram(t, openGL)
-		// when
-		cmd, err := program.AcceleratedCommand(nil)
-		assert.Error(t, err)
-		assert.Nil(t, cmd)
-	})
 	t.Run("should return command", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
 		program := workingProgram(t, openGL)
 		// when
-		cmd, err := program.AcceleratedCommand(&commandMock{})
-		require.NoError(t, err)
+		cmd := program.AcceleratedCommand(&commandMock{})
 		assert.NotNil(t, cmd)
 	})
 }

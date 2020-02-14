@@ -132,6 +132,9 @@ type AcceleratedCommand struct {
 
 // Run implements image.AcceleratedCommand#Run.
 func (c *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selections []image.AcceleratedImageSelection) error {
+	if c.command == nil {
+		return nil
+	}
 	if output.Image == nil {
 		return errors.New("nil output Image")
 	}
