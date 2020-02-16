@@ -6,8 +6,8 @@ import (
 
 func newScreenPolygon() *screenPolygon {
 	const (
-		vertexPosition  = 0
-		texturePosition = 1
+		vertexLocation  = 0
+		textureLocation = 1
 	)
 	var vertexArrayID, vertexBufferID uint32
 	gl.GenVertexArrays(1, &vertexArrayID)
@@ -24,7 +24,7 @@ func newScreenPolygon() *screenPolygon {
 	const stride int32 = 4 * 4
 	const vec2size int32 = 2
 	gl.VertexAttribPointer(
-		vertexPosition,
+		vertexLocation,
 		vec2size,
 		gl.FLOAT,
 		false,
@@ -33,7 +33,7 @@ func newScreenPolygon() *screenPolygon {
 	)
 	gl.EnableVertexAttribArray(0)
 	gl.VertexAttribPointer(
-		texturePosition,
+		textureLocation,
 		vec2size,
 		gl.FLOAT,
 		false,
