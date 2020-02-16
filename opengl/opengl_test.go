@@ -486,25 +486,24 @@ func TestOpenGL_CompileFragmentShader(t *testing.T) {
 }
 
 func TestOpenGL_LinkProgram(t *testing.T) {
-	t.Run("should return error when vertex shader is nil", func(t *testing.T) {
+	t.Run("should panic when vertex shader is nil", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
 		fragmentShader, _ := openGL.CompileFragmentShader("")
-		// when
-		program, err := openGL.LinkProgram(nil, fragmentShader)
-		// then
-		assertClientError(t, err)
-		assert.Nil(t, program)
+		assert.Panics(t, func() {
+			// when
+			_, _ = openGL.LinkProgram(nil, fragmentShader)
+		})
+
 	})
-	t.Run("should return error when fragment shader is nil", func(t *testing.T) {
+	t.Run("should panic when fragment shader is nil", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
 		vertexShader, _ := openGL.CompileVertexShader("")
-		// when
-		program, err := openGL.LinkProgram(vertexShader, nil)
-		// then
-		assertClientError(t, err)
-		assert.Nil(t, program)
+		assert.Panics(t, func() {
+			// when
+			_, _ = openGL.LinkProgram(vertexShader, nil)
+		})
 	})
 	t.Run("should return error", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
@@ -607,19 +606,28 @@ func TestOpenGL_NewFloatVertexBuffer(t *testing.T) {
 		// then
 		assert.NotEqual(t, buffer1.ID(), buffer2.ID())
 	})
-	//t.Run("should return out-of-memory error for too big buffer", func(t *testing.T) {
-	//	openGL, _ := opengl.New(mainThreadLoop)
-	//	defer openGL.Destroy()
-	//	terabyte := 1024 * 1024 * 1024 * 1024
-	//	openGL.NewFloatVertexBuffer(terabyte)
-	//	// when
-	//	assert.True(t, openGL.Get)
-	//	openGL.GetError
-	//	// then
-	//	assert.NotNil(t, buffer)
-	//	require.Error(t, err)
-	//	assertOutOfMemoryError(t, err) // this will no work
-	//})
+}
+
+func TestOpenGL_Error(t *testing.T) {
+	t.Run("should no return error", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		// when
+		err := openGL.Error()
+		// then
+		assert.NoError(t, err)
+	})
+	t.Run("should return out-of-memory error for too big vertex buffer", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		terabyte := 1024 * 1024 * 1024 * 1024
+		openGL.NewFloatVertexBuffer(terabyte)
+		// when
+		err := openGL.Error()
+		// then
+		require.Error(t, err)
+		assert.True(t, opengl.IsOutOfMemory(err))
+	})
 }
 
 func TestFloatVertexBuffer_Upload(t *testing.T) {
@@ -950,16 +958,6 @@ func TestVertexArray_Set(t *testing.T) {
 		// when
 		vao.Set(0, pointer)
 	})
-}
-
-func assertClientError(t *testing.T, err error) {
-	require.Error(t, err)
-	assert.False(t, opengl.IsOutOfMemory(err), "error is not out-of-memory")
-}
-
-func assertOutOfMemoryError(t *testing.T, err error) {
-	require.Error(t, err)
-	assert.True(t, opengl.IsOutOfMemory(err), "error is out-of-memory")
 }
 
 type commandMock struct {

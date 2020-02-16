@@ -191,8 +191,7 @@ func (g *OpenGL) Capabilities() *Capabilities {
 
 // Capabilities contains parameter values reported by current OpenGL instance.
 type Capabilities struct {
-	maxTextureSize         int
-	nonPowerOfTwoSupported bool
+	maxTextureSize int
 }
 
 // MaxTextureSize returns OpenGL's MAX_TEXTURE_SIZE
@@ -376,10 +375,10 @@ func (g *OpenGL) CompileVertexShader(sourceCode string) (*VertexShader, error) {
 // in image.Modify
 func (g *OpenGL) LinkProgram(vertexShader *VertexShader, fragmentShader *FragmentShader) (*Program, error) {
 	if vertexShader == nil {
-		return nil, illegalArgumentError("nil vertexShader")
+		panic("nil vertexShader")
 	}
 	if fragmentShader == nil {
-		return nil, illegalArgumentError("nil fragmentShader")
+		panic("nil fragmentShader")
 	}
 	var (
 		program          *program
@@ -491,6 +490,40 @@ func (g *OpenGL) NewVertexArray(layout VertexLayout) *VertexArray {
 	}
 }
 
+type glError uint32
+
+func (e glError) Error() string {
+	return fmt.Sprintf("gl error: %d", uint32(e))
+}
+
+// IsOutOfMemory returns true if given error indicates that OpenGL driver reported
+// out-of-memory.
+//
+// This error is not recoverable. Once you get it - you have to destroy the whole
+// OpenGL context and start a new one.
+func IsOutOfMemory(err error) bool {
+	e, ok := err.(glError)
+	if !ok {
+		return false
+	}
+	return e == gl.OUT_OF_MEMORY
+}
+
+// Error returns next error reported by OpenGL driver. For performance reasons should
+// be used sporadically, at most once per frame.
+//
+// See http://docs.gl/gl3/glGetError
+func (g *OpenGL) Error() error {
+	var code uint32
+	g.runInOpenGLThread(func() {
+		code = gl.GetError()
+	})
+	if code == gl.NO_ERROR {
+		return nil
+	}
+	return glError(code)
+}
+
 // VertexArray is a thin abstraction for OpenGL's Vertex Array Object.
 //
 // https://www.khronos.org/opengl/wiki/Vertex_Specification#Vertex_Array_Object
@@ -520,35 +553,6 @@ type VertexBufferPointer struct {
 type VertexBuffer interface {
 	// ID returns OpenGL identifier/name.
 	ID() uint32
-}
-
-// IsOutOfMemory returns true if the OpenGL driver returned out-of-memory error.
-// This error is not recoverable. Once you get it - you have to destroy the whole
-// OpenGL context and start a new one.
-func IsOutOfMemory(err error) bool {
-	if glErr, ok := err.(glError); ok {
-		return glErr.isOutOfMemory()
-	}
-	return false
-}
-
-type glError struct {
-	method string
-	code   uint32
-}
-
-func (g glError) Error() string {
-	return fmt.Sprintf("%s failed: %d", g.method, g.code)
-}
-
-func (g glError) isOutOfMemory() bool {
-	return g.code == gl.OUT_OF_MEMORY
-}
-
-type illegalArgumentError string
-
-func (e illegalArgumentError) Error() string {
-	return string(e)
 }
 
 // Set sets a location of VertexArray pointing to VertexBuffer slice.
