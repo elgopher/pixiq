@@ -176,7 +176,7 @@ func (g *OpenGL) startPollingEvents(stop <-chan struct{}) {
 // To avoid coupling with opengl you should define your own factory function
 // for creating images and use it instead of directly accessing opengl.OpenGL:
 //
-//	   type NewImage func(width, height) (*image.Image, error)
+//	   type NewImage func(width, height int) *image.Image
 //
 // Will panic if width or height are negative or higher than MAX_TEXTURE_SIZE
 func (g *OpenGL) NewImage(width, height int) *image.Image {
@@ -604,8 +604,9 @@ func (b *FloatVertexBuffer) Size() int {
 	return b.size
 }
 
-// Download gets data starting at a given offset in VRAM and put them into slice. Whole output slice will be filled with data,
-// unless output slice is bigger then the vertex buffer.
+// Download gets data starting at a given offset in VRAM and put them into slice.
+// Whole output slice will be filled with data, unless output slice is bigger then
+// the vertex buffer.
 func (b *FloatVertexBuffer) Download(offset int, output []float32) {
 	if b.deleted {
 		// TODO Change to noop?
@@ -638,7 +639,7 @@ func (b *FloatVertexBuffer) Delete() {
 
 // Upload sends data to the vertex buffer. All slice data will be inserted starting at a given offset position.
 //
-// Returns error when vertex buffer is too small to hold the data or offset is negative.
+// Panics when vertex buffer is too small to hold the data or offset is negative.
 func (b *FloatVertexBuffer) Upload(offset int, data []float32) {
 	if offset < 0 {
 		panic("negative offset")
