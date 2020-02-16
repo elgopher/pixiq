@@ -1,7 +1,6 @@
 package opengl_test
 
 import (
-	"errors"
 	"os"
 	"testing"
 
@@ -47,25 +46,23 @@ func TestNew(t *testing.T) {
 }
 
 func TestOpenGL_NewImage(t *testing.T) {
-	t.Run("should return error for negative width", func(t *testing.T) {
+	t.Run("should panic for negative width", func(t *testing.T) {
 		openGL, err := opengl.New(mainThreadLoop)
 		require.NoError(t, err)
 		defer openGL.Destroy()
-		// when
-		img, err := openGL.NewImage(-1, 0)
-		// then
-		assertClientError(t, err)
-		assert.Nil(t, img)
+		assert.Panics(t, func() {
+			// when
+			openGL.NewImage(-1, 0)
+		})
 	})
-	t.Run("should return error for negative height", func(t *testing.T) {
+	t.Run("should panic for negative height", func(t *testing.T) {
 		openGL, err := opengl.New(mainThreadLoop)
 		require.NoError(t, err)
 		defer openGL.Destroy()
-		// when
-		img, err := openGL.NewImage(0, -1)
-		// then
-		assertClientError(t, err)
-		assert.Nil(t, img)
+		assert.Panics(t, func() {
+			// when
+			openGL.NewImage(0, -1)
+		})
 	})
 	t.Run("should create Image", func(t *testing.T) {
 		tests := map[string]struct {
@@ -87,9 +84,8 @@ func TestOpenGL_NewImage(t *testing.T) {
 				require.NoError(t, err)
 				defer openGL.Destroy()
 				// when
-				img, err := openGL.NewImage(test.width, test.height)
+				img := openGL.NewImage(test.width, test.height)
 				// then
-				require.NoError(t, err)
 				assert.NotNil(t, img)
 				assert.Equal(t, test.width, img.Width())
 				assert.Equal(t, test.height, img.Height())
@@ -99,44 +95,40 @@ func TestOpenGL_NewImage(t *testing.T) {
 }
 
 func TestOpenGL_NewAcceleratedImage(t *testing.T) {
-	t.Run("should return error for negative width", func(t *testing.T) {
+	t.Run("should panic for negative width", func(t *testing.T) {
 		openGL, err := opengl.New(mainThreadLoop)
 		require.NoError(t, err)
 		defer openGL.Destroy()
 		// when
-		img, err := openGL.NewAcceleratedImage(-1, 0)
-		// then
-		assertClientError(t, err)
-		assert.Nil(t, img)
+		assert.Panics(t, func() {
+			openGL.NewAcceleratedImage(-1, 0)
+		})
 	})
-	t.Run("should return error for negative height", func(t *testing.T) {
+	t.Run("should panic for negative height", func(t *testing.T) {
 		openGL, err := opengl.New(mainThreadLoop)
 		require.NoError(t, err)
 		defer openGL.Destroy()
-		// when
-		img, err := openGL.NewAcceleratedImage(0, -1)
-		// then
-		assertClientError(t, err)
-		assert.Nil(t, img)
+		assert.Panics(t, func() {
+			// when
+			openGL.NewAcceleratedImage(0, -1)
+		})
 	})
-	t.Run("should return error for too big dimensions", func(t *testing.T) {
+	t.Run("should panic for too big dimensions", func(t *testing.T) {
 		openGL, err := opengl.New(mainThreadLoop)
 		require.NoError(t, err)
 		defer openGL.Destroy()
-		// when
-		img, err := openGL.NewAcceleratedImage(1024*1024, 1024*1024)
-		// then
-		assertClientError(t, err)
-		assert.Nil(t, img)
+		assert.Panics(t, func() {
+			// when
+			openGL.NewAcceleratedImage(1024*1024, 1024*1024)
+		})
 	})
 	t.Run("should create AcceleratedImage", func(t *testing.T) {
 		openGL, err := opengl.New(mainThreadLoop)
 		require.NoError(t, err)
 		defer openGL.Destroy()
 		// when
-		img, err := openGL.NewAcceleratedImage(0, 0)
+		img := openGL.NewAcceleratedImage(0, 0)
 		// then
-		require.NoError(t, err)
 		assert.NotNil(t, img)
 	})
 }
@@ -183,8 +175,7 @@ func TestTexture_Upload(t *testing.T) {
 				openGL, err := opengl.New(mainThreadLoop)
 				require.NoError(t, err)
 				defer openGL.Destroy()
-				img, err := openGL.NewAcceleratedImage(test.width, test.height)
-				require.NoError(t, err)
+				img := openGL.NewAcceleratedImage(test.width, test.height)
 				// when
 				img.Upload(test.inputColors)
 				// then
@@ -199,10 +190,8 @@ func TestTexture_Upload(t *testing.T) {
 		gl2, err := opengl.New(mainThreadLoop)
 		require.NoError(t, err)
 		defer gl2.Destroy()
-		img1, err := gl1.NewAcceleratedImage(1, 1)
-		require.NoError(t, err)
-		img2, err := gl2.NewAcceleratedImage(1, 1)
-		require.NoError(t, err)
+		img1 := gl1.NewAcceleratedImage(1, 1)
+		img2 := gl2.NewAcceleratedImage(1, 1)
 		// when
 		img1.Upload([]image.Color{color1})
 		img2.Upload([]image.Color{color2})
@@ -551,7 +540,7 @@ func assertColors(t *testing.T, expected []image.Color, img *opengl.AcceleratedI
 }
 
 func TestOpenGL_NewFloatVertexBuffer(t *testing.T) {
-	t.Run("should return error when size is negative", func(t *testing.T) {
+	t.Run("should panic when size is negative", func(t *testing.T) {
 		tests := map[string]int{
 			"size -1": -1,
 			"size -2": -2,
@@ -561,10 +550,9 @@ func TestOpenGL_NewFloatVertexBuffer(t *testing.T) {
 				openGL, _ := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
 				// when
-				buffer, err := openGL.NewFloatVertexBuffer(size)
-				// then
-				assertClientError(t, err)
-				assert.Nil(t, buffer)
+				assert.Panics(t, func() {
+					openGL.NewFloatVertexBuffer(size)
+				})
 			})
 		}
 	})
@@ -578,9 +566,8 @@ func TestOpenGL_NewFloatVertexBuffer(t *testing.T) {
 				openGL, _ := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
 				// when
-				buffer, err := openGL.NewFloatVertexBuffer(size)
+				buffer := openGL.NewFloatVertexBuffer(size)
 				// then
-				require.NoError(t, err)
 				assert.NotNil(t, buffer)
 				// and
 				assert.Equal(t, size, buffer.Size())
@@ -591,26 +578,28 @@ func TestOpenGL_NewFloatVertexBuffer(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
 		// when
-		buffer1, _ := openGL.NewFloatVertexBuffer(1)
-		buffer2, _ := openGL.NewFloatVertexBuffer(1)
+		buffer1 := openGL.NewFloatVertexBuffer(1)
+		buffer2 := openGL.NewFloatVertexBuffer(1)
 		// then
 		assert.NotEqual(t, buffer1.ID(), buffer2.ID())
 	})
-	t.Run("should return out-of-memory error for too big buffer", func(t *testing.T) {
-		openGL, _ := opengl.New(mainThreadLoop)
-		defer openGL.Destroy()
-		// when
-		terabyte := 1024 * 1024 * 1024 * 1024
-		buffer, err := openGL.NewFloatVertexBuffer(terabyte)
-		// then
-		assert.Nil(t, buffer)
-		require.Error(t, err)
-		assertOutOfMemoryError(t, err) // this will no work
-	})
+	//t.Run("should return out-of-memory error for too big buffer", func(t *testing.T) {
+	//	openGL, _ := opengl.New(mainThreadLoop)
+	//	defer openGL.Destroy()
+	//	terabyte := 1024 * 1024 * 1024 * 1024
+	//	openGL.NewFloatVertexBuffer(terabyte)
+	//	// when
+	//	assert.True(t, openGL.Get)
+	//	openGL.GetError
+	//	// then
+	//	assert.NotNil(t, buffer)
+	//	require.Error(t, err)
+	//	assertOutOfMemoryError(t, err) // this will no work
+	//})
 }
 
 func TestFloatVertexBuffer_Upload(t *testing.T) {
-	t.Run("should return error when trying to upload slice bigger than size", func(t *testing.T) {
+	t.Run("should panic when trying to upload slice bigger than size", func(t *testing.T) {
 		tests := map[string]struct {
 			offset int
 			size   int
@@ -637,22 +626,24 @@ func TestFloatVertexBuffer_Upload(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				openGL, _ := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
-				buffer, _ := openGL.NewFloatVertexBuffer(test.size)
+				buffer := openGL.NewFloatVertexBuffer(test.size)
 				defer buffer.Delete()
-				// when
-				err := buffer.Upload(test.offset, test.data)
-				assertClientError(t, err)
+				assert.Panics(t, func() {
+					// when
+					buffer.Upload(test.offset, test.data)
+				})
 			})
 		}
 	})
-	t.Run("should return error when offset is negative", func(t *testing.T) {
+	t.Run("should panic when offset is negative", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		buffer, _ := openGL.NewFloatVertexBuffer(1)
+		buffer := openGL.NewFloatVertexBuffer(1)
 		defer buffer.Delete()
-		// when
-		err := buffer.Upload(-1, []float32{1})
-		assertClientError(t, err)
+		assert.Panics(t, func() {
+			// when
+			buffer.Upload(-1, []float32{1})
+		})
 	})
 	t.Run("should upload data", func(t *testing.T) {
 		tests := map[string]struct {
@@ -684,16 +675,13 @@ func TestFloatVertexBuffer_Upload(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				openGL, _ := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
-				buffer, _ := openGL.NewFloatVertexBuffer(test.size)
+				buffer := openGL.NewFloatVertexBuffer(test.size)
 				defer buffer.Delete()
 				// when
-				err := buffer.Upload(test.offset, test.input)
+				buffer.Upload(test.offset, test.input)
 				// then
-				require.NoError(t, err)
-				// and
 				output := make([]float32, len(test.expected))
-				err = buffer.Download(test.offset, output)
-				require.NoError(t, err)
+				buffer.Download(test.offset, output)
 				assert.InDeltaSlice(t, test.expected, output, 1e-35)
 			})
 		}
@@ -702,25 +690,28 @@ func TestFloatVertexBuffer_Upload(t *testing.T) {
 }
 
 func TestFloatVertexBuffer_Download(t *testing.T) {
-	t.Run("should return error when offset is negative", func(t *testing.T) {
+	t.Run("should panic when offset is negative", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		buffer, _ := openGL.NewFloatVertexBuffer(1)
+		buffer := openGL.NewFloatVertexBuffer(1)
 		defer buffer.Delete()
 		output := make([]float32, 1)
-		// when
-		err := buffer.Download(-1, output)
-		assertClientError(t, err)
+		assert.Panics(t, func() {
+			// when
+			buffer.Download(-1, output)
+		})
 	})
-	t.Run("should return error when buffer has been deleted", func(t *testing.T) {
+	t.Run("should panic when buffer has been deleted", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		buffer, _ := openGL.NewFloatVertexBuffer(1)
+		buffer := openGL.NewFloatVertexBuffer(1)
 		buffer.Delete()
 		output := make([]float32, 1)
 		// when
-		err := buffer.Download(-1, output)
-		assertClientError(t, err)
+		assert.Panics(t, func() {
+			// when
+			buffer.Download(0, output)
+		})
 	})
 	t.Run("should download data", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
@@ -771,13 +762,12 @@ func TestFloatVertexBuffer_Download(t *testing.T) {
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
-				buffer, _ := openGL.NewFloatVertexBuffer(len(test.input))
+				buffer := openGL.NewFloatVertexBuffer(len(test.input))
 				defer buffer.Delete()
-				_ = buffer.Upload(0, test.input)
+				buffer.Upload(0, test.input)
 				// when
-				err := buffer.Download(test.offset, test.output)
+				buffer.Download(test.offset, test.output)
 				// then
-				require.NoError(t, err)
 				assert.InDeltaSlice(t, test.expectedOutput, test.output, 1e-35)
 			})
 		}
@@ -785,7 +775,7 @@ func TestFloatVertexBuffer_Download(t *testing.T) {
 }
 
 func TestOpenGL_NewVertexArray(t *testing.T) {
-	t.Run("should return error", func(t *testing.T) {
+	t.Run("should panic", func(t *testing.T) {
 		tests := map[string]struct {
 			layout opengl.VertexLayout
 		}{
@@ -800,11 +790,12 @@ func TestOpenGL_NewVertexArray(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				openGL, _ := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
-				// when
-				vao, err := openGL.NewVertexArray(test.layout)
-				// then
-				assertClientError(t, err)
-				assert.Nil(t, vao)
+				assert.Panics(t, func() {
+					// when
+					vao := openGL.NewVertexArray(test.layout)
+					// then
+					assert.Nil(t, vao)
+				})
 			})
 		}
 	})
@@ -812,9 +803,8 @@ func TestOpenGL_NewVertexArray(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
 		// when
-		vao, err := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float})
+		vao := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float})
 		// then
-		require.NoError(t, err)
 		assert.NotNil(t, vao)
 		// cleanup
 		vao.Delete()
@@ -822,93 +812,93 @@ func TestOpenGL_NewVertexArray(t *testing.T) {
 }
 
 func TestVertexArray_Set(t *testing.T) {
-	t.Run("should return error when offset is negative", func(t *testing.T) {
+	t.Run("should panic when offset is negative", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		vao, _ := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float})
+		vao := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float})
 		defer vao.Delete()
-		buffer, _ := openGL.NewFloatVertexBuffer(1)
+		buffer := openGL.NewFloatVertexBuffer(1)
 		defer buffer.Delete()
 		pointer := opengl.VertexBufferPointer{
 			Buffer: buffer,
 			Offset: -1,
 			Stride: 1,
 		}
-		// when
-		err := vao.Set(0, pointer)
-		// then
-		assertClientError(t, err)
+		assert.Panics(t, func() {
+			// when
+			vao.Set(0, pointer)
+		})
 	})
-	t.Run("should return error when stride is negative", func(t *testing.T) {
+	t.Run("should panic when stride is negative", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		vao, _ := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float})
+		vao := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float})
 		defer vao.Delete()
-		buffer, _ := openGL.NewFloatVertexBuffer(1)
+		buffer := openGL.NewFloatVertexBuffer(1)
 		defer buffer.Delete()
 		pointer := opengl.VertexBufferPointer{
 			Buffer: buffer,
 			Offset: 0,
 			Stride: -1,
 		}
-		// when
-		err := vao.Set(0, pointer)
-		// then
-		assertClientError(t, err)
+		assert.Panics(t, func() {
+			// when
+			vao.Set(0, pointer)
+		})
 	})
-	t.Run("should return error when location is negative", func(t *testing.T) {
+	t.Run("should panic when location is negative", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		vao, _ := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float})
+		vao := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float})
 		defer vao.Delete()
-		buffer, _ := openGL.NewFloatVertexBuffer(1)
+		buffer := openGL.NewFloatVertexBuffer(1)
 		defer buffer.Delete()
 		pointer := opengl.VertexBufferPointer{
 			Buffer: buffer,
 			Offset: 0,
 			Stride: 1,
 		}
-		// when
-		err := vao.Set(-1, pointer)
-		// then
-		assertClientError(t, err)
+		assert.Panics(t, func() {
+			// when
+			vao.Set(-1, pointer)
+		})
 	})
-	t.Run("should return error when location is higher than number of arguments", func(t *testing.T) {
+	t.Run("should panic when location is higher than number of arguments", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		vao, _ := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float})
+		vao := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float})
 		defer vao.Delete()
-		buffer, _ := openGL.NewFloatVertexBuffer(1)
+		buffer := openGL.NewFloatVertexBuffer(1)
 		defer buffer.Delete()
 		pointer := opengl.VertexBufferPointer{
 			Buffer: buffer,
 			Offset: 0,
 			Stride: 1,
 		}
-		// when
-		err := vao.Set(1, pointer)
-		// then
-		assertClientError(t, err)
+		assert.Panics(t, func() {
+			// when
+			vao.Set(1, pointer)
+		})
 	})
-	t.Run("should return error when buffer is nil", func(t *testing.T) {
+	t.Run("should panic when buffer is nil", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		vao, _ := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float})
+		vao := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float})
 		defer vao.Delete()
 		pointer := opengl.VertexBufferPointer{
 			Buffer: nil,
 			Offset: 0,
 			Stride: 1,
 		}
-		// when
-		err := vao.Set(0, pointer)
-		// then
-		assertClientError(t, err)
+		assert.Panics(t, func() {
+			// when
+			vao.Set(0, pointer)
+		})
 	})
-	t.Run("should return error when buffer was not created by context", func(t *testing.T) {
+	t.Run("should panic when buffer was not created by context", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		vao, _ := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float})
+		vao := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float})
 		defer vao.Delete()
 		vertexBufferNotCreatedInContext := &opengl.FloatVertexBuffer{}
 		pointer := opengl.VertexBufferPointer{
@@ -916,17 +906,17 @@ func TestVertexArray_Set(t *testing.T) {
 			Offset: 0,
 			Stride: 1,
 		}
-		// when
-		err := vao.Set(0, pointer)
-		// then
-		assertClientError(t, err)
+		assert.Panics(t, func() {
+			// when
+			vao.Set(0, pointer)
+		})
 	})
 	t.Run("should set", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		vao, _ := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float})
+		vao := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float})
 		defer vao.Delete()
-		buffer, _ := openGL.NewFloatVertexBuffer(1)
+		buffer := openGL.NewFloatVertexBuffer(1)
 		defer buffer.Delete()
 		pointer := opengl.VertexBufferPointer{
 			Buffer: buffer,
@@ -934,9 +924,7 @@ func TestVertexArray_Set(t *testing.T) {
 			Stride: 1,
 		}
 		// when
-		err := vao.Set(0, pointer)
-		// then
-		assert.NoError(t, err)
+		vao.Set(0, pointer)
 	})
 }
 
@@ -956,30 +944,21 @@ type commandMock struct {
 	renderer       *opengl.Renderer
 }
 
-func (f *commandMock) RunGL(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
+func (f *commandMock) RunGL(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
 	f.executionCount++
 	f.selections = selections
 	f.renderer = renderer
-	return nil
-}
-
-type failingCommand struct{}
-
-func (f *failingCommand) RunGL(*opengl.Renderer, []image.AcceleratedImageSelection) error {
-	return errors.New("command failed")
 }
 
 type command struct {
-	runGL func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error
+	runGL func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection)
 }
 
-func (c *command) RunGL(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
-	return c.runGL(renderer, selections)
+func (c *command) RunGL(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
+	c.runGL(renderer, selections)
 }
 
 type emptyCommand struct {
 }
 
-func (e emptyCommand) RunGL(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
-	return nil
-}
+func (e emptyCommand) RunGL(_ *opengl.Renderer, _ []image.AcceleratedImageSelection) {}

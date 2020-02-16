@@ -28,10 +28,7 @@ func main() {
 
 		// Create 2x2 image. Width parameter (as always) is before Height.
 		// All given in pixels.
-		img, err := gl.NewImage(2, 2)
-		if err != nil {
-			log.Panicf("NewImage failed: %v", err)
-		}
+		img := gl.NewImage(2, 2)
 
 		// Image can be modified via Selection. Here we create a selection
 		// spanning the whole Image. The Selection starts at (0,0) and have

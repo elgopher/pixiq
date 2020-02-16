@@ -15,7 +15,7 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
 		program := workingProgram(t, openGL)
-		texture, _ := openGL.NewAcceleratedImage(1, 1)
+		texture := openGL.NewAcceleratedImage(1, 1)
 		output := image.AcceleratedImageSelection{
 			Image: texture,
 		}
@@ -37,88 +37,72 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 				command := &commandMock{}
 				acceleratedCommand := program.AcceleratedCommand(command)
 				// when
-				err := acceleratedCommand.Run(output, test.selections)
+				acceleratedCommand.Run(output, test.selections)
 				// then
-				require.NoError(t, err)
 				assert.Equal(t, 1, command.executionCount)
 				assert.Equal(t, test.selections, command.selections)
 				assert.NotNil(t, command.renderer)
 			})
 		}
 	})
-	t.Run("should return error when command returned error", func(t *testing.T) {
-		openGL, _ := opengl.New(mainThreadLoop)
-		defer openGL.Destroy()
-		img, _ := openGL.NewAcceleratedImage(1, 1)
-		program := workingProgram(t, openGL)
-		command := program.AcceleratedCommand(&failingCommand{})
-		// when
-		err := command.Run(image.AcceleratedImageSelection{Image: img}, []image.AcceleratedImageSelection{})
-		assert.Error(t, err)
-	})
-	t.Run("should return error when output image is nil", func(t *testing.T) {
+	t.Run("should panic when output image is nil", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
 		program := workingProgram(t, openGL)
 		command := program.AcceleratedCommand(&emptyCommand{})
-		// when
-		err := command.Run(image.AcceleratedImageSelection{}, []image.AcceleratedImageSelection{})
-		assertClientError(t, err)
+		assert.Panics(t, func() {
+			// when
+			command.Run(image.AcceleratedImageSelection{}, []image.AcceleratedImageSelection{})
+		})
 	})
-	t.Run("should return error when output image and program were created in different OpenGL contexts", func(t *testing.T) {
+	t.Run("should panic when output image and program were created in different OpenGL contexts", func(t *testing.T) {
 		imageContext, _ := opengl.New(mainThreadLoop)
 		defer imageContext.Destroy()
 		programContext, _ := opengl.New(mainThreadLoop)
 		defer programContext.Destroy()
-		img, _ := imageContext.NewAcceleratedImage(1, 1)
+		img := imageContext.NewAcceleratedImage(1, 1)
 		program := workingProgram(t, programContext)
 		command := program.AcceleratedCommand(&emptyCommand{})
-		// when
-		err := command.Run(image.AcceleratedImageSelection{
-			Image: img,
-		}, []image.AcceleratedImageSelection{})
-		assertClientError(t, err)
+		assert.Panics(t, func() {
+			// when
+			command.Run(image.AcceleratedImageSelection{
+				Image: img,
+			}, []image.AcceleratedImageSelection{})
+		})
 	})
 	t.Run("vertex buffer can be used inside command", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
 		program := workingProgram(t, openGL)
-		output, _ := openGL.NewAcceleratedImage(1, 1)
-		command := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
-			buffer, err := openGL.NewFloatVertexBuffer(1)
-			require.NoError(t, err)
+		output := openGL.NewAcceleratedImage(1, 1)
+		command := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
+			buffer := openGL.NewFloatVertexBuffer(1)
 			values := []float32{1}
-			require.NoError(t, buffer.Upload(0, values))
-			require.NoError(t, buffer.Download(0, values))
+			buffer.Upload(0, values)
+			buffer.Download(0, values)
 			buffer.Delete()
-			return nil
 		}})
 		// when
-		err := command.Run(image.AcceleratedImageSelection{Image: output}, []image.AcceleratedImageSelection{})
-		assert.NoError(t, err)
+		command.Run(image.AcceleratedImageSelection{Image: output}, []image.AcceleratedImageSelection{})
 	})
 	t.Run("vertex array can be used inside command", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
 		program := workingProgram(t, openGL)
-		output, _ := openGL.NewAcceleratedImage(1, 1)
-		command := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
-			array, err := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float})
-			require.NoError(t, err)
+		output := openGL.NewAcceleratedImage(1, 1)
+		command := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
+			array := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float})
 			defer array.Delete()
-			buffer, _ := openGL.NewFloatVertexBuffer(1)
+			buffer := openGL.NewFloatVertexBuffer(1)
 			defer buffer.Delete()
-			err = array.Set(0, opengl.VertexBufferPointer{
+			array.Set(0, opengl.VertexBufferPointer{
 				Buffer: buffer,
 				Offset: 0,
 				Stride: 1,
 			})
-			require.NoError(t, err)
-			return nil
 		}})
 		// when
-		err := command.Run(image.AcceleratedImageSelection{Image: output}, []image.AcceleratedImageSelection{})
-		assert.NoError(t, err)
+		command.Run(image.AcceleratedImageSelection{Image: output}, []image.AcceleratedImageSelection{})
 	})
 	t.Run("clear image fragment with color", func(t *testing.T) {
 		color := image.RGBA(1, 2, 3, 4)
@@ -182,21 +166,19 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				openGL, _ := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
-				img, _ := openGL.NewAcceleratedImage(test.width, test.height)
+				img := openGL.NewAcceleratedImage(test.width, test.height)
 				img.Upload(make([]image.Color, test.width*test.height))
 				program := workingProgram(t, openGL)
-				glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
+				glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
 					renderer.Clear(color)
-					return nil
 				}}
 				command := program.AcceleratedCommand(glCommand)
 				// when
-				err := command.Run(image.AcceleratedImageSelection{
+				command.Run(image.AcceleratedImageSelection{
 					Location: test.location,
 					Image:    img,
 				}, []image.AcceleratedImageSelection{})
 				// then
-				require.NoError(t, err)
 				assertColors(t, test.expectedColors, img)
 			})
 		}
@@ -210,13 +192,13 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				openGL, _ := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
-				img, _ := openGL.NewAcceleratedImage(2, 1)
+				img := openGL.NewAcceleratedImage(2, 1)
 				pixels := []image.Color{image.RGB(1, 2, 3), image.RGB(4, 5, 6)}
 				img.Upload(pixels)
 				program := workingProgram(t, openGL)
 				command := program.AcceleratedCommand(command)
 				// when
-				err := command.Run(image.AcceleratedImageSelection{
+				command.Run(image.AcceleratedImageSelection{
 					Location: image.AcceleratedImageLocation{
 						X:      0,
 						Y:      0,
@@ -226,7 +208,6 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 					Image: img,
 				}, []image.AcceleratedImageSelection{})
 				// then
-				require.NoError(t, err)
 				assertColors(t, pixels, img)
 			})
 		}
@@ -248,21 +229,19 @@ func TestRenderer_Clear(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			openGL, _ := opengl.New(mainThreadLoop)
 			defer openGL.Destroy()
-			img, _ := openGL.NewAcceleratedImage(1, 1)
+			img := openGL.NewAcceleratedImage(1, 1)
 			img.Upload(make([]image.Color, 1))
 			program := workingProgram(t, openGL)
-			glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
+			glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
 				// when
 				renderer.Clear(test.color)
-				return nil
 			}}
 			command := program.AcceleratedCommand(glCommand)
-			err := command.Run(image.AcceleratedImageSelection{
+			command.Run(image.AcceleratedImageSelection{
 				Location: image.AcceleratedImageLocation{Width: 1, Height: 1},
 				Image:    img,
 			}, []image.AcceleratedImageSelection{})
 			// then
-			require.NoError(t, err)
 			assertColors(t, []image.Color{test.color}, img)
 		})
 	}
@@ -324,7 +303,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				openGL, _ := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
-				img, _ := openGL.NewAcceleratedImage(1, 1)
+				img := openGL.NewAcceleratedImage(1, 1)
 				img.Upload(make([]image.Color, 1))
 				vertexShader, err := openGL.CompileVertexShader(test.vertexShaderSrc)
 				require.NoError(t, err)
@@ -338,26 +317,21 @@ func TestRenderer_DrawArrays(t *testing.T) {
 				require.NoError(t, err)
 				program, err := openGL.LinkProgram(vertexShader, fragmentShader)
 				require.NoError(t, err)
-				array, err := openGL.NewVertexArray(opengl.VertexLayout{test.typ})
-				require.NoError(t, err)
-				buffer, err := openGL.NewFloatVertexBuffer(len(test.data))
-				require.NoError(t, err)
-				err = buffer.Upload(0, test.data)
-				require.NoError(t, err)
+				array := openGL.NewVertexArray(opengl.VertexLayout{test.typ})
+				buffer := openGL.NewFloatVertexBuffer(len(test.data))
+				buffer.Upload(0, test.data)
 				vertexPosition := opengl.VertexBufferPointer{Buffer: buffer, Stride: len(test.data)}
-				err = array.Set(0, vertexPosition)
-				require.NoError(t, err)
-				glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
+				array.Set(0, vertexPosition)
+				glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
 					// when
-					return renderer.DrawArrays(array, opengl.Points, 0, 1)
+					renderer.DrawArrays(array, opengl.Points, 0, 1)
 				}}
 				command := program.AcceleratedCommand(glCommand)
-				err = command.Run(image.AcceleratedImageSelection{
+				command.Run(image.AcceleratedImageSelection{
 					Location: image.AcceleratedImageLocation{Width: 1, Height: 1},
 					Image:    img,
 				}, []image.AcceleratedImageSelection{})
 				// then
-				require.NoError(t, err)
 				assertColors(t, []image.Color{image.RGBA(51, 102, 153, 204)}, img)
 			})
 		}
@@ -365,7 +339,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 	t.Run("should draw point using 2 vertex attributes", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		img, _ := openGL.NewAcceleratedImage(1, 1)
+		img := openGL.NewAcceleratedImage(1, 1)
 		img.Upload(make([]image.Color, 1))
 		vertexShader, err := openGL.CompileVertexShader(`
 								#version 330 core
@@ -389,29 +363,24 @@ func TestRenderer_DrawArrays(t *testing.T) {
 		require.NoError(t, err)
 		program, err := openGL.LinkProgram(vertexShader, fragmentShader)
 		require.NoError(t, err)
-		array, err := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float, opengl.Vec3})
+		array := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float, opengl.Vec3})
 		require.NoError(t, err)
-		buffer, err := openGL.NewFloatVertexBuffer(4)
-		require.NoError(t, err)
-		err = buffer.Upload(0, []float32{0, 0.2, 0.4, 0.6})
-		require.NoError(t, err)
+		buffer := openGL.NewFloatVertexBuffer(4)
+		buffer.Upload(0, []float32{0, 0.2, 0.4, 0.6})
 		vertexPositionX := opengl.VertexBufferPointer{Buffer: buffer, Offset: 0, Stride: 4}
-		err = array.Set(0, vertexPositionX)
-		require.NoError(t, err)
+		array.Set(0, vertexPositionX)
 		vertexColor := opengl.VertexBufferPointer{Buffer: buffer, Offset: 1, Stride: 4}
-		err = array.Set(1, vertexColor)
-		require.NoError(t, err)
-		glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
+		array.Set(1, vertexColor)
+		glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
 			// when
-			return renderer.DrawArrays(array, opengl.Points, 0, 1)
+			renderer.DrawArrays(array, opengl.Points, 0, 1)
 		}}
 		command := program.AcceleratedCommand(glCommand)
-		err = command.Run(image.AcceleratedImageSelection{
+		command.Run(image.AcceleratedImageSelection{
 			Location: image.AcceleratedImageLocation{Width: 1, Height: 1},
 			Image:    img,
 		}, []image.AcceleratedImageSelection{})
 		// then
-		require.NoError(t, err)
 		assertColors(t, []image.Color{image.RGB(51, 102, 153)}, img)
 	})
 	t.Run("should draw triangle fan with location specified", func(t *testing.T) {
@@ -456,7 +425,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				openGL, _ := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
-				img, _ := openGL.NewAcceleratedImage(test.width, test.height)
+				img := openGL.NewAcceleratedImage(test.width, test.height)
 				img.Upload(make([]image.Color, test.width*test.height))
 				program := compileProgram(t, openGL,
 					`
@@ -474,31 +443,26 @@ func TestRenderer_DrawArrays(t *testing.T) {
 								}
 								`,
 				)
-				array, err := openGL.NewVertexArray(opengl.VertexLayout{opengl.Vec2})
-				require.NoError(t, err)
-				buffer, err := openGL.NewFloatVertexBuffer(8)
-				require.NoError(t, err)
-				err = buffer.Upload(0, []float32{
+				array := openGL.NewVertexArray(opengl.VertexLayout{opengl.Vec2})
+				buffer := openGL.NewFloatVertexBuffer(8)
+				buffer.Upload(0, []float32{
 					-1, 1, // top-left
 					1, 1, // top-right
 					1, -1, // bottom-right
 					-1, -1}, // bottom-left
 				)
-				require.NoError(t, err)
 				vertexPosition := opengl.VertexBufferPointer{Buffer: buffer, Stride: 2}
-				err = array.Set(0, vertexPosition)
-				require.NoError(t, err)
-				glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
+				array.Set(0, vertexPosition)
+				glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
 					// when
-					return renderer.DrawArrays(array, opengl.TriangleFan, 0, 4)
+					renderer.DrawArrays(array, opengl.TriangleFan, 0, 4)
 				}}
 				command := program.AcceleratedCommand(glCommand)
-				err = command.Run(image.AcceleratedImageSelection{
+				command.Run(image.AcceleratedImageSelection{
 					Location: test.outputLocation,
 					Image:    img,
 				}, []image.AcceleratedImageSelection{})
 				// then
-				require.NoError(t, err)
 				assertColors(t, test.expectedColors, img)
 			})
 		}
@@ -506,7 +470,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 	t.Run("should draw two points", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		img, _ := openGL.NewAcceleratedImage(2, 1)
+		img := openGL.NewAcceleratedImage(2, 1)
 		img.Upload(make([]image.Color, 2))
 		vertexShader, err := openGL.CompileVertexShader(`
 								#version 330 core
@@ -526,29 +490,24 @@ func TestRenderer_DrawArrays(t *testing.T) {
 		require.NoError(t, err)
 		program, err := openGL.LinkProgram(vertexShader, fragmentShader)
 		require.NoError(t, err)
-		array, err := openGL.NewVertexArray(opengl.VertexLayout{opengl.Vec2})
-		require.NoError(t, err)
-		buffer, err := openGL.NewFloatVertexBuffer(4)
-		require.NoError(t, err)
-		err = buffer.Upload(0, []float32{-0.5, 0, 0.5, 0})
-		require.NoError(t, err)
+		array := openGL.NewVertexArray(opengl.VertexLayout{opengl.Vec2})
+		buffer := openGL.NewFloatVertexBuffer(4)
+		buffer.Upload(0, []float32{-0.5, 0, 0.5, 0})
 		vertexPositionX := opengl.VertexBufferPointer{Buffer: buffer, Offset: 0, Stride: 2}
-		err = array.Set(0, vertexPositionX)
-		require.NoError(t, err)
-		glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
+		array.Set(0, vertexPositionX)
+		glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
 			// when
-			return renderer.DrawArrays(array, opengl.Points, 0, 2)
+			renderer.DrawArrays(array, opengl.Points, 0, 2)
 		}}
 		command := program.AcceleratedCommand(glCommand)
-		err = command.Run(image.AcceleratedImageSelection{
+		command.Run(image.AcceleratedImageSelection{
 			Location: image.AcceleratedImageLocation{Width: 2, Height: 1},
 			Image:    img,
 		}, []image.AcceleratedImageSelection{})
 		// then
-		require.NoError(t, err)
 		assertColors(t, []image.Color{image.RGBA(255, 227, 204, 178), image.RGBA(255, 227, 204, 178)}, img)
 	})
-	t.Run("should return error on shader attributes and vertex array mismatch", func(t *testing.T) {
+	t.Run("should panic on shader attributes and vertex array mismatch", func(t *testing.T) {
 		tests := map[string]struct {
 			vertexShaderSrc string
 			layout          opengl.VertexLayout
@@ -601,7 +560,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				openGL, _ := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
-				img, _ := openGL.NewAcceleratedImage(1, 1)
+				img := openGL.NewAcceleratedImage(1, 1)
 				img.Upload(make([]image.Color, 2))
 				vertexShader, err := openGL.CompileVertexShader(test.vertexShaderSrc)
 				require.NoError(t, err)
@@ -612,28 +571,24 @@ func TestRenderer_DrawArrays(t *testing.T) {
 				require.NoError(t, err)
 				program, err := openGL.LinkProgram(vertexShader, fragmentShader)
 				require.NoError(t, err)
-				array, err := openGL.NewVertexArray(test.layout)
-				require.NoError(t, err)
-				buffer, err := openGL.NewFloatVertexBuffer(10)
-				require.NoError(t, err)
-				err = buffer.Upload(0, []float32{0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
-				require.NoError(t, err)
+				array := openGL.NewVertexArray(test.layout)
+				buffer := openGL.NewFloatVertexBuffer(10)
+				buffer.Upload(0, []float32{0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
 				vertexPosition := opengl.VertexBufferPointer{Buffer: buffer, Offset: 0, Stride: 10}
 				for i := range test.layout {
-					err = array.Set(i, vertexPosition)
-					require.NoError(t, err)
+					array.Set(i, vertexPosition)
 				}
-				glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
+				glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
 					// when
-					return renderer.DrawArrays(array, opengl.Points, 0, 1)
+					assert.Panics(t, func() {
+						renderer.DrawArrays(array, opengl.Points, 0, 1)
+					})
 				}}
 				command := program.AcceleratedCommand(glCommand)
-				err = command.Run(image.AcceleratedImageSelection{
+				command.Run(image.AcceleratedImageSelection{
 					Location: image.AcceleratedImageLocation{Width: 1, Height: 1},
 					Image:    img,
 				}, []image.AcceleratedImageSelection{})
-				// then
-				assert.Error(t, err)
 			})
 		}
 	})
@@ -668,7 +623,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				openGL, _ := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
-				img, _ := openGL.NewAcceleratedImage(1, 1)
+				img := openGL.NewAcceleratedImage(1, 1)
 				img.Upload(make([]image.Color, 2))
 				vertexShader, err := openGL.CompileVertexShader(test.vertexShaderSrc)
 				require.NoError(t, err)
@@ -679,27 +634,21 @@ func TestRenderer_DrawArrays(t *testing.T) {
 				require.NoError(t, err)
 				program, err := openGL.LinkProgram(vertexShader, fragmentShader)
 				require.NoError(t, err)
-				array, err := openGL.NewVertexArray(test.layout)
-				require.NoError(t, err)
-				buffer, err := openGL.NewFloatVertexBuffer(8)
-				require.NoError(t, err)
-				err = buffer.Upload(0, []float32{0, 0, 0, 0, 0, 0, 0, 0})
-				require.NoError(t, err)
+				array := openGL.NewVertexArray(test.layout)
+				buffer := openGL.NewFloatVertexBuffer(8)
+				buffer.Upload(0, []float32{0, 0, 0, 0, 0, 0, 0, 0})
 				for location := range test.layout {
-					err = array.Set(location, opengl.VertexBufferPointer{Buffer: buffer, Offset: location * 4, Stride: 8})
-					require.NoError(t, err)
+					array.Set(location, opengl.VertexBufferPointer{Buffer: buffer, Offset: location * 4, Stride: 8})
 				}
-				glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
+				glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
 					// when
-					return renderer.DrawArrays(array, opengl.Points, 0, 1)
+					renderer.DrawArrays(array, opengl.Points, 0, 1)
 				}}
 				command := program.AcceleratedCommand(glCommand)
-				err = command.Run(image.AcceleratedImageSelection{
+				command.Run(image.AcceleratedImageSelection{
 					Location: image.AcceleratedImageLocation{Width: 1, Height: 1},
 					Image:    img,
 				}, []image.AcceleratedImageSelection{})
-				// then
-				assert.NoError(t, err)
 			})
 		}
 
@@ -713,16 +662,16 @@ func TestRenderer_BindTexture(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				openGL, _ := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
-				output, _ := openGL.NewAcceleratedImage(1, 1)
-				tex, _ := openGL.NewAcceleratedImage(1, 1)
+				output := openGL.NewAcceleratedImage(1, 1)
+				tex := openGL.NewAcceleratedImage(1, 1)
 				program := workingProgram(t, openGL)
-				command := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
-					// when
-					return renderer.BindTexture(0, name, tex)
+				command := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
+					assert.Panics(t, func() {
+						// when
+						renderer.BindTexture(0, name, tex)
+					})
 				}})
-				err := command.Run(image.AcceleratedImageSelection{Image: output}, []image.AcceleratedImageSelection{})
-				// then
-				assertClientError(t, err)
+				command.Run(image.AcceleratedImageSelection{Image: output}, []image.AcceleratedImageSelection{})
 			})
 		}
 	})
@@ -732,8 +681,8 @@ func TestRenderer_BindTexture(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				openGL, _ := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
-				output, _ := openGL.NewAcceleratedImage(1, 1)
-				tex, _ := openGL.NewAcceleratedImage(1, 1)
+				output := openGL.NewAcceleratedImage(1, 1)
+				tex := openGL.NewAcceleratedImage(1, 1)
 				program := compileProgram(t, openGL,
 					`#version 330 core
 						void main() {
@@ -746,13 +695,13 @@ func TestRenderer_BindTexture(t *testing.T) {
 						 	color = texture(tex, vec2(0,0));
 						 }`,
 				)
-				command := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
-					// when
-					return renderer.BindTexture(0, name, tex)
+				command := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
+					assert.Panics(t, func() {
+						// when
+						renderer.BindTexture(0, name, tex)
+					})
 				}})
-				err := command.Run(image.AcceleratedImageSelection{Image: output}, []image.AcceleratedImageSelection{})
-				// then
-				assertClientError(t, err)
+				command.Run(image.AcceleratedImageSelection{Image: output}, []image.AcceleratedImageSelection{})
 			})
 		}
 	})
@@ -761,36 +710,36 @@ func TestRenderer_BindTexture(t *testing.T) {
 		defer openGL1.Destroy()
 		openGL2, _ := opengl.New(mainThreadLoop)
 		defer openGL2.Destroy()
-		output, _ := openGL1.NewAcceleratedImage(1, 1)
-		tex, _ := openGL2.NewAcceleratedImage(1, 1)
+		output := openGL1.NewAcceleratedImage(1, 1)
+		tex := openGL2.NewAcceleratedImage(1, 1)
 		program := workingProgram(t, openGL1)
-		command := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
-			// when
-			return renderer.BindTexture(0, "tex", tex)
+		command := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
+			assert.Panics(t, func() {
+				// when
+				renderer.BindTexture(0, "tex", tex)
+			})
 		}})
-		err := command.Run(image.AcceleratedImageSelection{Image: output}, []image.AcceleratedImageSelection{})
-		// then
-		assertClientError(t, err)
+		command.Run(image.AcceleratedImageSelection{Image: output}, []image.AcceleratedImageSelection{})
 	})
 	t.Run("can't bind texture with negative texture unit", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		output, _ := openGL.NewAcceleratedImage(1, 1)
-		tex, _ := openGL.NewAcceleratedImage(1, 1)
+		output := openGL.NewAcceleratedImage(1, 1)
+		tex := openGL.NewAcceleratedImage(1, 1)
 		program := workingProgram(t, openGL)
-		command := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
-			// when
-			return renderer.BindTexture(-1, "tex", tex)
+		command := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
+			assert.Panics(t, func() {
+				// when
+				renderer.BindTexture(-1, "tex", tex)
+			})
 		}})
-		err := command.Run(image.AcceleratedImageSelection{Image: output}, []image.AcceleratedImageSelection{})
-		// then
-		assertClientError(t, err)
+		command.Run(image.AcceleratedImageSelection{Image: output}, []image.AcceleratedImageSelection{})
 	})
 	t.Run("can bind texture", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		output, _ := openGL.NewAcceleratedImage(1, 1)
-		tex, _ := openGL.NewAcceleratedImage(1, 1)
+		output := openGL.NewAcceleratedImage(1, 1)
+		tex := openGL.NewAcceleratedImage(1, 1)
 		program := compileProgram(t, openGL,
 			`#version 330 core
 						void main() {
@@ -803,21 +752,19 @@ func TestRenderer_BindTexture(t *testing.T) {
 						 	color = texture(tex, vec2(0,0));
 						 }`,
 		)
-		glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
+		glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
 			// when
-			return renderer.BindTexture(0, "tex", tex)
+			renderer.BindTexture(0, "tex", tex)
 		}}
 		command := program.AcceleratedCommand(glCommand)
-		err := command.Run(image.AcceleratedImageSelection{Image: output}, []image.AcceleratedImageSelection{})
-		// then
-		assert.NoError(t, err)
+		command.Run(image.AcceleratedImageSelection{Image: output}, []image.AcceleratedImageSelection{})
 	})
 	t.Run("should draw point by sampling texture", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		img, _ := openGL.NewAcceleratedImage(1, 1)
+		img := openGL.NewAcceleratedImage(1, 1)
 		img.Upload(make([]image.Color, 1))
-		tex, _ := openGL.NewAcceleratedImage(1, 1)
+		tex := openGL.NewAcceleratedImage(1, 1)
 		tex.Upload([]image.Color{image.RGBA(1, 2, 3, 4)})
 		program := compileProgram(t,
 			openGL,
@@ -836,40 +783,32 @@ func TestRenderer_BindTexture(t *testing.T) {
 					color = texture(tex, vec2(0.0, 0.0));
 				}
 				`)
-		array, err := openGL.NewVertexArray(opengl.VertexLayout{opengl.Vec2, opengl.Vec2})
-		require.NoError(t, err)
-		buffer, err := openGL.NewFloatVertexBuffer(2)
-		require.NoError(t, err)
-		err = buffer.Upload(0, []float32{0.0, 0.0})
-		require.NoError(t, err)
+		array := openGL.NewVertexArray(opengl.VertexLayout{opengl.Vec2, opengl.Vec2})
+		buffer := openGL.NewFloatVertexBuffer(2)
+		buffer.Upload(0, []float32{0.0, 0.0})
 		vertexPosition := opengl.VertexBufferPointer{Buffer: buffer, Stride: 2}
-		err = array.Set(0, vertexPosition)
-		require.NoError(t, err)
-		glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
+		array.Set(0, vertexPosition)
+		glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
 			// when
-			err := renderer.BindTexture(0, "tex", tex)
-			if err != nil {
-				return err
-			}
-			return renderer.DrawArrays(array, opengl.Points, 0, 1)
+			renderer.BindTexture(0, "tex", tex)
+			renderer.DrawArrays(array, opengl.Points, 0, 1)
 		}}
 		command := program.AcceleratedCommand(glCommand)
-		err = command.Run(image.AcceleratedImageSelection{
+		command.Run(image.AcceleratedImageSelection{
 			Location: image.AcceleratedImageLocation{Width: 1, Height: 1},
 			Image:    img,
 		}, []image.AcceleratedImageSelection{})
 		// then
-		require.NoError(t, err)
 		assertColors(t, []image.Color{image.RGBA(1, 2, 3, 4)}, img)
 	})
 	t.Run("should draw point by sampling 2 textures", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		img, _ := openGL.NewAcceleratedImage(1, 1)
+		img := openGL.NewAcceleratedImage(1, 1)
 		img.Upload(make([]image.Color, 1))
-		tex1, _ := openGL.NewAcceleratedImage(1, 1)
+		tex1 := openGL.NewAcceleratedImage(1, 1)
 		tex1.Upload([]image.Color{image.RGBA(5, 6, 7, 8)})
-		tex2, _ := openGL.NewAcceleratedImage(1, 1)
+		tex2 := openGL.NewAcceleratedImage(1, 1)
 		tex2.Upload([]image.Color{image.RGBA(9, 10, 11, 12)})
 		program := compileProgram(t,
 			openGL,
@@ -889,34 +828,23 @@ func TestRenderer_BindTexture(t *testing.T) {
 					color = texture(tex1, vec2(0.0, 0.0)) + texture(tex2, vec2(0.0, 0.0));
 				}
 				`)
-		array, err := openGL.NewVertexArray(opengl.VertexLayout{opengl.Vec2, opengl.Vec2})
-		require.NoError(t, err)
-		buffer, err := openGL.NewFloatVertexBuffer(2)
-		require.NoError(t, err)
-		err = buffer.Upload(0, []float32{0.0, 0.0})
-		require.NoError(t, err)
+		array := openGL.NewVertexArray(opengl.VertexLayout{opengl.Vec2, opengl.Vec2})
+		buffer := openGL.NewFloatVertexBuffer(2)
+		buffer.Upload(0, []float32{0.0, 0.0})
 		vertexPosition := opengl.VertexBufferPointer{Buffer: buffer, Stride: 2}
-		err = array.Set(0, vertexPosition)
-		require.NoError(t, err)
-		glCommand := &command{runGL: func(renderer *opengl.Renderer, _ []image.AcceleratedImageSelection) error {
+		array.Set(0, vertexPosition)
+		glCommand := &command{runGL: func(renderer *opengl.Renderer, _ []image.AcceleratedImageSelection) {
 			// when
-			err := renderer.BindTexture(0, "tex1", tex1)
-			if err != nil {
-				return err
-			}
-			err = renderer.BindTexture(1, "tex2", tex2)
-			if err != nil {
-				return err
-			}
-			return renderer.DrawArrays(array, opengl.Points, 0, 1)
+			renderer.BindTexture(0, "tex1", tex1)
+			renderer.BindTexture(1, "tex2", tex2)
+			renderer.DrawArrays(array, opengl.Points, 0, 1)
 		}}
 		command := program.AcceleratedCommand(glCommand)
-		err = command.Run(image.AcceleratedImageSelection{
+		command.Run(image.AcceleratedImageSelection{
 			Location: image.AcceleratedImageLocation{Width: 1, Height: 1},
 			Image:    img,
 		}, []image.AcceleratedImageSelection{})
 		// then
-		require.NoError(t, err)
 		assertColors(t, []image.Color{image.RGBA(5+9, 6+10, 7+11, 8+12)}, img)
 	})
 }

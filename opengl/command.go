@@ -12,7 +12,7 @@ import (
 // Command is a procedure drawing primitives (such as triangles) in the AcceleratedImage.
 type Command interface {
 	// Implementations must not retain renderer and selections.
-	RunGL(renderer *Renderer, selections []image.AcceleratedImageSelection) error
+	RunGL(renderer *Renderer, selections []image.AcceleratedImageSelection)
 }
 
 // Renderer is an API for drawing primitives
@@ -24,28 +24,27 @@ type Renderer struct {
 
 // BindTexture assigns image.AcceleratedImage to a given textureUnit and uniform attribute.
 // The bounded texture can be sampled in a fragment shader.
-func (r *Renderer) BindTexture(textureUnit int, uniformAttributeName string, image image.AcceleratedImage) error {
+func (r *Renderer) BindTexture(textureUnit int, uniformAttributeName string, image image.AcceleratedImage) {
 	if textureUnit < 0 {
-		return illegalArgumentError("negative textureUnit")
+		panic("negative textureUnit")
 	}
 	trimmed := strings.TrimSpace(uniformAttributeName)
 	if trimmed == "" {
-		return illegalArgumentError("empty uniformAttributeName")
+		panic("empty uniformAttributeName")
 	}
 	textureLocation, ok := r.program.uniformLocations[uniformAttributeName]
 	if !ok {
-		return illegalArgumentError("not existing uniform attribute name")
+		panic("not existing uniform attribute name")
 	}
 	img, ok := r.allImages[image]
 	if !ok {
-		return illegalArgumentError("image has not been created in this OpenGL context")
+		panic("image has not been created in this OpenGL context")
 	}
 	r.runInOpenGLThread(func() {
 		gl.Uniform1i(textureLocation, int32(textureUnit))
 		gl.ActiveTexture(uint32(gl.TEXTURE0 + textureUnit))
 		gl.BindTexture(gl.TEXTURE_2D, img.textureID)
 	})
-	return nil
 }
 
 // Mode defines which primitives will be drawn.
@@ -89,27 +88,24 @@ var (
 // DrawArrays draws primitives (such as triangles) using vertices defined in VertexArray.
 //
 // Before primitive is drawn this method validates if
-func (r *Renderer) DrawArrays(array *VertexArray, mode Mode, first, count int) error {
-	if err := r.validateAttributeTypes(array); err != nil {
-		return err
-	}
+func (r *Renderer) DrawArrays(array *VertexArray, mode Mode, first, count int) {
+	r.validateAttributeTypes(array)
 	r.runInOpenGLThread(func() {
 		gl.BindVertexArray(array.id)
 		gl.DrawArrays(mode.glMode, int32(first), int32(count))
 	})
-	return nil
 }
 
-func (r *Renderer) validateAttributeTypes(array *VertexArray) error {
+func (r *Renderer) validateAttributeTypes(array *VertexArray) {
 	for i := 0; i < len(array.layout); i++ {
 		if attr, ok := r.program.attributes[int32(i)]; ok {
 			vertexArrayType := array.layout[i]
 			if attr.typ != vertexArrayType {
-				return fmt.Errorf("shader attribute %s with location %d has type %v, which is different than %v in the vertex array", attr.name, i, attr.typ, vertexArrayType)
+				err := fmt.Sprintf("shader attribute %s with location %d has type %v, which is different than %v in the vertex array", attr.name, i, attr.typ, vertexArrayType)
+				panic(err)
 			}
 		}
 	}
-	return nil
 }
 
 // Clear clears the selection with a given color.
@@ -130,16 +126,16 @@ type AcceleratedCommand struct {
 }
 
 // Run implements image.AcceleratedCommand#Run.
-func (c *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selections []image.AcceleratedImageSelection) error {
+func (c *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selections []image.AcceleratedImageSelection) {
 	if c.command == nil {
-		return nil
+		return
 	}
 	if output.Image == nil {
-		return illegalArgumentError("nil output Image")
+		panic("nil output Image")
 	}
 	img, ok := c.allImages[output.Image]
 	if !ok {
-		return illegalStateError("output image created in a different OpenGL context than program")
+		panic("output image created in a different OpenGL context than program")
 	}
 	c.runInOpenGLThread(func() {
 		c.program.use()
@@ -154,5 +150,5 @@ func (c *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selecti
 		runInOpenGLThread: c.runInOpenGLThread,
 		allImages:         c.allImages,
 	}
-	return c.command.RunGL(renderer, selections)
+	c.command.RunGL(renderer, selections)
 }

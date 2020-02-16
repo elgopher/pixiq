@@ -1,8 +1,6 @@
 package main
 
 import (
-	"errors"
-	"fmt"
 	"log"
 
 	"github.com/jacekolszak/pixiq/image"
@@ -19,10 +17,7 @@ func main() {
 			cmd     = program.AcceleratedCommand(&drawSelection{vertexArray: array})
 			window  = openWindow(gl)
 		)
-		sampledImage, err := gl.NewImage(2, 2)
-		if err != nil {
-			log.Panicf("NewImage failed: %v", err)
-		}
+		sampledImage := gl.NewImage(2, 2)
 		selection := sampledImage.WholeImageSelection()
 		selection.SetColor(0, 0, image.RGB(255, 0, 0))
 		selection.SetColor(1, 0, image.RGB(0, 255, 0))
@@ -31,26 +26,17 @@ func main() {
 
 		loop.Run(window, func(frame *loop.Frame) {
 			screen := frame.Screen()
-			if err := screen.Modify(cmd, selection); err != nil {
-				log.Panicf("Modify failed: %v", err)
-			}
+			screen.Modify(cmd, selection)
 		})
 	})
 }
 
 func makeVertexArray(gl *opengl.OpenGL, buffer *opengl.FloatVertexBuffer) *opengl.VertexArray {
-	array, err := gl.NewVertexArray(opengl.VertexLayout{opengl.Vec2, opengl.Vec2})
-	if err != nil {
-		log.Panicf("NewVertexArray failed: %v", err)
-	}
+	array := gl.NewVertexArray(opengl.VertexLayout{opengl.Vec2, opengl.Vec2})
 	xy := opengl.VertexBufferPointer{Offset: 0, Stride: 4, Buffer: buffer}
-	if err := array.Set(0, xy); err != nil {
-		log.Panicf("VertexBufferPointer failed: %v", err)
-	}
+	array.Set(0, xy)
 	st := opengl.VertexBufferPointer{Offset: 2, Stride: 4, Buffer: buffer}
-	if err := array.Set(1, st); err != nil {
-		log.Panicf("VertexBufferPointer failed: %v", err)
-	}
+	array.Set(1, st)
 	return array
 }
 
@@ -62,13 +48,8 @@ func makeVertexBuffer(gl *opengl.OpenGL) *opengl.FloatVertexBuffer {
 		1, -1, 1, 0, // bottom-right
 		-1, -1, 0, 0, // bottom-left
 	}
-	buffer, err := gl.NewFloatVertexBuffer(len(vertices))
-	if err != nil {
-		log.Panicf("NewFloatVertexBuffer failed: %v", err)
-	}
-	if err := buffer.Upload(0, vertices); err != nil {
-		log.Panicf("Upload failed: %v", err)
-	}
+	buffer := gl.NewFloatVertexBuffer(len(vertices))
+	buffer.Upload(0, vertices)
 	return buffer
 }
 
@@ -117,17 +98,12 @@ type drawSelection struct {
 	vertexArray *opengl.VertexArray
 }
 
-func (c drawSelection) RunGL(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) error {
+func (c drawSelection) RunGL(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
 	if len(selections) != 1 {
-		return errors.New("invalid number of selections")
+		panic("invalid number of selections")
 	}
-	if err := renderer.BindTexture(0, "tex", selections[0].Image); err != nil {
-		return fmt.Errorf("error binding texture: %v", err)
-	}
-	if err := renderer.DrawArrays(c.vertexArray, opengl.TriangleFan, 0, 4); err != nil {
-		return fmt.Errorf("error drawing arrays: %v", err)
-	}
-	return nil
+	renderer.BindTexture(0, "tex", selections[0].Image)
+	renderer.DrawArrays(c.vertexArray, opengl.TriangleFan, 0, 4)
 }
 
 func openWindow(gl *opengl.OpenGL) *opengl.Window {

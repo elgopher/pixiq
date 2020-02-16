@@ -8,6 +8,7 @@ package opengl
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
@@ -169,17 +170,14 @@ func (g *OpenGL) startPollingEvents(stop <-chan struct{}) {
 // Will return error if width or height are negative or image of these dimensions
 // cannot be created on a video card. (For instance when dimensions are not
 // a power of two)
-func (g *OpenGL) NewImage(width, height int) (*image.Image, error) {
+func (g *OpenGL) NewImage(width, height int) *image.Image {
 	if width < 0 {
-		return nil, illegalArgumentError("negative width")
+		panic("negative width")
 	}
 	if height < 0 {
-		return nil, illegalArgumentError("negative height")
+		panic("negative height")
 	}
-	acceleratedImage, err := g.NewAcceleratedImage(width, height)
-	if err != nil {
-		return nil, err
-	}
+	acceleratedImage := g.NewAcceleratedImage(width, height)
 	return image.New(width, height, acceleratedImage)
 }
 
@@ -187,16 +185,17 @@ func (g *OpenGL) NewImage(width, height int) (*image.Image, error) {
 // Will return error if width or height are negative or image of these dimensions
 // cannot be created on a video card. (For instance when dimensions are not
 // a power of two)
-func (g *OpenGL) NewAcceleratedImage(width, height int) (*AcceleratedImage, error) {
+func (g *OpenGL) NewAcceleratedImage(width, height int) *AcceleratedImage {
 	if width < 0 {
-		return nil, illegalArgumentError("negative width")
+		panic("negative width")
 	}
 	if height < 0 {
-		return nil, illegalArgumentError("negative height")
+		panic("negative height")
 	}
+	// TODO Add more validation which is done in OpenGL driver or get errors from driver
+	// and panic
 	var id uint32
 	var frameBufferID uint32
-	var err error
 	g.runInOpenGLThread(func() {
 		gl.GenTextures(1, &id)
 		gl.BindTexture(gl.TEXTURE_2D, id)
@@ -211,9 +210,9 @@ func (g *OpenGL) NewAcceleratedImage(width, height int) (*AcceleratedImage, erro
 			gl.UNSIGNED_BYTE,
 			gl.Ptr(nil),
 		)
-		if gle := gl.GetError(); gle != gl.NO_ERROR {
-			err = glError{method: "glTexImage2D", code: gle}
-			return
+		// TODO This is bad. get error should be done in a loop
+		if code := gl.GetError(); code != gl.NO_ERROR {
+			panic("gl error: " + strconv.Itoa(int(code)))
 		}
 		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
 		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
@@ -222,9 +221,6 @@ func (g *OpenGL) NewAcceleratedImage(width, height int) (*AcceleratedImage, erro
 		gl.BindFramebuffer(gl.FRAMEBUFFER, frameBufferID)
 		gl.FramebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, id, 0)
 	})
-	if err != nil {
-		return nil, err
-	}
 	img := &AcceleratedImage{
 		textureID:         id,
 		frameBufferID:     frameBufferID,
@@ -233,7 +229,7 @@ func (g *OpenGL) NewAcceleratedImage(width, height int) (*AcceleratedImage, erro
 		runInOpenGLThread: g.runInOpenGLThread,
 	}
 	g.allImages[img] = img
-	return img, nil
+	return img
 }
 
 // AcceleratedImage is an image.AcceleratedImage implementation storing pixels
@@ -293,14 +289,8 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 	}
 	// FIXME: EventBuffer size should be configurable
 	keyboardEvents := internal.NewKeyboardEvents(keyboard.NewEventBuffer(32))
-	screenAcceleratedImage, err := g.NewAcceleratedImage(width, height)
-	if err != nil {
-		return nil, err
-	}
-	screenImage, err := image.New(width, height, screenAcceleratedImage)
-	if err != nil {
-		return nil, err
-	}
+	screenAcceleratedImage := g.NewAcceleratedImage(width, height)
+	screenImage := image.New(width, height, screenAcceleratedImage)
 	win := &Window{
 		mainThreadLoop:         g.mainThreadLoop,
 		keyboardEvents:         keyboardEvents,
@@ -310,6 +300,7 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 		screenImage:            screenImage,
 		zoom:                   1,
 	}
+	var err error
 	g.mainThreadLoop.Execute(func() {
 		win.glfwWindow, err = createWindow(g.mainThreadLoop, g.mainWindow)
 		if err != nil {
@@ -398,30 +389,23 @@ func (g *OpenGL) LinkProgram(vertexShader *VertexShader, fragmentShader *Fragmen
 }
 
 // NewFloatVertexBuffer creates an OpenGL's Vertex Buffer Object (VBO) containing only float32 numbers.
-func (g *OpenGL) NewFloatVertexBuffer(size int) (*FloatVertexBuffer, error) {
+func (g *OpenGL) NewFloatVertexBuffer(size int) *FloatVertexBuffer {
 	if size < 0 {
-		return nil, illegalArgumentError("negative size")
+		panic("negative size")
 	}
 	var id uint32
-	var err error
 	g.runInOpenGLThread(func() {
 		gl.GenBuffers(1, &id)
 		gl.BindBuffer(gl.ARRAY_BUFFER, id)
 		gl.BufferData(gl.ARRAY_BUFFER, size*4, gl.Ptr(nil), gl.STATIC_DRAW) // FIXME: Parametrize usage
-		if errorCode := gl.GetError(); errorCode != gl.NO_ERROR {
-			err = glError{method: "glBufferData", code: errorCode}
-		}
 	})
-	if err != nil {
-		return nil, err
-	}
 	vb := &FloatVertexBuffer{
 		id:                id,
 		size:              size,
 		runInOpenGLThread: g.runInOpenGLThread,
 	}
 	g.vertexBufferIDs[vb] = id
-	return vb, nil
+	return vb
 }
 
 // VertexLayout defines data types of VertexArray locations.
@@ -469,9 +453,9 @@ var (
 
 // NewVertexArray creates a new instance of VertexArray. All vertex attributes
 // specified in layout will be enabled.
-func (g *OpenGL) NewVertexArray(layout VertexLayout) (*VertexArray, error) {
+func (g *OpenGL) NewVertexArray(layout VertexLayout) *VertexArray {
 	if len(layout) == 0 {
-		return nil, illegalArgumentError("empty layout")
+		panic("empty layout")
 	}
 	var id uint32
 	g.runInOpenGLThread(func() {
@@ -486,7 +470,7 @@ func (g *OpenGL) NewVertexArray(layout VertexLayout) (*VertexArray, error) {
 		layout:            layout,
 		runInOpenGLThread: g.runInOpenGLThread,
 		vertexBufferIDs:   g.vertexBufferIDs,
-	}, nil
+	}
 }
 
 // VertexArray is a thin abstraction for OpenGL's Vertex Array Object.
@@ -549,32 +533,26 @@ func (e illegalArgumentError) Error() string {
 	return string(e)
 }
 
-type illegalStateError string
-
-func (e illegalStateError) Error() string {
-	return string(e)
-}
-
 // Set sets a location of VertexArray pointing to VertexBuffer slice.
-func (a *VertexArray) Set(location int, pointer VertexBufferPointer) error {
+func (a *VertexArray) Set(location int, pointer VertexBufferPointer) {
 	if pointer.Offset < 0 {
-		return illegalArgumentError("negative pointer offset")
+		panic("negative pointer offset")
 	}
 	if pointer.Stride < 0 {
-		return illegalArgumentError("negative pointer stride")
+		panic("negative pointer stride")
 	}
 	if pointer.Buffer == nil {
-		return illegalArgumentError("nil pointer buffer")
+		panic("nil pointer buffer")
 	}
 	if location < 0 {
-		return illegalArgumentError("negative location")
+		panic("negative location")
 	}
 	if location >= len(a.layout) {
-		return illegalArgumentError("location out-of-bounds")
+		panic("location out-of-bounds")
 	}
 	bufferID, ok := a.vertexBufferIDs[pointer.Buffer]
 	if !ok {
-		return illegalStateError("vertex buffer has not been created in this context")
+		panic("vertex buffer has not been created in this context")
 	}
 	a.runInOpenGLThread(func() {
 		gl.BindVertexArray(a.id)
@@ -583,7 +561,6 @@ func (a *VertexArray) Set(location int, pointer VertexBufferPointer) error {
 		components := typ.components
 		gl.VertexAttribPointer(uint32(location), components, typ.xtype, false, int32(pointer.Stride*4), gl.PtrOffset(pointer.Offset*4))
 	})
-	return nil
 }
 
 // FloatVertexBuffer is a struct representing OpenGL's Vertex Buffer Object (VBO) containing only float32 numbers.
@@ -601,15 +578,16 @@ func (b *FloatVertexBuffer) Size() int {
 
 // Download gets data starting at a given offset in VRAM and put them into slice. Whole output slice will be filled with data,
 // unless output slice is bigger then the vertex buffer.
-func (b *FloatVertexBuffer) Download(offset int, output []float32) error {
+func (b *FloatVertexBuffer) Download(offset int, output []float32) {
 	if b.deleted {
-		return illegalStateError("deleted buffer")
+		// TODO Change to noop?
+		panic("deleted buffer")
 	}
 	if offset < 0 {
-		return illegalArgumentError("negative offset")
+		panic("negative offset")
 	}
 	if len(output) == 0 {
-		return nil
+		return
 	}
 	size := len(output)
 	if size+offset > b.size {
@@ -619,7 +597,6 @@ func (b *FloatVertexBuffer) Download(offset int, output []float32) error {
 		gl.BindBuffer(gl.ARRAY_BUFFER, b.id)
 		gl.GetBufferSubData(gl.ARRAY_BUFFER, offset*4, size*4, gl.Ptr(output))
 	})
-	return nil
 }
 
 // Delete should be called whenever you don't plan to use vertex buffer anymore. Vertex Buffer is external resource
@@ -634,19 +611,17 @@ func (b *FloatVertexBuffer) Delete() {
 // Upload sends data to the vertex buffer. All slice data will be inserted starting at a given offset position.
 //
 // Returns error when vertex buffer is too small to hold the data or offset is negative.
-func (b *FloatVertexBuffer) Upload(offset int, data []float32) error {
+func (b *FloatVertexBuffer) Upload(offset int, data []float32) {
 	if offset < 0 {
-		return illegalArgumentError("negative offset")
+		panic("negative offset")
 	}
 	if b.size < len(data)+offset {
-		return illegalArgumentError("FloatVertexBuffer is to small to store data")
+		panic("FloatVertexBuffer is to small to store data")
 	}
-	var err error
 	b.runInOpenGLThread(func() {
 		gl.BindBuffer(gl.ARRAY_BUFFER, b.id)
 		gl.BufferSubData(gl.ARRAY_BUFFER, offset*4, len(data)*4, gl.Ptr(data))
 	})
-	return err
 }
 
 // ID returns OpenGL identifier/name.

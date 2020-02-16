@@ -1,7 +1,5 @@
 package image
 
-import "errors"
-
 // AcceleratedImage is an image processed by external device (outside the CPU).
 // The mentioned device might be a video card.
 type AcceleratedImage interface {
@@ -29,15 +27,15 @@ type AcceleratedImage interface {
 // New creates an Image with specified size given in pixels.
 // Will panic if AcceleratedImage is nil
 // Will return error if width and height are negative
-func New(width, height int, acceleratedImage AcceleratedImage) (*Image, error) {
+func New(width, height int, acceleratedImage AcceleratedImage) *Image {
 	if acceleratedImage == nil {
 		panic("nil acceleratedImage")
 	}
 	if width < 0 {
-		return nil, errors.New("negative width")
+		panic("negative width")
 	}
 	if height < 0 {
-		return nil, errors.New("negative height")
+		panic("negative height")
 	}
 	return &Image{
 		width:            width,
@@ -46,7 +44,7 @@ func New(width, height int, acceleratedImage AcceleratedImage) (*Image, error) {
 		pixels:           make([]Color, width*height),
 		acceleratedImage: acceleratedImage,
 		selectionsCache:  make([]AcceleratedImageSelection, 0, 4),
-	}, nil
+	}
 }
 
 // Image is a 2D picture composed of pixels each having a specific color.
@@ -232,27 +230,24 @@ type AcceleratedCommand interface {
 	// as OpenGL context).
 	//
 	// Implementations must not retain selections.
-	Run(output AcceleratedImageSelection, selections []AcceleratedImageSelection) error
+	Run(output AcceleratedImageSelection, selections []AcceleratedImageSelection)
 }
 
 // Modify runs the AcceleratedCommand and put results into the Selection.
 // This method ensures that all passed selections are uploaded before the command
 // is called. Selections get converted into AcceleratedImageSelection and
 // passed to the command.Run.
-func (s Selection) Modify(command AcceleratedCommand, selections ...Selection) error {
+func (s Selection) Modify(command AcceleratedCommand, selections ...Selection) {
 	if command == nil {
-		return errors.New("nil command")
+		return
 	}
 	convertedSelections := s.image.selectionsCache[:0]
 	for _, selection := range selections {
 		selection.image.acceleratedImage.Upload(selection.image.pixels)
 		convertedSelections = append(convertedSelections, selection.toAcceleratedImageSelection())
 	}
-	if err := command.Run(s.toAcceleratedImageSelection(), convertedSelections); err != nil {
-		return err
-	}
+	command.Run(s.toAcceleratedImageSelection(), convertedSelections)
 	s.image.acceleratedImage.Download(s.image.pixels)
-	return nil
 }
 
 func (s Selection) toAcceleratedImageSelection() AcceleratedImageSelection {

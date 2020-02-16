@@ -18,9 +18,7 @@ func main() {
 		)
 		loop.Run(window, func(frame *loop.Frame) {
 			screen := frame.Screen()
-			if err := screen.Modify(cmd); err != nil {
-				log.Panicf("Modify failed: %v", err)
-			}
+			screen.Modify(cmd)
 		})
 	})
 }
@@ -29,8 +27,8 @@ type drawColorfulRectangle struct {
 	vertexArray *opengl.VertexArray
 }
 
-func (c drawColorfulRectangle) RunGL(renderer *opengl.Renderer, _ []image.AcceleratedImageSelection) error {
-	return renderer.DrawArrays(c.vertexArray, opengl.TriangleFan, 0, 4)
+func (c drawColorfulRectangle) RunGL(renderer *opengl.Renderer, _ []image.AcceleratedImageSelection) {
+	renderer.DrawArrays(c.vertexArray, opengl.TriangleFan, 0, 4)
 }
 
 func makeVertexBuffer(gl *opengl.OpenGL) *opengl.FloatVertexBuffer {
@@ -41,29 +39,17 @@ func makeVertexBuffer(gl *opengl.OpenGL) *opengl.FloatVertexBuffer {
 		1, -1, 0, 0, 1, // bottom-right -> blue
 		-1, -1, 1, 1, 1, // bottom-left -> white
 	}
-	buffer, err := gl.NewFloatVertexBuffer(len(vertices))
-	if err != nil {
-		log.Panicf("NewFloatVertexBuffer failed: %v", err)
-	}
-	if err := buffer.Upload(0, vertices); err != nil {
-		log.Panicf("Upload failed: %v", err)
-	}
+	buffer := gl.NewFloatVertexBuffer(len(vertices))
+	buffer.Upload(0, vertices)
 	return buffer
 }
 
 func makeVertexArray(gl *opengl.OpenGL, buffer *opengl.FloatVertexBuffer) *opengl.VertexArray {
-	array, err := gl.NewVertexArray(opengl.VertexLayout{opengl.Vec2, opengl.Vec3})
-	if err != nil {
-		log.Panicf("NewVertexArray failed: %v", err)
-	}
+	array := gl.NewVertexArray(opengl.VertexLayout{opengl.Vec2, opengl.Vec3})
 	xy := opengl.VertexBufferPointer{Offset: 0, Stride: 5, Buffer: buffer}
-	if err := array.Set(0, xy); err != nil {
-		log.Panicf("VertexBufferPointer failed: %v", err)
-	}
+	array.Set(0, xy)
 	color := opengl.VertexBufferPointer{Offset: 2, Stride: 5, Buffer: buffer}
-	if err := array.Set(1, color); err != nil {
-		log.Panicf("VertexBufferPointer failed: %v", err)
-	}
+	array.Set(1, color)
 	return array
 }
 
