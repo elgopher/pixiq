@@ -36,10 +36,10 @@ func New(mainThreadLoop *MainThreadLoop) (*OpenGL, error) {
 		panic("nil MainThreadLoop")
 	}
 	var (
-		mainWindow *glfw.Window
-		err        error
+		mainWindow   *glfw.Window
+		err          error
+		capabilities *Capabilities
 	)
-	var maxTextureSize int32
 	mainThreadLoop.Execute(func() {
 		err = glfw.Init()
 		if err != nil {
@@ -49,7 +49,7 @@ func New(mainThreadLoop *MainThreadLoop) (*OpenGL, error) {
 		if err != nil {
 			return
 		}
-		gl.GetIntegerv(gl.MAX_TEXTURE_SIZE, &maxTextureSize)
+		capabilities = gatherCapabilities()
 	})
 	if err != nil {
 		return nil, err
@@ -67,12 +67,18 @@ func New(mainThreadLoop *MainThreadLoop) (*OpenGL, error) {
 		mainWindow:        mainWindow,
 		vertexBufferIDs:   vertexBufferIDs{},
 		allImages:         allImages{},
-		capabilities: &Capabilities{
-			maxTextureSize: int(maxTextureSize),
-		},
+		capabilities:      capabilities,
 	}
 	go openGL.startPollingEvents(openGL.stopPollingEvents)
 	return openGL, nil
+}
+
+func gatherCapabilities() *Capabilities {
+	var maxTextureSize int32
+	gl.GetIntegerv(gl.MAX_TEXTURE_SIZE, &maxTextureSize)
+	return &Capabilities{
+		maxTextureSize: int(maxTextureSize),
+	}
 }
 
 // vertexBufferIDs contains all vertex buffer identifiers in OpenGL context
