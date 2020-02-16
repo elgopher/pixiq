@@ -33,6 +33,14 @@ func (c Color) A() byte {
 	return c.a
 }
 
+// RGBAf returns all color components as floats in range 0.0 to 1.0.
+func (c Color) RGBAf() (float32, float32, float32, float32) {
+	return float32(c.r) / 255.0,
+		float32(c.g) / 255.0,
+		float32(c.b) / 255.0,
+		float32(c.a) / 255.0
+}
+
 // RGBA creates Color using all four components: red, green, blue and alpha.
 func RGBA(r, g, b, a byte) Color {
 	return Color{

@@ -4,26 +4,27 @@ import (
 	"github.com/go-gl/gl/v3.3-core/gl"
 )
 
-func newScreenPolygon(vertexPositionLocation int32, texturePositionLocation int32) *screenPolygon {
-	var vertexArrayID uint32
-	var vertexBufferID uint32
+func newScreenPolygon() *screenPolygon {
+	const (
+		vertexLocation  = 0
+		textureLocation = 1
+	)
+	var vertexArrayID, vertexBufferID uint32
 	gl.GenVertexArrays(1, &vertexArrayID)
 	gl.BindVertexArray(vertexArrayID)
 	gl.GenBuffers(1, &vertexBufferID)
 	gl.BindBuffer(gl.ARRAY_BUFFER, vertexBufferID)
 	data := []float32{
-		-1, -1, 0, 1, // (x,y) -> (u,v), that is: vertexPosition -> texturePosition
-		1, -1, 1, 1,
-		1, 1, 1, 0,
-		-1, -1, 0, 1,
-		1, 1, 1, 0,
-		-1, 1, 0, 0,
+		-1, 1, 0, 1, // (x,y) -> (u,v), that is: vertexPosition -> texturePosition
+		1, 1, 1, 1,
+		1, -1, 1, 0,
+		-1, -1, 0, 0,
 	}
 	gl.BufferData(gl.ARRAY_BUFFER, len(data)*4, gl.Ptr(data), gl.STATIC_DRAW)
 	const stride int32 = 4 * 4
 	const vec2size int32 = 2
 	gl.VertexAttribPointer(
-		uint32(vertexPositionLocation),
+		vertexLocation,
 		vec2size,
 		gl.FLOAT,
 		false,
@@ -32,7 +33,7 @@ func newScreenPolygon(vertexPositionLocation int32, texturePositionLocation int3
 	)
 	gl.EnableVertexAttribArray(0)
 	gl.VertexAttribPointer(
-		uint32(texturePositionLocation),
+		textureLocation,
 		vec2size,
 		gl.FLOAT,
 		false,
@@ -40,16 +41,14 @@ func newScreenPolygon(vertexPositionLocation int32, texturePositionLocation int3
 		gl.PtrOffset(8),
 	)
 	gl.EnableVertexAttribArray(1)
-	return &screenPolygon{vertexArrayID: vertexArrayID, vertexBufferID: vertexBufferID}
+	return &screenPolygon{vertexArrayID: vertexArrayID}
 }
 
 type screenPolygon struct {
-	vertexArrayID  uint32
-	vertexBufferID uint32
+	vertexArrayID uint32
 }
 
 func (p *screenPolygon) draw() {
-	gl.BindBuffer(gl.ARRAY_BUFFER, p.vertexBufferID)
 	gl.BindVertexArray(p.vertexArrayID)
-	gl.DrawArrays(gl.TRIANGLES, 0, 6)
+	gl.DrawArrays(gl.TRIANGLE_FAN, 0, 4)
 }

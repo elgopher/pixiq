@@ -5,6 +5,7 @@ import (
 	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/loop"
 	"github.com/jacekolszak/pixiq/opengl"
+	"log"
 )
 
 // This example shows how to open two windows at the same time.
@@ -15,11 +16,11 @@ func main() {
 	opengl.RunOrDie(func(gl *opengl.OpenGL) {
 		redWindow, err := gl.OpenWindow(320, 180, opengl.Title("red"))
 		if err != nil {
-			panic(err)
+			log.Panicf("red OpenWindow failed: %v", err)
 		}
 		blueWindow, err := gl.OpenWindow(250, 90, opengl.Title("blue"))
 		if err != nil {
-			panic(err)
+			log.Panicf("blue OpenWindow failed: %v", err)
 		}
 		// Start the loop in the background, because Loop method blocks
 		// the current goroutine.

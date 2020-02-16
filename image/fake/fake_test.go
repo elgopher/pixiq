@@ -3,23 +3,21 @@ package fake_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
 	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/image/fake"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewAcceleratedImage(t *testing.T) {
-	t.Run("should return error when width<0", func(t *testing.T) {
-		img, err := fake.NewAcceleratedImage(-1, 1)
-		assert.Error(t, err)
-		assert.Nil(t, img)
+	t.Run("should panic when width<0", func(t *testing.T) {
+		assert.Panics(t, func() {
+			fake.NewAcceleratedImage(-1, 1)
+		})
 	})
-	t.Run("should return error when height<0", func(t *testing.T) {
-		img, err := fake.NewAcceleratedImage(1, -1)
-		assert.Error(t, err)
-		assert.Nil(t, img)
+	t.Run("should panic when height<0", func(t *testing.T) {
+		assert.Panics(t, func() {
+			fake.NewAcceleratedImage(1, -1)
+		})
 	})
 	t.Run("should create image", func(t *testing.T) {
 		tests := map[string]struct {
@@ -30,8 +28,7 @@ func TestNewAcceleratedImage(t *testing.T) {
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
-				img, err := fake.NewAcceleratedImage(test.width, test.height)
-				require.NoError(t, err)
+				img := fake.NewAcceleratedImage(test.width, test.height)
 				assert.NotNil(t, img)
 			})
 		}
@@ -59,7 +56,7 @@ func TestAcceleratedImage_Download(t *testing.T) {
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
-				img, _ := fake.NewAcceleratedImage(test.width, test.height)
+				img := fake.NewAcceleratedImage(test.width, test.height)
 				output := make([]image.Color, len(test.expected))
 				// when
 				img.Download(output)
@@ -88,7 +85,7 @@ func TestAcceleratedImage_Download(t *testing.T) {
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
-				img, _ := fake.NewAcceleratedImage(test.width, test.height)
+				img := fake.NewAcceleratedImage(test.width, test.height)
 				output := make([]image.Color, test.inputLength)
 				assert.Panics(t, func() {
 					img.Download(output)
@@ -119,7 +116,7 @@ func TestAcceleratedImage_Upload(t *testing.T) {
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
-				img, _ := fake.NewAcceleratedImage(test.width, test.height)
+				img := fake.NewAcceleratedImage(test.width, test.height)
 				input := make([]image.Color, test.inputLength)
 				assert.Panics(t, func() {
 					img.Upload(input)
@@ -151,7 +148,7 @@ func TestAcceleratedImage_Upload(t *testing.T) {
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
-				img, _ := fake.NewAcceleratedImage(test.width, test.height)
+				img := fake.NewAcceleratedImage(test.width, test.height)
 				// when
 				img.Upload(test.colors)
 				// then
@@ -164,7 +161,7 @@ func TestAcceleratedImage_Upload(t *testing.T) {
 	t.Run("should copy colors", func(t *testing.T) {
 		color0 := image.RGB(0, 0, 0)
 		color1 := image.RGB(1, 1, 1)
-		img, _ := fake.NewAcceleratedImage(1, 1)
+		img := fake.NewAcceleratedImage(1, 1)
 		input := []image.Color{color0}
 		// when
 		img.Upload(input)
@@ -213,7 +210,7 @@ func TestAcceleratedImage_PixelsTable(t *testing.T) {
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
-				acceleratedImage, _ := fake.NewAcceleratedImage(test.width, test.height)
+				acceleratedImage := fake.NewAcceleratedImage(test.width, test.height)
 				acceleratedImage.Upload(test.pixels)
 				// when
 				table := acceleratedImage.PixelsTable()

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/jacekolszak/pixiq/colornames"
 	"github.com/jacekolszak/pixiq/opengl"
@@ -20,17 +21,14 @@ func main() {
 		// Create OpenGL object.
 		gl, err := opengl.New(loop)
 		if err != nil {
-			panic(err)
+			log.Panicf("New failed: %v", err)
 		}
 		// Destroy OpenGL when the function ends
 		defer gl.Destroy()
 
 		// Create 2x2 image. Width parameter (as always) is before Height.
 		// All given in pixels.
-		img, err := gl.NewImage(2, 2)
-		if err != nil {
-			panic(err)
-		}
+		img := gl.NewImage(2, 2)
 
 		// Image can be modified via Selection. Here we create a selection
 		// spanning the whole Image. The Selection starts at (0,0) and have

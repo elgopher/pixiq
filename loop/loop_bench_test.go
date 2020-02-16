@@ -3,15 +3,12 @@ package loop_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/loop"
 )
 
 func BenchmarkScreenLoops_Loop(b *testing.B) {
-	img, err := image.New(1, 1, &acceleratedImageStub{})
-	require.NoError(b, err)
+	img := image.New(1, 1, &acceleratedImageStub{})
 	var (
 		screen = &noopScreen{image: img}
 	)

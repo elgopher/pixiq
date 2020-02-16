@@ -9,7 +9,7 @@ import (
 func BenchmarkSelection_SetColor(b *testing.B) {
 	var (
 		color     = image.RGBA(10, 20, 30, 40)
-		img, _    = image.New(1920, 1080, acceleratedImageStub{})
+		img       = image.New(1920, 1080, acceleratedImageStub{})
 		selection = img.WholeImageSelection()
 		height    = selection.Height()
 		width     = selection.Width()
@@ -26,7 +26,7 @@ func BenchmarkSelection_SetColor(b *testing.B) {
 
 func BenchmarkSelection_Color(b *testing.B) {
 	var (
-		img, _    = image.New(1920, 1080, acceleratedImageStub{})
+		img       = image.New(1920, 1080, acceleratedImageStub{})
 		selection = img.WholeImageSelection()
 		height    = selection.Height()
 		width     = selection.Width()
@@ -44,7 +44,7 @@ func BenchmarkSelection_Color(b *testing.B) {
 // Must be 0 allocs/op
 func BenchmarkImage_Selection(b *testing.B) {
 	var (
-		img, _ = image.New(1, 1, acceleratedImageStub{})
+		img = image.New(1, 1, acceleratedImageStub{})
 	)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -55,7 +55,7 @@ func BenchmarkImage_Selection(b *testing.B) {
 // Must be 0 allocs/op
 func BenchmarkSelection_Selection(b *testing.B) {
 	var (
-		img, _    = image.New(1, 1, acceleratedImageStub{})
+		img       = image.New(1, 1, acceleratedImageStub{})
 		selection = img.WholeImageSelection()
 	)
 	b.ResetTimer()
@@ -67,20 +67,19 @@ func BenchmarkSelection_Selection(b *testing.B) {
 // Must be 0 allocs/op
 func BenchmarkSelection_Modify(b *testing.B) {
 	var (
-		img, _          = image.New(1, 1, acceleratedImageStub{})
+		img             = image.New(1, 1, acceleratedImageStub{})
 		selection       = img.WholeImageSelection()
 		command         = &acceleratedCommandStub{}
 		sourceSelection = img.WholeImageSelection()
 	)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_ = selection.Modify(command, sourceSelection)
+		selection.Modify(command, sourceSelection)
 	}
 }
 
 type acceleratedCommandStub struct {
 }
 
-func (a acceleratedCommandStub) Run(output image.AcceleratedImageSelection, selections []image.AcceleratedImageSelection) error {
-	return nil
+func (a acceleratedCommandStub) Run(output image.AcceleratedImageSelection, selections []image.AcceleratedImageSelection) {
 }

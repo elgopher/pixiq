@@ -11,16 +11,16 @@ import (
 
 // Window is an implementation of loop.Screen and keyboard.EventSource
 type Window struct {
-	glfwWindow      *glfw.Window
-	program         *program
-	mainThreadLoop  *MainThreadLoop
-	screenPolygon   *screenPolygon
-	keyboardEvents  *internal.KeyboardEvents
-	requestedWidth  int
-	requestedHeight int
-	zoom            int
-	screenImage     *image.Image
-	screenTexture   *Texture
+	glfwWindow             *glfw.Window
+	program                *program
+	mainThreadLoop         *MainThreadLoop
+	screenPolygon          *screenPolygon
+	keyboardEvents         *internal.KeyboardEvents
+	requestedWidth         int
+	requestedHeight        int
+	zoom                   int
+	screenImage            *image.Image
+	screenAcceleratedImage *AcceleratedImage
 }
 
 // Draw draws a screen image to the invisible buffer. It will be shown in window
@@ -31,8 +31,9 @@ func (w *Window) Draw() {
 		w.mainThreadLoop.bind(w.glfwWindow)
 		w.program.use()
 		width, height := w.glfwWindow.GetFramebufferSize()
+		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 		gl.Viewport(0, 0, int32(width), int32(height))
-		gl.BindTexture(gl.TEXTURE_2D, w.screenTexture.TextureID())
+		gl.BindTexture(gl.TEXTURE_2D, w.screenAcceleratedImage.textureID)
 		w.screenPolygon.draw()
 	})
 }

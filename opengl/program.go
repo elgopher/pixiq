@@ -28,13 +28,47 @@ func compileProgram(vertexShaderSrc, fragmentShaderSrc string) (*program, error)
 }
 
 type program struct {
-	id                      uint32
-	vertexPositionLocation  int32
-	texturePositionLocation int32
+	id uint32
 }
 
 func (p *program) use() {
 	gl.UseProgram(p.id)
+}
+
+func (p *program) activeUniformLocations() map[string]int32 {
+	locationsByName := map[string]int32{}
+	var count, bufSize, length, nameMaxLength int32
+	var xtype uint32
+	gl.GetProgramiv(p.id, gl.ACTIVE_UNIFORM_MAX_LENGTH, &nameMaxLength)
+	name := make([]byte, nameMaxLength)
+	gl.GetProgramiv(p.id, gl.ACTIVE_UNIFORMS, &count)
+	for location := int32(0); location < count; location++ {
+		gl.GetActiveUniform(p.id, uint32(location), nameMaxLength, &bufSize, &length, &xtype, &name[0])
+		goName := gl.GoStr(&name[0])
+		locationsByName[goName] = location
+	}
+	return locationsByName
+}
+
+type attribute struct {
+	typ  Type
+	name string
+}
+
+func (p *program) attributes() map[int32]attribute {
+	var count, bufSize, length, nameMaxLength int32
+	var xtype uint32
+	gl.GetProgramiv(p.id, gl.ACTIVE_ATTRIBUTE_MAX_LENGTH, &nameMaxLength)
+	name := make([]byte, nameMaxLength)
+	gl.GetProgramiv(p.id, gl.ACTIVE_ATTRIBUTES, &count)
+	attributes := map[int32]attribute{}
+	for i := int32(0); i < count; i++ {
+		gl.GetActiveAttrib(p.id, uint32(i), nameMaxLength, &bufSize, &length, &xtype, &name[0])
+		location := gl.GetAttribLocation(p.id, &name[0])
+		attributes[location] = attribute{typ: valueOf(xtype),
+			name: gl.GoStr(&name[0])}
+	}
+	return attributes
 }
 
 func linkProgram(shaders ...*shader) (*program, error) {
@@ -54,12 +88,8 @@ func linkProgram(shaders ...*shader) (*program, error) {
 		}
 		return nil, fmt.Errorf("error linking program: %s", string(infoLog))
 	}
-	vertePositionLocation := gl.GetAttribLocation(programID, gl.Str("vertexPosition\x00"))
-	texturePositionLocation := gl.GetAttribLocation(programID, gl.Str("texturePosition\x00"))
 	return &program{
-		id:                      programID,
-		vertexPositionLocation:  vertePositionLocation,
-		texturePositionLocation: texturePositionLocation,
+		id: programID,
 	}, nil
 }
 
@@ -94,7 +124,7 @@ func compileShader(xtype uint32, src string) (*shader, error) {
 		if logLen > 0 {
 			gl.GetShaderInfoLog(shaderID, logLen, nil, &infoLog[0])
 		}
-		return nil, fmt.Errorf("error compiling shader: %s", string(infoLog))
+		return nil, fmt.Errorf("glCompileShader failed: %s", string(infoLog))
 	}
 	return &shader{id: shaderID}, nil
 }
@@ -106,8 +136,8 @@ func (s *shader) delete() {
 const vertexShaderSrc = `
 #version 330 core
 
-in vec2 vertexPosition;
-in vec2 texturePosition;
+layout(location = 0) in vec2 vertexPosition;
+layout(location = 1) in vec2 texturePosition;
 
 out vec2 position;
 
