@@ -28,10 +28,7 @@ func (r *Renderer) BindTexture(textureUnit int, uniformAttributeName string, ima
 	if textureUnit < 0 {
 		panic("negative textureUnit")
 	}
-	trimmed := strings.TrimSpace(uniformAttributeName)
-	if trimmed == "" {
-		panic("empty uniformAttributeName")
-	}
+	r.assertValidAttributeName(uniformAttributeName)
 	textureLocation, ok := r.program.uniformLocations[uniformAttributeName]
 	if !ok {
 		panic("not existing uniform attribute name")
@@ -45,6 +42,17 @@ func (r *Renderer) BindTexture(textureUnit int, uniformAttributeName string, ima
 		gl.ActiveTexture(uint32(gl.TEXTURE0 + textureUnit))
 		gl.BindTexture(gl.TEXTURE_2D, img.textureID)
 	})
+}
+
+func (r *Renderer) SetFloat(uniformAttributeName string, value float32) {
+	r.assertValidAttributeName(uniformAttributeName)
+}
+
+func (r *Renderer) assertValidAttributeName(uniformAttributeName string) {
+	trimmed := strings.TrimSpace(uniformAttributeName)
+	if trimmed == "" {
+		panic("empty uniformAttributeName")
+	}
 }
 
 // Mode defines which primitives will be drawn.

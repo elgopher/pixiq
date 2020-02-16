@@ -859,6 +859,29 @@ func TestRenderer_BindTexture(t *testing.T) {
 	})
 }
 
+func TestRenderer_SetFloat(t *testing.T) {
+	t.Run("should panic for invalid uniform name", func(t *testing.T) {
+		names := []string{"", " ", "  ", "\n", "\t"}
+		for _, name := range names {
+			t.Run(name, func(t *testing.T) {
+				openGL, _ := opengl.New(mainThreadLoop)
+				defer openGL.Destroy()
+				var (
+					output  = openGL.NewAcceleratedImage(1, 1)
+					program = workingProgram(t, openGL)
+					command = program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
+						assert.Panics(t, func() {
+							// when
+							renderer.SetFloat(name, 0)
+						})
+					}})
+				)
+				command.Run(image.AcceleratedImageSelection{Image: output}, []image.AcceleratedImageSelection{})
+			})
+		}
+	})
+}
+
 func workingProgram(t *testing.T, openGL *opengl.OpenGL) *opengl.Program {
 	return compileProgram(t, openGL,
 		`#version 330 core
