@@ -609,7 +609,6 @@ func (b *FloatVertexBuffer) Size() int {
 // the vertex buffer.
 func (b *FloatVertexBuffer) Download(offset int, output []float32) {
 	if b.deleted {
-		// TODO Change to noop?
 		panic("deleted buffer")
 	}
 	if offset < 0 {
