@@ -617,17 +617,6 @@ func TestOpenGL_Error(t *testing.T) {
 		// then
 		assert.NoError(t, err)
 	})
-	t.Run("should return out-of-memory error for too big vertex buffer", func(t *testing.T) {
-		openGL, _ := opengl.New(mainThreadLoop)
-		defer openGL.Destroy()
-		terabyte := 1024 * 1024 * 1024 * 1024
-		openGL.NewFloatVertexBuffer(terabyte)
-		// when
-		err := openGL.Error()
-		// then
-		require.Error(t, err)
-		assert.True(t, opengl.IsOutOfMemory(err))
-	})
 }
 
 func TestFloatVertexBuffer_Upload(t *testing.T) {
