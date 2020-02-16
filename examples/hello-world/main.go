@@ -4,7 +4,6 @@ import (
 	"github.com/jacekolszak/pixiq/colornames"
 	"github.com/jacekolszak/pixiq/loop"
 	"github.com/jacekolszak/pixiq/opengl"
-	"log"
 )
 
 func main() {
@@ -13,7 +12,7 @@ func main() {
 	opengl.RunOrDie(func(gl *opengl.OpenGL) {
 		window, err := gl.OpenWindow(80, 16, opengl.Zoom(5))
 		if err != nil {
-			log.Panicf("OpenWindow failed: %v", err)
+			panic(err)
 		}
 		// Create a loop for a screen. OpenGL's Window is a Screen (some day
 		// in the future Pixiq may support different platforms such as mobile
