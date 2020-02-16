@@ -94,6 +94,19 @@ func TestOpenGL_NewImage(t *testing.T) {
 	})
 }
 
+func TestOpenGL_Capabilities(t *testing.T) {
+	t.Run("should return capabilities", func(t *testing.T) {
+		openGL, err := opengl.New(mainThreadLoop)
+		require.NoError(t, err)
+		defer openGL.Destroy()
+		// when
+		capabilities := openGL.Capabilities()
+		// then
+		assert.NotNil(t, capabilities)
+		assert.Greater(t, capabilities.MaxTextureSize(), 0)
+	})
+}
+
 func TestOpenGL_NewAcceleratedImage(t *testing.T) {
 	t.Run("should panic for negative width", func(t *testing.T) {
 		openGL, err := opengl.New(mainThreadLoop)
@@ -113,13 +126,24 @@ func TestOpenGL_NewAcceleratedImage(t *testing.T) {
 			openGL.NewAcceleratedImage(0, -1)
 		})
 	})
-	t.Run("should panic for too big dimensions", func(t *testing.T) {
+	t.Run("should panic for too big width", func(t *testing.T) {
 		openGL, err := opengl.New(mainThreadLoop)
 		require.NoError(t, err)
 		defer openGL.Destroy()
+		capabilities := openGL.Capabilities()
 		assert.Panics(t, func() {
 			// when
-			openGL.NewAcceleratedImage(1024*1024, 1024*1024)
+			openGL.NewAcceleratedImage(capabilities.MaxTextureSize()+1, 1)
+		})
+	})
+	t.Run("should panic for too big height", func(t *testing.T) {
+		openGL, err := opengl.New(mainThreadLoop)
+		require.NoError(t, err)
+		defer openGL.Destroy()
+		capabilities := openGL.Capabilities()
+		assert.Panics(t, func() {
+			// when
+			openGL.NewAcceleratedImage(1, capabilities.MaxTextureSize()+1)
 		})
 	})
 	t.Run("should create AcceleratedImage", func(t *testing.T) {

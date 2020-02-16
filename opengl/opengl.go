@@ -8,7 +8,6 @@ package opengl
 import (
 	"fmt"
 	"log"
-	"strconv"
 	"time"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
@@ -40,6 +39,7 @@ func New(mainThreadLoop *MainThreadLoop) (*OpenGL, error) {
 		mainWindow *glfw.Window
 		err        error
 	)
+	var maxTextureSize int32
 	mainThreadLoop.Execute(func() {
 		err = glfw.Init()
 		if err != nil {
@@ -49,6 +49,7 @@ func New(mainThreadLoop *MainThreadLoop) (*OpenGL, error) {
 		if err != nil {
 			return
 		}
+		gl.GetIntegerv(gl.MAX_TEXTURE_SIZE, &maxTextureSize)
 	})
 	if err != nil {
 		return nil, err
@@ -66,6 +67,9 @@ func New(mainThreadLoop *MainThreadLoop) (*OpenGL, error) {
 		mainWindow:        mainWindow,
 		vertexBufferIDs:   vertexBufferIDs{},
 		allImages:         allImages{},
+		capabilities: &Capabilities{
+			maxTextureSize: int(maxTextureSize),
+		},
 	}
 	go openGL.startPollingEvents(openGL.stopPollingEvents)
 	return openGL, nil
@@ -126,6 +130,7 @@ type OpenGL struct {
 	mainWindow        *glfw.Window
 	vertexBufferIDs   vertexBufferIDs
 	allImages         allImages
+	capabilities      *Capabilities
 }
 
 // Destroy cleans all the OpenGL resources associated with this instance.
@@ -167,9 +172,7 @@ func (g *OpenGL) startPollingEvents(stop <-chan struct{}) {
 //
 //	   type NewImage func(width, height) (*image.Image, error)
 //
-// Will return error if width or height are negative or image of these dimensions
-// cannot be created on a video card. (For instance when dimensions are not
-// a power of two)
+// Will panic if width or height are negative or higher than MAX_TEXTURE_SIZE
 func (g *OpenGL) NewImage(width, height int) *image.Image {
 	if width < 0 {
 		panic("negative width")
@@ -181,10 +184,24 @@ func (g *OpenGL) NewImage(width, height int) *image.Image {
 	return image.New(width, height, acceleratedImage)
 }
 
+// Capabilities returns parameter values reported by current OpenGL instance.
+func (g *OpenGL) Capabilities() *Capabilities {
+	return g.capabilities
+}
+
+// Capabilities contains parameter values reported by current OpenGL instance.
+type Capabilities struct {
+	maxTextureSize         int
+	nonPowerOfTwoSupported bool
+}
+
+// MaxTextureSize returns OpenGL's MAX_TEXTURE_SIZE
+func (c Capabilities) MaxTextureSize() int {
+	return c.maxTextureSize
+}
+
 // NewAcceleratedImage returns an OpenGL-accelerated implementation of image.AcceleratedImage
-// Will return error if width or height are negative or image of these dimensions
-// cannot be created on a video card. (For instance when dimensions are not
-// a power of two)
+// Will panic if width or height are negative or higher than MAX_TEXTURE_SIZE
 func (g *OpenGL) NewAcceleratedImage(width, height int) *AcceleratedImage {
 	if width < 0 {
 		panic("negative width")
@@ -192,8 +209,13 @@ func (g *OpenGL) NewAcceleratedImage(width, height int) *AcceleratedImage {
 	if height < 0 {
 		panic("negative height")
 	}
-	// TODO Add more validation which is done in OpenGL driver or get errors from driver
-	// and panic
+	if width > g.capabilities.maxTextureSize {
+		panic(fmt.Sprintf("width higher than MAX_TEXTURE_SIZE (%d pixels)", g.capabilities.maxTextureSize))
+	}
+	if height > g.capabilities.maxTextureSize {
+		panic(fmt.Sprintf("height higher than MAX_TEXTURE_SIZE (%d pixels)", g.capabilities.maxTextureSize))
+	}
+	// FIXME resize image (internally) if OpenGL does support only a power-of-two dimensions.
 	var id uint32
 	var frameBufferID uint32
 	g.runInOpenGLThread(func() {
@@ -210,10 +232,6 @@ func (g *OpenGL) NewAcceleratedImage(width, height int) *AcceleratedImage {
 			gl.UNSIGNED_BYTE,
 			gl.Ptr(nil),
 		)
-		// TODO This is bad. get error should be done in a loop
-		if code := gl.GetError(); code != gl.NO_ERROR {
-			panic("gl error: " + strconv.Itoa(int(code)))
-		}
 		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
 		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
 
