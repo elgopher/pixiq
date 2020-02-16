@@ -662,15 +662,17 @@ func TestRenderer_BindTexture(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				openGL, _ := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
-				output := openGL.NewAcceleratedImage(1, 1)
-				tex := openGL.NewAcceleratedImage(1, 1)
-				program := workingProgram(t, openGL)
-				command := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
-					assert.Panics(t, func() {
-						// when
-						renderer.BindTexture(0, name, tex)
-					})
-				}})
+				var (
+					output  = openGL.NewAcceleratedImage(1, 1)
+					tex     = openGL.NewAcceleratedImage(1, 1)
+					program = workingProgram(t, openGL)
+					command = program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
+						assert.Panics(t, func() {
+							// when
+							renderer.BindTexture(0, name, tex)
+						})
+					}})
+				)
 				command.Run(image.AcceleratedImageSelection{Image: output}, []image.AcceleratedImageSelection{})
 			})
 		}
@@ -681,26 +683,28 @@ func TestRenderer_BindTexture(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				openGL, _ := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
-				output := openGL.NewAcceleratedImage(1, 1)
-				tex := openGL.NewAcceleratedImage(1, 1)
-				program := compileProgram(t, openGL,
-					`#version 330 core
+				var (
+					output  = openGL.NewAcceleratedImage(1, 1)
+					tex     = openGL.NewAcceleratedImage(1, 1)
+					program = compileProgram(t, openGL,
+						`#version 330 core
 						void main() {
 							gl_Position = vec4(0, 0, 0, 0);
 						}`,
-					`#version 330 core
+						`#version 330 core
 						 uniform sampler2D tex;
 						 out vec4 color;
 						 void main() {
 						 	color = texture(tex, vec2(0,0));
 						 }`,
+					)
+					command = program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
+						assert.Panics(t, func() {
+							// when
+							renderer.BindTexture(0, name, tex)
+						})
+					}})
 				)
-				command := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
-					assert.Panics(t, func() {
-						// when
-						renderer.BindTexture(0, name, tex)
-					})
-				}})
 				command.Run(image.AcceleratedImageSelection{Image: output}, []image.AcceleratedImageSelection{})
 			})
 		}
@@ -710,52 +714,58 @@ func TestRenderer_BindTexture(t *testing.T) {
 		defer openGL1.Destroy()
 		openGL2, _ := opengl.New(mainThreadLoop)
 		defer openGL2.Destroy()
-		output := openGL1.NewAcceleratedImage(1, 1)
-		tex := openGL2.NewAcceleratedImage(1, 1)
-		program := workingProgram(t, openGL1)
-		command := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
-			assert.Panics(t, func() {
-				// when
-				renderer.BindTexture(0, "tex", tex)
-			})
-		}})
+		var (
+			output  = openGL1.NewAcceleratedImage(1, 1)
+			tex     = openGL2.NewAcceleratedImage(1, 1)
+			program = workingProgram(t, openGL1)
+			command = program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
+				assert.Panics(t, func() {
+					// when
+					renderer.BindTexture(0, "tex", tex)
+				})
+			}})
+		)
 		command.Run(image.AcceleratedImageSelection{Image: output}, []image.AcceleratedImageSelection{})
 	})
 	t.Run("can't bind texture with negative texture unit", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		output := openGL.NewAcceleratedImage(1, 1)
-		tex := openGL.NewAcceleratedImage(1, 1)
-		program := workingProgram(t, openGL)
-		command := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
-			assert.Panics(t, func() {
-				// when
-				renderer.BindTexture(-1, "tex", tex)
-			})
-		}})
+		var (
+			output  = openGL.NewAcceleratedImage(1, 1)
+			tex     = openGL.NewAcceleratedImage(1, 1)
+			program = workingProgram(t, openGL)
+			command = program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
+				assert.Panics(t, func() {
+					// when
+					renderer.BindTexture(-1, "tex", tex)
+				})
+			}})
+		)
 		command.Run(image.AcceleratedImageSelection{Image: output}, []image.AcceleratedImageSelection{})
 	})
 	t.Run("can bind texture", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		output := openGL.NewAcceleratedImage(1, 1)
-		tex := openGL.NewAcceleratedImage(1, 1)
-		program := compileProgram(t, openGL,
-			`#version 330 core
+		var (
+			output  = openGL.NewAcceleratedImage(1, 1)
+			tex     = openGL.NewAcceleratedImage(1, 1)
+			program = compileProgram(t, openGL,
+				`#version 330 core
 						void main() {
 							gl_Position = vec4(0, 0, 0, 0);
 						}`,
-			`#version 330 core
+				`#version 330 core
 						 uniform sampler2D tex;
 						 out vec4 color;
 						 void main() {
 						 	color = texture(tex, vec2(0,0));
 						 }`,
+			)
+			glCommand = &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
+				// when
+				renderer.BindTexture(0, "tex", tex)
+			}}
 		)
-		glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
-			// when
-			renderer.BindTexture(0, "tex", tex)
-		}}
 		command := program.AcceleratedCommand(glCommand)
 		command.Run(image.AcceleratedImageSelection{Image: output}, []image.AcceleratedImageSelection{})
 	})
