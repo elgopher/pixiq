@@ -885,6 +885,8 @@ func TestRenderer_BindTexture(t *testing.T) {
 }
 
 func TestRenderer_SetXXX(t *testing.T) {
+	openGL, _ := opengl.New(mainThreadLoop)
+	defer openGL.Destroy()
 	tests := map[string]struct {
 		setUniform     func(name string, renderer *opengl.Renderer)
 		fragmentShader string
@@ -1034,8 +1036,6 @@ func TestRenderer_SetXXX(t *testing.T) {
 				names := []string{"", " ", "  ", "\n", "\t"}
 				for _, name := range names {
 					t.Run(name, func(t *testing.T) {
-						openGL, _ := opengl.New(mainThreadLoop)
-						defer openGL.Destroy()
 						var (
 							output  = openGL.NewAcceleratedImage(1, 1)
 							program = workingProgram(t, openGL)
