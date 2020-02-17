@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/jacekolszak/pixiq/colornames"
 	"log"
 
 	"github.com/jacekolszak/pixiq/image"
@@ -28,8 +27,6 @@ func main() {
 		loop.Run(window, func(frame *loop.Frame) {
 			screen := frame.Screen()
 			screen.Modify(cmd, selection)
-			screen.SetColor(10, 10, colornames.Blue)
-			screen.SetColor(11, 11, colornames.Blue)
 		})
 	})
 }
