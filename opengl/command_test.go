@@ -105,6 +105,8 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 		command.Run(image.AcceleratedImageSelection{Image: output}, []image.AcceleratedImageSelection{})
 	})
 	t.Run("clear image fragment with color", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
 		color := image.RGBA(1, 2, 3, 4)
 		tests := map[string]struct {
 			width, height  int
@@ -166,11 +168,14 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 				location:       image.AcceleratedImageLocation{X: 1, Y: 1, Width: 1, Height: 1},
 				expectedColors: []image.Color{image.Transparent, color, image.Transparent, image.Transparent},
 			},
+			"middle row": {
+				width: 1, height: 3,
+				location:       image.AcceleratedImageLocation{Y: 1, Width: 1, Height: 1},
+				expectedColors: []image.Color{image.Transparent, color, image.Transparent},
+			},
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
-				openGL, _ := opengl.New(mainThreadLoop)
-				defer openGL.Destroy()
 				img := openGL.NewAcceleratedImage(test.width, test.height)
 				img.Upload(make([]image.Color, test.width*test.height))
 				program := workingProgram(t, openGL)
@@ -389,6 +394,8 @@ func TestRenderer_DrawArrays(t *testing.T) {
 		assertColors(t, []image.Color{image.RGB(51, 102, 153)}, img)
 	})
 	t.Run("should draw triangle fan with location specified", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
 		color := image.RGBA(51, 102, 153, 204)
 		tests := map[string]struct {
 			width, height  int
@@ -435,11 +442,14 @@ func TestRenderer_DrawArrays(t *testing.T) {
 				width:          1, height: 2,
 				expectedColors: []image.Color{color, color},
 			},
+			"middle row": {
+				outputLocation: image.AcceleratedImageLocation{Y: 1, Width: 1, Height: 1},
+				width:          1, height: 3,
+				expectedColors: []image.Color{image.Transparent, color, image.Transparent},
+			},
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
-				openGL, _ := opengl.New(mainThreadLoop)
-				defer openGL.Destroy()
 				img := openGL.NewAcceleratedImage(test.width, test.height)
 				img.Upload(make([]image.Color, test.width*test.height))
 				program := compileProgram(t, openGL,
@@ -875,6 +885,8 @@ func TestRenderer_BindTexture(t *testing.T) {
 }
 
 func TestRenderer_SetXXX(t *testing.T) {
+	openGL, _ := opengl.New(mainThreadLoop)
+	defer openGL.Destroy()
 	tests := map[string]struct {
 		setUniform     func(name string, renderer *opengl.Renderer)
 		fragmentShader string
@@ -1024,8 +1036,6 @@ func TestRenderer_SetXXX(t *testing.T) {
 				names := []string{"", " ", "  ", "\n", "\t"}
 				for _, name := range names {
 					t.Run(name, func(t *testing.T) {
-						openGL, _ := opengl.New(mainThreadLoop)
-						defer openGL.Destroy()
 						var (
 							output  = openGL.NewAcceleratedImage(1, 1)
 							program = workingProgram(t, openGL)
@@ -1045,8 +1055,6 @@ func TestRenderer_SetXXX(t *testing.T) {
 				names := []string{"foo", "bar"}
 				for _, name := range names {
 					t.Run(name, func(t *testing.T) {
-						openGL, _ := opengl.New(mainThreadLoop)
-						defer openGL.Destroy()
 						var (
 							output  = openGL.NewAcceleratedImage(1, 1)
 							program = compileProgram(t, openGL,
@@ -1069,8 +1077,6 @@ func TestRenderer_SetXXX(t *testing.T) {
 			})
 
 			t.Run("should draw point by using uniform", func(t *testing.T) {
-				openGL, _ := opengl.New(mainThreadLoop)
-				defer openGL.Destroy()
 				img := openGL.NewAcceleratedImage(1, 1)
 				img.Upload(make([]image.Color, 1))
 				program := compileProgram(t,
