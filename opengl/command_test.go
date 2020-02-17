@@ -166,6 +166,11 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 				location:       image.AcceleratedImageLocation{X: 1, Y: 1, Width: 1, Height: 1},
 				expectedColors: []image.Color{image.Transparent, color, image.Transparent, image.Transparent},
 			},
+			"middle row": {
+				width: 1, height: 3,
+				location:       image.AcceleratedImageLocation{Y: 1, Width: 1, Height: 1},
+				expectedColors: []image.Color{image.Transparent, color, image.Transparent},
+			},
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
@@ -389,6 +394,8 @@ func TestRenderer_DrawArrays(t *testing.T) {
 		assertColors(t, []image.Color{image.RGB(51, 102, 153)}, img)
 	})
 	t.Run("should draw triangle fan with location specified", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
 		color := image.RGBA(51, 102, 153, 204)
 		tests := map[string]struct {
 			width, height  int
@@ -435,11 +442,14 @@ func TestRenderer_DrawArrays(t *testing.T) {
 				width:          1, height: 2,
 				expectedColors: []image.Color{color, color},
 			},
+			"middle row": {
+				outputLocation: image.AcceleratedImageLocation{Y: 1, Width: 1, Height: 1},
+				width:          1, height: 3,
+				expectedColors: []image.Color{image.Transparent, color, image.Transparent},
+			},
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
-				openGL, _ := opengl.New(mainThreadLoop)
-				defer openGL.Destroy()
 				img := openGL.NewAcceleratedImage(test.width, test.height)
 				img.Upload(make([]image.Color, test.width*test.height))
 				program := compileProgram(t, openGL,

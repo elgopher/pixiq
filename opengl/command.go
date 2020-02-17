@@ -234,7 +234,7 @@ func (c *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selecti
 		x := int32(loc.X)
 		y := int32(img.height - locHeight - loc.Y)
 		w := int32(loc.Width)
-		h := int32(img.height - loc.Y)
+		h := int32(locHeight)
 		gl.Scissor(x, y, w, h)
 		gl.Viewport(x, y, w, h)
 	})
