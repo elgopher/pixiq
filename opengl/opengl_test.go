@@ -711,9 +711,9 @@ func TestFloatVertexBuffer_Upload(t *testing.T) {
 }
 
 func TestFloatVertexBuffer_Download(t *testing.T) {
+	openGL, _ := opengl.New(mainThreadLoop)
+	defer openGL.Destroy()
 	t.Run("should panic when offset is negative", func(t *testing.T) {
-		openGL, _ := opengl.New(mainThreadLoop)
-		defer openGL.Destroy()
 		buffer := openGL.NewFloatVertexBuffer(1)
 		defer buffer.Delete()
 		output := make([]float32, 1)
@@ -723,8 +723,6 @@ func TestFloatVertexBuffer_Download(t *testing.T) {
 		})
 	})
 	t.Run("should panic when buffer has been deleted", func(t *testing.T) {
-		openGL, _ := opengl.New(mainThreadLoop)
-		defer openGL.Destroy()
 		buffer := openGL.NewFloatVertexBuffer(1)
 		buffer.Delete()
 		output := make([]float32, 1)
@@ -735,8 +733,6 @@ func TestFloatVertexBuffer_Download(t *testing.T) {
 		})
 	})
 	t.Run("should download data", func(t *testing.T) {
-		openGL, _ := opengl.New(mainThreadLoop)
-		defer openGL.Destroy()
 		tests := map[string]struct {
 			input          []float32
 			offset         int
@@ -833,9 +829,9 @@ func TestOpenGL_NewVertexArray(t *testing.T) {
 }
 
 func TestVertexArray_Set(t *testing.T) {
+	openGL, _ := opengl.New(mainThreadLoop)
+	defer openGL.Destroy()
 	t.Run("should panic when offset is negative", func(t *testing.T) {
-		openGL, _ := opengl.New(mainThreadLoop)
-		defer openGL.Destroy()
 		vao := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float})
 		defer vao.Delete()
 		buffer := openGL.NewFloatVertexBuffer(1)
@@ -851,8 +847,6 @@ func TestVertexArray_Set(t *testing.T) {
 		})
 	})
 	t.Run("should panic when stride is negative", func(t *testing.T) {
-		openGL, _ := opengl.New(mainThreadLoop)
-		defer openGL.Destroy()
 		vao := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float})
 		defer vao.Delete()
 		buffer := openGL.NewFloatVertexBuffer(1)
@@ -868,8 +862,6 @@ func TestVertexArray_Set(t *testing.T) {
 		})
 	})
 	t.Run("should panic when location is negative", func(t *testing.T) {
-		openGL, _ := opengl.New(mainThreadLoop)
-		defer openGL.Destroy()
 		vao := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float})
 		defer vao.Delete()
 		buffer := openGL.NewFloatVertexBuffer(1)
@@ -885,8 +877,6 @@ func TestVertexArray_Set(t *testing.T) {
 		})
 	})
 	t.Run("should panic when location is higher than number of arguments", func(t *testing.T) {
-		openGL, _ := opengl.New(mainThreadLoop)
-		defer openGL.Destroy()
 		vao := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float})
 		defer vao.Delete()
 		buffer := openGL.NewFloatVertexBuffer(1)
@@ -902,8 +892,6 @@ func TestVertexArray_Set(t *testing.T) {
 		})
 	})
 	t.Run("should panic when buffer is nil", func(t *testing.T) {
-		openGL, _ := opengl.New(mainThreadLoop)
-		defer openGL.Destroy()
 		vao := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float})
 		defer vao.Delete()
 		pointer := opengl.VertexBufferPointer{
@@ -917,8 +905,6 @@ func TestVertexArray_Set(t *testing.T) {
 		})
 	})
 	t.Run("should panic when buffer was not created by context", func(t *testing.T) {
-		openGL, _ := opengl.New(mainThreadLoop)
-		defer openGL.Destroy()
 		vao := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float})
 		defer vao.Delete()
 		vertexBufferNotCreatedInContext := &opengl.FloatVertexBuffer{}
@@ -933,8 +919,6 @@ func TestVertexArray_Set(t *testing.T) {
 		})
 	})
 	t.Run("should set", func(t *testing.T) {
-		openGL, _ := opengl.New(mainThreadLoop)
-		defer openGL.Destroy()
 		vao := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float})
 		defer vao.Delete()
 		buffer := openGL.NewFloatVertexBuffer(1)
