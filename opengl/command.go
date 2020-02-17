@@ -236,7 +236,7 @@ func (c *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selecti
 		w := int32(loc.Width)
 		h := int32(img.height - loc.Y)
 		gl.Scissor(x, y, w, h)
-		gl.Viewport(x, y, w, h) // TODO Not well tested
+		gl.Viewport(x, y, w, h)
 	})
 	renderer := &Renderer{
 		program:           c.program,

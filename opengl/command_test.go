@@ -425,6 +425,16 @@ func TestRenderer_DrawArrays(t *testing.T) {
 				width:          1, height: 3,
 				expectedColors: []image.Color{color, color, color},
 			},
+			"Height:2 and Y:1": {
+				outputLocation: image.AcceleratedImageLocation{Y: 1, Width: 1, Height: 2},
+				width:          1, height: 3,
+				expectedColors: []image.Color{color, color, image.Transparent},
+			},
+			"Height out of bounds": {
+				outputLocation: image.AcceleratedImageLocation{Width: 1, Height: 3},
+				width:          1, height: 2,
+				expectedColors: []image.Color{color, color},
+			},
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
