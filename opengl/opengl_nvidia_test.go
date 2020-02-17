@@ -15,8 +15,8 @@ func TestOpenGL_Error_Nvidia(t *testing.T) {
 	t.Run("should return out-of-memory error for too big vertex buffer", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		terabyte := 1024 * 1024 * 1024 * 1024
-		openGL.NewFloatVertexBuffer(terabyte)
+		petabyte := 1024 * 1024 * 1024 * 1024 * 1024
+		openGL.NewFloatVertexBuffer(petabyte)
 		// when
 		err := openGL.Error()
 		// then
