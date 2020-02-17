@@ -28,7 +28,7 @@ func (r *Renderer) BindTexture(textureUnit int, uniformAttributeName string, ima
 	if textureUnit < 0 {
 		panic("negative textureUnit")
 	}
-	r.assertValidAttributeName(uniformAttributeName)
+	assertValidAttributeName(uniformAttributeName)
 	textureLocation, ok := r.program.uniformLocations[uniformAttributeName]
 	if !ok {
 		panic("not existing uniform attribute name")
@@ -45,10 +45,17 @@ func (r *Renderer) BindTexture(textureUnit int, uniformAttributeName string, ima
 }
 
 func (r *Renderer) SetFloat(uniformAttributeName string, value float32) {
-	r.assertValidAttributeName(uniformAttributeName)
+	assertValidAttributeName(uniformAttributeName)
+	location, ok := r.program.uniformLocations[uniformAttributeName]
+	if !ok {
+		panic("not existing uniform attribute name")
+	}
+	r.runInOpenGLThread(func() {
+		gl.Uniform1f(location, value)
+	})
 }
 
-func (r *Renderer) assertValidAttributeName(uniformAttributeName string) {
+func assertValidAttributeName(uniformAttributeName string) {
 	trimmed := strings.TrimSpace(uniformAttributeName)
 	if trimmed == "" {
 		panic("empty uniformAttributeName")

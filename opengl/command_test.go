@@ -880,6 +880,77 @@ func TestRenderer_SetFloat(t *testing.T) {
 			})
 		}
 	})
+	t.Run("should panic for uniform name not specified in program", func(t *testing.T) {
+		names := []string{"foo", "bar"}
+		for _, name := range names {
+			t.Run(name, func(t *testing.T) {
+				openGL, _ := opengl.New(mainThreadLoop)
+				defer openGL.Destroy()
+				var (
+					output  = openGL.NewAcceleratedImage(1, 1)
+					program = compileProgram(t, openGL,
+						`#version 330 core
+						void main() {
+							gl_Position = vec4(0, 0, 0, 0);
+						}`,
+						`#version 330 core
+						 uniform float someFloat;
+						 out vec4 color;
+						 void main() {
+						 	color = vec4(someFloat, someFloat, someFloat, someFloat); 
+						 }`,
+					)
+					command = program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
+						assert.Panics(t, func() {
+							// when
+							renderer.SetFloat(name, 0)
+						})
+					}})
+				)
+				command.Run(image.AcceleratedImageSelection{Image: output}, []image.AcceleratedImageSelection{})
+			})
+		}
+	})
+	t.Run("should draw point by using uniform", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		img := openGL.NewAcceleratedImage(1, 1)
+		img.Upload(make([]image.Color, 1))
+		program := compileProgram(t,
+			openGL,
+			`
+				#version 330 core
+				layout(location = 0) in vec2 xy;	
+				void main() {
+					gl_Position = vec4(xy, 0.0, 1.0);
+				}
+				`,
+			`
+				#version 330 core
+				uniform float someFloat;
+				out vec4 color;
+				void main() {
+					color = vec4(someFloat, someFloat, someFloat, someFloat); 
+				}
+				`)
+		array := openGL.NewVertexArray(opengl.VertexLayout{opengl.Vec2, opengl.Vec2})
+		buffer := openGL.NewFloatVertexBuffer(2)
+		buffer.Upload(0, []float32{0.0, 0.0})
+		vertexPosition := opengl.VertexBufferPointer{Buffer: buffer, Stride: 2}
+		array.Set(0, vertexPosition)
+		glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
+			// when
+			renderer.SetFloat("someFloat", 1)
+			renderer.DrawArrays(array, opengl.Points, 0, 1)
+		}}
+		command := program.AcceleratedCommand(glCommand)
+		command.Run(image.AcceleratedImageSelection{
+			Location: image.AcceleratedImageLocation{Width: 1, Height: 1},
+			Image:    img,
+		}, []image.AcceleratedImageSelection{})
+		// then
+		assertColors(t, []image.Color{image.RGBA(255, 255, 255, 255)}, img)
+	})
 }
 
 func workingProgram(t *testing.T, openGL *opengl.OpenGL) *opengl.Program {
