@@ -859,6 +859,240 @@ func TestRenderer_BindTexture(t *testing.T) {
 	})
 }
 
+func TestRenderer_SetXXX(t *testing.T) {
+	tests := map[string]struct {
+		setUniform     func(name string, renderer *opengl.Renderer)
+		fragmentShader string
+		expectedColor  image.Color
+	}{
+		"Float": {
+			setUniform: func(name string, renderer *opengl.Renderer) {
+				renderer.SetFloat(name, 1)
+			},
+			fragmentShader: `#version 330 core
+							 uniform float attr;
+							 out vec4 color;
+							 void main() {
+								color = vec4(attr, 0, 0, 0); 
+							 }`,
+			expectedColor: image.RGBA(255, 0, 0, 0),
+		},
+		"Vec2": {
+			setUniform: func(name string, renderer *opengl.Renderer) {
+				renderer.SetVec2(name, 0.11, 0.2)
+			},
+			fragmentShader: `#version 330 core
+							 uniform vec2 attr;
+							 out vec4 color;
+							 void main() {
+								color = vec4(attr, 0, 0); 
+							 }`,
+			expectedColor: image.RGBA(28, 51, 0, 0),
+		},
+		"Vec3": {
+			setUniform: func(name string, renderer *opengl.Renderer) {
+				renderer.SetVec3(name, 0.11, 0.2, 0.4)
+			},
+			fragmentShader: `#version 330 core
+							 uniform vec3 attr;
+							 out vec4 color;
+							 void main() {
+								color = vec4(attr, 0); 
+							 }`,
+			expectedColor: image.RGBA(28, 51, 102, 0),
+		},
+		"Vec4": {
+			setUniform: func(name string, renderer *opengl.Renderer) {
+				renderer.SetVec4(name, 0.11, 0.2, 0.4, 0.6)
+			},
+			fragmentShader: `#version 330 core
+							 uniform vec4 attr;
+							 out vec4 color;
+							 void main() {
+								color = attr; 
+							 }`,
+			expectedColor: image.RGBA(28, 51, 102, 153),
+		},
+		"Int": {
+			setUniform: func(name string, renderer *opengl.Renderer) {
+				renderer.SetInt(name, 1)
+			},
+			fragmentShader: `#version 330 core
+							 uniform int attr;
+							 out vec4 color;
+							 void main() {
+								color = vec4(attr / 255.0, 0, 0, 0); 
+							 }`,
+			expectedColor: image.RGBA(1, 0, 0, 0),
+		},
+		"IVec2": {
+			setUniform: func(name string, renderer *opengl.Renderer) {
+				renderer.SetIVec2(name, 1, 2)
+			},
+			fragmentShader: `#version 330 core
+							 uniform ivec2 attr;
+							 out vec4 color;
+							 void main() {
+								color = vec4(attr.x/255.0, attr.y/255.0, 0, 0); 
+							 }`,
+			expectedColor: image.RGBA(1, 2, 0, 0),
+		},
+		"IVec3": {
+			setUniform: func(name string, renderer *opengl.Renderer) {
+				renderer.SetIVec3(name, 1, 2, 3)
+			},
+			fragmentShader: `#version 330 core
+							 uniform ivec3 attr;
+							 out vec4 color;
+							 void main() {
+								color = vec4(attr.x/255.0, attr.y/255.0, attr.z/255.0, 0); 
+							 }`,
+			expectedColor: image.RGBA(1, 2, 3, 0),
+		},
+		"IVec4": {
+			setUniform: func(name string, renderer *opengl.Renderer) {
+				renderer.SetIVec4(name, 1, 2, 3, 4)
+			},
+			fragmentShader: `#version 330 core
+							 uniform ivec4 attr;
+							 out vec4 color;
+							 void main() {
+								color = vec4(attr.x/255.0, attr.y/255.0, attr.z/255.0, attr.w/255.0); 
+							 }`,
+			expectedColor: image.RGBA(1, 2, 3, 4),
+		},
+		"Mat3": {
+			setUniform: func(name string, renderer *opengl.Renderer) {
+				renderer.SetMat3(name, [9]float32{
+					0.0, 0.11, 0.6,
+					0.3, 0.2, 0.15,
+					0.5, 0.4, 0.25,
+				})
+			},
+			fragmentShader: `#version 330 core
+							 uniform mat3 attr;
+							 out vec4 color;
+							 void main() {
+								float red   = attr[0][0] + attr[1][0] + attr[2][0];
+								float green = attr[0][1] + attr[1][1] + attr[2][1];
+								float blue  = attr[0][2] + attr[1][2] + attr[2][2];
+								color = vec4(red, green, blue, 0); 
+							 }`,
+			expectedColor: image.RGBA(204, 181, 255, 0),
+		},
+		"Mat4": {
+			setUniform: func(name string, renderer *opengl.Renderer) {
+				renderer.SetMat4(name, [16]float32{
+					0.0, 0.11, 0.34, 0.1,
+					0.3, 0.2, 0.15, 0.8,
+					0.5, 0.4, 0.25, 0.05,
+					0.01, 0.02, 0.03, 0.04,
+				})
+			},
+			fragmentShader: `#version 330 core
+							 uniform mat4 attr;
+							 out vec4 color;
+							 void main() {
+								float red   = attr[0][0] + attr[1][0] + attr[2][0] + attr[3][0];
+								float green = attr[0][1] + attr[1][1] + attr[2][1] + attr[3][1];
+								float blue  = attr[0][2] + attr[1][2] + attr[2][2] + attr[3][2];
+								float alpha = attr[0][3] + attr[1][3] + attr[2][3] + attr[3][3];
+								color = vec4(red, green, blue, alpha); 
+							 }`,
+			expectedColor: image.RGBA(207, 186, 196, 252),
+		},
+	}
+	for attributeType, test := range tests {
+		t.Run(attributeType, func(t *testing.T) {
+
+			t.Run("should panic for invalid uniform name", func(t *testing.T) {
+				names := []string{"", " ", "  ", "\n", "\t"}
+				for _, name := range names {
+					t.Run(name, func(t *testing.T) {
+						openGL, _ := opengl.New(mainThreadLoop)
+						defer openGL.Destroy()
+						var (
+							output  = openGL.NewAcceleratedImage(1, 1)
+							program = workingProgram(t, openGL)
+							command = program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
+								assert.Panics(t, func() {
+									// when
+									test.setUniform(name, renderer)
+								})
+							}})
+						)
+						command.Run(image.AcceleratedImageSelection{Image: output}, []image.AcceleratedImageSelection{})
+					})
+				}
+			})
+
+			t.Run("should panic for uniform name not specified in program", func(t *testing.T) {
+				names := []string{"foo", "bar"}
+				for _, name := range names {
+					t.Run(name, func(t *testing.T) {
+						openGL, _ := opengl.New(mainThreadLoop)
+						defer openGL.Destroy()
+						var (
+							output  = openGL.NewAcceleratedImage(1, 1)
+							program = compileProgram(t, openGL,
+								`#version 330 core
+												void main() {
+													gl_Position = vec4(0, 0, 0, 0);
+												}`,
+								test.fragmentShader,
+							)
+							command = program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
+								assert.Panics(t, func() {
+									// when
+									test.setUniform(name, renderer)
+								})
+							}})
+						)
+						command.Run(image.AcceleratedImageSelection{Image: output}, []image.AcceleratedImageSelection{})
+					})
+				}
+			})
+
+			t.Run("should draw point by using uniform", func(t *testing.T) {
+				openGL, _ := opengl.New(mainThreadLoop)
+				defer openGL.Destroy()
+				img := openGL.NewAcceleratedImage(1, 1)
+				img.Upload(make([]image.Color, 1))
+				program := compileProgram(t,
+					openGL,
+					`
+					#version 330 core
+					layout(location = 0) in vec2 xy;	
+					void main() {
+						gl_Position = vec4(xy, 0.0, 1.0);
+					}
+					`,
+					test.fragmentShader,
+				)
+				array := openGL.NewVertexArray(opengl.VertexLayout{opengl.Vec2, opengl.Vec2})
+				buffer := openGL.NewFloatVertexBuffer(2)
+				buffer.Upload(0, []float32{0.0, 0.0})
+				vertexPosition := opengl.VertexBufferPointer{Buffer: buffer, Stride: 2}
+				array.Set(0, vertexPosition)
+				glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
+					// when
+					test.setUniform("attr", renderer)
+					renderer.DrawArrays(array, opengl.Points, 0, 1)
+				}}
+				command := program.AcceleratedCommand(glCommand)
+				command.Run(image.AcceleratedImageSelection{
+					Location: image.AcceleratedImageLocation{Width: 1, Height: 1},
+					Image:    img,
+				}, []image.AcceleratedImageSelection{})
+				// then
+				assertColors(t, []image.Color{test.expectedColor}, img)
+			})
+
+		})
+	}
+
+}
+
 func workingProgram(t *testing.T, openGL *opengl.OpenGL) *opengl.Program {
 	return compileProgram(t, openGL,
 		`#version 330 core

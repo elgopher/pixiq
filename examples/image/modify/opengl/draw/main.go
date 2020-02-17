@@ -5,6 +5,7 @@ import (
 	"github.com/jacekolszak/pixiq/loop"
 	"github.com/jacekolszak/pixiq/opengl"
 	"log"
+	"time"
 )
 
 func main() {
@@ -28,6 +29,8 @@ type drawColorfulRectangle struct {
 }
 
 func (c drawColorfulRectangle) RunGL(renderer *opengl.Renderer, _ []image.AcceleratedImageSelection) {
+	var opacity = float32(time.Now().Nanosecond()) / float32(time.Second)
+	renderer.SetFloat("opacity", opacity)
 	renderer.DrawArrays(c.vertexArray, opengl.TriangleFan, 0, 4)
 }
 
@@ -68,12 +71,14 @@ const vertexShaderSrc = `
 
 const fragmentShaderSrc = `
 	#version 330 core
-	
+
+	uniform float opacity;
+
 	in vec4 interpolatedColor;
 	out vec4 color;
 	
 	void main() {
-		color = interpolatedColor;
+		color = interpolatedColor * opacity;
 	}
 `
 
