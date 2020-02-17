@@ -1055,8 +1055,6 @@ func TestRenderer_SetXXX(t *testing.T) {
 				names := []string{"foo", "bar"}
 				for _, name := range names {
 					t.Run(name, func(t *testing.T) {
-						openGL, _ := opengl.New(mainThreadLoop)
-						defer openGL.Destroy()
 						var (
 							output  = openGL.NewAcceleratedImage(1, 1)
 							program = compileProgram(t, openGL,
@@ -1079,8 +1077,6 @@ func TestRenderer_SetXXX(t *testing.T) {
 			})
 
 			t.Run("should draw point by using uniform", func(t *testing.T) {
-				openGL, _ := opengl.New(mainThreadLoop)
-				defer openGL.Destroy()
 				img := openGL.NewAcceleratedImage(1, 1)
 				img.Upload(make([]image.Color, 1))
 				program := compileProgram(t,
