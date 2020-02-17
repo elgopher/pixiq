@@ -105,6 +105,8 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 		command.Run(image.AcceleratedImageSelection{Image: output}, []image.AcceleratedImageSelection{})
 	})
 	t.Run("clear image fragment with color", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
 		color := image.RGBA(1, 2, 3, 4)
 		tests := map[string]struct {
 			width, height  int
@@ -174,8 +176,6 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
-				openGL, _ := opengl.New(mainThreadLoop)
-				defer openGL.Destroy()
 				img := openGL.NewAcceleratedImage(test.width, test.height)
 				img.Upload(make([]image.Color, test.width*test.height))
 				program := workingProgram(t, openGL)
