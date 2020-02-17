@@ -40,6 +40,7 @@ func (r *Renderer) BindTexture(textureUnit int, uniformAttributeName string, ima
 	})
 }
 
+// SetFloat sets uniform attribute of type float
 func (r *Renderer) SetFloat(uniformAttributeName string, value float32) {
 	location := r.locationOrPanic(uniformAttributeName)
 	r.runInOpenGLThread(func() {
@@ -59,6 +60,7 @@ func (r *Renderer) locationOrPanic(uniformAttributeName string) int32 {
 	return location
 }
 
+// SetVec2 sets uniform attribute of type vec2
 func (r *Renderer) SetVec2(uniformAttributeName string, v1, v2 float32) {
 	location := r.locationOrPanic(uniformAttributeName)
 	r.runInOpenGLThread(func() {
@@ -66,6 +68,7 @@ func (r *Renderer) SetVec2(uniformAttributeName string, v1, v2 float32) {
 	})
 }
 
+// SetVec3 sets uniform attribute of type vec3
 func (r *Renderer) SetVec3(uniformAttributeName string, v1, v2, v3 float32) {
 	location := r.locationOrPanic(uniformAttributeName)
 	r.runInOpenGLThread(func() {
@@ -73,6 +76,7 @@ func (r *Renderer) SetVec3(uniformAttributeName string, v1, v2, v3 float32) {
 	})
 }
 
+// SetVec4 sets uniform attribute of type vec4
 func (r *Renderer) SetVec4(uniformAttributeName string, v1, v2, v3, v4 float32) {
 	location := r.locationOrPanic(uniformAttributeName)
 	r.runInOpenGLThread(func() {
@@ -80,6 +84,7 @@ func (r *Renderer) SetVec4(uniformAttributeName string, v1, v2, v3, v4 float32) 
 	})
 }
 
+// SetInt sets uniform attribute of type int32
 func (r *Renderer) SetInt(uniformAttributeName string, value int32) {
 	location := r.locationOrPanic(uniformAttributeName)
 	r.runInOpenGLThread(func() {
@@ -87,6 +92,7 @@ func (r *Renderer) SetInt(uniformAttributeName string, value int32) {
 	})
 }
 
+// SetIVec2 sets uniform attribute of type ivec2
 func (r *Renderer) SetIVec2(uniformAttributeName string, v1, v2 int32) {
 	location := r.locationOrPanic(uniformAttributeName)
 	r.runInOpenGLThread(func() {
@@ -94,6 +100,7 @@ func (r *Renderer) SetIVec2(uniformAttributeName string, v1, v2 int32) {
 	})
 }
 
+// SetIVec3 sets uniform attribute of type ivec3
 func (r *Renderer) SetIVec3(uniformAttributeName string, v1, v2, v3 int32) {
 	location := r.locationOrPanic(uniformAttributeName)
 	r.runInOpenGLThread(func() {
@@ -101,6 +108,7 @@ func (r *Renderer) SetIVec3(uniformAttributeName string, v1, v2, v3 int32) {
 	})
 }
 
+// SetIVec4 sets uniform attribute of type ivec4
 func (r *Renderer) SetIVec4(uniformAttributeName string, v1, v2, v3, v4 int32) {
 	location := r.locationOrPanic(uniformAttributeName)
 	r.runInOpenGLThread(func() {
@@ -108,6 +116,7 @@ func (r *Renderer) SetIVec4(uniformAttributeName string, v1, v2, v3, v4 int32) {
 	})
 }
 
+// SetMat3 sets uniform attribute of type mat3
 func (r *Renderer) SetMat3(uniformAttributeName string, value [9]float32) {
 	location := r.locationOrPanic(uniformAttributeName)
 	r.runInOpenGLThread(func() {
@@ -115,6 +124,7 @@ func (r *Renderer) SetMat3(uniformAttributeName string, value [9]float32) {
 	})
 }
 
+// SetMat4 sets uniform attribute of type mat4
 func (r *Renderer) SetMat4(uniformAttributeName string, value [16]float32) {
 	location := r.locationOrPanic(uniformAttributeName)
 	r.runInOpenGLThread(func() {
