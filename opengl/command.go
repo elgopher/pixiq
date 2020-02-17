@@ -28,11 +28,7 @@ func (r *Renderer) BindTexture(textureUnit int, uniformAttributeName string, ima
 	if textureUnit < 0 {
 		panic("negative textureUnit")
 	}
-	assertValidAttributeName(uniformAttributeName)
-	textureLocation, ok := r.program.uniformLocations[uniformAttributeName]
-	if !ok {
-		panic("not existing uniform attribute name")
-	}
+	textureLocation := r.locationOrPanic(uniformAttributeName)
 	img, ok := r.allImages[image]
 	if !ok {
 		panic("image has not been created in this OpenGL context")
@@ -45,21 +41,85 @@ func (r *Renderer) BindTexture(textureUnit int, uniformAttributeName string, ima
 }
 
 func (r *Renderer) SetFloat(uniformAttributeName string, value float32) {
-	assertValidAttributeName(uniformAttributeName)
-	location, ok := r.program.uniformLocations[uniformAttributeName]
-	if !ok {
-		panic("not existing uniform attribute name")
-	}
+	location := r.locationOrPanic(uniformAttributeName)
 	r.runInOpenGLThread(func() {
 		gl.Uniform1f(location, value)
 	})
 }
 
-func assertValidAttributeName(uniformAttributeName string) {
+func (r *Renderer) locationOrPanic(uniformAttributeName string) int32 {
 	trimmed := strings.TrimSpace(uniformAttributeName)
 	if trimmed == "" {
 		panic("empty uniformAttributeName")
 	}
+	location, ok := r.program.uniformLocations[uniformAttributeName]
+	if !ok {
+		panic("not existing uniform attribute name: " + uniformAttributeName)
+	}
+	return location
+}
+
+func (r *Renderer) SetVec2(uniformAttributeName string, v1, v2 float32) {
+	location := r.locationOrPanic(uniformAttributeName)
+	r.runInOpenGLThread(func() {
+		gl.Uniform2f(location, v1, v2)
+	})
+}
+
+func (r *Renderer) SetVec3(uniformAttributeName string, v1, v2, v3 float32) {
+	location := r.locationOrPanic(uniformAttributeName)
+	r.runInOpenGLThread(func() {
+		gl.Uniform3f(location, v1, v2, v3)
+	})
+}
+
+func (r *Renderer) SetVec4(uniformAttributeName string, v1, v2, v3, v4 float32) {
+	location := r.locationOrPanic(uniformAttributeName)
+	r.runInOpenGLThread(func() {
+		gl.Uniform4f(location, v1, v2, v3, v4)
+	})
+}
+
+func (r *Renderer) SetInt(uniformAttributeName string, value int32) {
+	location := r.locationOrPanic(uniformAttributeName)
+	r.runInOpenGLThread(func() {
+		gl.Uniform1i(location, value)
+	})
+}
+
+func (r *Renderer) SetIVec2(uniformAttributeName string, v1, v2 int32) {
+	location := r.locationOrPanic(uniformAttributeName)
+	r.runInOpenGLThread(func() {
+		gl.Uniform2i(location, v1, v2)
+	})
+}
+
+func (r *Renderer) SetIVec3(uniformAttributeName string, v1, v2, v3 int32) {
+	location := r.locationOrPanic(uniformAttributeName)
+	r.runInOpenGLThread(func() {
+		gl.Uniform3i(location, v1, v2, v3)
+	})
+}
+
+func (r *Renderer) SetIVec4(uniformAttributeName string, v1, v2, v3, v4 int32) {
+	location := r.locationOrPanic(uniformAttributeName)
+	r.runInOpenGLThread(func() {
+		gl.Uniform4i(location, v1, v2, v3, v4)
+	})
+}
+
+func (r *Renderer) SetMat3(uniformAttributeName string, value [9]float32) {
+	location := r.locationOrPanic(uniformAttributeName)
+	r.runInOpenGLThread(func() {
+		gl.UniformMatrix3fv(location, 1, false, &value[0])
+	})
+}
+
+func (r *Renderer) SetMat4(uniformAttributeName string, value [16]float32) {
+	location := r.locationOrPanic(uniformAttributeName)
+	r.runInOpenGLThread(func() {
+		gl.UniformMatrix4fv(location, 1, false, &value[0])
+	})
 }
 
 // Mode defines which primitives will be drawn.
