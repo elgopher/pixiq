@@ -227,8 +227,12 @@ func (c *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selecti
 		gl.Enable(gl.SCISSOR_TEST)
 		gl.BindFramebuffer(gl.FRAMEBUFFER, img.frameBufferID)
 		loc := output.Location
-		gl.Scissor(int32(loc.X), int32(loc.Y), int32(loc.Width), int32(loc.Height))
-		gl.Viewport(int32(loc.X), int32(loc.Y), int32(loc.Width), int32(loc.Height))
+		locHeight := loc.Height
+		if locHeight > img.height {
+			locHeight = img.height
+		}
+		gl.Scissor(int32(loc.X), int32(img.height-locHeight-loc.Y), int32(loc.Width), int32(img.height-loc.Y))
+		gl.Viewport(int32(loc.X), int32(img.height-locHeight-loc.Y), int32(loc.Width), int32(img.height-loc.Y)) // TODO Not well tested
 	})
 	renderer := &Renderer{
 		program:           c.program,

@@ -131,15 +131,20 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 				location:       image.AcceleratedImageLocation{Width: 1, Height: 1},
 				expectedColors: []image.Color{color},
 			},
+			"height out of bound": {
+				width: 1, height: 1,
+				location:       image.AcceleratedImageLocation{Width: 1, Height: 2},
+				expectedColors: []image.Color{color},
+			},
 			"top left corner": {
 				width: 2, height: 2,
 				location:       image.AcceleratedImageLocation{Width: 1, Height: 1},
-				expectedColors: []image.Color{color, image.Transparent, image.Transparent, image.Transparent},
+				expectedColors: []image.Color{image.Transparent, image.Transparent, color, image.Transparent},
 			},
 			"top row": {
 				width: 2, height: 2,
 				location:       image.AcceleratedImageLocation{Width: 2, Height: 1},
-				expectedColors: []image.Color{color, color, image.Transparent, image.Transparent},
+				expectedColors: []image.Color{image.Transparent, image.Transparent, color, color},
 			},
 			"left column": {
 				width: 2, height: 2,
@@ -149,17 +154,17 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 			"top right corner": {
 				width: 2, height: 2,
 				location:       image.AcceleratedImageLocation{X: 1, Width: 1, Height: 1},
-				expectedColors: []image.Color{image.Transparent, color, image.Transparent, image.Transparent},
+				expectedColors: []image.Color{image.Transparent, image.Transparent, image.Transparent, color},
 			},
 			"bottom left corner": {
 				width: 2, height: 2,
 				location:       image.AcceleratedImageLocation{Y: 1, Width: 1, Height: 1},
-				expectedColors: []image.Color{image.Transparent, image.Transparent, color, image.Transparent},
+				expectedColors: []image.Color{color, image.Transparent, image.Transparent, image.Transparent},
 			},
 			"bottom right corner": {
 				width: 2, height: 2,
 				location:       image.AcceleratedImageLocation{X: 1, Y: 1, Width: 1, Height: 1},
-				expectedColors: []image.Color{image.Transparent, image.Transparent, image.Transparent, color},
+				expectedColors: []image.Color{image.Transparent, color, image.Transparent, image.Transparent},
 			},
 		}
 		for name, test := range tests {
@@ -398,7 +403,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 			"Y:1": {
 				outputLocation: image.AcceleratedImageLocation{Y: 1, Width: 1, Height: 1},
 				width:          1, height: 2,
-				expectedColors: []image.Color{image.Transparent, color},
+				expectedColors: []image.Color{color, image.Transparent},
 			},
 			"Width:2": {
 				outputLocation: image.AcceleratedImageLocation{Width: 2, Height: 1},
