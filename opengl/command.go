@@ -231,8 +231,12 @@ func (c *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selecti
 		if locHeight > img.height {
 			locHeight = img.height
 		}
-		gl.Scissor(int32(loc.X), int32(img.height-locHeight-loc.Y), int32(loc.Width), int32(img.height-loc.Y))
-		gl.Viewport(int32(loc.X), int32(img.height-locHeight-loc.Y), int32(loc.Width), int32(img.height-loc.Y)) // TODO Not well tested
+		x := int32(loc.X)
+		y := int32(img.height - locHeight - loc.Y)
+		w := int32(loc.Width)
+		h := int32(img.height - loc.Y)
+		gl.Scissor(x, y, w, h)
+		gl.Viewport(x, y, w, h) // TODO Not well tested
 	})
 	renderer := &Renderer{
 		program:           c.program,

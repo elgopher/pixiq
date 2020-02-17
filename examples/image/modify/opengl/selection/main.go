@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/jacekolszak/pixiq/colornames"
-	"github.com/jacekolszak/pixiq/fill"
 	"log"
 
 	"github.com/jacekolszak/pixiq/image"
@@ -13,12 +12,11 @@ import (
 func main() {
 	opengl.RunOrDie(func(gl *opengl.OpenGL) {
 		var (
-			buffer    = makeVertexBuffer(gl)
-			array     = makeVertexArray(gl, buffer)
-			program   = compileProgram(gl)
-			cmd       = program.AcceleratedCommand(&drawSelection{vertexArray: array})
-			window    = openWindow(gl)
-			fillColor = fill.New(program)
+			buffer  = makeVertexBuffer(gl)
+			array   = makeVertexArray(gl, buffer)
+			program = compileProgram(gl)
+			cmd     = program.AcceleratedCommand(&drawSelection{vertexArray: array})
+			window  = openWindow(gl)
 		)
 		sampledImage := gl.NewImage(2, 2)
 		selection := sampledImage.WholeImageSelection()
@@ -30,7 +28,6 @@ func main() {
 		loop.Run(window, func(frame *loop.Frame) {
 			screen := frame.Screen()
 			screen.Modify(cmd, selection)
-			fillColor.Fill(screen.Selection(0, 0).WithSize(60, 60), colornames.Darkred)
 			screen.SetColor(10, 10, colornames.Blue)
 			screen.SetColor(11, 11, colornames.Blue)
 		})
