@@ -268,3 +268,46 @@ func TestContext_CompileVertexShader(t *testing.T) {
 		_, _ = context.CompileVertexShader("")
 	})
 }
+
+func TestOpenGL_LinkProgram(t *testing.T) {
+	t.Run("should return error", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		context := gl.ContextOf(openGL)
+		vertexShader, err := context.CompileVertexShader(`
+								#version 330 core
+								void noMain() {}
+								`)
+		require.NoError(t, err)
+		fragmentShader, err := context.CompileFragmentShader(`
+								#version 330 core
+								void noMainEither() {}
+								`)
+		require.NoError(t, err)
+		// when
+		program, err := context.LinkProgram(vertexShader, fragmentShader)
+		// then
+		assert.Error(t, err)
+		assert.Nil(t, program)
+	})
+	t.Run("should return program", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		context := gl.ContextOf(openGL)
+		vertexShader, _ := context.CompileVertexShader(`
+								#version 330 core
+								void main() {
+									gl_Position = vec4(0, 0, 0, 0);
+								}
+								`)
+		fragmentShader, _ := context.CompileFragmentShader(`
+								#version 330 core
+								void main() {}
+								`)
+		// when
+		program, err := context.LinkProgram(vertexShader, fragmentShader)
+		// then
+		require.NoError(t, err)
+		assert.NotNil(t, program)
+	})
+}

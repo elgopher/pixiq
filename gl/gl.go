@@ -48,6 +48,24 @@ type API interface {
 	GetShaderInfoLog(shader uint32, bufSize int32, length *int32, infoLog *uint8)
 	// DeleteShader deletes a shader object
 	DeleteShader(shader uint32)
+	// AttachShader attaches a shader object to a program object
+	AttachShader(program uint32, shader uint32)
+	// LinkProgram links a program object
+	LinkProgram(program uint32)
+	// GetProgramiv returns a parameter from a program object
+	GetProgramiv(program uint32, pname uint32, params *int32)
+	// GetProgramInfoLog returns the information log for a program object
+	GetProgramInfoLog(program uint32, bufSize int32, length *int32, infoLog *uint8)
+	// UseProgram installs a program object as part of current rendering state
+	UseProgram(program uint32)
+	// CreateProgram creates a program object
+	CreateProgram() uint32
+	// GetActiveUniform returns information about an active uniform variable for the specified program object
+	GetActiveUniform(program uint32, index uint32, bufSize int32, length *int32, size *int32, xtype *uint32, name *uint8)
+	// GetActiveAttrib returns information about an active attribute variable for the specified program object
+	GetActiveAttrib(program uint32, index uint32, bufSize int32, length *int32, size *int32, xtype *uint32, name *uint8)
+	// Returns the location of an attribute variable
+	GetAttribLocation(program uint32, name *uint8) int32
 
 	// GoStr takes a null-terminated string returned by OpenGL and constructs a
 	// corresponding Go string.
@@ -64,17 +82,22 @@ type API interface {
 
 // Camel-cased GL constants
 const (
-	arrayBuffer    = 0x8892
-	staticDraw     = 0x88E4
-	float          = 0x1406
-	floatVec2      = 0x8B50
-	floatVec3      = 0x8B51
-	floatVec4      = 0x8B52
-	vertexShader   = 0x8B31
-	fragmentShader = 0x8B30
-	compileStatus  = 0x8B81
-	ffalse         = 0
-	infoLogLength  = 0x8B84
+	arrayBuffer              = 0x8892
+	staticDraw               = 0x88E4
+	float                    = 0x1406
+	floatVec2                = 0x8B50
+	floatVec3                = 0x8B51
+	floatVec4                = 0x8B52
+	vertexShader             = 0x8B31
+	fragmentShader           = 0x8B30
+	compileStatus            = 0x8B81
+	ffalse                   = 0
+	infoLogLength            = 0x8B84
+	linkStatus               = 0x8B82
+	activeUniforms           = 0x8B86
+	activeUniformMaxLength   = 0x8B87
+	activeAttributeMaxLength = 0x8B8A
+	activeAttributes         = 0x8B89
 )
 
 // ContextOf returns an OpenGL's Context for given API.
@@ -358,6 +381,113 @@ func (c *Context) compileShader(xtype uint32, src string) (uint32, error) {
 		return 0, fmt.Errorf("glCompileShader failed: %s", string(infoLog))
 	}
 	return shaderID, nil
+}
+
+// LinkProgram links an OpenGL program from shaders. Created program can be used
+// in image.Modify
+func (c *Context) LinkProgram(vertexShader *VertexShader, fragmentShader *FragmentShader) (*Program, error) {
+	if vertexShader == nil {
+		panic("nil vertexShader")
+	}
+	if fragmentShader == nil {
+		panic("nil fragmentShader")
+	}
+	var (
+		program          *program
+		err              error
+		uniformLocations map[string]int32
+		attributes       map[int32]attribute
+	)
+	program, err = c.linkProgram(vertexShader.id, fragmentShader.id)
+	if err == nil {
+		uniformLocations = program.activeUniformLocations()
+		attributes = program.attributes()
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &Program{
+		program:          program,
+		api:              c.api,
+		uniformLocations: uniformLocations,
+		attributes:       attributes,
+	}, err
+}
+
+func (c *Context) linkProgram(shaderIDs ...uint32) (*program, error) {
+	programID := c.api.CreateProgram()
+	for _, shaderID := range shaderIDs {
+		c.api.AttachShader(programID, shaderID)
+	}
+	c.api.LinkProgram(programID)
+	var success int32
+	c.api.GetProgramiv(programID, linkStatus, &success)
+	if success == ffalse {
+		var infoLogLen int32
+		c.api.GetProgramiv(programID, infoLogLength, &infoLogLen)
+		infoLog := make([]byte, infoLogLen)
+		if infoLogLen > 0 {
+			c.api.GetProgramInfoLog(programID, infoLogLen, nil, &infoLog[0])
+		}
+		return nil, fmt.Errorf("error linking program: %s", string(infoLog))
+	}
+	return &program{
+		id:  programID,
+		api: c.api,
+	}, nil
+}
+
+type program struct {
+	api API
+	id  uint32
+}
+
+func (p *program) use() {
+	p.api.UseProgram(p.id)
+}
+
+func (p *program) activeUniformLocations() map[string]int32 {
+	locationsByName := map[string]int32{}
+	var count, bufSize, length, nameMaxLength int32
+	var xtype uint32
+	p.api.GetProgramiv(p.id, activeUniformMaxLength, &nameMaxLength)
+	name := make([]byte, nameMaxLength)
+	p.api.GetProgramiv(p.id, activeUniforms, &count)
+	for location := int32(0); location < count; location++ {
+		p.api.GetActiveUniform(p.id, uint32(location), nameMaxLength, &bufSize, &length, &xtype, &name[0])
+		goName := p.api.GoStr(&name[0])
+		locationsByName[goName] = location
+	}
+	return locationsByName
+}
+
+type attribute struct {
+	typ  Type
+	name string
+}
+
+func (p *program) attributes() map[int32]attribute {
+	var count, bufSize, length, nameMaxLength int32
+	var xtype uint32
+	p.api.GetProgramiv(p.id, activeAttributeMaxLength, &nameMaxLength)
+	name := make([]byte, nameMaxLength)
+	p.api.GetProgramiv(p.id, activeAttributes, &count)
+	attributes := map[int32]attribute{}
+	for i := int32(0); i < count; i++ {
+		p.api.GetActiveAttrib(p.id, uint32(i), nameMaxLength, &bufSize, &length, &xtype, &name[0])
+		location := p.api.GetAttribLocation(p.id, &name[0])
+		attributes[location] = attribute{typ: valueOf(xtype),
+			name: p.api.GoStr(&name[0])}
+	}
+	return attributes
+}
+
+// Program is shaders linked together
+type Program struct {
+	*program
+	uniformLocations map[string]int32
+	attributes       map[int32]attribute
+	api              API
 }
 
 // Ptr takes a slice or pointer (to a singular scalar value or the first

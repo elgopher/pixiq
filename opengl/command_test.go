@@ -325,7 +325,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 								}
 								`)
 				require.NoError(t, err)
-				program, err := openGL.LinkProgram(vertexShader, fragmentShader)
+				program, err := openGL.LinkProgram2(vertexShader, fragmentShader)
 				require.NoError(t, err)
 				array := openGL.NewVertexArray(opengl.VertexLayout{test.typ})
 				buffer := openGL.NewFloatVertexBuffer(len(test.data))
@@ -371,7 +371,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 								}
 								`)
 		require.NoError(t, err)
-		program, err := openGL.LinkProgram(vertexShader, fragmentShader)
+		program, err := openGL.LinkProgram2(vertexShader, fragmentShader)
 		require.NoError(t, err)
 		array := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float, opengl.Vec3})
 		require.NoError(t, err)
@@ -513,7 +513,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 								}
 								`)
 		require.NoError(t, err)
-		program, err := openGL.LinkProgram(vertexShader, fragmentShader)
+		program, err := openGL.LinkProgram2(vertexShader, fragmentShader)
 		require.NoError(t, err)
 		array := openGL.NewVertexArray(opengl.VertexLayout{opengl.Vec2})
 		buffer := openGL.NewFloatVertexBuffer(4)
@@ -594,7 +594,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 								void main() {}
 								`)
 				require.NoError(t, err)
-				program, err := openGL.LinkProgram(vertexShader, fragmentShader)
+				program, err := openGL.LinkProgram2(vertexShader, fragmentShader)
 				require.NoError(t, err)
 				array := openGL.NewVertexArray(test.layout)
 				buffer := openGL.NewFloatVertexBuffer(10)
@@ -657,7 +657,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 								void main() {}
 								`)
 				require.NoError(t, err)
-				program, err := openGL.LinkProgram(vertexShader, fragmentShader)
+				program, err := openGL.LinkProgram2(vertexShader, fragmentShader)
 				require.NoError(t, err)
 				array := openGL.NewVertexArray(test.layout)
 				buffer := openGL.NewFloatVertexBuffer(8)
@@ -1134,7 +1134,7 @@ func compileProgram(t *testing.T, openGL *opengl.OpenGL,
 	require.NoError(t, err)
 	fragmentShader, err := openGL.CompileFragmentShader(fragmentShaderSrc)
 	require.NoError(t, err)
-	program, err := openGL.LinkProgram(vertexShader, fragmentShader)
+	program, err := openGL.LinkProgram2(vertexShader, fragmentShader)
 	require.NoError(t, err)
 	return program
 }

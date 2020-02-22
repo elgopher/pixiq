@@ -91,7 +91,7 @@ func compileProgram(gl *opengl.OpenGL) *opengl.Program {
 	if err != nil {
 		log.Panicf("CompileFragmentShader failed: %v", err)
 	}
-	program, err := gl.LinkProgram(vertexShader, fragmentShader)
+	program, err := gl.LinkProgram2(vertexShader, fragmentShader)
 	if err != nil {
 		log.Panicf("LinkProgram failed: %v", err)
 	}

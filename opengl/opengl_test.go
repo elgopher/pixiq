@@ -395,66 +395,6 @@ func TestOpenGL_OpenWindow(t *testing.T) {
 	})
 }
 
-func TestOpenGL_LinkProgram(t *testing.T) {
-	t.Run("should panic when vertex shader is nil", func(t *testing.T) {
-		openGL, _ := opengl.New(mainThreadLoop)
-		defer openGL.Destroy()
-		fragmentShader, _ := openGL.CompileFragmentShader("")
-		assert.Panics(t, func() {
-			// when
-			_, _ = openGL.LinkProgram(nil, fragmentShader)
-		})
-
-	})
-	t.Run("should panic when fragment shader is nil", func(t *testing.T) {
-		openGL, _ := opengl.New(mainThreadLoop)
-		defer openGL.Destroy()
-		vertexShader, _ := openGL.CompileVertexShader("")
-		assert.Panics(t, func() {
-			// when
-			_, _ = openGL.LinkProgram(vertexShader, nil)
-		})
-	})
-	t.Run("should return error", func(t *testing.T) {
-		openGL, _ := opengl.New(mainThreadLoop)
-		defer openGL.Destroy()
-		vertexShader, err := openGL.CompileVertexShader(`
-								#version 330 core
-								void noMain() {}
-								`)
-		require.NoError(t, err)
-		fragmentShader, err := openGL.CompileFragmentShader(`
-								#version 330 core
-								void noMainEither() {}
-								`)
-		require.NoError(t, err)
-		// when
-		program, err := openGL.LinkProgram(vertexShader, fragmentShader)
-		// then
-		assert.Error(t, err)
-		assert.Nil(t, program)
-	})
-	t.Run("should return program", func(t *testing.T) {
-		openGL, _ := opengl.New(mainThreadLoop)
-		defer openGL.Destroy()
-		vertexShader, _ := openGL.CompileVertexShader(`
-								#version 330 core
-								void main() {
-									gl_Position = vec4(0, 0, 0, 0);
-								}
-								`)
-		fragmentShader, _ := openGL.CompileFragmentShader(`
-								#version 330 core
-								void main() {}
-								`)
-		// when
-		program, err := openGL.LinkProgram(vertexShader, fragmentShader)
-		// then
-		require.NoError(t, err)
-		assert.NotNil(t, program)
-	})
-}
-
 func TestProgram_AcceleratedCommand(t *testing.T) {
 	t.Run("should return command", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
