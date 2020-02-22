@@ -17,7 +17,7 @@ type API interface {
 	GenBuffers(n int32, buffers *uint32)
 	// BindBuffer binds a named buffer object
 	BindBuffer(target uint32, buffer uint32)
-	// BufferData creates and initializes a buffer object's data     store
+	// BufferData creates and initializes a buffer object's data store
 	BufferData(target uint32, size int, data unsafe.Pointer, usage uint32)
 	// BufferSubData updates a subset of a buffer object's data store
 	BufferSubData(target uint32, offset int, size int, data unsafe.Pointer)

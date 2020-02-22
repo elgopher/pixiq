@@ -716,36 +716,42 @@ func Zoom(zoom int) WindowOption {
 	}
 }
 
+// GenBuffers generates buffer object names
 func (g *OpenGL) GenBuffers(n int32, buffers *uint32) {
 	g.runInOpenGLThread(func() {
 		gl.GenBuffers(n, buffers)
 	})
 }
 
+// BindBuffer binds a named buffer object
 func (g *OpenGL) BindBuffer(target uint32, buffer uint32) {
 	g.runInOpenGLThread(func() {
 		gl.BindBuffer(target, buffer)
 	})
 }
 
+// BufferData creates and initializes a buffer object's data store
 func (g *OpenGL) BufferData(target uint32, size int, data unsafe.Pointer, usage uint32) {
 	g.runInOpenGLThread(func() {
 		gl.BufferData(target, size, data, usage)
 	})
 }
 
+// BufferSubData updates a subset of a buffer object's data store
 func (g *OpenGL) BufferSubData(target uint32, offset int, size int, data unsafe.Pointer) {
 	g.runInOpenGLThread(func() {
 		gl.BufferSubData(target, offset, size, data)
 	})
 }
 
+// GetBufferSubData returns a subset of a buffer object's data store
 func (g *OpenGL) GetBufferSubData(target uint32, offset int, size int, data unsafe.Pointer) {
 	g.runInOpenGLThread(func() {
 		gl.GetBufferSubData(target, offset, size, data)
 	})
 }
 
+// DeleteBuffers deletes named buffer objects
 func (g *OpenGL) DeleteBuffers(n int32, buffers *uint32) {
 	g.runInOpenGLThread(func() {
 		gl.DeleteBuffers(n, buffers)
