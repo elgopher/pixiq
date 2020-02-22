@@ -13,24 +13,23 @@ import (
 
 // API is a gateway for directly accessing OpenGL driver.
 type API interface {
-	// generate buffer object names
+	// GenBuffers generates buffer object names
 	GenBuffers(n int32, buffers *uint32)
-	// bind a named buffer object
+	// BindBuffer binds a named buffer object
 	BindBuffer(target uint32, buffer uint32)
-	// creates and initializes a buffer object's data     store
+	// BufferData creates and initializes a buffer object's data     store
 	BufferData(target uint32, size int, data unsafe.Pointer, usage uint32)
-	// updates a subset of a buffer object's data store
+	// BufferSubData updates a subset of a buffer object's data store
 	BufferSubData(target uint32, offset int, size int, data unsafe.Pointer)
-	// returns a subset of a buffer object's data store
+	// GetBufferSubData returns a subset of a buffer object's data store
 	GetBufferSubData(target uint32, offset int, size int, data unsafe.Pointer)
-	// delete named buffer objects
+	// DeleteBuffers deletes named buffer objects
 	DeleteBuffers(n int32, buffers *uint32)
 }
 
-// +nolint
 const (
-	ARRAY_BUFFER = 0x8892
-	STATIC_DRAW  = 0x88E4
+	arrayBuffer = 0x8892
+	staticDraw  = 0x88E4
 )
 
 // ContextOf returns an OpenGL's Context for given API.
@@ -66,8 +65,8 @@ func (g *Context) NewFloatVertexBuffer(size int) *FloatVertexBuffer {
 	}
 	var id uint32
 	g.api.GenBuffers(1, &id)
-	g.api.BindBuffer(ARRAY_BUFFER, id)
-	g.api.BufferData(ARRAY_BUFFER, size*4, Ptr(nil), STATIC_DRAW) // FIXME: Parametrize usage
+	g.api.BindBuffer(arrayBuffer, id)
+	g.api.BufferData(arrayBuffer, size*4, Ptr(nil), staticDraw) // FIXME: Parametrize usage
 	vb := &FloatVertexBuffer{
 		id:   id,
 		size: size,
@@ -105,8 +104,8 @@ func (b *FloatVertexBuffer) Upload(offset int, data []float32) {
 	if b.size < len(data)+offset {
 		panic("FloatVertexBuffer is to small to store data")
 	}
-	b.api.BindBuffer(ARRAY_BUFFER, b.id)
-	b.api.BufferSubData(ARRAY_BUFFER, offset*4, len(data)*4, Ptr(data))
+	b.api.BindBuffer(arrayBuffer, b.id)
+	b.api.BufferSubData(arrayBuffer, offset*4, len(data)*4, Ptr(data))
 }
 
 // Delete should be called whenever you don't plan to use vertex buffer anymore. Vertex Buffer is external resource
@@ -133,12 +132,10 @@ func (b *FloatVertexBuffer) Download(offset int, output []float32) {
 	if size+offset > b.size {
 		size = b.size - offset
 	}
-	b.api.BindBuffer(ARRAY_BUFFER, b.id)
-	b.api.GetBufferSubData(ARRAY_BUFFER, offset*4, size*4, Ptr(output))
+	b.api.BindBuffer(arrayBuffer, b.id)
+	b.api.GetBufferSubData(arrayBuffer, offset*4, size*4, Ptr(output))
 }
 
-// Copied from go-gl package
-//
 // Ptr takes a slice or pointer (to a singular scalar value or the first
 // element of an array or slice) and returns its GL-compatible address.
 //
