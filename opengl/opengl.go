@@ -757,3 +757,38 @@ func (g *OpenGL) DeleteBuffers(n int32, buffers *uint32) {
 		gl.DeleteBuffers(n, buffers)
 	})
 }
+
+// GenVertexArrays generates vertex array object names
+func (g *OpenGL) GenVertexArrays(n int32, arrays *uint32) {
+	g.runInOpenGLThread(func() {
+		gl.GenVertexArrays(n, arrays)
+	})
+}
+
+// DeleteVertexArrays deletes vertex array objects
+func (g *OpenGL) DeleteVertexArrays(n int32, arrays *uint32) {
+	g.runInOpenGLThread(func() {
+		gl.DeleteVertexArrays(n, arrays)
+	})
+}
+
+// BindVertexArray binds a vertex array object
+func (g *OpenGL) BindVertexArray(array uint32) {
+	g.runInOpenGLThread(func() {
+		gl.BindVertexArray(array)
+	})
+}
+
+// VertexAttribPointer defines an array of generic vertex attribute data
+func (g *OpenGL) VertexAttribPointer(index uint32, size int32, xtype uint32, normalized bool, stride int32, pointer unsafe.Pointer) {
+	g.runInOpenGLThread(func() {
+		gl.VertexAttribPointer(index, size, xtype, normalized, stride, pointer)
+	})
+}
+
+// EnableVertexAttribArray enables a generic vertex attribute array
+func (g *OpenGL) EnableVertexAttribArray(index uint32) {
+	g.runInOpenGLThread(func() {
+		gl.EnableVertexAttribArray(index)
+	})
+}

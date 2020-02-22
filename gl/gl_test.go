@@ -99,23 +99,154 @@ func TestFloatVertexBuffer_Upload(t *testing.T) {
 	})
 }
 
-type apiStub struct {
+func TestFloatVertexBuffer_Download(t *testing.T) {
+	t.Run("should panic when offset is negative", func(t *testing.T) {
+		context := gl.ContextOf(apiStub{})
+		buffer := context.NewFloatVertexBuffer(1)
+		defer buffer.Delete()
+		output := make([]float32, 1)
+		assert.Panics(t, func() {
+			// when
+			buffer.Download(-1, output)
+		})
+	})
+	t.Run("should panic when buffer has been deleted", func(t *testing.T) {
+		context := gl.ContextOf(apiStub{})
+		buffer := context.NewFloatVertexBuffer(1)
+		buffer.Delete()
+		output := make([]float32, 1)
+		// when
+		assert.Panics(t, func() {
+			// when
+			buffer.Download(0, output)
+		})
+	})
 }
 
-func (a apiStub) GenBuffers(n int32, buffers *uint32) {
+func TestOpenGL_NewVertexArray(t *testing.T) {
+	t.Run("should panic", func(t *testing.T) {
+		tests := map[string]struct {
+			layout gl.VertexLayout
+		}{
+			"nil layout": {
+				layout: nil,
+			},
+			"empty layout": {
+				layout: gl.VertexLayout{},
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				context := gl.ContextOf(apiStub{})
+				assert.Panics(t, func() {
+					// when
+					vao := context.NewVertexArray(test.layout)
+					// then
+					assert.Nil(t, vao)
+				})
+			})
+		}
+	})
 }
 
-func (a apiStub) BindBuffer(target uint32, buffer uint32) {
+func TestVertexArray_Set(t *testing.T) {
+	t.Run("should panic when offset is negative", func(t *testing.T) {
+		context := gl.ContextOf(apiStub{})
+		vao := context.NewVertexArray(gl.VertexLayout{gl.Float})
+		defer vao.Delete()
+		buffer := context.NewFloatVertexBuffer(1)
+		pointer := gl.VertexBufferPointer{
+			Buffer: buffer,
+			Offset: -1,
+			Stride: 1,
+		}
+		assert.Panics(t, func() {
+			// when
+			vao.Set(0, pointer)
+		})
+	})
+	t.Run("should panic when stride is negative", func(t *testing.T) {
+		context := gl.ContextOf(apiStub{})
+		vao := context.NewVertexArray(gl.VertexLayout{gl.Float})
+		buffer := context.NewFloatVertexBuffer(1)
+		pointer := gl.VertexBufferPointer{
+			Buffer: buffer,
+			Offset: 0,
+			Stride: -1,
+		}
+		assert.Panics(t, func() {
+			// when
+			vao.Set(0, pointer)
+		})
+	})
+	t.Run("should panic when location is negative", func(t *testing.T) {
+		context := gl.ContextOf(apiStub{})
+		vao := context.NewVertexArray(gl.VertexLayout{gl.Float})
+		buffer := context.NewFloatVertexBuffer(1)
+		pointer := gl.VertexBufferPointer{
+			Buffer: buffer,
+			Offset: 0,
+			Stride: 1,
+		}
+		assert.Panics(t, func() {
+			// when
+			vao.Set(-1, pointer)
+		})
+	})
+	t.Run("should panic when location is higher than number of arguments", func(t *testing.T) {
+		context := gl.ContextOf(apiStub{})
+		vao := context.NewVertexArray(gl.VertexLayout{gl.Float})
+		buffer := context.NewFloatVertexBuffer(1)
+		pointer := gl.VertexBufferPointer{
+			Buffer: buffer,
+			Offset: 0,
+			Stride: 1,
+		}
+		assert.Panics(t, func() {
+			// when
+			vao.Set(1, pointer)
+		})
+	})
+	t.Run("should panic when buffer is nil", func(t *testing.T) {
+		context := gl.ContextOf(apiStub{})
+		vao := context.NewVertexArray(gl.VertexLayout{gl.Float})
+		pointer := gl.VertexBufferPointer{
+			Buffer: nil,
+			Offset: 0,
+			Stride: 1,
+		}
+		assert.Panics(t, func() {
+			// when
+			vao.Set(0, pointer)
+		})
+	})
+	t.Run("should panic when buffer was not created by context", func(t *testing.T) {
+		context := gl.ContextOf(apiStub{})
+		vao := context.NewVertexArray(gl.VertexLayout{gl.Float})
+		vertexBufferNotCreatedInContext := &gl.FloatVertexBuffer{}
+		pointer := gl.VertexBufferPointer{
+			Buffer: vertexBufferNotCreatedInContext,
+			Offset: 0,
+			Stride: 1,
+		}
+		assert.Panics(t, func() {
+			// when
+			vao.Set(0, pointer)
+		})
+	})
 }
 
-func (a apiStub) BufferData(target uint32, size int, data unsafe.Pointer, usage uint32) {
-}
+type apiStub struct{}
 
-func (a apiStub) BufferSubData(target uint32, offset int, size int, data unsafe.Pointer) {
+func (a apiStub) GenBuffers(n int32, buffers *uint32)                                       {}
+func (a apiStub) BindBuffer(target uint32, buffer uint32)                                   {}
+func (a apiStub) BufferData(target uint32, size int, data unsafe.Pointer, usage uint32)     {}
+func (a apiStub) BufferSubData(target uint32, offset int, size int, data unsafe.Pointer)    {}
+func (a apiStub) GetBufferSubData(target uint32, offset int, size int, data unsafe.Pointer) {}
+func (a apiStub) DeleteBuffers(n int32, buffers *uint32)                                    {}
+func (a apiStub) GenVertexArrays(n int32, arrays *uint32)                                   {}
+func (a apiStub) DeleteVertexArrays(n int32, arrays *uint32)                                {}
+func (a apiStub) BindVertexArray(array uint32)                                              {}
+func (a apiStub) VertexAttribPointer(index uint32, size int32, xtype uint32, normalized bool, stride int32, pointer unsafe.Pointer) {
 }
-
-func (a apiStub) GetBufferSubData(target uint32, offset int, size int, data unsafe.Pointer) {
-}
-
-func (a apiStub) DeleteBuffers(n int32, buffers *uint32) {
-}
+func (a apiStub) EnableVertexAttribArray(index uint32) {}

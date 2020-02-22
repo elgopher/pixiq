@@ -75,5 +75,99 @@ func TestFloatVertexBuffer_Upload(t *testing.T) {
 			})
 		}
 	})
+}
 
+func TestFloatVertexBuffer_Download(t *testing.T) {
+	openGL, _ := opengl.New(mainThreadLoop)
+	defer openGL.Destroy()
+	t.Run("should download data", func(t *testing.T) {
+		tests := map[string]struct {
+			input          []float32
+			offset         int
+			output         []float32
+			expectedOutput []float32
+		}{
+			"empty output slice": {
+				input:          []float32{1},
+				output:         make([]float32, 0),
+				expectedOutput: []float32{},
+			},
+			"nil output slice": {
+				input:          []float32{1},
+				output:         nil,
+				expectedOutput: nil,
+			},
+			"one element slice": {
+				input:          []float32{1},
+				output:         make([]float32, 1),
+				expectedOutput: []float32{1},
+			},
+			"two elements slice": {
+				input:          []float32{1, 2},
+				output:         make([]float32, 2),
+				expectedOutput: []float32{1, 2},
+			},
+			"output slice bigger than buffer": {
+				input:          []float32{1},
+				output:         make([]float32, 2),
+				expectedOutput: []float32{1, 0},
+			},
+			"offset: 1": {
+				offset:         1,
+				input:          []float32{1, 2},
+				output:         make([]float32, 1),
+				expectedOutput: []float32{2},
+			},
+			"output slice bigger than remaining buffer": {
+				offset:         1,
+				input:          []float32{1, 2},
+				output:         make([]float32, 2),
+				expectedOutput: []float32{2, 0},
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				context := gl.ContextOf(openGL)
+				buffer := context.NewFloatVertexBuffer(len(test.input))
+				defer buffer.Delete()
+				buffer.Upload(0, test.input)
+				// when
+				buffer.Download(test.offset, test.output)
+				// then
+				assert.InDeltaSlice(t, test.expectedOutput, test.output, 1e-35)
+			})
+		}
+	})
+}
+
+func TestOpenGL_NewVertexArray(t *testing.T) {
+	t.Run("should create vertex array", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		context := gl.ContextOf(openGL)
+		// when
+		vao := context.NewVertexArray(gl.VertexLayout{gl.Float})
+		// then
+		assert.NotNil(t, vao)
+		// cleanup
+		vao.Delete()
+	})
+}
+func TestVertexArray_Set(t *testing.T) {
+	t.Run("should set", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		context := gl.ContextOf(openGL)
+		vao := context.NewVertexArray(gl.VertexLayout{gl.Float})
+		defer vao.Delete()
+		buffer := context.NewFloatVertexBuffer(1)
+		defer buffer.Delete()
+		pointer := gl.VertexBufferPointer{
+			Buffer: buffer,
+			Offset: 0,
+			Stride: 1,
+		}
+		// when
+		vao.Set(0, pointer)
+	})
 }
