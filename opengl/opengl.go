@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"time"
+	"unsafe"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
@@ -713,4 +714,40 @@ func Zoom(zoom int) WindowOption {
 			window.zoom = zoom
 		}
 	}
+}
+
+func (g *OpenGL) GenBuffers(n int32, buffers *uint32) {
+	g.runInOpenGLThread(func() {
+		gl.GenBuffers(n, buffers)
+	})
+}
+
+func (g *OpenGL) BindBuffer(target uint32, buffer uint32) {
+	g.runInOpenGLThread(func() {
+		gl.BindBuffer(target, buffer)
+	})
+}
+
+func (g *OpenGL) BufferData(target uint32, size int, data unsafe.Pointer, usage uint32) {
+	g.runInOpenGLThread(func() {
+		gl.BufferData(target, size, data, usage)
+	})
+}
+
+func (g *OpenGL) BufferSubData(target uint32, offset int, size int, data unsafe.Pointer) {
+	g.runInOpenGLThread(func() {
+		gl.BufferSubData(target, offset, size, data)
+	})
+}
+
+func (g *OpenGL) GetBufferSubData(target uint32, offset int, size int, data unsafe.Pointer) {
+	g.runInOpenGLThread(func() {
+		gl.GetBufferSubData(target, offset, size, data)
+	})
+}
+
+func (g *OpenGL) DeleteBuffers(n int32, buffers *uint32) {
+	g.runInOpenGLThread(func() {
+		gl.DeleteBuffers(n, buffers)
+	})
 }
