@@ -250,3 +250,18 @@ func (a apiStub) BindVertexArray(array uint32)                                  
 func (a apiStub) VertexAttribPointer(index uint32, size int32, xtype uint32, normalized bool, stride int32, pointer unsafe.Pointer) {
 }
 func (a apiStub) EnableVertexAttribArray(index uint32) {}
+func (a apiStub) CreateShader(xtype uint32) uint32 {
+	return 0
+}
+func (a apiStub) ShaderSource(shader uint32, count int32, xstring **uint8, length *int32)      {}
+func (a apiStub) CompileShader(shader uint32)                                                  {}
+func (a apiStub) GetShaderiv(shader uint32, pname uint32, params *int32)                       {}
+func (a apiStub) GetShaderInfoLog(shader uint32, bufSize int32, length *int32, infoLog *uint8) {}
+func (a apiStub) DeleteShader(shader uint32)                                                   {}
+func (a apiStub) GoStr(cstr *uint8) string {
+	return ""
+}
+
+func (a apiStub) Strs(strs ...string) (cstrs **uint8, free func()) {
+	return nil, func() {}
+}

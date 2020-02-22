@@ -2,9 +2,10 @@
 //
 // It may be used with following versions and subsets of OpenGL:
 // 	* OpenGL 3.3 and never
-// 	* OpenGL ES 2.0 and never (TODO or 3.0?)
+// 	* OpenGL ES 3.0 and never
 package gl
 
+import "C"
 import (
 	"fmt"
 	"reflect"
@@ -35,16 +36,45 @@ type API interface {
 	VertexAttribPointer(index uint32, size int32, xtype uint32, normalized bool, stride int32, pointer unsafe.Pointer)
 	// EnableVertexAttribArray enables a generic vertex attribute array
 	EnableVertexAttribArray(index uint32)
+	// CreateShader creates a shader object
+	CreateShader(xtype uint32) uint32
+	// ShaderSource replaces the source code in a shader object
+	ShaderSource(shader uint32, count int32, xstring **uint8, length *int32)
+	// CompileShader compiles a shader object
+	CompileShader(shader uint32)
+	// GetShaderiv returns a parameter from a shader object
+	GetShaderiv(shader uint32, pname uint32, params *int32)
+	// GetShaderInfoLog returns the information log for a shader object
+	GetShaderInfoLog(shader uint32, bufSize int32, length *int32, infoLog *uint8)
+	// DeleteShader deletes a shader object
+	DeleteShader(shader uint32)
+
+	// GoStr takes a null-terminated string returned by OpenGL and constructs a
+	// corresponding Go string.
+	GoStr(cstr *uint8) string
+	// Strs takes a list of Go strings (with or without null-termination) and
+	// returns their C counterpart.
+	//
+	// The returned free function must be called once you are done using the strings
+	// in order to free the memory.
+	//
+	// If no strings are provided as a parameter this function will panic.
+	Strs(strs ...string) (cstrs **uint8, free func())
 }
 
 // Camel-cased GL constants
 const (
-	arrayBuffer = 0x8892
-	staticDraw  = 0x88E4
-	float       = 0x1406
-	floatVec2   = 0x8B50
-	floatVec3   = 0x8B51
-	floatVec4   = 0x8B52
+	arrayBuffer    = 0x8892
+	staticDraw     = 0x88E4
+	float          = 0x1406
+	floatVec2      = 0x8B50
+	floatVec3      = 0x8B51
+	floatVec4      = 0x8B52
+	vertexShader   = 0x8B31
+	fragmentShader = 0x8B30
+	compileStatus  = 0x8B81
+	ffalse         = 0
+	infoLogLength  = 0x8B84
 )
 
 // ContextOf returns an OpenGL's Context for given API.
@@ -270,6 +300,64 @@ func (a *VertexArray) Set(location int, pointer VertexBufferPointer) {
 		int32(pointer.Stride*4),
 		PtrOffset(pointer.Offset*4),
 	)
+}
+
+// CompileFragmentShader compiles fragment shader source code written in GLSL.
+func (c *Context) CompileFragmentShader(sourceCode string) (*FragmentShader, error) {
+	shaderID, err := c.compileShader(fragmentShader, sourceCode)
+	if err != nil {
+		return nil, err
+	}
+	return &FragmentShader{id: shaderID}, nil
+}
+
+// FragmentShader is a part of an OpenGL program which transforms each fragment
+// (pixel) color into another one
+type FragmentShader struct {
+	id uint32
+}
+
+// CompileVertexShader compiles vertex shader source code written in GLSL.
+func (c *Context) CompileVertexShader(sourceCode string) (*VertexShader, error) {
+	shaderID, err := c.compileShader(vertexShader, sourceCode)
+	if err != nil {
+		return nil, err
+	}
+	return &VertexShader{id: shaderID}, nil
+}
+
+// VertexShader is a part of an OpenGL program which applies transformations
+// to drawn vertices.
+type VertexShader struct {
+	id uint32
+}
+
+func (c *Context) compileVertexShader(src string) (uint32, error) {
+	return c.compileShader(vertexShader, src)
+}
+
+func (c *Context) compileShader(xtype uint32, src string) (uint32, error) {
+	if src == "" {
+		src = " "
+	}
+	shaderID := c.api.CreateShader(xtype)
+	srcXString, free := c.api.Strs(src)
+	defer free()
+	length := int32(len(src))
+	c.api.ShaderSource(shaderID, 1, srcXString, &length)
+	c.api.CompileShader(shaderID)
+	var success int32
+	c.api.GetShaderiv(shaderID, compileStatus, &success)
+	if success == ffalse {
+		var logLen int32
+		c.api.GetShaderiv(shaderID, infoLogLength, &logLen)
+		infoLog := make([]byte, logLen)
+		if logLen > 0 {
+			c.api.GetShaderInfoLog(shaderID, logLen, nil, &infoLog[0])
+		}
+		return 0, fmt.Errorf("glCompileShader failed: %s", string(infoLog))
+	}
+	return shaderID, nil
 }
 
 // Ptr takes a slice or pointer (to a singular scalar value or the first

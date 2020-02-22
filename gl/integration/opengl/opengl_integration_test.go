@@ -4,6 +4,7 @@ import (
 	"github.com/jacekolszak/pixiq/gl"
 	"github.com/jacekolszak/pixiq/opengl"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"os"
 	"testing"
 )
@@ -140,7 +141,7 @@ func TestFloatVertexBuffer_Download(t *testing.T) {
 	})
 }
 
-func TestOpenGL_NewVertexArray(t *testing.T) {
+func TestContext_NewVertexArray(t *testing.T) {
 	t.Run("should create vertex array", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
@@ -169,5 +170,101 @@ func TestVertexArray_Set(t *testing.T) {
 		}
 		// when
 		vao.Set(0, pointer)
+	})
+}
+
+func TestContext_CompileFragmentShader(t *testing.T) {
+	t.Run("should return error for incorrect shader", func(t *testing.T) {
+		tests := map[string]string{
+			"golang code": "package main\nfunc main() {}",
+		}
+		for name, source := range tests {
+			t.Run(name, func(t *testing.T) {
+				openGL, _ := opengl.New(mainThreadLoop)
+				defer openGL.Destroy()
+				context := gl.ContextOf(openGL)
+				// when
+				shader, err := context.CompileFragmentShader(source)
+				assert.Error(t, err)
+				assert.Nil(t, shader)
+			})
+		}
+	})
+	t.Run("should compile shader", func(t *testing.T) {
+		tests := map[string]string{
+			"GLSL 1.10": "void main() {}",
+			"minimal": `
+				#version 330 core
+				void main() {}
+				`,
+		}
+		for name, source := range tests {
+			t.Run(name, func(t *testing.T) {
+				openGL, _ := opengl.New(mainThreadLoop)
+				defer openGL.Destroy()
+				context := gl.ContextOf(openGL)
+				// when
+				shader, err := context.CompileFragmentShader(source)
+				require.NoError(t, err)
+				assert.NotNil(t, shader)
+			})
+		}
+	})
+	t.Run("should not panic for empty shader", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		context := gl.ContextOf(openGL)
+		// when
+		_, _ = context.CompileFragmentShader("")
+	})
+}
+
+func TestContext_CompileVertexShader(t *testing.T) {
+	t.Run("should return error for incorrect shader", func(t *testing.T) {
+		tests := map[string]string{
+			"golang code": "package main\nfunc main() {}",
+		}
+		for name, source := range tests {
+			t.Run(name, func(t *testing.T) {
+				openGL, _ := opengl.New(mainThreadLoop)
+				defer openGL.Destroy()
+				context := gl.ContextOf(openGL)
+				// when
+				shader, err := context.CompileVertexShader(source)
+				// then
+				assert.Error(t, err)
+				assert.Nil(t, shader)
+			})
+		}
+	})
+	t.Run("should compile shader", func(t *testing.T) {
+		tests := map[string]string{
+			"GLSL 1.10": "void main() {}",
+			"minimal": `
+				#version 330 core
+				void main() {
+					gl_Position = vec4(0, 0, 0, 0);
+				}
+				`,
+		}
+		for name, source := range tests {
+			t.Run(name, func(t *testing.T) {
+				openGL, _ := opengl.New(mainThreadLoop)
+				defer openGL.Destroy()
+				context := gl.ContextOf(openGL)
+				// when
+				shader, err := context.CompileVertexShader(source)
+				// then
+				require.NoError(t, err)
+				assert.NotNil(t, shader)
+			})
+		}
+	})
+	t.Run("should not panic for empty shader", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		context := gl.ContextOf(openGL)
+		// when
+		_, _ = context.CompileVertexShader("")
 	})
 }

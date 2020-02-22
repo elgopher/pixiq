@@ -792,3 +792,64 @@ func (g *OpenGL) EnableVertexAttribArray(index uint32) {
 		gl.EnableVertexAttribArray(index)
 	})
 }
+
+// CreateShader creates a shader object
+func (g *OpenGL) CreateShader(xtype uint32) uint32 {
+	var id uint32
+	g.runInOpenGLThread(func() {
+		id = gl.CreateShader(xtype)
+	})
+	return id
+}
+
+// ShaderSource replaces the source code in a shader object
+func (g *OpenGL) ShaderSource(shader uint32, count int32, xstring **uint8, length *int32) {
+	g.runInOpenGLThread(func() {
+		gl.ShaderSource(shader, count, xstring, length)
+	})
+}
+
+// CompileShader compiles a shader object
+func (g *OpenGL) CompileShader(shader uint32) {
+	g.runInOpenGLThread(func() {
+		gl.CompileShader(shader)
+	})
+}
+
+// GetShaderiv returns a parameter from a shader object
+func (g *OpenGL) GetShaderiv(shader uint32, pname uint32, params *int32) {
+	g.runInOpenGLThread(func() {
+		gl.GetShaderiv(shader, pname, params)
+	})
+}
+
+// GetShaderInfoLog returns the information log for a shader object
+func (g *OpenGL) GetShaderInfoLog(shader uint32, bufSize int32, length *int32, infoLog *uint8) {
+	g.runInOpenGLThread(func() {
+		gl.GetShaderInfoLog(shader, bufSize, length, infoLog)
+	})
+}
+
+// DeleteShader deletes a shader object
+func (g *OpenGL) DeleteShader(shader uint32) {
+	g.runInOpenGLThread(func() {
+		gl.DeleteShader(shader)
+	})
+}
+
+// GoStr takes a null-terminated string returned by OpenGL and constructs a
+// corresponding Go string.
+func (g *OpenGL) GoStr(cstr *uint8) string {
+	return gl.GoStr(cstr)
+}
+
+// Strs takes a list of Go strings (with or without null-termination) and
+// returns their C counterpart.
+//
+// The returned free function must be called once you are done using the strings
+// in order to free the memory.
+//
+// If no strings are provided as a parameter this function will panic.
+func (g *OpenGL) Strs(strs ...string) (cstrs **uint8, free func()) {
+	return gl.Strs(strs...)
+}
