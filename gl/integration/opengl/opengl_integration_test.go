@@ -311,3 +311,48 @@ func TestOpenGL_LinkProgram(t *testing.T) {
 		assert.NotNil(t, program)
 	})
 }
+
+func TestOpenGL_Capabilities(t *testing.T) {
+	t.Run("should return capabilities", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		context := gl.ContextOf(openGL)
+		// when
+		capabilities := context.Capabilities()
+		// then
+		assert.NotNil(t, capabilities)
+		assert.Greater(t, capabilities.MaxTextureSize(), 0)
+	})
+}
+
+func TestOpenGL_NewAcceleratedImage(t *testing.T) {
+	t.Run("should panic for too big width", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		context := gl.ContextOf(openGL)
+		capabilities := context.Capabilities()
+		assert.Panics(t, func() {
+			// when
+			context.NewAcceleratedImage(capabilities.MaxTextureSize()+1, 1)
+		})
+	})
+	t.Run("should panic for too big height", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		context := gl.ContextOf(openGL)
+		capabilities := context.Capabilities()
+		assert.Panics(t, func() {
+			// when
+			context.NewAcceleratedImage(1, capabilities.MaxTextureSize()+1)
+		})
+	})
+	t.Run("should create AcceleratedImage", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		context := gl.ContextOf(openGL)
+		// when
+		img := context.NewAcceleratedImage(0, 0)
+		// then
+		assert.NotNil(t, img)
+	})
+}

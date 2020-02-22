@@ -254,6 +254,22 @@ func TestOpenGL_LinkProgram(t *testing.T) {
 		})
 	})
 }
+func TestContext_NewAcceleratedImage(t *testing.T) {
+	t.Run("should panic for negative width", func(t *testing.T) {
+		context := gl.ContextOf(apiStub{})
+		// when
+		assert.Panics(t, func() {
+			context.NewAcceleratedImage(-1, 0)
+		})
+	})
+	t.Run("should panic for negative height", func(t *testing.T) {
+		context := gl.ContextOf(apiStub{})
+		assert.Panics(t, func() {
+			// when
+			context.NewAcceleratedImage(0, -1)
+		})
+	})
+}
 
 type apiStub struct{}
 
@@ -289,4 +305,35 @@ func (a apiStub) GetActiveUniform(program uint32, index uint32, bufSize int32, l
 }
 func (a apiStub) GetActiveAttrib(program uint32, index uint32, bufSize int32, length *int32, size *int32, xtype *uint32, name *uint8) {
 }
-func (a apiStub) GetAttribLocation(program uint32, name *uint8) int32 { return 0 }
+func (a apiStub) GetAttribLocation(program uint32, name *uint8) int32                          { return 0 }
+func (a apiStub) Enable(cap uint32)                                                            {}
+func (a apiStub) BindFramebuffer(target uint32, framebuffer uint32)                            {}
+func (a apiStub) Scissor(x int32, y int32, width int32, height int32)                          {}
+func (a apiStub) Viewport(x int32, y int32, width int32, height int32)                         {}
+func (a apiStub) ClearColor(red float32, green float32, blue float32, alpha float32)           {}
+func (a apiStub) Clear(mask uint32)                                                            {}
+func (a apiStub) DrawArrays(mode uint32, first int32, count int32)                             {}
+func (a apiStub) Uniform1f(location int32, v0 float32)                                         {}
+func (a apiStub) Uniform2f(location int32, v0 float32, v1 float32)                             {}
+func (a apiStub) Uniform3f(location int32, v0 float32, v1 float32, v2 float32)                 {}
+func (a apiStub) Uniform4f(location int32, v0 float32, v1 float32, v2 float32, v3 float32)     {}
+func (a apiStub) Uniform1i(location int32, v0 int32)                                           {}
+func (a apiStub) Uniform2i(location int32, v0 int32, v1 int32)                                 {}
+func (a apiStub) Uniform3i(location int32, v0 int32, v1 int32, v2 int32)                       {}
+func (a apiStub) Uniform4i(location int32, v0 int32, v1 int32, v2 int32, v3 int32)             {}
+func (a apiStub) UniformMatrix3fv(location int32, count int32, transpose bool, value *float32) {}
+func (a apiStub) UniformMatrix4fv(location int32, count int32, transpose bool, value *float32) {}
+func (a apiStub) ActiveTexture(texture uint32)                                                 {}
+func (a apiStub) BindTexture(target uint32, texture uint32)                                    {}
+func (a apiStub) GetIntegerv(pname uint32, data *int32)                                        {}
+func (a apiStub) GenTextures(n int32, textures *uint32)                                        {}
+func (a apiStub) TexImage2D(target uint32, level int32, internalformat int32, width int32, height int32, border int32, format uint32, xtype uint32, pixels unsafe.Pointer) {
+}
+func (a apiStub) TexParameteri(target uint32, pname uint32, param int32) {}
+func (a apiStub) GenFramebuffers(n int32, framebuffers *uint32)          {}
+func (a apiStub) FramebufferTexture2D(target uint32, attachment uint32, textarget uint32, texture uint32, level int32) {
+}
+func (a apiStub) TexSubImage2D(target uint32, level int32, xoffset int32, yoffset int32, width int32, height int32, format uint32, xtype uint32, pixels unsafe.Pointer) {
+}
+func (a apiStub) GetTexImage(target uint32, level int32, format uint32, xtype uint32, pixels unsafe.Pointer) {
+}

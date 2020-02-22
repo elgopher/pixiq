@@ -9,12 +9,11 @@ import (
 	"fmt"
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
-	"log"
-	"time"
-
 	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/keyboard"
 	"github.com/jacekolszak/pixiq/opengl/internal"
+	"log"
+	"time"
 )
 
 // New creates OpenGL instance.
@@ -217,7 +216,7 @@ func (g *OpenGL) NewAcceleratedImage(width, height int) *AcceleratedImage {
 		panic(fmt.Sprintf("width higher than MAX_TEXTURE_SIZE (%d pixels)", g.capabilities.maxTextureSize))
 	}
 	if height > g.capabilities.maxTextureSize {
-		panic(fmt.Sprintf("height higher than MAX_TEXTURE_SIZE (%d pixels)", g.capabilities.maxTextureSize))
+		panic(fmt.Sprintf("height higher than AX_TEXTURE_SIZE (%d pixels)", g.capabilities.maxTextureSize))
 	}
 	// FIXME resize image (internally) if OpenGL does support only a power-of-two dimensions.
 	var id uint32

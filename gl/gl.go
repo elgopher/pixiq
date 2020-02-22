@@ -1,13 +1,14 @@
-// Package gl provides Go abstractions for interacting with OpenGL in a safer way.
+// Package gl provides Go abstractions for interacting with OpenGL in a safer
+// and easier way.
 //
 // It may be used with following versions and subsets of OpenGL:
 // 	* OpenGL 3.3 and never
 // 	* OpenGL ES 3.0 and never
 package gl
 
-import "C"
 import (
 	"fmt"
+	"github.com/jacekolszak/pixiq/image"
 	"reflect"
 	"unsafe"
 )
@@ -66,6 +67,60 @@ type API interface {
 	GetActiveAttrib(program uint32, index uint32, bufSize int32, length *int32, size *int32, xtype *uint32, name *uint8)
 	// Returns the location of an attribute variable
 	GetAttribLocation(program uint32, name *uint8) int32
+	// Enable enables or disable server-side GL capabilities
+	Enable(cap uint32)
+	// BindFramebuffer binds a framebuffer to a framebuffer target
+	BindFramebuffer(target uint32, framebuffer uint32)
+	// Scissor defines the scissor box
+	Scissor(x int32, y int32, width int32, height int32)
+	// Viewport sets the viewport
+	Viewport(x int32, y int32, width int32, height int32)
+	// ClearColor specifies clear values for the color buffers
+	ClearColor(red float32, green float32, blue float32, alpha float32)
+	// Clear clears buffers to preset values
+	Clear(mask uint32)
+	// DrawArrays render primitives from array data
+	DrawArrays(mode uint32, first int32, count int32)
+	// Uniform1f specifies the value of a uniform variable for the current program object
+	Uniform1f(location int32, v0 float32)
+	// Uniform2f specifies the value of a uniform variable for the current program object
+	Uniform2f(location int32, v0 float32, v1 float32)
+	// Uniform3f specifies the value of a uniform variable for the current program object
+	Uniform3f(location int32, v0 float32, v1 float32, v2 float32)
+	// Uniform4f specifies the value of a uniform variable for the current program object
+	Uniform4f(location int32, v0 float32, v1 float32, v2 float32, v3 float32)
+	// Uniform1i specifies the value of a uniform variable for the current program object
+	Uniform1i(location int32, v0 int32)
+	// Uniform2i specifies the value of a uniform variable for the current program object
+	Uniform2i(location int32, v0 int32, v1 int32)
+	// Uniform3i specifies the value of a uniform variable for the current program object
+	Uniform3i(location int32, v0 int32, v1 int32, v2 int32)
+	// Uniform4i specifies the value of a uniform variable for the current program object
+	Uniform4i(location int32, v0 int32, v1 int32, v2 int32, v3 int32)
+	// UniformMatrix3fv specifies the value of a uniform variable for the current program object
+	UniformMatrix3fv(location int32, count int32, transpose bool, value *float32)
+	// UniformMatrix4fv specifies the value of a uniform variable for the current program object
+	UniformMatrix4fv(location int32, count int32, transpose bool, value *float32)
+	// ActiveTexture selects active texture unit
+	ActiveTexture(texture uint32)
+	// BindTexture binds a named texture to a texturing target
+	BindTexture(target uint32, texture uint32)
+	// GetIntegerv returns the value or values of the specified parameter
+	GetIntegerv(pname uint32, data *int32)
+	// GenTextures generates texture names
+	GenTextures(n int32, textures *uint32)
+	// TexImage2D specifies a two-dimensional texture image
+	TexImage2D(target uint32, level int32, internalformat int32, width int32, height int32, border int32, format uint32, xtype uint32, pixels unsafe.Pointer)
+	// TexParameteri sets texture parameter
+	TexParameteri(target uint32, pname uint32, param int32)
+	// GenFramebuffers generates framebuffer object names
+	GenFramebuffers(n int32, framebuffers *uint32)
+	// FramebufferTexture2D attaches a level of a texture object as a logical buffer to the currently bound framebuffer object
+	FramebufferTexture2D(target uint32, attachment uint32, textarget uint32, texture uint32, level int32)
+	// TexSubImage2D specifies a two-dimensional texture subimage
+	TexSubImage2D(target uint32, level int32, xoffset int32, yoffset int32, width int32, height int32, format uint32, xtype uint32, pixels unsafe.Pointer)
+	// GetTexImage returns a texture image
+	GetTexImage(target uint32, level int32, format uint32, xtype uint32, pixels unsafe.Pointer)
 
 	// GoStr takes a null-terminated string returned by OpenGL and constructs a
 	// corresponding Go string.
@@ -80,26 +135,6 @@ type API interface {
 	Strs(strs ...string) (cstrs **uint8, free func())
 }
 
-// Camel-cased GL constants
-const (
-	arrayBuffer              = 0x8892
-	staticDraw               = 0x88E4
-	float                    = 0x1406
-	floatVec2                = 0x8B50
-	floatVec3                = 0x8B51
-	floatVec4                = 0x8B52
-	vertexShader             = 0x8B31
-	fragmentShader           = 0x8B30
-	compileStatus            = 0x8B81
-	ffalse                   = 0
-	infoLogLength            = 0x8B84
-	linkStatus               = 0x8B82
-	activeUniforms           = 0x8B86
-	activeUniformMaxLength   = 0x8B87
-	activeAttributeMaxLength = 0x8B8A
-	activeAttributes         = 0x8B89
-)
-
 // ContextOf returns an OpenGL's Context for given API.
 func ContextOf(api API) *Context {
 	if api == nil {
@@ -108,13 +143,17 @@ func ContextOf(api API) *Context {
 	return &Context{
 		api:             api,
 		vertexBufferIDs: vertexBufferIDs{},
+		allImages:       allImages{},
+		capabilities:    gatherCapabilities(api),
 	}
 }
 
-// Context is an OpenGL context
-type Context struct {
-	api             API
-	vertexBufferIDs vertexBufferIDs
+func gatherCapabilities(api API) *Capabilities {
+	var maxTextureSizeVal int32
+	api.GetIntegerv(maxTextureSize, &maxTextureSizeVal)
+	return &Capabilities{
+		maxTextureSize: int(maxTextureSizeVal),
+	}
 }
 
 // VertexBuffer contains data about vertices.
@@ -125,24 +164,7 @@ type VertexBuffer interface {
 
 // vertexBufferIDs contains all vertex buffer identifiers in OpenGL context
 type vertexBufferIDs map[VertexBuffer]uint32
-
-// NewFloatVertexBuffer creates an OpenGL's Vertex Buffer Object (VBO) containing only float32 numbers.
-func (c *Context) NewFloatVertexBuffer(size int) *FloatVertexBuffer {
-	if size < 0 {
-		panic("negative size")
-	}
-	var id uint32
-	c.api.GenBuffers(1, &id)
-	c.api.BindBuffer(arrayBuffer, id)
-	c.api.BufferData(arrayBuffer, size*4, Ptr(nil), staticDraw) // FIXME: Parametrize usage
-	vb := &FloatVertexBuffer{
-		id:   id,
-		size: size,
-		api:  c.api,
-	}
-	c.vertexBufferIDs[vb] = id
-	return vb
-}
+type allImages map[image.AcceleratedImage]*AcceleratedImage
 
 // FloatVertexBuffer is a struct representing OpenGL's Vertex Buffer Object (VBO) containing only float32 numbers.
 type FloatVertexBuffer struct {
@@ -257,26 +279,6 @@ type VertexArray struct {
 	api             API
 }
 
-// NewVertexArray creates a new instance of VertexArray. All vertex attributes
-// specified in layout will be enabled.
-func (c *Context) NewVertexArray(layout VertexLayout) *VertexArray {
-	if len(layout) == 0 {
-		panic("empty layout")
-	}
-	var id uint32
-	c.api.GenVertexArrays(1, &id)
-	c.api.BindVertexArray(id)
-	for i := 0; i < len(layout); i++ {
-		c.api.EnableVertexAttribArray(uint32(i))
-	}
-	return &VertexArray{
-		id:              id,
-		layout:          layout,
-		api:             c.api,
-		vertexBufferIDs: c.vertexBufferIDs,
-	}
-}
-
 // Delete should be called whenever you don't plan to use VertexArray anymore.
 // VertexArray is an external resource (like file for example) and must be deleted manually.
 func (a *VertexArray) Delete() {
@@ -325,171 +327,6 @@ func (a *VertexArray) Set(location int, pointer VertexBufferPointer) {
 	)
 }
 
-// CompileFragmentShader compiles fragment shader source code written in GLSL.
-func (c *Context) CompileFragmentShader(sourceCode string) (*FragmentShader, error) {
-	shaderID, err := c.compileShader(fragmentShader, sourceCode)
-	if err != nil {
-		return nil, err
-	}
-	return &FragmentShader{id: shaderID}, nil
-}
-
-// FragmentShader is a part of an OpenGL program which transforms each fragment
-// (pixel) color into another one
-type FragmentShader struct {
-	id uint32
-}
-
-// CompileVertexShader compiles vertex shader source code written in GLSL.
-func (c *Context) CompileVertexShader(sourceCode string) (*VertexShader, error) {
-	shaderID, err := c.compileShader(vertexShader, sourceCode)
-	if err != nil {
-		return nil, err
-	}
-	return &VertexShader{id: shaderID}, nil
-}
-
-// VertexShader is a part of an OpenGL program which applies transformations
-// to drawn vertices.
-type VertexShader struct {
-	id uint32
-}
-
-func (c *Context) compileVertexShader(src string) (uint32, error) {
-	return c.compileShader(vertexShader, src)
-}
-
-func (c *Context) compileShader(xtype uint32, src string) (uint32, error) {
-	if src == "" {
-		src = " "
-	}
-	shaderID := c.api.CreateShader(xtype)
-	srcXString, free := c.api.Strs(src)
-	defer free()
-	length := int32(len(src))
-	c.api.ShaderSource(shaderID, 1, srcXString, &length)
-	c.api.CompileShader(shaderID)
-	var success int32
-	c.api.GetShaderiv(shaderID, compileStatus, &success)
-	if success == ffalse {
-		var logLen int32
-		c.api.GetShaderiv(shaderID, infoLogLength, &logLen)
-		infoLog := make([]byte, logLen)
-		if logLen > 0 {
-			c.api.GetShaderInfoLog(shaderID, logLen, nil, &infoLog[0])
-		}
-		return 0, fmt.Errorf("glCompileShader failed: %s", string(infoLog))
-	}
-	return shaderID, nil
-}
-
-// LinkProgram links an OpenGL program from shaders. Created program can be used
-// in image.Modify
-func (c *Context) LinkProgram(vertexShader *VertexShader, fragmentShader *FragmentShader) (*Program, error) {
-	if vertexShader == nil {
-		panic("nil vertexShader")
-	}
-	if fragmentShader == nil {
-		panic("nil fragmentShader")
-	}
-	var (
-		program          *program
-		err              error
-		uniformLocations map[string]int32
-		attributes       map[int32]attribute
-	)
-	program, err = c.linkProgram(vertexShader.id, fragmentShader.id)
-	if err == nil {
-		uniformLocations = program.activeUniformLocations()
-		attributes = program.attributes()
-	}
-	if err != nil {
-		return nil, err
-	}
-	return &Program{
-		program:          program,
-		api:              c.api,
-		uniformLocations: uniformLocations,
-		attributes:       attributes,
-	}, err
-}
-
-func (c *Context) linkProgram(shaderIDs ...uint32) (*program, error) {
-	programID := c.api.CreateProgram()
-	for _, shaderID := range shaderIDs {
-		c.api.AttachShader(programID, shaderID)
-	}
-	c.api.LinkProgram(programID)
-	var success int32
-	c.api.GetProgramiv(programID, linkStatus, &success)
-	if success == ffalse {
-		var infoLogLen int32
-		c.api.GetProgramiv(programID, infoLogLength, &infoLogLen)
-		infoLog := make([]byte, infoLogLen)
-		if infoLogLen > 0 {
-			c.api.GetProgramInfoLog(programID, infoLogLen, nil, &infoLog[0])
-		}
-		return nil, fmt.Errorf("error linking program: %s", string(infoLog))
-	}
-	return &program{
-		id:  programID,
-		api: c.api,
-	}, nil
-}
-
-type program struct {
-	api API
-	id  uint32
-}
-
-func (p *program) use() {
-	p.api.UseProgram(p.id)
-}
-
-func (p *program) activeUniformLocations() map[string]int32 {
-	locationsByName := map[string]int32{}
-	var count, bufSize, length, nameMaxLength int32
-	var xtype uint32
-	p.api.GetProgramiv(p.id, activeUniformMaxLength, &nameMaxLength)
-	name := make([]byte, nameMaxLength)
-	p.api.GetProgramiv(p.id, activeUniforms, &count)
-	for location := int32(0); location < count; location++ {
-		p.api.GetActiveUniform(p.id, uint32(location), nameMaxLength, &bufSize, &length, &xtype, &name[0])
-		goName := p.api.GoStr(&name[0])
-		locationsByName[goName] = location
-	}
-	return locationsByName
-}
-
-type attribute struct {
-	typ  Type
-	name string
-}
-
-func (p *program) attributes() map[int32]attribute {
-	var count, bufSize, length, nameMaxLength int32
-	var xtype uint32
-	p.api.GetProgramiv(p.id, activeAttributeMaxLength, &nameMaxLength)
-	name := make([]byte, nameMaxLength)
-	p.api.GetProgramiv(p.id, activeAttributes, &count)
-	attributes := map[int32]attribute{}
-	for i := int32(0); i < count; i++ {
-		p.api.GetActiveAttrib(p.id, uint32(i), nameMaxLength, &bufSize, &length, &xtype, &name[0])
-		location := p.api.GetAttribLocation(p.id, &name[0])
-		attributes[location] = attribute{typ: valueOf(xtype),
-			name: p.api.GoStr(&name[0])}
-	}
-	return attributes
-}
-
-// Program is shaders linked together
-type Program struct {
-	*program
-	uniformLocations map[string]int32
-	attributes       map[int32]attribute
-	api              API
-}
-
 // Ptr takes a slice or pointer (to a singular scalar value or the first
 // element of an array or slice) and returns its GL-compatible address.
 //
@@ -497,7 +334,7 @@ type Program struct {
 //
 // 	var data []uint8
 // 	...
-// 	gl.TexImage2D(gl.TEXTURE_2D, ..., gl.UNSIGNED_BYTE, gl.Ptr(&data[0]))
+// 	api.TexImage2D(texture2D, ..., unsignedByte, gl.Ptr(&data[0]))
 func Ptr(data interface{}) unsafe.Pointer {
 	if data == nil {
 		return unsafe.Pointer(nil)
