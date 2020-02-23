@@ -126,10 +126,6 @@ type VertexShader struct {
 	id uint32
 }
 
-func (c *Context) compileVertexShader(src string) (uint32, error) {
-	return c.compileShader(vertexShader, src)
-}
-
 func (c *Context) compileShader(xtype uint32, src string) (uint32, error) {
 	if src == "" {
 		src = " "
