@@ -127,7 +127,6 @@ func (g *OpenGL) DeleteShader(shader uint32) {
 }
 
 // AttachShader attaches a shader object to a program object
-
 func (g *OpenGL) AttachShader(program uint32, shader uint32) {
 	g.runInOpenGLThread(func() {
 		gl.AttachShader(program, shader)
@@ -185,7 +184,7 @@ func (g *OpenGL) GetActiveAttrib(program uint32, index uint32, bufSize int32, le
 	})
 }
 
-// Returns the location of an attribute variable
+// GetAttribLocation returns the location of an attribute variable
 func (g *OpenGL) GetAttribLocation(program uint32, name *uint8) int32 {
 	var loc int32
 	g.runInOpenGLThread(func() {

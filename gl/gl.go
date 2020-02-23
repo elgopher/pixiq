@@ -65,7 +65,7 @@ type API interface {
 	GetActiveUniform(program uint32, index uint32, bufSize int32, length *int32, size *int32, xtype *uint32, name *uint8)
 	// GetActiveAttrib returns information about an active attribute variable for the specified program object
 	GetActiveAttrib(program uint32, index uint32, bufSize int32, length *int32, size *int32, xtype *uint32, name *uint8)
-	// Returns the location of an attribute variable
+	// GetAttribLocation returns the location of an attribute variable
 	GetAttribLocation(program uint32, name *uint8) int32
 	// Enable enables or disable server-side GL capabilities
 	Enable(cap uint32)

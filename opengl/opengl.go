@@ -375,7 +375,7 @@ func (g *OpenGL) CompileVertexShader(sourceCode string) (*VertexShader, error) {
 	return &VertexShader{shader: shader}, err
 }
 
-// LinkProgram links an OpenGL program from shaders. Created program can be used
+// LinkProgram2 links an OpenGL program from shaders. Created program can be used
 // in image.Modify
 func (g *OpenGL) LinkProgram2(vertexShader *VertexShader, fragmentShader *FragmentShader) (*Program, error) {
 	if vertexShader == nil {
