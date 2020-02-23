@@ -23,6 +23,10 @@ type context struct {
 	uniform2f       *uniform2f
 	uniform3f       *uniform3f
 	uniform4f       *uniform4f
+	uniform1i       *uniform1i
+	uniform2i       *uniform2i
+	uniform3i       *uniform3i
+	uniform4i       *uniform4i
 	useProgram      *useProgram
 	bindFramebuffer *bindFramebuffer
 	scissor         *scissor
@@ -44,6 +48,10 @@ func newContext(runInOpenGLThread func(func()), glThread *glThread) *context {
 		uniform2f:         &uniform2f{},
 		uniform3f:         &uniform3f{},
 		uniform4f:         &uniform4f{},
+		uniform1i:         &uniform1i{},
+		uniform2i:         &uniform2i{},
+		uniform3i:         &uniform3i{},
+		uniform4i:         &uniform4i{},
 		useProgram:        &useProgram{},
 		bindFramebuffer:   &bindFramebuffer{},
 		scissor:           &scissor{},
@@ -523,40 +531,88 @@ func (g *context) Uniform4f(location int32, v0 float32, v1 float32, v2 float32, 
 	g.glThread.execute(g.uniform4f)
 }
 
+type uniform1i struct {
+	location int32
+	v0       int32
+}
+
+func (u *uniform1i) run() {
+	gl.Uniform1i(u.location, u.v0)
+}
+
 // Uniform1i specifies the value of a uniform variable for the current program object
 func (g *context) Uniform1i(location int32, v0 int32) {
 	g.mutex.Lock()
 	defer g.mutex.Unlock()
-	g.runInOpenGLThread(func() {
-		gl.Uniform1i(location, v0)
-	})
+	g.uniform1i.location = location
+	g.uniform1i.v0 = v0
+	g.glThread.execute(g.uniform1i)
+}
+
+type uniform2i struct {
+	location int32
+	v0       int32
+	v1       int32
+}
+
+func (u *uniform2i) run() {
+	gl.Uniform2i(u.location, u.v0, u.v1)
 }
 
 // Uniform2i specifies the value of a uniform variable for the current program object
 func (g *context) Uniform2i(location int32, v0 int32, v1 int32) {
 	g.mutex.Lock()
 	defer g.mutex.Unlock()
-	g.runInOpenGLThread(func() {
-		gl.Uniform2i(location, v0, v1)
-	})
+	g.uniform2i.location = location
+	g.uniform2i.v0 = v0
+	g.uniform2i.v1 = v1
+	g.glThread.execute(g.uniform2i)
+}
+
+type uniform3i struct {
+	location int32
+	v0       int32
+	v1       int32
+	v2       int32
+}
+
+func (u *uniform3i) run() {
+	gl.Uniform3i(u.location, u.v0, u.v1, u.v2)
 }
 
 // Uniform3i specifies the value of a uniform variable for the current program object
 func (g *context) Uniform3i(location int32, v0 int32, v1 int32, v2 int32) {
 	g.mutex.Lock()
 	defer g.mutex.Unlock()
-	g.runInOpenGLThread(func() {
-		gl.Uniform3i(location, v0, v1, v2)
-	})
+	g.uniform3i.location = location
+	g.uniform3i.v0 = v0
+	g.uniform3i.v1 = v1
+	g.uniform3i.v2 = v2
+	g.glThread.execute(g.uniform3i)
+}
+
+type uniform4i struct {
+	location int32
+	v0       int32
+	v1       int32
+	v2       int32
+	v3       int32
+}
+
+func (u *uniform4i) run() {
+	gl.Uniform4i(u.location, u.v0, u.v1, u.v2, u.v3)
 }
 
 // Uniform4i specifies the value of a uniform variable for the current program object
 func (g *context) Uniform4i(location int32, v0 int32, v1 int32, v2 int32, v3 int32) {
 	g.mutex.Lock()
 	defer g.mutex.Unlock()
-	g.runInOpenGLThread(func() {
-		gl.Uniform4i(location, v0, v1, v2, v3)
-	})
+	g.uniform4i.location = location
+	g.uniform4i.v0 = v0
+	g.uniform4i.v1 = v1
+	g.uniform4i.v2 = v2
+	g.uniform4i.v3 = v3
+	g.glThread.execute(g.uniform4i)
 }
 
 // UniformMatrix3fv specifies the value of a uniform variable for the current program object
