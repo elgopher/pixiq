@@ -348,15 +348,3 @@ func TestOpenGL_Error(t *testing.T) {
 		assert.NoError(t, err)
 	})
 }
-
-type commandMock struct {
-	executionCount int
-	selections     []image.AcceleratedImageSelection
-	renderer       *opengl.Renderer
-}
-
-func (f *commandMock) RunGL(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
-	f.executionCount++
-	f.selections = selections
-	f.renderer = renderer
-}

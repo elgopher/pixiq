@@ -355,6 +355,44 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 	})
 }
 
+func TestRenderer_BindTexture(t *testing.T) {
+	t.Run("can't bind texture without uniformName", func(t *testing.T) {
+		names := []string{"", " ", "  ", "\n", "\t"}
+		for _, name := range names {
+			t.Run(name, func(t *testing.T) {
+				context := gl.ContextOf(apiStub{})
+				var (
+					output  = context.NewAcceleratedImage(1, 1)
+					tex     = context.NewAcceleratedImage(1, 1)
+					program = workingProgram(context)
+					command = program.AcceleratedCommand(&command{runGL: func(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
+						assert.Panics(t, func() {
+							// when
+							renderer.BindTexture(0, name, tex)
+						})
+					}})
+				)
+				command.Run(image.AcceleratedImageSelection{Image: output}, []image.AcceleratedImageSelection{})
+			})
+		}
+	})
+	t.Run("can't bind texture with negative texture unit", func(t *testing.T) {
+		context := gl.ContextOf(apiStub{})
+		var (
+			output  = context.NewAcceleratedImage(1, 1)
+			tex     = context.NewAcceleratedImage(1, 1)
+			program = workingProgram(context)
+			command = program.AcceleratedCommand(&command{runGL: func(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
+				assert.Panics(t, func() {
+					// when
+					renderer.BindTexture(-1, "tex", tex)
+				})
+			}})
+		)
+		command.Run(image.AcceleratedImageSelection{Image: output}, []image.AcceleratedImageSelection{})
+	})
+}
+
 func workingProgram(context *gl.Context) *gl.Program {
 	var (
 		vertexShader, _   = context.CompileVertexShader("")
@@ -378,6 +416,14 @@ func (f *commandMock) RunGL(renderer *gl.Renderer, selections []image.Accelerate
 	f.executionCount++
 	f.selections = selections
 	f.renderer = renderer
+}
+
+type command struct {
+	runGL func(renderer *gl.Renderer, selections []image.AcceleratedImageSelection)
+}
+
+func (c *command) RunGL(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
+	c.runGL(renderer, selections)
 }
 
 type apiStub struct{}
