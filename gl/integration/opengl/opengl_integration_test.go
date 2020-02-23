@@ -14,8 +14,6 @@ import (
 
 var mainThreadLoop *opengl.MainThreadLoop
 
-const programPointSize = 0x8642
-
 func TestMain(m *testing.M) {
 	var exit int
 	opengl.StartMainThreadLoop(func(main *opengl.MainThreadLoop) {
@@ -617,7 +615,6 @@ func TestRenderer_DrawArrays(t *testing.T) {
 								layout(location = 0) in float vertexPosition;
 								void main() {
 									gl_Position = vec4(vertexPosition - 1, 0, 0, 1);
-									gl_PointSize = 1;
 								}
 								`,
 				typ:  gl.Float,
@@ -629,7 +626,6 @@ func TestRenderer_DrawArrays(t *testing.T) {
 								layout(location = 0) in vec2 vertexPosition;
 								void main() {
 									gl_Position = vec4(vertexPosition.x-1, vertexPosition.y-2, 0, 1);
-									gl_PointSize = 1;
 								}
 								`,
 				typ:  gl.Vec2,
@@ -641,7 +637,6 @@ func TestRenderer_DrawArrays(t *testing.T) {
 								layout(location = 0) in vec3 vertexPosition;
 								void main() {
 									gl_Position = vec4(vertexPosition.x-1, vertexPosition.y-2, vertexPosition.z-3, 1);
-									gl_PointSize = 1;
 								}
 								`,
 				typ:  gl.Vec3,
@@ -653,7 +648,6 @@ func TestRenderer_DrawArrays(t *testing.T) {
 								layout(location = 0) in vec4 vertexPosition;
 								void main() {
 									gl_Position = vec4(vertexPosition.x-1, vertexPosition.y-2, vertexPosition.z-3, vertexPosition.w-3);
-									gl_PointSize = 1;
 								}
 								`,
 				typ:  gl.Vec4,
@@ -665,7 +659,6 @@ func TestRenderer_DrawArrays(t *testing.T) {
 				openGL, _ := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
 				context := openGL.Context()
-				context.API().Enable(programPointSize)
 				img := context.NewAcceleratedImage(1, 1)
 				img.Upload(make([]image.Color, 1))
 				vertexShader, err := context.CompileVertexShader(test.vertexShaderSrc)
@@ -703,7 +696,6 @@ func TestRenderer_DrawArrays(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
 		context := openGL.Context()
-		context.API().Enable(programPointSize)
 		img := context.NewAcceleratedImage(1, 1)
 		img.Upload(make([]image.Color, 1))
 		vertexShader, err := context.CompileVertexShader(`
@@ -714,7 +706,6 @@ func TestRenderer_DrawArrays(t *testing.T) {
 								void main() {
 									gl_Position = vec4(vertexPositionX, 0, 0, 1);
 									interpolatedColor = vec4(vertexColor, 1.);
-									gl_PointSize = 1;
 								}
 								`)
 		require.NoError(t, err)
@@ -853,7 +844,6 @@ func TestRenderer_DrawArrays(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
 		context := openGL.Context()
-		context.API().Enable(programPointSize)
 		img := context.NewAcceleratedImage(2, 1)
 		img.Upload(make([]image.Color, 2))
 		vertexShader, err := context.CompileVertexShader(`
@@ -861,7 +851,6 @@ func TestRenderer_DrawArrays(t *testing.T) {
 								layout(location = 0) in vec2 vertexPosition;
 								void main() {
 									gl_Position = vec4(vertexPosition, 0, 1);
-									gl_PointSize = 1;
 								}
 								`)
 		require.NoError(t, err)
@@ -1127,7 +1116,6 @@ func TestRenderer_BindTexture(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
 		context := openGL.Context()
-		context.API().Enable(programPointSize)
 		img := context.NewAcceleratedImage(1, 1)
 		img.Upload(make([]image.Color, 1))
 		tex := context.NewAcceleratedImage(1, 1)
@@ -1139,7 +1127,6 @@ func TestRenderer_BindTexture(t *testing.T) {
 				layout(location = 0) in vec2 xy;	
 				void main() {
 					gl_Position = vec4(xy, 0.0, 1.0);
-					gl_PointSize = 1;
 				}
 				`,
 			`
@@ -1172,7 +1159,6 @@ func TestRenderer_BindTexture(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
 		context := openGL.Context()
-		context.API().Enable(programPointSize)
 		img := context.NewAcceleratedImage(1, 1)
 		img.Upload(make([]image.Color, 1))
 		tex1 := context.NewAcceleratedImage(1, 1)
@@ -1186,7 +1172,6 @@ func TestRenderer_BindTexture(t *testing.T) {
 				layout(location = 0) in vec2 xy;	
 				void main() {
 					gl_Position = vec4(xy, 0.0, 1.0);
-					gl_PointSize = 1;
 				}
 				`,
 			`
@@ -1223,7 +1208,6 @@ func TestRenderer_SetXXX(t *testing.T) {
 	openGL, _ := opengl.New(mainThreadLoop)
 	defer openGL.Destroy()
 	context := openGL.Context()
-	context.API().Enable(programPointSize)
 	tests := map[string]struct {
 		setUniform     func(name string, renderer *gl.Renderer)
 		fragmentShader string
@@ -1398,7 +1382,6 @@ func TestRenderer_SetXXX(t *testing.T) {
 								`#version 330 core
 												void main() {
 													gl_Position = vec4(0, 0, 0, 0);
-													gl_PointSize = 1;
 												}`,
 								test.fragmentShader,
 							)
@@ -1424,7 +1407,6 @@ func TestRenderer_SetXXX(t *testing.T) {
 					layout(location = 0) in vec2 xy;	
 					void main() {
 						gl_Position = vec4(xy, 0.0, 1.0);
-						gl_PointSize = 1;
 					}
 					`,
 					test.fragmentShader,
