@@ -196,18 +196,7 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 		if err != nil {
 			return
 		}
-		runInOpenGLThread := func(job func()) {
-			g.mainThreadLoop.Execute(func() {
-				g.mainThreadLoop.bind(win.glfwWindow)
-				job()
-			})
-		}
-		win.context = &context{runInOpenGLThread: runInOpenGLThread}
 		win.glfwWindow.SetKeyCallback(win.keyboardEvents.OnKeyCallback)
-		win.program, err = compileProgram(vertexShaderSrc, fragmentShaderSrc)
-		if err != nil {
-			return
-		}
 		for _, option := range options {
 			if option == nil {
 				log.Println("nil option given when opening the window")
@@ -221,7 +210,19 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 	if err != nil {
 		return nil, err
 	}
+	runInOpenGLThread := func(job func()) {
+		g.mainThreadLoop.Execute(func() {
+			g.mainThreadLoop.bind(win.glfwWindow)
+			job()
+		})
+	}
+	win.context = &context{runInOpenGLThread: runInOpenGLThread}
+	win.glContext = gl.NewContext(win.context)
 	win.screenPolygon = newScreenPolygon(win.context)
+	win.program, err = compileProgram(win.glContext, vertexShaderSrc, fragmentShaderSrc)
+	if err != nil {
+		return nil, err
+	}
 	return win, nil
 }
 

@@ -264,3 +264,7 @@ func (p *Program) AcceleratedCommand(command Command) *AcceleratedCommand {
 		allImages: p.allImages,
 	}
 }
+
+func (p *Program) ID() uint32 {
+	return p.id
+}

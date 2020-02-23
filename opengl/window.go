@@ -12,7 +12,6 @@ import (
 // Window is an implementation of loop.Screen and keyboard.EventSource
 type Window struct {
 	glfwWindow             *glfw.Window
-	program                *program
 	mainThreadLoop         *MainThreadLoop
 	screenPolygon          *screenPolygon
 	keyboardEvents         *internal.KeyboardEvents
@@ -22,13 +21,15 @@ type Window struct {
 	screenImage            *image.Image
 	screenAcceleratedImage *gl.AcceleratedImage
 	context                *context
+	glContext              *gl.Context
+	program                *gl.Program
 }
 
 // Draw draws a screen image to the invisible buffer. It will be shown in window
 // after SwapImages is called.
 func (w *Window) Draw() {
 	w.screenImage.Upload()
-	w.context.UseProgram(w.program.id)
+	w.context.UseProgram(w.program.ID())
 	var width, height int
 	w.mainThreadLoop.Execute(func() {
 		width, height = w.glfwWindow.GetFramebufferSize()
