@@ -7,18 +7,15 @@ import (
 	"github.com/jacekolszak/pixiq/opengl"
 )
 
-func BenchmarkTexture_Upload(b *testing.B) {
+func BenchmarkAcceleratedImage_Upload(b *testing.B) {
 	openGL, err := opengl.New(mainThreadLoop)
 	if err != nil {
 		panic(err)
 	}
-	texture, err := openGL.NewTexture(1, 1)
-	if err != nil {
-		panic(err)
-	}
+	img := openGL.Context().NewAcceleratedImage(1, 1)
 	pixels := []image.Color{image.Transparent, image.Transparent}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		texture.Upload(pixels)
+		img.Upload(pixels)
 	}
 }
