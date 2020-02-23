@@ -6,7 +6,7 @@ import (
 	"github.com/jacekolszak/pixiq/opengl"
 )
 
-// Must be 0 allocs/op
+// Should be 0 allocs/op (but it's 2 allocs/op at the moment)
 func BenchmarkContext_Clear(b *testing.B) {
 	openGL, err := opengl.New(mainThreadLoop)
 	if err != nil {
