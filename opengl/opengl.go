@@ -231,7 +231,7 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 	return win, nil
 }
 
-// Context returns OpenGL's context.
+// Context returns OpenGL's context. It's methods can be invoked from any goroutine.
 func (g *OpenGL) Context() *gl.Context {
 	return g.context
 }

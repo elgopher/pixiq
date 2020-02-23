@@ -195,7 +195,10 @@ func TestContext_CompileFragmentShader(t *testing.T) {
 	})
 	t.Run("should compile shader", func(t *testing.T) {
 		tests := map[string]string{
-			"GLSL 1.10": "void main() {}",
+			"GLSL 1.4": `
+				#version 140
+				void main() {}
+				`,
 			"minimal": `
 				#version 330 core
 				void main() {}
@@ -242,7 +245,10 @@ func TestContext_CompileVertexShader(t *testing.T) {
 	})
 	t.Run("should compile shader", func(t *testing.T) {
 		tests := map[string]string{
-			"GLSL 1.10": "void main() {}",
+			"GLSL 1.4": `
+				#version 140
+				void main() {}
+				`,
 			"minimal": `
 				#version 330 core
 				void main() {
@@ -1137,7 +1143,7 @@ func TestRenderer_BindTexture(t *testing.T) {
 					color = texture(tex, vec2(0.0, 0.0));
 				}
 				`)
-		array := context.NewVertexArray(gl.VertexLayout{gl.Vec2, gl.Vec2})
+		array := context.NewVertexArray(gl.VertexLayout{gl.Vec2})
 		buffer := context.NewFloatVertexBuffer(2)
 		buffer.Upload(0, []float32{0.0, 0.0})
 		vertexPosition := gl.VertexBufferPointer{Buffer: buffer, Stride: 2}
@@ -1183,7 +1189,7 @@ func TestRenderer_BindTexture(t *testing.T) {
 					color = texture(tex1, vec2(0.0, 0.0)) + texture(tex2, vec2(0.0, 0.0));
 				}
 				`)
-		array := context.NewVertexArray(gl.VertexLayout{gl.Vec2, gl.Vec2})
+		array := context.NewVertexArray(gl.VertexLayout{gl.Vec2})
 		buffer := context.NewFloatVertexBuffer(2)
 		buffer.Upload(0, []float32{0.0, 0.0})
 		vertexPosition := gl.VertexBufferPointer{Buffer: buffer, Stride: 2}
@@ -1334,7 +1340,7 @@ func TestRenderer_SetXXX(t *testing.T) {
 					0.0, 0.11, 0.34, 0.1,
 					0.3, 0.2, 0.15, 0.8,
 					0.5, 0.4, 0.25, 0.05,
-					0.01, 0.02, 0.03, 0.04,
+					0.011, 0.02, 0.03, 0.04,
 				})
 			},
 			fragmentShader: `#version 330 core
@@ -1411,7 +1417,7 @@ func TestRenderer_SetXXX(t *testing.T) {
 					`,
 					test.fragmentShader,
 				)
-				array := context.NewVertexArray(gl.VertexLayout{gl.Vec2, gl.Vec2})
+				array := context.NewVertexArray(gl.VertexLayout{gl.Vec2})
 				buffer := context.NewFloatVertexBuffer(2)
 				buffer.Upload(0, []float32{0.0, 0.0})
 				vertexPosition := gl.VertexBufferPointer{Buffer: buffer, Stride: 2}
