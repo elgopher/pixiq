@@ -270,7 +270,7 @@ func TestContext_CompileVertexShader(t *testing.T) {
 	})
 }
 
-func TestOpenGL_LinkProgram(t *testing.T) {
+func TestContext_LinkProgram(t *testing.T) {
 	t.Run("should return error", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
@@ -313,7 +313,7 @@ func TestOpenGL_LinkProgram(t *testing.T) {
 	})
 }
 
-func TestOpenGL_Capabilities(t *testing.T) {
+func TestContext_Capabilities(t *testing.T) {
 	t.Run("should return capabilities", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
@@ -326,7 +326,7 @@ func TestOpenGL_Capabilities(t *testing.T) {
 	})
 }
 
-func TestOpenGL_NewAcceleratedImage(t *testing.T) {
+func TestContext_NewAcceleratedImage(t *testing.T) {
 	t.Run("should create AcceleratedImage", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
@@ -335,6 +335,75 @@ func TestOpenGL_NewAcceleratedImage(t *testing.T) {
 		img := context.NewAcceleratedImage(0, 0)
 		// then
 		assert.NotNil(t, img)
+	})
+}
+
+func TestAcceleratedImage_Upload(t *testing.T) {
+	color1 := image.RGBA(10, 20, 30, 40)
+	color2 := image.RGBA(50, 60, 70, 80)
+	color3 := image.RGBA(90, 100, 110, 120)
+	color4 := image.RGBA(130, 140, 150, 160)
+
+	t.Run("should upload pixels", func(t *testing.T) {
+		tests := map[string]struct {
+			width, height int
+			inputColors   []image.Color
+		}{
+			"0x0": {
+				width:       0,
+				height:      0,
+				inputColors: []image.Color{},
+			},
+			"1x1": {
+				width:       1,
+				height:      1,
+				inputColors: []image.Color{color1},
+			},
+			"2x1": {
+				width:       2,
+				height:      1,
+				inputColors: []image.Color{color1, color2},
+			},
+			"1x2": {
+				width:       1,
+				height:      2,
+				inputColors: []image.Color{color1, color2},
+			},
+			"2x2": {
+				width:       2,
+				height:      2,
+				inputColors: []image.Color{color1, color2, color3, color4},
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				openGL, _ := opengl.New(mainThreadLoop)
+				defer openGL.Destroy()
+				context := gl.ContextOf(openGL)
+				img := context.NewAcceleratedImage(test.width, test.height)
+				// when
+				img.Upload(test.inputColors)
+				// then
+				assertColors(t, test.inputColors, img)
+			})
+		}
+	})
+	t.Run("2 OpenGL contexts", func(t *testing.T) {
+		gl1, _ := opengl.New(mainThreadLoop)
+		defer gl1.Destroy()
+		context1 := gl.ContextOf(gl1)
+		gl2, _ := opengl.New(mainThreadLoop)
+		defer gl2.Destroy()
+		context2 := gl.ContextOf(gl2)
+
+		img1 := context1.NewAcceleratedImage(1, 1)
+		img2 := context2.NewAcceleratedImage(1, 1)
+		// when
+		img1.Upload([]image.Color{color1})
+		img2.Upload([]image.Color{color2})
+		// then
+		assertColors(t, []image.Color{color1}, img1)
+		assertColors(t, []image.Color{color2}, img2)
 	})
 }
 
