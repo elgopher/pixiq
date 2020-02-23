@@ -935,6 +935,16 @@ func TestRenderer_DrawArrays(t *testing.T) {
 					`,
 				layout: gl.VertexLayout{gl.Vec4, gl.Vec4},
 			},
+			"len(vertex array) > len(shader)": {
+				vertexShaderSrc: `
+					#version 330 core
+					layout(location = 0) in vec4 vertexPosition;
+					void main() {
+						gl_Position = vertexPosition;
+					}
+					`,
+				layout: gl.VertexLayout{gl.Vec4, gl.Vec4},
+			},
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
@@ -973,67 +983,50 @@ func TestRenderer_DrawArrays(t *testing.T) {
 			})
 		}
 	})
-	t.Run("should not return error when vertex array and program have different len of attributes", func(t *testing.T) {
-		tests := map[string]struct {
-			vertexShaderSrc string
-			layout          gl.VertexLayout
-		}{
-			"len(vertex array) > len(shader)": {
-				vertexShaderSrc: `
-					#version 330 core
-					layout(location = 0) in vec4 vertexPosition;
-					void main() {
-						gl_Position = vertexPosition;
-					}
-					`,
-				layout: gl.VertexLayout{gl.Vec4, gl.Vec4},
-			},
-			"len(vertex array) < len(shader)": {
-				vertexShaderSrc: `
-					#version 330 core
-					layout(location = 0) in vec4 vertexPosition1;
-					layout(location = 1) in vec4 vertexPosition2;
-					void main() {
-						gl_Position = vertexPosition1 + vertexPosition2; 
-					}
-					`,
-				layout: gl.VertexLayout{gl.Vec4},
-			},
-		}
-		for name, test := range tests {
-			t.Run(name, func(t *testing.T) {
-				openGL, _ := opengl.New(mainThreadLoop)
-				defer openGL.Destroy()
-				context := openGL.Context()
-				img := context.NewAcceleratedImage(1, 1)
-				img.Upload(make([]image.Color, 2))
-				vertexShader, err := context.CompileVertexShader(test.vertexShaderSrc)
-				require.NoError(t, err)
-				fragmentShader, err := context.CompileFragmentShader(`
-								#version 330 core
-								void main() {}
-								`)
-				require.NoError(t, err)
-				program, err := context.LinkProgram(vertexShader, fragmentShader)
-				require.NoError(t, err)
-				array := context.NewVertexArray(test.layout)
-				buffer := context.NewFloatVertexBuffer(8)
-				buffer.Upload(0, []float32{0, 0, 0, 0, 0, 0, 0, 0})
-				for location := range test.layout {
-					array.Set(location, gl.VertexBufferPointer{Buffer: buffer, Offset: location * 4, Stride: 8})
-				}
-				glCommand := &command{runGL: func(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
-					// when
-					renderer.DrawArrays(array, gl.Points, 0, 1)
-				}}
-				command := program.AcceleratedCommand(glCommand)
-				command.Run(image.AcceleratedImageSelection{
-					Location: image.AcceleratedImageLocation{Width: 1, Height: 1},
-					Image:    img,
-				}, []image.AcceleratedImageSelection{})
-			})
-		}
 
+	t.Run("should use default value when attribute is not given - len(vertex array) < len(program attributes)", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		context := openGL.Context()
+		img := context.NewAcceleratedImage(1, 1)
+		img.Upload(make([]image.Color, 1))
+		vertexShader, err := context.CompileVertexShader(`
+					#version 330 core
+					layout(location = 0) in float attr1;
+					layout(location = 1) in float attr2; // 0.0 will be used
+					out float sum;
+					void main() {
+						gl_Position = vec4(0, 0, 0, 1);
+						sum= attr1+attr2;
+					}
+					`)
+		require.NoError(t, err)
+		fragmentShader, err := context.CompileFragmentShader(`
+								#version 330 core
+								in float sum;
+								out vec4 color;
+								void main() {
+									color = vec4(0, 0, 0, sum);
+								}
+								`)
+		require.NoError(t, err)
+		program, err := context.LinkProgram(vertexShader, fragmentShader)
+		require.NoError(t, err)
+		array := context.NewVertexArray(gl.VertexLayout{gl.Float})
+		buffer := context.NewFloatVertexBuffer(1)
+		buffer.Upload(0, []float32{0.392})
+		array.Set(0, gl.VertexBufferPointer{Buffer: buffer, Stride: 1})
+		glCommand := &command{runGL: func(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
+			// when
+			renderer.DrawArrays(array, gl.Points, 0, 1)
+		}}
+		command := program.AcceleratedCommand(glCommand)
+		command.Run(image.AcceleratedImageSelection{
+			Location: image.AcceleratedImageLocation{Width: 1, Height: 1},
+			Image:    img,
+		}, []image.AcceleratedImageSelection{})
+		// then
+		assertColors(t, []image.Color{image.RGBA(0, 0, 0, 100)}, img)
 	})
 }
 
