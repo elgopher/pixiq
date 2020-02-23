@@ -62,6 +62,7 @@ type AcceleratedImage struct {
 	api           API
 }
 
+// TextureID returns texture identifier (aka name)
 func (t *AcceleratedImage) TextureID() uint32 {
 	return t.textureID
 }

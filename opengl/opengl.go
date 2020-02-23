@@ -226,6 +226,7 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 	return win, nil
 }
 
+// Context returns OpenGL's context.
 func (g *OpenGL) Context() *gl.Context {
 	return g.glContext
 }

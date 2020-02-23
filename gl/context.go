@@ -265,6 +265,7 @@ func (p *Program) AcceleratedCommand(command Command) *AcceleratedCommand {
 	}
 }
 
+// ID returns program identifier (aka name)
 func (p *Program) ID() uint32 {
 	return p.id
 }
