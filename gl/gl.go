@@ -121,6 +121,8 @@ type API interface {
 	TexSubImage2D(target uint32, level int32, xoffset int32, yoffset int32, width int32, height int32, format uint32, xtype uint32, pixels unsafe.Pointer)
 	// GetTexImage returns a texture image
 	GetTexImage(target uint32, level int32, format uint32, xtype uint32, pixels unsafe.Pointer)
+	// GetError returns error information
+	GetError() uint32
 
 	// GoStr takes a null-terminated string returned by OpenGL and constructs a
 	// corresponding Go string.

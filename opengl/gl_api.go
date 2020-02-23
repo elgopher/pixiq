@@ -383,6 +383,15 @@ func (g *OpenGL) GetTexImage(target uint32, level int32, format uint32, xtype ui
 	})
 }
 
+// GetError returns error information
+func (g *OpenGL) GetError() uint32 {
+	var code uint32
+	g.runInOpenGLThread(func() {
+		code = gl.GetError()
+	})
+	return code
+}
+
 // GoStr takes a null-terminated string returned by OpenGL and constructs a
 // corresponding Go string.
 func (g *OpenGL) GoStr(cstr *uint8) string {

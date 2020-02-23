@@ -337,14 +337,3 @@ func assertColors(t *testing.T, expected []image.Color, img *opengl.AcceleratedI
 	img.Download(output)
 	assert.Equal(t, expected, output)
 }
-
-func TestOpenGL_Error(t *testing.T) {
-	t.Run("should no return error", func(t *testing.T) {
-		openGL, _ := opengl.New(mainThreadLoop)
-		defer openGL.Destroy()
-		// when
-		err := openGL.Error()
-		// then
-		assert.NoError(t, err)
-	})
-}

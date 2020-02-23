@@ -37,4 +37,6 @@ const (
 	textureMinFilter         = 0x2801
 	textureMagFilter         = 0x2800
 	nearest                  = 0x2600
+	noError                  = 0
+	outOfMemory              = 0x0505
 )

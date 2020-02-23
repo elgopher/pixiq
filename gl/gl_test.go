@@ -393,6 +393,16 @@ func TestRenderer_BindTexture(t *testing.T) {
 	})
 }
 
+func TestOpenGL_Error(t *testing.T) {
+	t.Run("should no return error", func(t *testing.T) {
+		context := gl.ContextOf(apiStub{})
+		// when
+		err := context.Error()
+		// then
+		assert.NoError(t, err)
+	})
+}
+
 func workingProgram(context *gl.Context) *gl.Program {
 	var (
 		vertexShader, _   = context.CompileVertexShader("")
@@ -508,4 +518,7 @@ func (a apiStub) FramebufferTexture2D(target uint32, attachment uint32, textarge
 func (a apiStub) TexSubImage2D(target uint32, level int32, xoffset int32, yoffset int32, width int32, height int32, format uint32, xtype uint32, pixels unsafe.Pointer) {
 }
 func (a apiStub) GetTexImage(target uint32, level int32, format uint32, xtype uint32, pixels unsafe.Pointer) {
+}
+func (a apiStub) GetError() uint32 {
+	return 0
 }

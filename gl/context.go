@@ -27,6 +27,37 @@ func (c Capabilities) MaxTextureSize() int {
 	return c.maxTextureSize
 }
 
+type glError uint32
+
+func (e glError) Error() string {
+	return fmt.Sprintf("gl error: %d", uint32(e))
+}
+
+// IsOutOfMemory returns true if given error indicates that OpenGL driver reported
+// out-of-memory.
+//
+// This error is not recoverable. Once you get it - you have to destroy the whole
+// OpenGL context and start a new one.
+func IsOutOfMemory(err error) bool {
+	e, ok := err.(glError)
+	if !ok {
+		return false
+	}
+	return e == outOfMemory
+}
+
+// Error returns next error reported by OpenGL driver. For performance reasons should
+// be used sporadically, at most once per frame.
+//
+// See http://docs.gl/gl3/glGetError
+func (c *Context) Error() error {
+	var code = c.api.GetError()
+	if code == noError {
+		return nil
+	}
+	return glError(code)
+}
+
 // NewFloatVertexBuffer creates an OpenGL's Vertex Buffer Object (VBO) containing only float32 numbers.
 func (c *Context) NewFloatVertexBuffer(size int) *FloatVertexBuffer {
 	if size < 0 {
