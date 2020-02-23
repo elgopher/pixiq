@@ -8,15 +8,19 @@ import (
 )
 
 type context struct {
-	runInOpenGLThread func(func())
+	runInOpenGLThread func(func()) // FIXME: to be removed
 	glThread          *glThread
 	mutex             sync.Mutex
 
-	genBuffers    *genBuffers
-	clear         *clear
-	bindTexture   *bindTexture
-	texSubImage2D *texSubImage2D
-	bindBuffer    *bindBuffer
+	genBuffers      *genBuffers
+	clear           *clear
+	bindTexture     *bindTexture
+	texSubImage2D   *texSubImage2D
+	bindBuffer      *bindBuffer
+	drawArrays      *drawArrays
+	bindVertexArray *bindVertexArray
+	uniform1f       *uniform1f
+	uniform2f       *uniform2f
 }
 
 func newContext(runInOpenGLThread func(func()), glThread *glThread) *context {
@@ -28,6 +32,10 @@ func newContext(runInOpenGLThread func(func()), glThread *glThread) *context {
 		bindTexture:       &bindTexture{},
 		texSubImage2D:     &texSubImage2D{},
 		bindBuffer:        &bindBuffer{},
+		drawArrays:        &drawArrays{},
+		bindVertexArray:   &bindVertexArray{},
+		uniform1f:         &uniform1f{},
+		uniform2f:         &uniform2f{},
 	}
 }
 
@@ -121,13 +129,20 @@ func (g *context) DeleteVertexArrays(n int32, arrays *uint32) {
 	})
 }
 
+type bindVertexArray struct {
+	array uint32
+}
+
+func (b *bindVertexArray) run() {
+	gl.BindVertexArray(b.array)
+}
+
 // BindVertexArray binds a vertex array object
 func (g *context) BindVertexArray(array uint32) {
 	g.mutex.Lock()
 	defer g.mutex.Unlock()
-	g.runInOpenGLThread(func() {
-		gl.BindVertexArray(array)
-	})
+	g.bindVertexArray.array = array
+	g.glThread.execute(g.bindVertexArray)
 }
 
 // VertexAttribPointer defines an array of generic vertex attribute data
@@ -350,31 +365,62 @@ func (g *context) Clear(mask uint32) {
 	g.glThread.execute(g.clear)
 }
 
+type drawArrays struct {
+	mode  uint32
+	first int32
+	count int32
+}
+
+func (d *drawArrays) run() {
+	gl.DrawArrays(d.mode, d.first, d.count)
+}
+
 // DrawArrays render primitives from array data
 func (g *context) DrawArrays(mode uint32, first int32, count int32) {
 	g.mutex.Lock()
 	defer g.mutex.Unlock()
-	g.runInOpenGLThread(func() {
-		gl.DrawArrays(mode, first, count)
-	})
+	g.drawArrays.mode = mode
+	g.drawArrays.first = first
+	g.drawArrays.count = count
+	g.glThread.execute(g.drawArrays)
+}
+
+type uniform1f struct {
+	location int32
+	v0       float32
+}
+
+func (u *uniform1f) run() {
+	gl.Uniform1f(u.location, u.v0)
 }
 
 // Uniform1f specifies the value of a uniform variable for the current program object
 func (g *context) Uniform1f(location int32, v0 float32) {
 	g.mutex.Lock()
 	defer g.mutex.Unlock()
-	g.runInOpenGLThread(func() {
-		gl.Uniform1f(location, v0)
-	})
+	g.uniform1f.location = location
+	g.uniform1f.v0 = v0
+	g.glThread.execute(g.uniform1f)
+}
+
+type uniform2f struct {
+	location int32
+	v0       float32
+	v1       float32
+}
+
+func (u *uniform2f) run() {
+	gl.Uniform2f(u.location, u.v0, u.v1)
 }
 
 // Uniform2f specifies the value of a uniform variable for the current program object
 func (g *context) Uniform2f(location int32, v0 float32, v1 float32) {
 	g.mutex.Lock()
 	defer g.mutex.Unlock()
-	g.runInOpenGLThread(func() {
-		gl.Uniform2f(location, v0, v1)
-	})
+	g.uniform2f.location = location
+	g.uniform2f.v0 = v0
+	g.uniform2f.v1 = v1
+	g.glThread.execute(g.uniform2f)
 }
 
 // Uniform3f specifies the value of a uniform variable for the current program object
