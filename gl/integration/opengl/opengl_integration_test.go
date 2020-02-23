@@ -195,7 +195,10 @@ func TestContext_CompileFragmentShader(t *testing.T) {
 	})
 	t.Run("should compile shader", func(t *testing.T) {
 		tests := map[string]string{
-			"GLSL 1.10": "void main() {}",
+			"GLSL 1.4": `
+				#version 140
+				void main() {}
+				`,
 			"minimal": `
 				#version 330 core
 				void main() {}
@@ -242,7 +245,10 @@ func TestContext_CompileVertexShader(t *testing.T) {
 	})
 	t.Run("should compile shader", func(t *testing.T) {
 		tests := map[string]string{
-			"GLSL 1.10": "void main() {}",
+			"GLSL 1.4": `
+				#version 140
+				void main() {}
+				`,
 			"minimal": `
 				#version 330 core
 				void main() {
