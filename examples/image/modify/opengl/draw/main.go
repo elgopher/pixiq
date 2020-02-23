@@ -12,7 +12,7 @@ import (
 func main() {
 	opengl.RunOrDie(func(openGL *opengl.OpenGL) {
 		var (
-			context = gl.ContextOf(openGL)
+			context = openGL.Context()
 			buffer  = makeVertexBuffer(context)
 			array   = makeVertexArray(context, buffer)
 			program = compileProgram(context)

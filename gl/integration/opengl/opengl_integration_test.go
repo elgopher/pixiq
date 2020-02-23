@@ -25,7 +25,7 @@ func TestContext_NewFloatVertexBuffer(t *testing.T) {
 	t.Run("two buffers should have different IDs", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		context := gl.ContextOf(openGL)
+		context := openGL.Context()
 		// when
 		buffer1 := context.NewFloatVertexBuffer(1)
 		buffer2 := context.NewFloatVertexBuffer(1)
@@ -65,7 +65,7 @@ func TestFloatVertexBuffer_Upload(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				openGL, _ := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
-				context := gl.ContextOf(openGL)
+				context := openGL.Context()
 				buffer := context.NewFloatVertexBuffer(test.size)
 				defer buffer.Delete()
 				// when
@@ -129,7 +129,7 @@ func TestFloatVertexBuffer_Download(t *testing.T) {
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
-				context := gl.ContextOf(openGL)
+				context := openGL.Context()
 				buffer := context.NewFloatVertexBuffer(len(test.input))
 				defer buffer.Delete()
 				buffer.Upload(0, test.input)
@@ -146,7 +146,7 @@ func TestContext_NewVertexArray(t *testing.T) {
 	t.Run("should create vertex array", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		context := gl.ContextOf(openGL)
+		context := openGL.Context()
 		// when
 		vao := context.NewVertexArray(gl.VertexLayout{gl.Float})
 		// then
@@ -159,7 +159,7 @@ func TestVertexArray_Set(t *testing.T) {
 	t.Run("should set", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		context := gl.ContextOf(openGL)
+		context := openGL.Context()
 		vao := context.NewVertexArray(gl.VertexLayout{gl.Float})
 		defer vao.Delete()
 		buffer := context.NewFloatVertexBuffer(1)
@@ -183,7 +183,7 @@ func TestContext_CompileFragmentShader(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				openGL, _ := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
-				context := gl.ContextOf(openGL)
+				context := openGL.Context()
 				// when
 				shader, err := context.CompileFragmentShader(source)
 				assert.Error(t, err)
@@ -203,7 +203,7 @@ func TestContext_CompileFragmentShader(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				openGL, _ := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
-				context := gl.ContextOf(openGL)
+				context := openGL.Context()
 				// when
 				shader, err := context.CompileFragmentShader(source)
 				require.NoError(t, err)
@@ -214,7 +214,7 @@ func TestContext_CompileFragmentShader(t *testing.T) {
 	t.Run("should not panic for empty shader", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		context := gl.ContextOf(openGL)
+		context := openGL.Context()
 		// when
 		_, _ = context.CompileFragmentShader("")
 	})
@@ -229,7 +229,7 @@ func TestContext_CompileVertexShader(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				openGL, _ := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
-				context := gl.ContextOf(openGL)
+				context := openGL.Context()
 				// when
 				shader, err := context.CompileVertexShader(source)
 				// then
@@ -252,7 +252,7 @@ func TestContext_CompileVertexShader(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				openGL, _ := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
-				context := gl.ContextOf(openGL)
+				context := openGL.Context()
 				// when
 				shader, err := context.CompileVertexShader(source)
 				// then
@@ -264,7 +264,7 @@ func TestContext_CompileVertexShader(t *testing.T) {
 	t.Run("should not panic for empty shader", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		context := gl.ContextOf(openGL)
+		context := openGL.Context()
 		// when
 		_, _ = context.CompileVertexShader("")
 	})
@@ -274,7 +274,7 @@ func TestContext_LinkProgram(t *testing.T) {
 	t.Run("should return error", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		context := gl.ContextOf(openGL)
+		context := openGL.Context()
 		vertexShader, err := context.CompileVertexShader(`
 								#version 330 core
 								void noMain() {}
@@ -294,7 +294,7 @@ func TestContext_LinkProgram(t *testing.T) {
 	t.Run("should return program", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		context := gl.ContextOf(openGL)
+		context := openGL.Context()
 		vertexShader, _ := context.CompileVertexShader(`
 								#version 330 core
 								void main() {
@@ -317,7 +317,7 @@ func TestContext_Capabilities(t *testing.T) {
 	t.Run("should return capabilities", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		context := gl.ContextOf(openGL)
+		context := openGL.Context()
 		// when
 		capabilities := context.Capabilities()
 		// then
@@ -330,7 +330,7 @@ func TestContext_NewAcceleratedImage(t *testing.T) {
 	t.Run("should create AcceleratedImage", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		context := gl.ContextOf(openGL)
+		context := openGL.Context()
 		// when
 		img := context.NewAcceleratedImage(0, 0)
 		// then
@@ -379,7 +379,7 @@ func TestAcceleratedImage_Upload(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				openGL, _ := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
-				context := gl.ContextOf(openGL)
+				context := openGL.Context()
 				img := context.NewAcceleratedImage(test.width, test.height)
 				// when
 				img.Upload(test.inputColors)
@@ -391,10 +391,10 @@ func TestAcceleratedImage_Upload(t *testing.T) {
 	t.Run("2 OpenGL contexts", func(t *testing.T) {
 		gl1, _ := opengl.New(mainThreadLoop)
 		defer gl1.Destroy()
-		context1 := gl.ContextOf(gl1)
+		context1 := gl1.Context()
 		gl2, _ := opengl.New(mainThreadLoop)
 		defer gl2.Destroy()
-		context2 := gl.ContextOf(gl2)
+		context2 := gl2.Context()
 
 		img1 := context1.NewAcceleratedImage(1, 1)
 		img2 := context2.NewAcceleratedImage(1, 1)
@@ -411,7 +411,7 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 	t.Run("vertex buffer can be used inside command", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		context := gl.ContextOf(openGL)
+		context := openGL.Context()
 		program := workingProgram(t, context)
 		output := context.NewAcceleratedImage(1, 1)
 		command := program.AcceleratedCommand(&command{runGL: func(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
@@ -427,7 +427,7 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 	t.Run("vertex array can be used inside command", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		context := gl.ContextOf(openGL)
+		context := openGL.Context()
 		program := workingProgram(t, context)
 		output := context.NewAcceleratedImage(1, 1)
 		command := program.AcceleratedCommand(&command{runGL: func(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
@@ -447,7 +447,7 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 	t.Run("clear image fragment with color", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		context := gl.ContextOf(openGL)
+		context := openGL.Context()
 		color := image.RGBA(1, 2, 3, 4)
 		tests := map[string]struct {
 			width, height  int
@@ -543,7 +543,7 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				openGL, _ := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
-				context := gl.ContextOf(openGL)
+				context := openGL.Context()
 				img := context.NewAcceleratedImage(2, 1)
 				pixels := []image.Color{image.RGB(1, 2, 3), image.RGB(4, 5, 6)}
 				img.Upload(pixels)
@@ -581,7 +581,7 @@ func TestRenderer_Clear(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			openGL, _ := opengl.New(mainThreadLoop)
 			defer openGL.Destroy()
-			context := gl.ContextOf(openGL)
+			context := openGL.Context()
 			img := context.NewAcceleratedImage(1, 1)
 			img.Upload(make([]image.Color, 1))
 			program := workingProgram(t, context)
@@ -656,7 +656,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				openGL, _ := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
-				context := gl.ContextOf(openGL)
+				context := openGL.Context()
 				img := context.NewAcceleratedImage(1, 1)
 				img.Upload(make([]image.Color, 1))
 				vertexShader, err := context.CompileVertexShader(test.vertexShaderSrc)
@@ -693,7 +693,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 	t.Run("should draw point using 2 vertex attributes", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		context := gl.ContextOf(openGL)
+		context := openGL.Context()
 		img := context.NewAcceleratedImage(1, 1)
 		img.Upload(make([]image.Color, 1))
 		vertexShader, err := context.CompileVertexShader(`
@@ -741,7 +741,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 	t.Run("should draw triangle fan with location specified", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		context := gl.ContextOf(openGL)
+		context := openGL.Context()
 		color := image.RGBA(51, 102, 153, 204)
 		tests := map[string]struct {
 			width, height  int
@@ -841,7 +841,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 	t.Run("should draw two points", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		context := gl.ContextOf(openGL)
+		context := openGL.Context()
 		img := context.NewAcceleratedImage(2, 1)
 		img.Upload(make([]image.Color, 2))
 		vertexShader, err := context.CompileVertexShader(`
@@ -932,7 +932,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				openGL, _ := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
-				context := gl.ContextOf(openGL)
+				context := openGL.Context()
 				img := context.NewAcceleratedImage(1, 1)
 				img.Upload(make([]image.Color, 2))
 				vertexShader, err := context.CompileVertexShader(test.vertexShaderSrc)
@@ -996,7 +996,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				openGL, _ := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
-				context := gl.ContextOf(openGL)
+				context := openGL.Context()
 				img := context.NewAcceleratedImage(1, 1)
 				img.Upload(make([]image.Color, 2))
 				vertexShader, err := context.CompileVertexShader(test.vertexShaderSrc)
@@ -1036,7 +1036,7 @@ func TestRenderer_BindTexture(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				openGL, _ := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
-				context := gl.ContextOf(openGL)
+				context := openGL.Context()
 				var (
 					output  = context.NewAcceleratedImage(1, 1)
 					tex     = context.NewAcceleratedImage(1, 1)
@@ -1066,10 +1066,10 @@ func TestRenderer_BindTexture(t *testing.T) {
 	t.Run("can't bind texture created in a different context", func(t *testing.T) {
 		openGL1, _ := opengl.New(mainThreadLoop)
 		defer openGL1.Destroy()
-		context1 := gl.ContextOf(openGL1)
+		context1 := gl.NewContext(openGL1)
 		openGL2, _ := opengl.New(mainThreadLoop)
 		defer openGL2.Destroy()
-		context2 := gl.ContextOf(openGL2)
+		context2 := gl.NewContext(openGL2)
 		var (
 			output  = context1.NewAcceleratedImage(1, 1)
 			tex     = context2.NewAcceleratedImage(1, 1)
@@ -1086,7 +1086,7 @@ func TestRenderer_BindTexture(t *testing.T) {
 	t.Run("can bind texture", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		context := gl.ContextOf(openGL)
+		context := openGL.Context()
 		var (
 			output  = context.NewAcceleratedImage(1, 1)
 			tex     = context.NewAcceleratedImage(1, 1)
@@ -1113,7 +1113,7 @@ func TestRenderer_BindTexture(t *testing.T) {
 	t.Run("should draw point by sampling texture", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		context := gl.ContextOf(openGL)
+		context := openGL.Context()
 		img := context.NewAcceleratedImage(1, 1)
 		img.Upload(make([]image.Color, 1))
 		tex := context.NewAcceleratedImage(1, 1)
@@ -1156,7 +1156,7 @@ func TestRenderer_BindTexture(t *testing.T) {
 	t.Run("should draw point by sampling 2 textures", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		context := gl.ContextOf(openGL)
+		context := openGL.Context()
 		img := context.NewAcceleratedImage(1, 1)
 		img.Upload(make([]image.Color, 1))
 		tex1 := context.NewAcceleratedImage(1, 1)
@@ -1205,7 +1205,7 @@ func TestRenderer_BindTexture(t *testing.T) {
 func TestRenderer_SetXXX(t *testing.T) {
 	openGL, _ := opengl.New(mainThreadLoop)
 	defer openGL.Destroy()
-	context := gl.ContextOf(openGL)
+	context := openGL.Context()
 	tests := map[string]struct {
 		setUniform     func(name string, renderer *gl.Renderer)
 		fragmentShader string

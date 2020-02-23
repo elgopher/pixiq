@@ -137,8 +137,8 @@ type API interface {
 	Strs(strs ...string) (cstrs **uint8, free func())
 }
 
-// ContextOf returns an OpenGL's Context for given API.
-func ContextOf(api API) *Context {
+// NewContext returns an OpenGL's Context for given API.
+func NewContext(api API) *Context {
 	if api == nil {
 		panic("nil api")
 	}

@@ -11,11 +11,11 @@ import (
 func TestContextOf(t *testing.T) {
 	t.Run("should panic when api is nil", func(t *testing.T) {
 		assert.Panics(t, func() {
-			gl.ContextOf(nil)
+			gl.NewContext(nil)
 		})
 	})
 	t.Run("should create context", func(t *testing.T) {
-		context := gl.ContextOf(apiStub{})
+		context := gl.NewContext(apiStub{})
 		assert.NotNil(t, context)
 	})
 }
@@ -28,7 +28,7 @@ func TestContext_NewFloatVertexBuffer(t *testing.T) {
 		}
 		for name, size := range tests {
 			t.Run(name, func(t *testing.T) {
-				context := gl.ContextOf(apiStub{})
+				context := gl.NewContext(apiStub{})
 				// when
 				assert.Panics(t, func() {
 					context.NewFloatVertexBuffer(size)
@@ -43,7 +43,7 @@ func TestContext_NewFloatVertexBuffer(t *testing.T) {
 		}
 		for name, size := range tests {
 			t.Run(name, func(t *testing.T) {
-				context := gl.ContextOf(apiStub{})
+				context := gl.NewContext(apiStub{})
 				// when
 				buffer := context.NewFloatVertexBuffer(size)
 				// then
@@ -81,7 +81,7 @@ func TestFloatVertexBuffer_Upload(t *testing.T) {
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
-				context := gl.ContextOf(apiStub{})
+				context := gl.NewContext(apiStub{})
 				buffer := context.NewFloatVertexBuffer(test.size)
 				assert.Panics(t, func() {
 					// when
@@ -91,7 +91,7 @@ func TestFloatVertexBuffer_Upload(t *testing.T) {
 		}
 	})
 	t.Run("should panic when offset is negative", func(t *testing.T) {
-		context := gl.ContextOf(apiStub{})
+		context := gl.NewContext(apiStub{})
 		buffer := context.NewFloatVertexBuffer(1)
 		assert.Panics(t, func() {
 			// when
@@ -102,7 +102,7 @@ func TestFloatVertexBuffer_Upload(t *testing.T) {
 
 func TestFloatVertexBuffer_Download(t *testing.T) {
 	t.Run("should panic when offset is negative", func(t *testing.T) {
-		context := gl.ContextOf(apiStub{})
+		context := gl.NewContext(apiStub{})
 		buffer := context.NewFloatVertexBuffer(1)
 		defer buffer.Delete()
 		output := make([]float32, 1)
@@ -112,7 +112,7 @@ func TestFloatVertexBuffer_Download(t *testing.T) {
 		})
 	})
 	t.Run("should panic when buffer has been deleted", func(t *testing.T) {
-		context := gl.ContextOf(apiStub{})
+		context := gl.NewContext(apiStub{})
 		buffer := context.NewFloatVertexBuffer(1)
 		buffer.Delete()
 		output := make([]float32, 1)
@@ -138,7 +138,7 @@ func TestOpenGL_NewVertexArray(t *testing.T) {
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
-				context := gl.ContextOf(apiStub{})
+				context := gl.NewContext(apiStub{})
 				assert.Panics(t, func() {
 					// when
 					vao := context.NewVertexArray(test.layout)
@@ -152,7 +152,7 @@ func TestOpenGL_NewVertexArray(t *testing.T) {
 
 func TestVertexArray_Set(t *testing.T) {
 	t.Run("should panic when offset is negative", func(t *testing.T) {
-		context := gl.ContextOf(apiStub{})
+		context := gl.NewContext(apiStub{})
 		vao := context.NewVertexArray(gl.VertexLayout{gl.Float})
 		defer vao.Delete()
 		buffer := context.NewFloatVertexBuffer(1)
@@ -167,7 +167,7 @@ func TestVertexArray_Set(t *testing.T) {
 		})
 	})
 	t.Run("should panic when stride is negative", func(t *testing.T) {
-		context := gl.ContextOf(apiStub{})
+		context := gl.NewContext(apiStub{})
 		vao := context.NewVertexArray(gl.VertexLayout{gl.Float})
 		buffer := context.NewFloatVertexBuffer(1)
 		pointer := gl.VertexBufferPointer{
@@ -181,7 +181,7 @@ func TestVertexArray_Set(t *testing.T) {
 		})
 	})
 	t.Run("should panic when location is negative", func(t *testing.T) {
-		context := gl.ContextOf(apiStub{})
+		context := gl.NewContext(apiStub{})
 		vao := context.NewVertexArray(gl.VertexLayout{gl.Float})
 		buffer := context.NewFloatVertexBuffer(1)
 		pointer := gl.VertexBufferPointer{
@@ -195,7 +195,7 @@ func TestVertexArray_Set(t *testing.T) {
 		})
 	})
 	t.Run("should panic when location is higher than number of arguments", func(t *testing.T) {
-		context := gl.ContextOf(apiStub{})
+		context := gl.NewContext(apiStub{})
 		vao := context.NewVertexArray(gl.VertexLayout{gl.Float})
 		buffer := context.NewFloatVertexBuffer(1)
 		pointer := gl.VertexBufferPointer{
@@ -209,7 +209,7 @@ func TestVertexArray_Set(t *testing.T) {
 		})
 	})
 	t.Run("should panic when buffer is nil", func(t *testing.T) {
-		context := gl.ContextOf(apiStub{})
+		context := gl.NewContext(apiStub{})
 		vao := context.NewVertexArray(gl.VertexLayout{gl.Float})
 		pointer := gl.VertexBufferPointer{
 			Buffer: nil,
@@ -222,7 +222,7 @@ func TestVertexArray_Set(t *testing.T) {
 		})
 	})
 	t.Run("should panic when buffer was not created by context", func(t *testing.T) {
-		context := gl.ContextOf(apiStub{})
+		context := gl.NewContext(apiStub{})
 		vao := context.NewVertexArray(gl.VertexLayout{gl.Float})
 		vertexBufferNotCreatedInContext := &gl.FloatVertexBuffer{}
 		pointer := gl.VertexBufferPointer{
@@ -238,7 +238,7 @@ func TestVertexArray_Set(t *testing.T) {
 }
 func TestOpenGL_LinkProgram(t *testing.T) {
 	t.Run("should panic when vertex shader is nil", func(t *testing.T) {
-		context := gl.ContextOf(apiStub{})
+		context := gl.NewContext(apiStub{})
 		fragmentShader, _ := context.CompileFragmentShader("")
 		assert.Panics(t, func() {
 			// when
@@ -247,7 +247,7 @@ func TestOpenGL_LinkProgram(t *testing.T) {
 
 	})
 	t.Run("should panic when fragment shader is nil", func(t *testing.T) {
-		context := gl.ContextOf(apiStub{})
+		context := gl.NewContext(apiStub{})
 		vertexShader, _ := context.CompileVertexShader("")
 		assert.Panics(t, func() {
 			// when
@@ -257,21 +257,21 @@ func TestOpenGL_LinkProgram(t *testing.T) {
 }
 func TestContext_NewAcceleratedImage(t *testing.T) {
 	t.Run("should panic for negative width", func(t *testing.T) {
-		context := gl.ContextOf(apiStub{})
+		context := gl.NewContext(apiStub{})
 		// when
 		assert.Panics(t, func() {
 			context.NewAcceleratedImage(-1, 0)
 		})
 	})
 	t.Run("should panic for negative height", func(t *testing.T) {
-		context := gl.ContextOf(apiStub{})
+		context := gl.NewContext(apiStub{})
 		assert.Panics(t, func() {
 			// when
 			context.NewAcceleratedImage(0, -1)
 		})
 	})
 	t.Run("should panic for too big width", func(t *testing.T) {
-		context := gl.ContextOf(apiStub{})
+		context := gl.NewContext(apiStub{})
 		capabilities := context.Capabilities()
 		assert.Panics(t, func() {
 			// when
@@ -279,7 +279,7 @@ func TestContext_NewAcceleratedImage(t *testing.T) {
 		})
 	})
 	t.Run("should panic for too big height", func(t *testing.T) {
-		context := gl.ContextOf(apiStub{})
+		context := gl.NewContext(apiStub{})
 		capabilities := context.Capabilities()
 		assert.Panics(t, func() {
 			// when
@@ -289,7 +289,7 @@ func TestContext_NewAcceleratedImage(t *testing.T) {
 }
 func TestProgram_AcceleratedCommand(t *testing.T) {
 	t.Run("should return command", func(t *testing.T) {
-		context := gl.ContextOf(apiStub{})
+		context := gl.NewContext(apiStub{})
 		program := workingProgram(context)
 		// when
 		cmd := program.AcceleratedCommand(&emptyCommand{})
@@ -299,7 +299,7 @@ func TestProgram_AcceleratedCommand(t *testing.T) {
 
 func TestAcceleratedCommand_Run(t *testing.T) {
 	t.Run("should execute command", func(t *testing.T) {
-		context := gl.ContextOf(apiStub{})
+		context := gl.NewContext(apiStub{})
 		program := workingProgram(context)
 		texture := context.NewAcceleratedImage(1, 1)
 		output := image.AcceleratedImageSelection{
@@ -332,7 +332,7 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 		}
 	})
 	t.Run("should panic when output image is nil", func(t *testing.T) {
-		context := gl.ContextOf(apiStub{})
+		context := gl.NewContext(apiStub{})
 		program := workingProgram(context)
 		command := program.AcceleratedCommand(&emptyCommand{})
 		assert.Panics(t, func() {
@@ -341,8 +341,8 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 		})
 	})
 	t.Run("should panic when output image and program were created in different OpenGL contexts", func(t *testing.T) {
-		imageContext := gl.ContextOf(apiStub{})
-		programContext := gl.ContextOf(apiStub{})
+		imageContext := gl.NewContext(apiStub{})
+		programContext := gl.NewContext(apiStub{})
 		img := imageContext.NewAcceleratedImage(1, 1)
 		program := workingProgram(programContext)
 		command := program.AcceleratedCommand(&emptyCommand{})
@@ -360,7 +360,7 @@ func TestRenderer_BindTexture(t *testing.T) {
 		names := []string{"", " ", "  ", "\n", "\t"}
 		for _, name := range names {
 			t.Run(name, func(t *testing.T) {
-				context := gl.ContextOf(apiStub{})
+				context := gl.NewContext(apiStub{})
 				var (
 					output  = context.NewAcceleratedImage(1, 1)
 					tex     = context.NewAcceleratedImage(1, 1)
@@ -377,7 +377,7 @@ func TestRenderer_BindTexture(t *testing.T) {
 		}
 	})
 	t.Run("can't bind texture with negative texture unit", func(t *testing.T) {
-		context := gl.ContextOf(apiStub{})
+		context := gl.NewContext(apiStub{})
 		var (
 			output  = context.NewAcceleratedImage(1, 1)
 			tex     = context.NewAcceleratedImage(1, 1)
@@ -395,7 +395,7 @@ func TestRenderer_BindTexture(t *testing.T) {
 
 func TestOpenGL_Error(t *testing.T) {
 	t.Run("should no return error", func(t *testing.T) {
-		context := gl.ContextOf(apiStub{})
+		context := gl.NewContext(apiStub{})
 		// when
 		err := context.Error()
 		// then

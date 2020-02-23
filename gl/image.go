@@ -62,6 +62,10 @@ type AcceleratedImage struct {
 	api           API
 }
 
+func (t *AcceleratedImage) TextureID() uint32 {
+	return t.textureID
+}
+
 // Upload send pixels to video card
 func (t *AcceleratedImage) Upload(pixels []image.Color) {
 	if len(pixels) == 0 {

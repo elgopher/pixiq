@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/jacekolszak/pixiq/gl"
 	"log"
 
 	"github.com/jacekolszak/pixiq/image"
@@ -11,9 +12,10 @@ import (
 func main() {
 	opengl.RunOrDie(func(gl *opengl.OpenGL) {
 		var (
-			buffer  = makeVertexBuffer(gl)
-			array   = makeVertexArray(gl, buffer)
-			program = compileProgram(gl)
+			context = gl.Context()
+			buffer  = makeVertexBuffer(context)
+			array   = makeVertexArray(context, buffer)
+			program = compileProgram(context)
 			cmd     = program.AcceleratedCommand(&drawSelection{vertexArray: array})
 			window  = openWindow(gl)
 		)
@@ -31,16 +33,16 @@ func main() {
 	})
 }
 
-func makeVertexArray(gl *opengl.OpenGL, buffer *opengl.FloatVertexBuffer) *opengl.VertexArray {
-	array := gl.NewVertexArray(opengl.VertexLayout{opengl.Vec2, opengl.Vec2})
-	xy := opengl.VertexBufferPointer{Offset: 0, Stride: 4, Buffer: buffer}
+func makeVertexArray(context *gl.Context, buffer *gl.FloatVertexBuffer) *gl.VertexArray {
+	array := context.NewVertexArray(gl.VertexLayout{gl.Vec2, gl.Vec2})
+	xy := gl.VertexBufferPointer{Offset: 0, Stride: 4, Buffer: buffer}
 	array.Set(0, xy)
-	st := opengl.VertexBufferPointer{Offset: 2, Stride: 4, Buffer: buffer}
+	st := gl.VertexBufferPointer{Offset: 2, Stride: 4, Buffer: buffer}
 	array.Set(1, st)
 	return array
 }
 
-func makeVertexBuffer(gl *opengl.OpenGL) *opengl.FloatVertexBuffer {
+func makeVertexBuffer(gl *gl.Context) *gl.FloatVertexBuffer {
 	// xy -> st
 	vertices := []float32{
 		-1, 1, 0, 1, // top-left
@@ -78,16 +80,16 @@ const fragmentShaderSrc = `
 	}
 `
 
-func compileProgram(gl *opengl.OpenGL) *opengl.Program {
-	vertexShader, err := gl.CompileVertexShader(vertexShaderSrc)
+func compileProgram(context *gl.Context) *gl.Program {
+	vertexShader, err := context.CompileVertexShader(vertexShaderSrc)
 	if err != nil {
 		log.Panicf("CompileVertexShader failed: %v", err)
 	}
-	fragmentShader, err := gl.CompileFragmentShader(fragmentShaderSrc)
+	fragmentShader, err := context.CompileFragmentShader(fragmentShaderSrc)
 	if err != nil {
 		log.Panicf("CompileFragmentShader failed: %v", err)
 	}
-	program, err := gl.LinkProgram2(vertexShader, fragmentShader)
+	program, err := context.LinkProgram(vertexShader, fragmentShader)
 	if err != nil {
 		log.Panicf("LinkProgram failed: %v", err)
 	}
@@ -95,15 +97,15 @@ func compileProgram(gl *opengl.OpenGL) *opengl.Program {
 }
 
 type drawSelection struct {
-	vertexArray *opengl.VertexArray
+	vertexArray *gl.VertexArray
 }
 
-func (c drawSelection) RunGL(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
+func (c drawSelection) RunGL(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
 	if len(selections) != 1 {
 		panic("invalid number of selections")
 	}
 	renderer.BindTexture(0, "tex", selections[0].Image)
-	renderer.DrawArrays(c.vertexArray, opengl.TriangleFan, 0, 4)
+	renderer.DrawArrays(c.vertexArray, gl.TriangleFan, 0, 4)
 }
 
 func openWindow(gl *opengl.OpenGL) *opengl.Window {

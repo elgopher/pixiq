@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/opengl"
 )
 
@@ -262,10 +261,4 @@ func TestOpenGL_OpenWindow(t *testing.T) {
 			})
 		}
 	})
-}
-
-func assertColors(t *testing.T, expected []image.Color, img *opengl.AcceleratedImage) {
-	output := make([]image.Color, len(expected))
-	img.Download(output)
-	assert.Equal(t, expected, output)
 }

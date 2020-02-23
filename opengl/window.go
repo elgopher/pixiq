@@ -1,9 +1,9 @@
 package opengl
 
 import (
-	"github.com/go-gl/gl/v3.3-core/gl"
+	gl33 "github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
-
+	"github.com/jacekolszak/pixiq/gl"
 	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/keyboard"
 	"github.com/jacekolszak/pixiq/opengl/internal"
@@ -20,22 +20,23 @@ type Window struct {
 	requestedHeight        int
 	zoom                   int
 	screenImage            *image.Image
-	screenAcceleratedImage *AcceleratedImage
+	screenAcceleratedImage *gl.AcceleratedImage
+	context                *context
 }
 
 // Draw draws a screen image to the invisible buffer. It will be shown in window
 // after SwapImages is called.
 func (w *Window) Draw() {
 	w.screenImage.Upload()
+	w.context.UseProgram(w.program.id)
+	var width, height int
 	w.mainThreadLoop.Execute(func() {
-		w.mainThreadLoop.bind(w.glfwWindow)
-		w.program.use()
-		width, height := w.glfwWindow.GetFramebufferSize()
-		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
-		gl.Viewport(0, 0, int32(width), int32(height))
-		gl.BindTexture(gl.TEXTURE_2D, w.screenAcceleratedImage.textureID)
-		w.screenPolygon.draw()
+		width, height = w.glfwWindow.GetFramebufferSize()
 	})
+	w.context.BindFramebuffer(gl33.FRAMEBUFFER, 0)
+	w.context.Viewport(0, 0, int32(width), int32(height))
+	w.context.BindTexture(gl33.TEXTURE_2D, w.screenAcceleratedImage.TextureID())
+	w.screenPolygon.draw()
 }
 
 // SwapImages makes last drawn image visible in window.
