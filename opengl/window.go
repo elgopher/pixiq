@@ -1,9 +1,9 @@
 package opengl
 
 import (
-	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
 
+	"github.com/jacekolszak/pixiq/gl"
 	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/keyboard"
 	"github.com/jacekolszak/pixiq/opengl/internal"
@@ -12,7 +12,6 @@ import (
 // Window is an implementation of loop.Screen and keyboard.EventSource
 type Window struct {
 	glfwWindow             *glfw.Window
-	program                *program
 	mainThreadLoop         *MainThreadLoop
 	screenPolygon          *screenPolygon
 	keyboardEvents         *internal.KeyboardEvents
@@ -20,22 +19,22 @@ type Window struct {
 	requestedHeight        int
 	zoom                   int
 	screenImage            *image.Image
-	screenAcceleratedImage *AcceleratedImage
+	screenAcceleratedImage *gl.AcceleratedImage
+	api                    gl.API
+	context                *gl.Context
+	program                *gl.Program
 }
 
 // Draw draws a screen image to the invisible buffer. It will be shown in window
 // after SwapImages is called.
 func (w *Window) Draw() {
 	w.screenImage.Upload()
+	var width, height int
 	w.mainThreadLoop.Execute(func() {
-		w.mainThreadLoop.bind(w.glfwWindow)
-		w.program.use()
-		width, height := w.glfwWindow.GetFramebufferSize()
-		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
-		gl.Viewport(0, 0, int32(width), int32(height))
-		gl.BindTexture(gl.TEXTURE_2D, w.screenAcceleratedImage.textureID)
-		w.screenPolygon.draw()
+		width, height = w.glfwWindow.GetFramebufferSize()
 	})
+	w.api.Viewport(0, 0, int32(width), int32(height))
+	w.screenPolygon.draw()
 }
 
 // SwapImages makes last drawn image visible in window.

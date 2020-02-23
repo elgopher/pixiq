@@ -1,82 +1,423 @@
 package opengl_test
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/jacekolszak/pixiq/gl"
 	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/opengl"
 )
 
-func TestAcceleratedCommand_Run(t *testing.T) {
-	t.Run("should execute command", func(t *testing.T) {
+var mainThreadLoop *opengl.MainThreadLoop
+
+func TestMain(m *testing.M) {
+	var exit int
+	opengl.StartMainThreadLoop(func(main *opengl.MainThreadLoop) {
+		mainThreadLoop = main
+		exit = m.Run()
+	})
+	os.Exit(exit)
+}
+
+func TestContext_NewFloatVertexBuffer(t *testing.T) {
+	t.Run("two buffers should have different IDs", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		program := workingProgram(t, openGL)
-		texture := openGL.NewAcceleratedImage(1, 1)
-		output := image.AcceleratedImageSelection{
-			Image: texture,
-		}
+		context := openGL.Context()
+		// when
+		buffer1 := context.NewFloatVertexBuffer(1)
+		buffer2 := context.NewFloatVertexBuffer(1)
+		// then
+		assert.NotEqual(t, buffer1.ID(), buffer2.ID())
+	})
+}
+
+func TestFloatVertexBuffer_Upload(t *testing.T) {
+	t.Run("should upload data", func(t *testing.T) {
 		tests := map[string]struct {
-			selections []image.AcceleratedImageSelection
+			size     int
+			offset   int
+			input    []float32
+			expected []float32
 		}{
-			"empty selections": {
-				selections: []image.AcceleratedImageSelection{},
+			"offset 0": {
+				size:     1,
+				offset:   0,
+				input:    []float32{1},
+				expected: []float32{1},
 			},
-			"one selection": {
-				selections: []image.AcceleratedImageSelection{{}},
+			"offset 0, size 2": {
+				size:     2,
+				offset:   0,
+				input:    []float32{1, 2},
+				expected: []float32{1, 2},
 			},
-			"two selections": {
-				selections: []image.AcceleratedImageSelection{{}, {}},
+			"offset 1": {
+				size:     2,
+				offset:   1,
+				input:    []float32{1},
+				expected: []float32{1},
 			},
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
-				command := &commandMock{}
-				acceleratedCommand := program.AcceleratedCommand(command)
+				openGL, _ := opengl.New(mainThreadLoop)
+				defer openGL.Destroy()
+				context := openGL.Context()
+				buffer := context.NewFloatVertexBuffer(test.size)
+				defer buffer.Delete()
 				// when
-				acceleratedCommand.Run(output, test.selections)
+				buffer.Upload(test.offset, test.input)
 				// then
-				assert.Equal(t, 1, command.executionCount)
-				assert.Equal(t, test.selections, command.selections)
-				assert.NotNil(t, command.renderer)
+				output := make([]float32, len(test.expected))
+				buffer.Download(test.offset, output)
+				assert.InDeltaSlice(t, test.expected, output, 1e-35)
 			})
 		}
 	})
-	t.Run("should panic when output image is nil", func(t *testing.T) {
+}
+
+func TestFloatVertexBuffer_Download(t *testing.T) {
+	openGL, _ := opengl.New(mainThreadLoop)
+	defer openGL.Destroy()
+	t.Run("should download data", func(t *testing.T) {
+		tests := map[string]struct {
+			input          []float32
+			offset         int
+			output         []float32
+			expectedOutput []float32
+		}{
+			"empty output slice": {
+				input:          []float32{1},
+				output:         make([]float32, 0),
+				expectedOutput: []float32{},
+			},
+			"nil output slice": {
+				input:          []float32{1},
+				output:         nil,
+				expectedOutput: nil,
+			},
+			"one element slice": {
+				input:          []float32{1},
+				output:         make([]float32, 1),
+				expectedOutput: []float32{1},
+			},
+			"two elements slice": {
+				input:          []float32{1, 2},
+				output:         make([]float32, 2),
+				expectedOutput: []float32{1, 2},
+			},
+			"output slice bigger than buffer": {
+				input:          []float32{1},
+				output:         make([]float32, 2),
+				expectedOutput: []float32{1, 0},
+			},
+			"offset: 1": {
+				offset:         1,
+				input:          []float32{1, 2},
+				output:         make([]float32, 1),
+				expectedOutput: []float32{2},
+			},
+			"output slice bigger than remaining buffer": {
+				offset:         1,
+				input:          []float32{1, 2},
+				output:         make([]float32, 2),
+				expectedOutput: []float32{2, 0},
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				context := openGL.Context()
+				buffer := context.NewFloatVertexBuffer(len(test.input))
+				defer buffer.Delete()
+				buffer.Upload(0, test.input)
+				// when
+				buffer.Download(test.offset, test.output)
+				// then
+				assert.InDeltaSlice(t, test.expectedOutput, test.output, 1e-35)
+			})
+		}
+	})
+}
+
+func TestContext_NewVertexArray(t *testing.T) {
+	t.Run("should create vertex array", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		program := workingProgram(t, openGL)
-		command := program.AcceleratedCommand(&emptyCommand{})
-		assert.Panics(t, func() {
-			// when
-			command.Run(image.AcceleratedImageSelection{}, []image.AcceleratedImageSelection{})
-		})
+		context := openGL.Context()
+		// when
+		vao := context.NewVertexArray(gl.VertexLayout{gl.Float})
+		// then
+		assert.NotNil(t, vao)
+		// cleanup
+		vao.Delete()
 	})
-	t.Run("should panic when output image and program were created in different OpenGL contexts", func(t *testing.T) {
-		imageContext, _ := opengl.New(mainThreadLoop)
-		defer imageContext.Destroy()
-		programContext, _ := opengl.New(mainThreadLoop)
-		defer programContext.Destroy()
-		img := imageContext.NewAcceleratedImage(1, 1)
-		program := workingProgram(t, programContext)
-		command := program.AcceleratedCommand(&emptyCommand{})
-		assert.Panics(t, func() {
-			// when
-			command.Run(image.AcceleratedImageSelection{
-				Image: img,
-			}, []image.AcceleratedImageSelection{})
-		})
+}
+func TestVertexArray_Set(t *testing.T) {
+	t.Run("should set", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		context := openGL.Context()
+		vao := context.NewVertexArray(gl.VertexLayout{gl.Float})
+		defer vao.Delete()
+		buffer := context.NewFloatVertexBuffer(1)
+		defer buffer.Delete()
+		pointer := gl.VertexBufferPointer{
+			Buffer: buffer,
+			Offset: 0,
+			Stride: 1,
+		}
+		// when
+		vao.Set(0, pointer)
 	})
+}
+
+func TestContext_CompileFragmentShader(t *testing.T) {
+	t.Run("should return error for incorrect shader", func(t *testing.T) {
+		tests := map[string]string{
+			"golang code": "package main\nfunc main() {}",
+		}
+		for name, source := range tests {
+			t.Run(name, func(t *testing.T) {
+				openGL, _ := opengl.New(mainThreadLoop)
+				defer openGL.Destroy()
+				context := openGL.Context()
+				// when
+				shader, err := context.CompileFragmentShader(source)
+				assert.Error(t, err)
+				assert.Nil(t, shader)
+			})
+		}
+	})
+	t.Run("should compile shader", func(t *testing.T) {
+		tests := map[string]string{
+			"GLSL 1.10": "void main() {}",
+			"minimal": `
+				#version 330 core
+				void main() {}
+				`,
+		}
+		for name, source := range tests {
+			t.Run(name, func(t *testing.T) {
+				openGL, _ := opengl.New(mainThreadLoop)
+				defer openGL.Destroy()
+				context := openGL.Context()
+				// when
+				shader, err := context.CompileFragmentShader(source)
+				require.NoError(t, err)
+				assert.NotNil(t, shader)
+			})
+		}
+	})
+	t.Run("should not panic for empty shader", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		context := openGL.Context()
+		// when
+		_, _ = context.CompileFragmentShader("")
+	})
+}
+
+func TestContext_CompileVertexShader(t *testing.T) {
+	t.Run("should return error for incorrect shader", func(t *testing.T) {
+		tests := map[string]string{
+			"golang code": "package main\nfunc main() {}",
+		}
+		for name, source := range tests {
+			t.Run(name, func(t *testing.T) {
+				openGL, _ := opengl.New(mainThreadLoop)
+				defer openGL.Destroy()
+				context := openGL.Context()
+				// when
+				shader, err := context.CompileVertexShader(source)
+				// then
+				assert.Error(t, err)
+				assert.Nil(t, shader)
+			})
+		}
+	})
+	t.Run("should compile shader", func(t *testing.T) {
+		tests := map[string]string{
+			"GLSL 1.10": "void main() {}",
+			"minimal": `
+				#version 330 core
+				void main() {
+					gl_Position = vec4(0, 0, 0, 0);
+				}
+				`,
+		}
+		for name, source := range tests {
+			t.Run(name, func(t *testing.T) {
+				openGL, _ := opengl.New(mainThreadLoop)
+				defer openGL.Destroy()
+				context := openGL.Context()
+				// when
+				shader, err := context.CompileVertexShader(source)
+				// then
+				require.NoError(t, err)
+				assert.NotNil(t, shader)
+			})
+		}
+	})
+	t.Run("should not panic for empty shader", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		context := openGL.Context()
+		// when
+		_, _ = context.CompileVertexShader("")
+	})
+}
+
+func TestContext_LinkProgram(t *testing.T) {
+	t.Run("should return error", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		context := openGL.Context()
+		vertexShader, err := context.CompileVertexShader(`
+								#version 330 core
+								void noMain() {}
+								`)
+		require.NoError(t, err)
+		fragmentShader, err := context.CompileFragmentShader(`
+								#version 330 core
+								void noMainEither() {}
+								`)
+		require.NoError(t, err)
+		// when
+		program, err := context.LinkProgram(vertexShader, fragmentShader)
+		// then
+		assert.Error(t, err)
+		assert.Nil(t, program)
+	})
+	t.Run("should return program", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		context := openGL.Context()
+		vertexShader, _ := context.CompileVertexShader(`
+								#version 330 core
+								void main() {
+									gl_Position = vec4(0, 0, 0, 0);
+								}
+								`)
+		fragmentShader, _ := context.CompileFragmentShader(`
+								#version 330 core
+								void main() {}
+								`)
+		// when
+		program, err := context.LinkProgram(vertexShader, fragmentShader)
+		// then
+		require.NoError(t, err)
+		assert.NotNil(t, program)
+	})
+}
+
+func TestContext_Capabilities(t *testing.T) {
+	t.Run("should return capabilities", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		context := openGL.Context()
+		// when
+		capabilities := context.Capabilities()
+		// then
+		assert.NotNil(t, capabilities)
+		assert.Greater(t, capabilities.MaxTextureSize(), 0)
+	})
+}
+
+func TestContext_NewAcceleratedImage(t *testing.T) {
+	t.Run("should create AcceleratedImage", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		context := openGL.Context()
+		// when
+		img := context.NewAcceleratedImage(0, 0)
+		// then
+		assert.NotNil(t, img)
+	})
+}
+
+func TestAcceleratedImage_Upload(t *testing.T) {
+	color1 := image.RGBA(10, 20, 30, 40)
+	color2 := image.RGBA(50, 60, 70, 80)
+	color3 := image.RGBA(90, 100, 110, 120)
+	color4 := image.RGBA(130, 140, 150, 160)
+
+	t.Run("should upload pixels", func(t *testing.T) {
+		tests := map[string]struct {
+			width, height int
+			inputColors   []image.Color
+		}{
+			"0x0": {
+				width:       0,
+				height:      0,
+				inputColors: []image.Color{},
+			},
+			"1x1": {
+				width:       1,
+				height:      1,
+				inputColors: []image.Color{color1},
+			},
+			"2x1": {
+				width:       2,
+				height:      1,
+				inputColors: []image.Color{color1, color2},
+			},
+			"1x2": {
+				width:       1,
+				height:      2,
+				inputColors: []image.Color{color1, color2},
+			},
+			"2x2": {
+				width:       2,
+				height:      2,
+				inputColors: []image.Color{color1, color2, color3, color4},
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				openGL, _ := opengl.New(mainThreadLoop)
+				defer openGL.Destroy()
+				context := openGL.Context()
+				img := context.NewAcceleratedImage(test.width, test.height)
+				// when
+				img.Upload(test.inputColors)
+				// then
+				assertColors(t, test.inputColors, img)
+			})
+		}
+	})
+	t.Run("2 OpenGL contexts", func(t *testing.T) {
+		gl1, _ := opengl.New(mainThreadLoop)
+		defer gl1.Destroy()
+		context1 := gl1.Context()
+		gl2, _ := opengl.New(mainThreadLoop)
+		defer gl2.Destroy()
+		context2 := gl2.Context()
+
+		img1 := context1.NewAcceleratedImage(1, 1)
+		img2 := context2.NewAcceleratedImage(1, 1)
+		// when
+		img1.Upload([]image.Color{color1})
+		img2.Upload([]image.Color{color2})
+		// then
+		assertColors(t, []image.Color{color1}, img1)
+		assertColors(t, []image.Color{color2}, img2)
+	})
+}
+
+func TestAcceleratedCommand_Run(t *testing.T) {
 	t.Run("vertex buffer can be used inside command", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		program := workingProgram(t, openGL)
-		output := openGL.NewAcceleratedImage(1, 1)
-		command := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
-			buffer := openGL.NewFloatVertexBuffer(1)
+		context := openGL.Context()
+		program := workingProgram(t, context)
+		output := context.NewAcceleratedImage(1, 1)
+		command := program.AcceleratedCommand(&command{runGL: func(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
+			buffer := context.NewFloatVertexBuffer(1)
 			values := []float32{1}
 			buffer.Upload(0, values)
 			buffer.Download(0, values)
@@ -88,14 +429,15 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 	t.Run("vertex array can be used inside command", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		program := workingProgram(t, openGL)
-		output := openGL.NewAcceleratedImage(1, 1)
-		command := program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
-			array := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float})
+		context := openGL.Context()
+		program := workingProgram(t, context)
+		output := context.NewAcceleratedImage(1, 1)
+		command := program.AcceleratedCommand(&command{runGL: func(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
+			array := context.NewVertexArray(gl.VertexLayout{gl.Float})
 			defer array.Delete()
-			buffer := openGL.NewFloatVertexBuffer(1)
+			buffer := context.NewFloatVertexBuffer(1)
 			defer buffer.Delete()
-			array.Set(0, opengl.VertexBufferPointer{
+			array.Set(0, gl.VertexBufferPointer{
 				Buffer: buffer,
 				Offset: 0,
 				Stride: 1,
@@ -107,6 +449,7 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 	t.Run("clear image fragment with color", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
+		context := openGL.Context()
 		color := image.RGBA(1, 2, 3, 4)
 		tests := map[string]struct {
 			width, height  int
@@ -176,10 +519,10 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
-				img := openGL.NewAcceleratedImage(test.width, test.height)
+				img := context.NewAcceleratedImage(test.width, test.height)
 				img.Upload(make([]image.Color, test.width*test.height))
-				program := workingProgram(t, openGL)
-				glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
+				program := workingProgram(t, context)
+				glCommand := &command{runGL: func(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
 					renderer.Clear(color)
 				}}
 				command := program.AcceleratedCommand(glCommand)
@@ -194,7 +537,7 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 		}
 	})
 	t.Run("should not change the image pixels when command does not do anything", func(t *testing.T) {
-		commands := map[string]opengl.Command{
+		commands := map[string]gl.Command{
 			"nil":   nil,
 			"empty": &emptyCommand{},
 		}
@@ -202,10 +545,11 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				openGL, _ := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
-				img := openGL.NewAcceleratedImage(2, 1)
+				context := openGL.Context()
+				img := context.NewAcceleratedImage(2, 1)
 				pixels := []image.Color{image.RGB(1, 2, 3), image.RGB(4, 5, 6)}
 				img.Upload(pixels)
-				program := workingProgram(t, openGL)
+				program := workingProgram(t, context)
 				command := program.AcceleratedCommand(command)
 				// when
 				command.Run(image.AcceleratedImageSelection{
@@ -239,10 +583,11 @@ func TestRenderer_Clear(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			openGL, _ := opengl.New(mainThreadLoop)
 			defer openGL.Destroy()
-			img := openGL.NewAcceleratedImage(1, 1)
+			context := openGL.Context()
+			img := context.NewAcceleratedImage(1, 1)
 			img.Upload(make([]image.Color, 1))
-			program := workingProgram(t, openGL)
-			glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
+			program := workingProgram(t, context)
+			glCommand := &command{runGL: func(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
 				// when
 				renderer.Clear(test.color)
 			}}
@@ -261,7 +606,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 	t.Run("should draw point using one vertex attribute", func(t *testing.T) {
 		tests := map[string]struct {
 			vertexShaderSrc string
-			typ             opengl.Type
+			typ             gl.Type
 			data            []float32
 		}{
 			"float": {
@@ -272,7 +617,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 									gl_Position = vec4(vertexPosition - 1, 0, 0, 1);
 								}
 								`,
-				typ:  opengl.Float,
+				typ:  gl.Float,
 				data: []float32{1},
 			},
 			"vec2": {
@@ -283,7 +628,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 									gl_Position = vec4(vertexPosition.x-1, vertexPosition.y-2, 0, 1);
 								}
 								`,
-				typ:  opengl.Vec2,
+				typ:  gl.Vec2,
 				data: []float32{1, 2},
 			},
 			"vec3": {
@@ -294,7 +639,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 									gl_Position = vec4(vertexPosition.x-1, vertexPosition.y-2, vertexPosition.z-3, 1);
 								}
 								`,
-				typ:  opengl.Vec3,
+				typ:  gl.Vec3,
 				data: []float32{1, 2, 3},
 			},
 			"vec4": {
@@ -305,7 +650,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 									gl_Position = vec4(vertexPosition.x-1, vertexPosition.y-2, vertexPosition.z-3, vertexPosition.w-3);
 								}
 								`,
-				typ:  opengl.Vec4,
+				typ:  gl.Vec4,
 				data: []float32{1, 2, 3, 4},
 			},
 		}
@@ -313,11 +658,12 @@ func TestRenderer_DrawArrays(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				openGL, _ := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
-				img := openGL.NewAcceleratedImage(1, 1)
+				context := openGL.Context()
+				img := context.NewAcceleratedImage(1, 1)
 				img.Upload(make([]image.Color, 1))
-				vertexShader, err := openGL.CompileVertexShader(test.vertexShaderSrc)
+				vertexShader, err := context.CompileVertexShader(test.vertexShaderSrc)
 				require.NoError(t, err)
-				fragmentShader, err := openGL.CompileFragmentShader(`
+				fragmentShader, err := context.CompileFragmentShader(`
 								#version 330 core
 								out vec4 color;
 								void main() {
@@ -325,16 +671,16 @@ func TestRenderer_DrawArrays(t *testing.T) {
 								}
 								`)
 				require.NoError(t, err)
-				program, err := openGL.LinkProgram(vertexShader, fragmentShader)
+				program, err := context.LinkProgram(vertexShader, fragmentShader)
 				require.NoError(t, err)
-				array := openGL.NewVertexArray(opengl.VertexLayout{test.typ})
-				buffer := openGL.NewFloatVertexBuffer(len(test.data))
+				array := context.NewVertexArray(gl.VertexLayout{test.typ})
+				buffer := context.NewFloatVertexBuffer(len(test.data))
 				buffer.Upload(0, test.data)
-				vertexPosition := opengl.VertexBufferPointer{Buffer: buffer, Stride: len(test.data)}
+				vertexPosition := gl.VertexBufferPointer{Buffer: buffer, Stride: len(test.data)}
 				array.Set(0, vertexPosition)
-				glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
+				glCommand := &command{runGL: func(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
 					// when
-					renderer.DrawArrays(array, opengl.Points, 0, 1)
+					renderer.DrawArrays(array, gl.Points, 0, 1)
 				}}
 				command := program.AcceleratedCommand(glCommand)
 				command.Run(image.AcceleratedImageSelection{
@@ -349,9 +695,10 @@ func TestRenderer_DrawArrays(t *testing.T) {
 	t.Run("should draw point using 2 vertex attributes", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		img := openGL.NewAcceleratedImage(1, 1)
+		context := openGL.Context()
+		img := context.NewAcceleratedImage(1, 1)
 		img.Upload(make([]image.Color, 1))
-		vertexShader, err := openGL.CompileVertexShader(`
+		vertexShader, err := context.CompileVertexShader(`
 								#version 330 core
 								layout(location = 0) in float vertexPositionX;
 								layout(location = 1) in vec3 vertexColor;
@@ -362,7 +709,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 								}
 								`)
 		require.NoError(t, err)
-		fragmentShader, err := openGL.CompileFragmentShader(`
+		fragmentShader, err := context.CompileFragmentShader(`
 								#version 330 core
 								in vec4 interpolatedColor;
 								out vec4 color;
@@ -371,19 +718,19 @@ func TestRenderer_DrawArrays(t *testing.T) {
 								}
 								`)
 		require.NoError(t, err)
-		program, err := openGL.LinkProgram(vertexShader, fragmentShader)
+		program, err := context.LinkProgram(vertexShader, fragmentShader)
 		require.NoError(t, err)
-		array := openGL.NewVertexArray(opengl.VertexLayout{opengl.Float, opengl.Vec3})
+		array := context.NewVertexArray(gl.VertexLayout{gl.Float, gl.Vec3})
 		require.NoError(t, err)
-		buffer := openGL.NewFloatVertexBuffer(4)
+		buffer := context.NewFloatVertexBuffer(4)
 		buffer.Upload(0, []float32{0, 0.2, 0.4, 0.6})
-		vertexPositionX := opengl.VertexBufferPointer{Buffer: buffer, Offset: 0, Stride: 4}
+		vertexPositionX := gl.VertexBufferPointer{Buffer: buffer, Offset: 0, Stride: 4}
 		array.Set(0, vertexPositionX)
-		vertexColor := opengl.VertexBufferPointer{Buffer: buffer, Offset: 1, Stride: 4}
+		vertexColor := gl.VertexBufferPointer{Buffer: buffer, Offset: 1, Stride: 4}
 		array.Set(1, vertexColor)
-		glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
+		glCommand := &command{runGL: func(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
 			// when
-			renderer.DrawArrays(array, opengl.Points, 0, 1)
+			renderer.DrawArrays(array, gl.Points, 0, 1)
 		}}
 		command := program.AcceleratedCommand(glCommand)
 		command.Run(image.AcceleratedImageSelection{
@@ -396,6 +743,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 	t.Run("should draw triangle fan with location specified", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
+		context := openGL.Context()
 		color := image.RGBA(51, 102, 153, 204)
 		tests := map[string]struct {
 			width, height  int
@@ -450,9 +798,9 @@ func TestRenderer_DrawArrays(t *testing.T) {
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
-				img := openGL.NewAcceleratedImage(test.width, test.height)
+				img := context.NewAcceleratedImage(test.width, test.height)
 				img.Upload(make([]image.Color, test.width*test.height))
-				program := compileProgram(t, openGL,
+				program := compileProgram(t, context,
 					`
 								#version 330 core
 								layout(location = 0) in vec2 vertexPosition;
@@ -468,19 +816,19 @@ func TestRenderer_DrawArrays(t *testing.T) {
 								}
 								`,
 				)
-				array := openGL.NewVertexArray(opengl.VertexLayout{opengl.Vec2})
-				buffer := openGL.NewFloatVertexBuffer(8)
+				array := context.NewVertexArray(gl.VertexLayout{gl.Vec2})
+				buffer := context.NewFloatVertexBuffer(8)
 				buffer.Upload(0, []float32{
 					-1, 1, // top-left
 					1, 1, // top-right
 					1, -1, // bottom-right
 					-1, -1}, // bottom-left
 				)
-				vertexPosition := opengl.VertexBufferPointer{Buffer: buffer, Stride: 2}
+				vertexPosition := gl.VertexBufferPointer{Buffer: buffer, Stride: 2}
 				array.Set(0, vertexPosition)
-				glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
+				glCommand := &command{runGL: func(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
 					// when
-					renderer.DrawArrays(array, opengl.TriangleFan, 0, 4)
+					renderer.DrawArrays(array, gl.TriangleFan, 0, 4)
 				}}
 				command := program.AcceleratedCommand(glCommand)
 				command.Run(image.AcceleratedImageSelection{
@@ -495,9 +843,10 @@ func TestRenderer_DrawArrays(t *testing.T) {
 	t.Run("should draw two points", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		img := openGL.NewAcceleratedImage(2, 1)
+		context := openGL.Context()
+		img := context.NewAcceleratedImage(2, 1)
 		img.Upload(make([]image.Color, 2))
-		vertexShader, err := openGL.CompileVertexShader(`
+		vertexShader, err := context.CompileVertexShader(`
 								#version 330 core
 								layout(location = 0) in vec2 vertexPosition;
 								void main() {
@@ -505,7 +854,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 								}
 								`)
 		require.NoError(t, err)
-		fragmentShader, err := openGL.CompileFragmentShader(`
+		fragmentShader, err := context.CompileFragmentShader(`
 								#version 330 core
 								out vec4 color;
 								void main() {
@@ -513,16 +862,16 @@ func TestRenderer_DrawArrays(t *testing.T) {
 								}
 								`)
 		require.NoError(t, err)
-		program, err := openGL.LinkProgram(vertexShader, fragmentShader)
+		program, err := context.LinkProgram(vertexShader, fragmentShader)
 		require.NoError(t, err)
-		array := openGL.NewVertexArray(opengl.VertexLayout{opengl.Vec2})
-		buffer := openGL.NewFloatVertexBuffer(4)
+		array := context.NewVertexArray(gl.VertexLayout{gl.Vec2})
+		buffer := context.NewFloatVertexBuffer(4)
 		buffer.Upload(0, []float32{-0.5, 0, 0.5, 0})
-		vertexPositionX := opengl.VertexBufferPointer{Buffer: buffer, Offset: 0, Stride: 2}
+		vertexPositionX := gl.VertexBufferPointer{Buffer: buffer, Offset: 0, Stride: 2}
 		array.Set(0, vertexPositionX)
-		glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
+		glCommand := &command{runGL: func(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
 			// when
-			renderer.DrawArrays(array, opengl.Points, 0, 2)
+			renderer.DrawArrays(array, gl.Points, 0, 2)
 		}}
 		command := program.AcceleratedCommand(glCommand)
 		command.Run(image.AcceleratedImageSelection{
@@ -535,7 +884,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 	t.Run("should panic on shader attributes and vertex array mismatch", func(t *testing.T) {
 		tests := map[string]struct {
 			vertexShaderSrc string
-			layout          opengl.VertexLayout
+			layout          gl.VertexLayout
 		}{
 			"float instead of vec2": {
 				vertexShaderSrc: `
@@ -545,7 +894,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 						gl_Position = vec4(vertexPosition, 0, 1);
 					}
 					`,
-				layout: opengl.VertexLayout{opengl.Float},
+				layout: gl.VertexLayout{gl.Float},
 			},
 			"vec2, vec4 instead of vec2, vec3": {
 				vertexShaderSrc: `
@@ -557,7 +906,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 						gl_Position = vec4(vertexPosition, 1);
 					}
 					`,
-				layout: opengl.VertexLayout{opengl.Vec2, opengl.Vec4},
+				layout: gl.VertexLayout{gl.Vec2, gl.Vec4},
 			},
 			"vec3 instead of float, vec4": {
 				vertexShaderSrc: `
@@ -568,7 +917,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 						gl_Position = vec4(vertexPosition1, vertexPosition2.yzw); 
 					}
 					`,
-				layout: opengl.VertexLayout{opengl.Vec3},
+				layout: gl.VertexLayout{gl.Vec3},
 			},
 			"vec4, vec4 instead of float": {
 				vertexShaderSrc: `
@@ -578,35 +927,36 @@ func TestRenderer_DrawArrays(t *testing.T) {
 						gl_Position = vec4(vertexPosition, 0, 0, 1); 
 					}
 					`,
-				layout: opengl.VertexLayout{opengl.Vec4, opengl.Vec4},
+				layout: gl.VertexLayout{gl.Vec4, gl.Vec4},
 			},
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
 				openGL, _ := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
-				img := openGL.NewAcceleratedImage(1, 1)
+				context := openGL.Context()
+				img := context.NewAcceleratedImage(1, 1)
 				img.Upload(make([]image.Color, 2))
-				vertexShader, err := openGL.CompileVertexShader(test.vertexShaderSrc)
+				vertexShader, err := context.CompileVertexShader(test.vertexShaderSrc)
 				require.NoError(t, err)
-				fragmentShader, err := openGL.CompileFragmentShader(`
+				fragmentShader, err := context.CompileFragmentShader(`
 								#version 330 core
 								void main() {}
 								`)
 				require.NoError(t, err)
-				program, err := openGL.LinkProgram(vertexShader, fragmentShader)
+				program, err := context.LinkProgram(vertexShader, fragmentShader)
 				require.NoError(t, err)
-				array := openGL.NewVertexArray(test.layout)
-				buffer := openGL.NewFloatVertexBuffer(10)
+				array := context.NewVertexArray(test.layout)
+				buffer := context.NewFloatVertexBuffer(10)
 				buffer.Upload(0, []float32{0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
-				vertexPosition := opengl.VertexBufferPointer{Buffer: buffer, Offset: 0, Stride: 10}
+				vertexPosition := gl.VertexBufferPointer{Buffer: buffer, Offset: 0, Stride: 10}
 				for i := range test.layout {
 					array.Set(i, vertexPosition)
 				}
-				glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
+				glCommand := &command{runGL: func(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
 					// when
 					assert.Panics(t, func() {
-						renderer.DrawArrays(array, opengl.Points, 0, 1)
+						renderer.DrawArrays(array, gl.Points, 0, 1)
 					})
 				}}
 				command := program.AcceleratedCommand(glCommand)
@@ -620,7 +970,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 	t.Run("should not return error when vertex array and program have different len of attributes", func(t *testing.T) {
 		tests := map[string]struct {
 			vertexShaderSrc string
-			layout          opengl.VertexLayout
+			layout          gl.VertexLayout
 		}{
 			"len(vertex array) > len(shader)": {
 				vertexShaderSrc: `
@@ -630,7 +980,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 						gl_Position = vertexPosition;
 					}
 					`,
-				layout: opengl.VertexLayout{opengl.Vec4, opengl.Vec4},
+				layout: gl.VertexLayout{gl.Vec4, gl.Vec4},
 			},
 			"len(vertex array) < len(shader)": {
 				vertexShaderSrc: `
@@ -641,33 +991,34 @@ func TestRenderer_DrawArrays(t *testing.T) {
 						gl_Position = vertexPosition1 + vertexPosition2; 
 					}
 					`,
-				layout: opengl.VertexLayout{opengl.Vec4},
+				layout: gl.VertexLayout{gl.Vec4},
 			},
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
 				openGL, _ := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
-				img := openGL.NewAcceleratedImage(1, 1)
+				context := openGL.Context()
+				img := context.NewAcceleratedImage(1, 1)
 				img.Upload(make([]image.Color, 2))
-				vertexShader, err := openGL.CompileVertexShader(test.vertexShaderSrc)
+				vertexShader, err := context.CompileVertexShader(test.vertexShaderSrc)
 				require.NoError(t, err)
-				fragmentShader, err := openGL.CompileFragmentShader(`
+				fragmentShader, err := context.CompileFragmentShader(`
 								#version 330 core
 								void main() {}
 								`)
 				require.NoError(t, err)
-				program, err := openGL.LinkProgram(vertexShader, fragmentShader)
+				program, err := context.LinkProgram(vertexShader, fragmentShader)
 				require.NoError(t, err)
-				array := openGL.NewVertexArray(test.layout)
-				buffer := openGL.NewFloatVertexBuffer(8)
+				array := context.NewVertexArray(test.layout)
+				buffer := context.NewFloatVertexBuffer(8)
 				buffer.Upload(0, []float32{0, 0, 0, 0, 0, 0, 0, 0})
 				for location := range test.layout {
-					array.Set(location, opengl.VertexBufferPointer{Buffer: buffer, Offset: location * 4, Stride: 8})
+					array.Set(location, gl.VertexBufferPointer{Buffer: buffer, Offset: location * 4, Stride: 8})
 				}
-				glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
+				glCommand := &command{runGL: func(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
 					// when
-					renderer.DrawArrays(array, opengl.Points, 0, 1)
+					renderer.DrawArrays(array, gl.Points, 0, 1)
 				}}
 				command := program.AcceleratedCommand(glCommand)
 				command.Run(image.AcceleratedImageSelection{
@@ -681,37 +1032,17 @@ func TestRenderer_DrawArrays(t *testing.T) {
 }
 
 func TestRenderer_BindTexture(t *testing.T) {
-	t.Run("can't bind texture without uniformName", func(t *testing.T) {
-		names := []string{"", " ", "  ", "\n", "\t"}
-		for _, name := range names {
-			t.Run(name, func(t *testing.T) {
-				openGL, _ := opengl.New(mainThreadLoop)
-				defer openGL.Destroy()
-				var (
-					output  = openGL.NewAcceleratedImage(1, 1)
-					tex     = openGL.NewAcceleratedImage(1, 1)
-					program = workingProgram(t, openGL)
-					command = program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
-						assert.Panics(t, func() {
-							// when
-							renderer.BindTexture(0, name, tex)
-						})
-					}})
-				)
-				command.Run(image.AcceleratedImageSelection{Image: output}, []image.AcceleratedImageSelection{})
-			})
-		}
-	})
 	t.Run("can't bind texture with uniformName not specified in program", func(t *testing.T) {
 		names := []string{"foo", "bar"}
 		for _, name := range names {
 			t.Run(name, func(t *testing.T) {
 				openGL, _ := opengl.New(mainThreadLoop)
 				defer openGL.Destroy()
+				context := openGL.Context()
 				var (
-					output  = openGL.NewAcceleratedImage(1, 1)
-					tex     = openGL.NewAcceleratedImage(1, 1)
-					program = compileProgram(t, openGL,
+					output  = context.NewAcceleratedImage(1, 1)
+					tex     = context.NewAcceleratedImage(1, 1)
+					program = compileProgram(t, context,
 						`#version 330 core
 						void main() {
 							gl_Position = vec4(0, 0, 0, 0);
@@ -723,7 +1054,7 @@ func TestRenderer_BindTexture(t *testing.T) {
 						 	color = texture(tex, vec2(0,0));
 						 }`,
 					)
-					command = program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
+					command = program.AcceleratedCommand(&command{runGL: func(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
 						assert.Panics(t, func() {
 							// when
 							renderer.BindTexture(0, name, tex)
@@ -737,13 +1068,15 @@ func TestRenderer_BindTexture(t *testing.T) {
 	t.Run("can't bind texture created in a different context", func(t *testing.T) {
 		openGL1, _ := opengl.New(mainThreadLoop)
 		defer openGL1.Destroy()
+		context1 := openGL1.Context()
 		openGL2, _ := opengl.New(mainThreadLoop)
 		defer openGL2.Destroy()
+		context2 := openGL2.Context()
 		var (
-			output  = openGL1.NewAcceleratedImage(1, 1)
-			tex     = openGL2.NewAcceleratedImage(1, 1)
-			program = workingProgram(t, openGL1)
-			command = program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
+			output  = context1.NewAcceleratedImage(1, 1)
+			tex     = context2.NewAcceleratedImage(1, 1)
+			program = workingProgram(t, context1)
+			command = program.AcceleratedCommand(&command{runGL: func(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
 				assert.Panics(t, func() {
 					// when
 					renderer.BindTexture(0, "tex", tex)
@@ -752,29 +1085,14 @@ func TestRenderer_BindTexture(t *testing.T) {
 		)
 		command.Run(image.AcceleratedImageSelection{Image: output}, []image.AcceleratedImageSelection{})
 	})
-	t.Run("can't bind texture with negative texture unit", func(t *testing.T) {
-		openGL, _ := opengl.New(mainThreadLoop)
-		defer openGL.Destroy()
-		var (
-			output  = openGL.NewAcceleratedImage(1, 1)
-			tex     = openGL.NewAcceleratedImage(1, 1)
-			program = workingProgram(t, openGL)
-			command = program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
-				assert.Panics(t, func() {
-					// when
-					renderer.BindTexture(-1, "tex", tex)
-				})
-			}})
-		)
-		command.Run(image.AcceleratedImageSelection{Image: output}, []image.AcceleratedImageSelection{})
-	})
 	t.Run("can bind texture", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
+		context := openGL.Context()
 		var (
-			output  = openGL.NewAcceleratedImage(1, 1)
-			tex     = openGL.NewAcceleratedImage(1, 1)
-			program = compileProgram(t, openGL,
+			output  = context.NewAcceleratedImage(1, 1)
+			tex     = context.NewAcceleratedImage(1, 1)
+			program = compileProgram(t, context,
 				`#version 330 core
 						void main() {
 							gl_Position = vec4(0, 0, 0, 0);
@@ -786,7 +1104,7 @@ func TestRenderer_BindTexture(t *testing.T) {
 						 	color = texture(tex, vec2(0,0));
 						 }`,
 			)
-			glCommand = &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
+			glCommand = &command{runGL: func(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
 				// when
 				renderer.BindTexture(0, "tex", tex)
 			}}
@@ -797,12 +1115,13 @@ func TestRenderer_BindTexture(t *testing.T) {
 	t.Run("should draw point by sampling texture", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		img := openGL.NewAcceleratedImage(1, 1)
+		context := openGL.Context()
+		img := context.NewAcceleratedImage(1, 1)
 		img.Upload(make([]image.Color, 1))
-		tex := openGL.NewAcceleratedImage(1, 1)
+		tex := context.NewAcceleratedImage(1, 1)
 		tex.Upload([]image.Color{image.RGBA(1, 2, 3, 4)})
 		program := compileProgram(t,
-			openGL,
+			context,
 			`
 				#version 330 core
 				layout(location = 0) in vec2 xy;	
@@ -818,15 +1137,15 @@ func TestRenderer_BindTexture(t *testing.T) {
 					color = texture(tex, vec2(0.0, 0.0));
 				}
 				`)
-		array := openGL.NewVertexArray(opengl.VertexLayout{opengl.Vec2, opengl.Vec2})
-		buffer := openGL.NewFloatVertexBuffer(2)
+		array := context.NewVertexArray(gl.VertexLayout{gl.Vec2, gl.Vec2})
+		buffer := context.NewFloatVertexBuffer(2)
 		buffer.Upload(0, []float32{0.0, 0.0})
-		vertexPosition := opengl.VertexBufferPointer{Buffer: buffer, Stride: 2}
+		vertexPosition := gl.VertexBufferPointer{Buffer: buffer, Stride: 2}
 		array.Set(0, vertexPosition)
-		glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
+		glCommand := &command{runGL: func(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
 			// when
 			renderer.BindTexture(0, "tex", tex)
-			renderer.DrawArrays(array, opengl.Points, 0, 1)
+			renderer.DrawArrays(array, gl.Points, 0, 1)
 		}}
 		command := program.AcceleratedCommand(glCommand)
 		command.Run(image.AcceleratedImageSelection{
@@ -839,14 +1158,15 @@ func TestRenderer_BindTexture(t *testing.T) {
 	t.Run("should draw point by sampling 2 textures", func(t *testing.T) {
 		openGL, _ := opengl.New(mainThreadLoop)
 		defer openGL.Destroy()
-		img := openGL.NewAcceleratedImage(1, 1)
+		context := openGL.Context()
+		img := context.NewAcceleratedImage(1, 1)
 		img.Upload(make([]image.Color, 1))
-		tex1 := openGL.NewAcceleratedImage(1, 1)
+		tex1 := context.NewAcceleratedImage(1, 1)
 		tex1.Upload([]image.Color{image.RGBA(5, 6, 7, 8)})
-		tex2 := openGL.NewAcceleratedImage(1, 1)
+		tex2 := context.NewAcceleratedImage(1, 1)
 		tex2.Upload([]image.Color{image.RGBA(9, 10, 11, 12)})
 		program := compileProgram(t,
-			openGL,
+			context,
 			`
 				#version 330 core
 				layout(location = 0) in vec2 xy;	
@@ -863,16 +1183,16 @@ func TestRenderer_BindTexture(t *testing.T) {
 					color = texture(tex1, vec2(0.0, 0.0)) + texture(tex2, vec2(0.0, 0.0));
 				}
 				`)
-		array := openGL.NewVertexArray(opengl.VertexLayout{opengl.Vec2, opengl.Vec2})
-		buffer := openGL.NewFloatVertexBuffer(2)
+		array := context.NewVertexArray(gl.VertexLayout{gl.Vec2, gl.Vec2})
+		buffer := context.NewFloatVertexBuffer(2)
 		buffer.Upload(0, []float32{0.0, 0.0})
-		vertexPosition := opengl.VertexBufferPointer{Buffer: buffer, Stride: 2}
+		vertexPosition := gl.VertexBufferPointer{Buffer: buffer, Stride: 2}
 		array.Set(0, vertexPosition)
-		glCommand := &command{runGL: func(renderer *opengl.Renderer, _ []image.AcceleratedImageSelection) {
+		glCommand := &command{runGL: func(renderer *gl.Renderer, _ []image.AcceleratedImageSelection) {
 			// when
 			renderer.BindTexture(0, "tex1", tex1)
 			renderer.BindTexture(1, "tex2", tex2)
-			renderer.DrawArrays(array, opengl.Points, 0, 1)
+			renderer.DrawArrays(array, gl.Points, 0, 1)
 		}}
 		command := program.AcceleratedCommand(glCommand)
 		command.Run(image.AcceleratedImageSelection{
@@ -887,13 +1207,14 @@ func TestRenderer_BindTexture(t *testing.T) {
 func TestRenderer_SetXXX(t *testing.T) {
 	openGL, _ := opengl.New(mainThreadLoop)
 	defer openGL.Destroy()
+	context := openGL.Context()
 	tests := map[string]struct {
-		setUniform     func(name string, renderer *opengl.Renderer)
+		setUniform     func(name string, renderer *gl.Renderer)
 		fragmentShader string
 		expectedColor  image.Color
 	}{
 		"Float": {
-			setUniform: func(name string, renderer *opengl.Renderer) {
+			setUniform: func(name string, renderer *gl.Renderer) {
 				renderer.SetFloat(name, 1)
 			},
 			fragmentShader: `#version 330 core
@@ -905,7 +1226,7 @@ func TestRenderer_SetXXX(t *testing.T) {
 			expectedColor: image.RGBA(255, 0, 0, 0),
 		},
 		"Vec2": {
-			setUniform: func(name string, renderer *opengl.Renderer) {
+			setUniform: func(name string, renderer *gl.Renderer) {
 				renderer.SetVec2(name, 0.11, 0.2)
 			},
 			fragmentShader: `#version 330 core
@@ -917,7 +1238,7 @@ func TestRenderer_SetXXX(t *testing.T) {
 			expectedColor: image.RGBA(28, 51, 0, 0),
 		},
 		"Vec3": {
-			setUniform: func(name string, renderer *opengl.Renderer) {
+			setUniform: func(name string, renderer *gl.Renderer) {
 				renderer.SetVec3(name, 0.11, 0.2, 0.4)
 			},
 			fragmentShader: `#version 330 core
@@ -929,7 +1250,7 @@ func TestRenderer_SetXXX(t *testing.T) {
 			expectedColor: image.RGBA(28, 51, 102, 0),
 		},
 		"Vec4": {
-			setUniform: func(name string, renderer *opengl.Renderer) {
+			setUniform: func(name string, renderer *gl.Renderer) {
 				renderer.SetVec4(name, 0.11, 0.2, 0.4, 0.6)
 			},
 			fragmentShader: `#version 330 core
@@ -941,7 +1262,7 @@ func TestRenderer_SetXXX(t *testing.T) {
 			expectedColor: image.RGBA(28, 51, 102, 153),
 		},
 		"Int": {
-			setUniform: func(name string, renderer *opengl.Renderer) {
+			setUniform: func(name string, renderer *gl.Renderer) {
 				renderer.SetInt(name, 1)
 			},
 			fragmentShader: `#version 330 core
@@ -953,7 +1274,7 @@ func TestRenderer_SetXXX(t *testing.T) {
 			expectedColor: image.RGBA(1, 0, 0, 0),
 		},
 		"IVec2": {
-			setUniform: func(name string, renderer *opengl.Renderer) {
+			setUniform: func(name string, renderer *gl.Renderer) {
 				renderer.SetIVec2(name, 1, 2)
 			},
 			fragmentShader: `#version 330 core
@@ -965,7 +1286,7 @@ func TestRenderer_SetXXX(t *testing.T) {
 			expectedColor: image.RGBA(1, 2, 0, 0),
 		},
 		"IVec3": {
-			setUniform: func(name string, renderer *opengl.Renderer) {
+			setUniform: func(name string, renderer *gl.Renderer) {
 				renderer.SetIVec3(name, 1, 2, 3)
 			},
 			fragmentShader: `#version 330 core
@@ -977,7 +1298,7 @@ func TestRenderer_SetXXX(t *testing.T) {
 			expectedColor: image.RGBA(1, 2, 3, 0),
 		},
 		"IVec4": {
-			setUniform: func(name string, renderer *opengl.Renderer) {
+			setUniform: func(name string, renderer *gl.Renderer) {
 				renderer.SetIVec4(name, 1, 2, 3, 4)
 			},
 			fragmentShader: `#version 330 core
@@ -989,7 +1310,7 @@ func TestRenderer_SetXXX(t *testing.T) {
 			expectedColor: image.RGBA(1, 2, 3, 4),
 		},
 		"Mat3": {
-			setUniform: func(name string, renderer *opengl.Renderer) {
+			setUniform: func(name string, renderer *gl.Renderer) {
 				renderer.SetMat3(name, [9]float32{
 					0.0, 0.11, 0.6,
 					0.3, 0.2, 0.15,
@@ -1008,7 +1329,7 @@ func TestRenderer_SetXXX(t *testing.T) {
 			expectedColor: image.RGBA(204, 181, 255, 0),
 		},
 		"Mat4": {
-			setUniform: func(name string, renderer *opengl.Renderer) {
+			setUniform: func(name string, renderer *gl.Renderer) {
 				renderer.SetMat4(name, [16]float32{
 					0.0, 0.11, 0.34, 0.1,
 					0.3, 0.2, 0.15, 0.8,
@@ -1037,9 +1358,9 @@ func TestRenderer_SetXXX(t *testing.T) {
 				for _, name := range names {
 					t.Run(name, func(t *testing.T) {
 						var (
-							output  = openGL.NewAcceleratedImage(1, 1)
-							program = workingProgram(t, openGL)
-							command = program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
+							output  = context.NewAcceleratedImage(1, 1)
+							program = workingProgram(t, context)
+							command = program.AcceleratedCommand(&command{runGL: func(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
 								assert.Panics(t, func() {
 									// when
 									test.setUniform(name, renderer)
@@ -1056,15 +1377,15 @@ func TestRenderer_SetXXX(t *testing.T) {
 				for _, name := range names {
 					t.Run(name, func(t *testing.T) {
 						var (
-							output  = openGL.NewAcceleratedImage(1, 1)
-							program = compileProgram(t, openGL,
+							output  = context.NewAcceleratedImage(1, 1)
+							program = compileProgram(t, context,
 								`#version 330 core
 												void main() {
 													gl_Position = vec4(0, 0, 0, 0);
 												}`,
 								test.fragmentShader,
 							)
-							command = program.AcceleratedCommand(&command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
+							command = program.AcceleratedCommand(&command{runGL: func(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
 								assert.Panics(t, func() {
 									// when
 									test.setUniform(name, renderer)
@@ -1077,10 +1398,10 @@ func TestRenderer_SetXXX(t *testing.T) {
 			})
 
 			t.Run("should draw point by using uniform", func(t *testing.T) {
-				img := openGL.NewAcceleratedImage(1, 1)
+				img := context.NewAcceleratedImage(1, 1)
 				img.Upload(make([]image.Color, 1))
 				program := compileProgram(t,
-					openGL,
+					context,
 					`
 					#version 330 core
 					layout(location = 0) in vec2 xy;	
@@ -1090,15 +1411,15 @@ func TestRenderer_SetXXX(t *testing.T) {
 					`,
 					test.fragmentShader,
 				)
-				array := openGL.NewVertexArray(opengl.VertexLayout{opengl.Vec2, opengl.Vec2})
-				buffer := openGL.NewFloatVertexBuffer(2)
+				array := context.NewVertexArray(gl.VertexLayout{gl.Vec2, gl.Vec2})
+				buffer := context.NewFloatVertexBuffer(2)
 				buffer.Upload(0, []float32{0.0, 0.0})
-				vertexPosition := opengl.VertexBufferPointer{Buffer: buffer, Stride: 2}
+				vertexPosition := gl.VertexBufferPointer{Buffer: buffer, Stride: 2}
 				array.Set(0, vertexPosition)
-				glCommand := &command{runGL: func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
+				glCommand := &command{runGL: func(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
 					// when
 					test.setUniform("attr", renderer)
-					renderer.DrawArrays(array, opengl.Points, 0, 1)
+					renderer.DrawArrays(array, gl.Points, 0, 1)
 				}}
 				command := program.AcceleratedCommand(glCommand)
 				command.Run(image.AcceleratedImageSelection{
@@ -1114,8 +1435,8 @@ func TestRenderer_SetXXX(t *testing.T) {
 
 }
 
-func workingProgram(t *testing.T, openGL *opengl.OpenGL) *opengl.Program {
-	return compileProgram(t, openGL,
+func workingProgram(t *testing.T, gl *gl.Context) *gl.Program {
+	return compileProgram(t, gl,
 		`#version 330 core
 						void main() {
 							gl_Position = vec4(0, 0, 0, 0);
@@ -1128,13 +1449,32 @@ func workingProgram(t *testing.T, openGL *opengl.OpenGL) *opengl.Program {
 						 }`)
 }
 
-func compileProgram(t *testing.T, openGL *opengl.OpenGL,
-	vertexShaderSrc, fragmentShaderSrc string) *opengl.Program {
-	vertexShader, err := openGL.CompileVertexShader(vertexShaderSrc)
+func compileProgram(t *testing.T, context *gl.Context,
+	vertexShaderSrc, fragmentShaderSrc string) *gl.Program {
+	vertexShader, err := context.CompileVertexShader(vertexShaderSrc)
 	require.NoError(t, err)
-	fragmentShader, err := openGL.CompileFragmentShader(fragmentShaderSrc)
+	fragmentShader, err := context.CompileFragmentShader(fragmentShaderSrc)
 	require.NoError(t, err)
-	program, err := openGL.LinkProgram(vertexShader, fragmentShader)
+	program, err := context.LinkProgram(vertexShader, fragmentShader)
 	require.NoError(t, err)
 	return program
+}
+
+type command struct {
+	runGL func(renderer *gl.Renderer, selections []image.AcceleratedImageSelection)
+}
+
+func (c *command) RunGL(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
+	c.runGL(renderer, selections)
+}
+
+type emptyCommand struct {
+}
+
+func (e emptyCommand) RunGL(_ *gl.Renderer, _ []image.AcceleratedImageSelection) {}
+
+func assertColors(t *testing.T, expected []image.Color, img *gl.AcceleratedImage) {
+	output := make([]image.Color, len(expected))
+	img.Download(output)
+	assert.Equal(t, expected, output)
 }

@@ -3,9 +3,10 @@ package fake_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/image/fake"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestNewAcceleratedImage(t *testing.T) {

@@ -1,136 +1,23 @@
 package opengl
 
 import (
-	"fmt"
-
-	"github.com/go-gl/gl/v3.3-core/gl"
+	"github.com/jacekolszak/pixiq/gl"
 )
 
-func compileProgram(vertexShaderSrc, fragmentShaderSrc string) (*program, error) {
-	vertexShader, err := compileVertexShader(vertexShaderSrc)
+func compileProgram(context *gl.Context, vertexShaderSrc, fragmentShaderSrc string) (*gl.Program, error) {
+	vertexShader, err := context.CompileVertexShader(vertexShaderSrc)
 	if err != nil {
 		return nil, err
 	}
-	defer vertexShader.delete()
-
-	fragmentShader, err := compileFragmentShader(fragmentShaderSrc)
+	fragmentShader, err := context.CompileFragmentShader(fragmentShaderSrc)
 	if err != nil {
 		return nil, err
 	}
-	defer fragmentShader.delete()
-
-	program, err := linkProgram(vertexShader, fragmentShader)
+	program, err := context.LinkProgram(vertexShader, fragmentShader)
 	if err != nil {
 		return nil, err
 	}
-
 	return program, nil
-}
-
-type program struct {
-	id uint32
-}
-
-func (p *program) use() {
-	gl.UseProgram(p.id)
-}
-
-func (p *program) activeUniformLocations() map[string]int32 {
-	locationsByName := map[string]int32{}
-	var count, bufSize, length, nameMaxLength int32
-	var xtype uint32
-	gl.GetProgramiv(p.id, gl.ACTIVE_UNIFORM_MAX_LENGTH, &nameMaxLength)
-	name := make([]byte, nameMaxLength)
-	gl.GetProgramiv(p.id, gl.ACTIVE_UNIFORMS, &count)
-	for location := int32(0); location < count; location++ {
-		gl.GetActiveUniform(p.id, uint32(location), nameMaxLength, &bufSize, &length, &xtype, &name[0])
-		goName := gl.GoStr(&name[0])
-		locationsByName[goName] = location
-	}
-	return locationsByName
-}
-
-type attribute struct {
-	typ  Type
-	name string
-}
-
-func (p *program) attributes() map[int32]attribute {
-	var count, bufSize, length, nameMaxLength int32
-	var xtype uint32
-	gl.GetProgramiv(p.id, gl.ACTIVE_ATTRIBUTE_MAX_LENGTH, &nameMaxLength)
-	name := make([]byte, nameMaxLength)
-	gl.GetProgramiv(p.id, gl.ACTIVE_ATTRIBUTES, &count)
-	attributes := map[int32]attribute{}
-	for i := int32(0); i < count; i++ {
-		gl.GetActiveAttrib(p.id, uint32(i), nameMaxLength, &bufSize, &length, &xtype, &name[0])
-		location := gl.GetAttribLocation(p.id, &name[0])
-		attributes[location] = attribute{typ: valueOf(xtype),
-			name: gl.GoStr(&name[0])}
-	}
-	return attributes
-}
-
-func linkProgram(shaders ...*shader) (*program, error) {
-	programID := gl.CreateProgram()
-	for _, shader := range shaders {
-		gl.AttachShader(programID, shader.id)
-	}
-	gl.LinkProgram(programID)
-	var success int32
-	gl.GetProgramiv(programID, gl.LINK_STATUS, &success)
-	if success == gl.FALSE {
-		var infoLogLen int32
-		gl.GetProgramiv(programID, gl.INFO_LOG_LENGTH, &infoLogLen)
-		infoLog := make([]byte, infoLogLen)
-		if infoLogLen > 0 {
-			gl.GetProgramInfoLog(programID, infoLogLen, nil, &infoLog[0])
-		}
-		return nil, fmt.Errorf("error linking program: %s", string(infoLog))
-	}
-	return &program{
-		id: programID,
-	}, nil
-}
-
-type shader struct {
-	id uint32
-}
-
-func compileVertexShader(src string) (*shader, error) {
-	return compileShader(gl.VERTEX_SHADER, src)
-}
-
-func compileFragmentShader(src string) (*shader, error) {
-	return compileShader(gl.FRAGMENT_SHADER, src)
-}
-
-func compileShader(xtype uint32, src string) (*shader, error) {
-	if src == "" {
-		src = " "
-	}
-	shaderID := gl.CreateShader(xtype)
-	srcXString, free := gl.Strs(src)
-	defer free()
-	length := int32(len(src))
-	gl.ShaderSource(shaderID, 1, srcXString, &length)
-	gl.CompileShader(shaderID)
-	var success int32
-	gl.GetShaderiv(shaderID, gl.COMPILE_STATUS, &success)
-	if success == gl.FALSE {
-		var logLen int32
-		gl.GetShaderiv(shaderID, gl.INFO_LOG_LENGTH, &logLen)
-		infoLog := make([]byte, logLen)
-		if logLen > 0 {
-			gl.GetShaderInfoLog(shaderID, logLen, nil, &infoLog[0])
-		}
-		return nil, fmt.Errorf("glCompileShader failed: %s", string(infoLog))
-	}
-	return &shader{id: shaderID}, nil
-}
-
-func (s *shader) delete() {
-	gl.DeleteShader(s.id)
 }
 
 const vertexShaderSrc = `

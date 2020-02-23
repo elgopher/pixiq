@@ -1,9 +1,10 @@
 package main
 
 import (
+	"log"
+
 	"github.com/jacekolszak/pixiq/loop"
 	"github.com/jacekolszak/pixiq/opengl"
-	"log"
 )
 
 // This example shows how to properly close the window.

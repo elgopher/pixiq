@@ -1,21 +1,24 @@
 package main
 
 import (
+	"log"
+	"time"
+
+	"github.com/jacekolszak/pixiq/gl"
 	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/loop"
 	"github.com/jacekolszak/pixiq/opengl"
-	"log"
-	"time"
 )
 
 func main() {
-	opengl.RunOrDie(func(gl *opengl.OpenGL) {
+	opengl.RunOrDie(func(openGL *opengl.OpenGL) {
 		var (
-			buffer  = makeVertexBuffer(gl)
-			array   = makeVertexArray(gl, buffer)
-			program = compileProgram(gl)
+			context = openGL.Context()
+			buffer  = makeVertexBuffer(context)
+			array   = makeVertexArray(context, buffer)
+			program = compileProgram(context)
 			cmd     = program.AcceleratedCommand(&drawColorfulRectangle{vertexArray: array})
-			window  = openWindow(gl)
+			window  = openWindow(openGL)
 		)
 		loop.Run(window, func(frame *loop.Frame) {
 			screen := frame.Screen()
@@ -25,16 +28,16 @@ func main() {
 }
 
 type drawColorfulRectangle struct {
-	vertexArray *opengl.VertexArray
+	vertexArray *gl.VertexArray
 }
 
-func (c drawColorfulRectangle) RunGL(renderer *opengl.Renderer, _ []image.AcceleratedImageSelection) {
+func (c drawColorfulRectangle) RunGL(renderer *gl.Renderer, _ []image.AcceleratedImageSelection) {
 	var opacity = float32(time.Now().Nanosecond()) / float32(time.Second)
 	renderer.SetFloat("opacity", opacity)
-	renderer.DrawArrays(c.vertexArray, opengl.TriangleFan, 0, 4)
+	renderer.DrawArrays(c.vertexArray, gl.TriangleFan, 0, 4)
 }
 
-func makeVertexBuffer(gl *opengl.OpenGL) *opengl.FloatVertexBuffer {
+func makeVertexBuffer(context *gl.Context) *gl.FloatVertexBuffer {
 	// xy -> rgb
 	vertices := []float32{
 		-1, 1, 1, 0, 0, // top-left -> red
@@ -42,16 +45,16 @@ func makeVertexBuffer(gl *opengl.OpenGL) *opengl.FloatVertexBuffer {
 		1, -1, 0, 0, 1, // bottom-right -> blue
 		-1, -1, 1, 1, 1, // bottom-left -> white
 	}
-	buffer := gl.NewFloatVertexBuffer(len(vertices))
+	buffer := context.NewFloatVertexBuffer(len(vertices))
 	buffer.Upload(0, vertices)
 	return buffer
 }
 
-func makeVertexArray(gl *opengl.OpenGL, buffer *opengl.FloatVertexBuffer) *opengl.VertexArray {
-	array := gl.NewVertexArray(opengl.VertexLayout{opengl.Vec2, opengl.Vec3})
-	xy := opengl.VertexBufferPointer{Offset: 0, Stride: 5, Buffer: buffer}
+func makeVertexArray(context *gl.Context, buffer *gl.FloatVertexBuffer) *gl.VertexArray {
+	array := context.NewVertexArray(gl.VertexLayout{gl.Vec2, gl.Vec3})
+	xy := gl.VertexBufferPointer{Offset: 0, Stride: 5, Buffer: buffer}
 	array.Set(0, xy)
-	color := opengl.VertexBufferPointer{Offset: 2, Stride: 5, Buffer: buffer}
+	color := gl.VertexBufferPointer{Offset: 2, Stride: 5, Buffer: buffer}
 	array.Set(1, color)
 	return array
 }
@@ -82,16 +85,16 @@ const fragmentShaderSrc = `
 	}
 `
 
-func compileProgram(gl *opengl.OpenGL) *opengl.Program {
-	vertexShader, err := gl.CompileVertexShader(vertexShaderSrc)
+func compileProgram(context *gl.Context) *gl.Program {
+	vertexShader, err := context.CompileVertexShader(vertexShaderSrc)
 	if err != nil {
 		log.Panicf("CompileVertexShader failed: %v", err)
 	}
-	fragmentShader, err := gl.CompileFragmentShader(fragmentShaderSrc)
+	fragmentShader, err := context.CompileFragmentShader(fragmentShaderSrc)
 	if err != nil {
 		log.Panicf("CompileFragmentShader failed: %v", err)
 	}
-	program, err := gl.LinkProgram(vertexShader, fragmentShader)
+	program, err := context.LinkProgram(vertexShader, fragmentShader)
 	if err != nil {
 		log.Panicf("LinkProgram failed: %v", err)
 	}

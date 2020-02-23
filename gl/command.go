@@ -1,10 +1,8 @@
-package opengl
+package gl
 
 import (
 	"fmt"
 	"strings"
-
-	"github.com/go-gl/gl/v3.3-core/gl"
 
 	"github.com/jacekolszak/pixiq/image"
 )
@@ -17,9 +15,9 @@ type Command interface {
 
 // Renderer is an API for drawing primitives
 type Renderer struct {
-	program           *Program
-	runInOpenGLThread func(func())
-	allImages         allImages
+	program   *Program
+	api       API
+	allImages allImages
 }
 
 // BindTexture assigns image.AcceleratedImage to a given textureUnit and uniform attribute.
@@ -33,19 +31,15 @@ func (r *Renderer) BindTexture(textureUnit int, uniformAttributeName string, ima
 	if !ok {
 		panic("image has not been created in this OpenGL context")
 	}
-	r.runInOpenGLThread(func() {
-		gl.Uniform1i(textureLocation, int32(textureUnit))
-		gl.ActiveTexture(uint32(gl.TEXTURE0 + textureUnit))
-		gl.BindTexture(gl.TEXTURE_2D, img.textureID)
-	})
+	r.api.Uniform1i(textureLocation, int32(textureUnit))
+	r.api.ActiveTexture(uint32(texture0 + textureUnit))
+	r.api.BindTexture(texture2D, img.textureID)
 }
 
 // SetFloat sets uniform attribute of type float
 func (r *Renderer) SetFloat(uniformAttributeName string, value float32) {
 	location := r.locationOrPanic(uniformAttributeName)
-	r.runInOpenGLThread(func() {
-		gl.Uniform1f(location, value)
-	})
+	r.api.Uniform1f(location, value)
 }
 
 func (r *Renderer) locationOrPanic(uniformAttributeName string) int32 {
@@ -63,73 +57,55 @@ func (r *Renderer) locationOrPanic(uniformAttributeName string) int32 {
 // SetVec2 sets uniform attribute of type vec2
 func (r *Renderer) SetVec2(uniformAttributeName string, v1, v2 float32) {
 	location := r.locationOrPanic(uniformAttributeName)
-	r.runInOpenGLThread(func() {
-		gl.Uniform2f(location, v1, v2)
-	})
+	r.api.Uniform2f(location, v1, v2)
 }
 
 // SetVec3 sets uniform attribute of type vec3
 func (r *Renderer) SetVec3(uniformAttributeName string, v1, v2, v3 float32) {
 	location := r.locationOrPanic(uniformAttributeName)
-	r.runInOpenGLThread(func() {
-		gl.Uniform3f(location, v1, v2, v3)
-	})
+	r.api.Uniform3f(location, v1, v2, v3)
 }
 
 // SetVec4 sets uniform attribute of type vec4
 func (r *Renderer) SetVec4(uniformAttributeName string, v1, v2, v3, v4 float32) {
 	location := r.locationOrPanic(uniformAttributeName)
-	r.runInOpenGLThread(func() {
-		gl.Uniform4f(location, v1, v2, v3, v4)
-	})
+	r.api.Uniform4f(location, v1, v2, v3, v4)
 }
 
 // SetInt sets uniform attribute of type int32
 func (r *Renderer) SetInt(uniformAttributeName string, value int32) {
 	location := r.locationOrPanic(uniformAttributeName)
-	r.runInOpenGLThread(func() {
-		gl.Uniform1i(location, value)
-	})
+	r.api.Uniform1i(location, value)
 }
 
 // SetIVec2 sets uniform attribute of type ivec2
 func (r *Renderer) SetIVec2(uniformAttributeName string, v1, v2 int32) {
 	location := r.locationOrPanic(uniformAttributeName)
-	r.runInOpenGLThread(func() {
-		gl.Uniform2i(location, v1, v2)
-	})
+	r.api.Uniform2i(location, v1, v2)
 }
 
 // SetIVec3 sets uniform attribute of type ivec3
 func (r *Renderer) SetIVec3(uniformAttributeName string, v1, v2, v3 int32) {
 	location := r.locationOrPanic(uniformAttributeName)
-	r.runInOpenGLThread(func() {
-		gl.Uniform3i(location, v1, v2, v3)
-	})
+	r.api.Uniform3i(location, v1, v2, v3)
 }
 
 // SetIVec4 sets uniform attribute of type ivec4
 func (r *Renderer) SetIVec4(uniformAttributeName string, v1, v2, v3, v4 int32) {
 	location := r.locationOrPanic(uniformAttributeName)
-	r.runInOpenGLThread(func() {
-		gl.Uniform4i(location, v1, v2, v3, v4)
-	})
+	r.api.Uniform4i(location, v1, v2, v3, v4)
 }
 
 // SetMat3 sets uniform attribute of type mat3
 func (r *Renderer) SetMat3(uniformAttributeName string, value [9]float32) {
 	location := r.locationOrPanic(uniformAttributeName)
-	r.runInOpenGLThread(func() {
-		gl.UniformMatrix3fv(location, 1, false, &value[0])
-	})
+	r.api.UniformMatrix3fv(location, 1, false, &value[0])
 }
 
 // SetMat4 sets uniform attribute of type mat4
 func (r *Renderer) SetMat4(uniformAttributeName string, value [16]float32) {
 	location := r.locationOrPanic(uniformAttributeName)
-	r.runInOpenGLThread(func() {
-		gl.UniformMatrix4fv(location, 1, false, &value[0])
-	})
+	r.api.UniformMatrix4fv(location, 1, false, &value[0])
 }
 
 // Mode defines which primitives will be drawn.
@@ -143,31 +119,31 @@ var (
 	// Points draws points using GL_POINTS.
 	//
 	// See https://www.khronos.org/opengl/wiki/Primitive#Point_primitives
-	Points = Mode{glMode: gl.POINTS}
+	Points = Mode{glMode: points}
 	// LineStrip draws lines using GL_LINE_STRIP.
 	//
 	// See https://www.khronos.org/opengl/wiki/Primitive#Line_primitives
-	LineStrip = Mode{glMode: gl.LINE_STRIP}
+	LineStrip = Mode{glMode: lineStrip}
 	// LineLoop draws lines using GL_LINE_LOOP.
 	//
 	// See https://www.khronos.org/opengl/wiki/Primitive#Line_primitives
-	LineLoop = Mode{glMode: gl.LINE_LOOP}
+	LineLoop = Mode{glMode: lineLoop}
 	// Lines draws lines using GL_LINES.
 	//
 	// See https://www.khronos.org/opengl/wiki/Primitive#Line_primitives
-	Lines = Mode{glMode: gl.LINES}
+	Lines = Mode{glMode: lines}
 	// TriangleStrip draws triangles using GL_TRIANGLE_STRIP.
 	//
 	// See https://www.khronos.org/opengl/wiki/Primitive#Triangle_primitives
-	TriangleStrip = Mode{glMode: gl.TRIANGLE_STRIP}
+	TriangleStrip = Mode{glMode: triangleStrip}
 	// TriangleFan draws triangles using GL_TRIANGLE_FAN.
 	//
 	// See https://www.khronos.org/opengl/wiki/Primitive#Triangle_primitives
-	TriangleFan = Mode{glMode: gl.TRIANGLE_FAN}
+	TriangleFan = Mode{glMode: triangleFan}
 	// Triangles draws triangles using GL_TRIANGLES.
 	//
 	// See https://www.khronos.org/opengl/wiki/Primitive#Triangle_primitives
-	Triangles = Mode{glMode: gl.TRIANGLES}
+	Triangles = Mode{glMode: triangles}
 )
 
 // DrawArrays draws primitives (such as triangles) using vertices defined in VertexArray.
@@ -175,10 +151,8 @@ var (
 // Before primitive is drawn this method validates if
 func (r *Renderer) DrawArrays(array *VertexArray, mode Mode, first, count int) {
 	r.validateAttributeTypes(array)
-	r.runInOpenGLThread(func() {
-		gl.BindVertexArray(array.id)
-		gl.DrawArrays(mode.glMode, int32(first), int32(count))
-	})
+	r.api.BindVertexArray(array.id)
+	r.api.DrawArrays(mode.glMode, int32(first), int32(count))
 }
 
 func (r *Renderer) validateAttributeTypes(array *VertexArray) {
@@ -195,19 +169,17 @@ func (r *Renderer) validateAttributeTypes(array *VertexArray) {
 
 // Clear clears the selection with a given color.
 func (r *Renderer) Clear(color image.Color) {
-	r.runInOpenGLThread(func() {
-		gl.ClearColor(color.RGBAf())
-		gl.Clear(gl.COLOR_BUFFER_BIT)
-	})
+	r.api.ClearColor(color.RGBAf())
+	r.api.Clear(colorBufferBit)
 }
 
 // AcceleratedCommand is an image.AcceleratedCommand implementation. It delegates
 // the drawing to Command.
 type AcceleratedCommand struct {
-	command           Command
-	program           *Program
-	runInOpenGLThread func(func())
-	allImages         allImages
+	command   Command
+	program   *Program
+	api       API
+	allImages allImages
 }
 
 // Run implements image.AcceleratedCommand#Run.
@@ -222,26 +194,26 @@ func (c *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selecti
 	if !ok {
 		panic("output image created in a different OpenGL context than program")
 	}
-	c.runInOpenGLThread(func() {
-		c.program.use()
-		gl.Enable(gl.SCISSOR_TEST)
-		gl.BindFramebuffer(gl.FRAMEBUFFER, img.frameBufferID)
-		loc := output.Location
-		locHeight := loc.Height
-		if locHeight > img.height {
-			locHeight = img.height
-		}
-		x := int32(loc.X)
-		y := int32(img.height - locHeight - loc.Y)
-		w := int32(loc.Width)
-		h := int32(locHeight)
-		gl.Scissor(x, y, w, h)
-		gl.Viewport(x, y, w, h)
-	})
+
+	c.api.UseProgram(c.program.id)
+	c.api.Enable(scissorTest)
+	c.api.BindFramebuffer(framebuffer, img.frameBufferID)
+	loc := output.Location
+	locHeight := loc.Height
+	if locHeight > img.height {
+		locHeight = img.height
+	}
+	x := int32(loc.X)
+	y := int32(img.height - locHeight - loc.Y)
+	w := int32(loc.Width)
+	h := int32(locHeight)
+	c.api.Scissor(x, y, w, h)
+	c.api.Viewport(x, y, w, h)
+
 	renderer := &Renderer{
-		program:           c.program,
-		runInOpenGLThread: c.runInOpenGLThread,
-		allImages:         c.allImages,
+		program:   c.program,
+		api:       c.api,
+		allImages: c.allImages,
 	}
 	c.command.RunGL(renderer, selections)
 }
