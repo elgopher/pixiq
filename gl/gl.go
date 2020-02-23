@@ -330,6 +330,11 @@ func (a *VertexArray) Set(location int, pointer VertexBufferPointer) {
 	)
 }
 
+// ID returns VertexArray identifier (aka name)
+func (a *VertexArray) ID() uint32 {
+	return a.id
+}
+
 // Ptr takes a slice or pointer (to a singular scalar value or the first
 // element of an array or slice) and returns its GL-compatible address.
 //

@@ -55,14 +55,14 @@ func New(mainThreadLoop *MainThreadLoop) (*OpenGL, error) {
 			job()
 		})
 	}
-	context := &context{runInOpenGLThread: runInOpenGLThread}
+	api := &context{runInOpenGLThread: runInOpenGLThread}
 	openGL := &OpenGL{
 		mainThreadLoop:    mainThreadLoop,
 		runInOpenGLThread: runInOpenGLThread,
 		stopPollingEvents: make(chan struct{}),
 		mainWindow:        mainWindow,
-		context:           context,
-		glContext:         gl.NewContext(context),
+		api:               api,
+		context:           gl.NewContext(api),
 	}
 	go openGL.startPollingEvents(openGL.stopPollingEvents)
 	return openGL, nil
@@ -116,8 +116,8 @@ type OpenGL struct {
 	runInOpenGLThread func(func())
 	stopPollingEvents chan struct{}
 	mainWindow        *glfw.Window
-	glContext         *gl.Context
-	*context
+	api               gl.API
+	context           *gl.Context
 }
 
 // Destroy cleans all the OpenGL resources associated with this instance.
@@ -167,7 +167,7 @@ func (g *OpenGL) NewImage(width, height int) *image.Image {
 	if height < 0 {
 		panic("negative height")
 	}
-	acceleratedImage := g.glContext.NewAcceleratedImage(width, height)
+	acceleratedImage := g.context.NewAcceleratedImage(width, height)
 	return image.New(width, height, acceleratedImage)
 }
 
@@ -181,7 +181,7 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 	}
 	// FIXME: EventBuffer size should be configurable
 	keyboardEvents := internal.NewKeyboardEvents(keyboard.NewEventBuffer(32))
-	screenAcceleratedImage := g.glContext.NewAcceleratedImage(width, height)
+	screenAcceleratedImage := g.context.NewAcceleratedImage(width, height)
 	screenImage := image.New(width, height, screenAcceleratedImage)
 	win := &Window{
 		mainThreadLoop:         g.mainThreadLoop,
@@ -218,10 +218,10 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 			job()
 		})
 	}
-	win.context = &context{runInOpenGLThread: runInOpenGLThread}
-	win.glContext = gl.NewContext(win.context)
-	win.screenPolygon = newScreenPolygon(win.context)
-	win.program, err = compileProgram(win.glContext, vertexShaderSrc, fragmentShaderSrc)
+	win.api = &context{runInOpenGLThread: runInOpenGLThread}
+	win.context = gl.NewContext(win.api)
+	win.screenPolygon = newScreenPolygon(win.context, win.api)
+	win.program, err = compileProgram(win.context, vertexShaderSrc, fragmentShaderSrc)
 	if err != nil {
 		return nil, err
 	}
@@ -230,7 +230,7 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 
 // Context returns OpenGL's context.
 func (g *OpenGL) Context() *gl.Context {
-	return g.glContext
+	return g.context
 }
 
 // WindowOption is an option used when opening the window.

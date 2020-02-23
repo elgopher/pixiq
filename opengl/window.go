@@ -21,8 +21,8 @@ type Window struct {
 	zoom                   int
 	screenImage            *image.Image
 	screenAcceleratedImage *gl.AcceleratedImage
-	context                *context
-	glContext              *gl.Context
+	api                    gl.API
+	context                *gl.Context
 	program                *gl.Program
 }
 
@@ -30,14 +30,14 @@ type Window struct {
 // after SwapImages is called.
 func (w *Window) Draw() {
 	w.screenImage.Upload()
-	w.context.UseProgram(w.program.ID())
+	w.api.UseProgram(w.program.ID())
 	var width, height int
 	w.mainThreadLoop.Execute(func() {
 		width, height = w.glfwWindow.GetFramebufferSize()
 	})
-	w.context.BindFramebuffer(gl33.FRAMEBUFFER, 0)
-	w.context.Viewport(0, 0, int32(width), int32(height))
-	w.context.BindTexture(gl33.TEXTURE_2D, w.screenAcceleratedImage.TextureID())
+	w.api.BindFramebuffer(gl33.FRAMEBUFFER, 0)
+	w.api.Viewport(0, 0, int32(width), int32(height))
+	w.api.BindTexture(gl33.TEXTURE_2D, w.screenAcceleratedImage.TextureID())
 	w.screenPolygon.draw()
 }
 

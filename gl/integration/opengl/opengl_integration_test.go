@@ -1068,10 +1068,10 @@ func TestRenderer_BindTexture(t *testing.T) {
 	t.Run("can't bind texture created in a different context", func(t *testing.T) {
 		openGL1, _ := opengl.New(mainThreadLoop)
 		defer openGL1.Destroy()
-		context1 := gl.NewContext(openGL1)
+		context1 := openGL1.Context()
 		openGL2, _ := opengl.New(mainThreadLoop)
 		defer openGL2.Destroy()
-		context2 := gl.NewContext(openGL2)
+		context2 := openGL2.Context()
 		var (
 			output  = context1.NewAcceleratedImage(1, 1)
 			tex     = context2.NewAcceleratedImage(1, 1)
