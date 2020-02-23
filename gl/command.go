@@ -156,6 +156,10 @@ func (r *Renderer) DrawArrays(array *VertexArray, mode Mode, first, count int) {
 }
 
 func (r *Renderer) validateAttributeTypes(array *VertexArray) {
+	if len(array.layout) > len(r.program.attributes) {
+		msg := fmt.Sprintf("vertex array has more enabled attributes (%d) than program (%d)", len(array.layout), len(r.program.attributes))
+		panic(msg)
+	}
 	for i := 0; i < len(array.layout); i++ {
 		if attr, ok := r.program.attributes[int32(i)]; ok {
 			vertexArrayType := array.layout[i]
