@@ -10,7 +10,7 @@ import (
 	"github.com/jacekolszak/pixiq/image"
 )
 
-func TestContextOf(t *testing.T) {
+func TestNewContext(t *testing.T) {
 	t.Run("should panic when api is nil", func(t *testing.T) {
 		assert.Panics(t, func() {
 			gl.NewContext(nil)
@@ -19,6 +19,16 @@ func TestContextOf(t *testing.T) {
 	t.Run("should create context", func(t *testing.T) {
 		context := gl.NewContext(apiStub{})
 		assert.NotNil(t, context)
+	})
+}
+
+func TestContextAPI(t *testing.T) {
+	t.Run("should return API", func(t *testing.T) {
+		api := &apiStub{}
+		context := gl.NewContext(api)
+		// when
+		actualAPI := context.API()
+		assert.Same(t, api, actualAPI)
 	})
 }
 

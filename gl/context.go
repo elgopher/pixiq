@@ -12,6 +12,12 @@ type Context struct {
 	capabilities    *Capabilities
 }
 
+// API returns API passed during Context construction. It may be used for directly
+// accessing OpenGL.
+func (c *Context) API() API {
+	return c.api
+}
+
 // Capabilities returns parameter values reported by current OpenGL instance.
 func (c *Context) Capabilities() *Capabilities {
 	return c.capabilities
