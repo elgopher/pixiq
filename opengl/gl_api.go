@@ -21,6 +21,12 @@ type context struct {
 	bindVertexArray *bindVertexArray
 	uniform1f       *uniform1f
 	uniform2f       *uniform2f
+	uniform3f       *uniform3f
+	uniform4f       *uniform4f
+	useProgram      *useProgram
+	bindFramebuffer *bindFramebuffer
+	scissor         *scissor
+	viewport        *viewport
 }
 
 func newContext(runInOpenGLThread func(func()), glThread *glThread) *context {
@@ -36,6 +42,12 @@ func newContext(runInOpenGLThread func(func()), glThread *glThread) *context {
 		bindVertexArray:   &bindVertexArray{},
 		uniform1f:         &uniform1f{},
 		uniform2f:         &uniform2f{},
+		uniform3f:         &uniform3f{},
+		uniform4f:         &uniform4f{},
+		useProgram:        &useProgram{},
+		bindFramebuffer:   &bindFramebuffer{},
+		scissor:           &scissor{},
+		viewport:          &viewport{},
 	}
 }
 
@@ -255,13 +267,20 @@ func (g *context) GetProgramInfoLog(program uint32, bufSize int32, length *int32
 	})
 }
 
+type useProgram struct {
+	program uint32
+}
+
+func (u *useProgram) run() {
+	gl.UseProgram(u.program)
+}
+
 // UseProgram installs a program object as part of current rendering state
 func (g *context) UseProgram(program uint32) {
 	g.mutex.Lock()
 	defer g.mutex.Unlock()
-	g.runInOpenGLThread(func() {
-		gl.UseProgram(program)
-	})
+	g.useProgram.program = program
+	g.glThread.execute(g.useProgram)
 }
 
 // CreateProgram creates a program object
@@ -313,31 +332,66 @@ func (g *context) Enable(cap uint32) {
 	})
 }
 
+type bindFramebuffer struct {
+	target      uint32
+	framebuffer uint32
+}
+
+func (b *bindFramebuffer) run() {
+	gl.BindFramebuffer(b.target, b.framebuffer)
+}
+
 // BindFramebuffer binds a framebuffer to a framebuffer target
 func (g *context) BindFramebuffer(target uint32, framebuffer uint32) {
 	g.mutex.Lock()
 	defer g.mutex.Unlock()
-	g.runInOpenGLThread(func() {
-		gl.BindFramebuffer(target, framebuffer)
-	})
+	g.bindFramebuffer.target = target
+	g.bindFramebuffer.framebuffer = framebuffer
+	g.glThread.execute(g.bindFramebuffer)
+}
+
+type scissor struct {
+	x      int32
+	y      int32
+	width  int32
+	height int32
+}
+
+func (s *scissor) run() {
+	gl.Scissor(s.x, s.y, s.width, s.height)
 }
 
 // Scissor defines the scissor box
 func (g *context) Scissor(x int32, y int32, width int32, height int32) {
 	g.mutex.Lock()
 	defer g.mutex.Unlock()
-	g.runInOpenGLThread(func() {
-		gl.Scissor(x, y, width, height)
-	})
+	g.scissor.x = x
+	g.scissor.y = y
+	g.scissor.width = width
+	g.scissor.height = height
+	g.glThread.execute(g.scissor)
+}
+
+type viewport struct {
+	x      int32
+	y      int32
+	width  int32
+	height int32
+}
+
+func (v *viewport) run() {
+	gl.Viewport(v.x, v.y, v.width, v.height)
 }
 
 // Viewport sets the viewport
 func (g *context) Viewport(x int32, y int32, width int32, height int32) {
 	g.mutex.Lock()
 	defer g.mutex.Unlock()
-	g.runInOpenGLThread(func() {
-		gl.Viewport(x, y, width, height)
-	})
+	g.viewport.x = x
+	g.viewport.y = y
+	g.viewport.width = width
+	g.viewport.height = height
+	g.glThread.execute(g.viewport)
 }
 
 // ClearColor specifies clear values for the color buffers
@@ -423,22 +477,50 @@ func (g *context) Uniform2f(location int32, v0 float32, v1 float32) {
 	g.glThread.execute(g.uniform2f)
 }
 
+type uniform3f struct {
+	location int32
+	v0       float32
+	v1       float32
+	v2       float32
+}
+
+func (u *uniform3f) run() {
+	gl.Uniform3f(u.location, u.v0, u.v1, u.v2)
+}
+
 // Uniform3f specifies the value of a uniform variable for the current program object
 func (g *context) Uniform3f(location int32, v0 float32, v1 float32, v2 float32) {
 	g.mutex.Lock()
 	defer g.mutex.Unlock()
-	g.runInOpenGLThread(func() {
-		gl.Uniform3f(location, v0, v1, v2)
-	})
+	g.uniform3f.location = location
+	g.uniform3f.v0 = v0
+	g.uniform3f.v1 = v1
+	g.uniform3f.v2 = v2
+	g.glThread.execute(g.uniform3f)
+}
+
+type uniform4f struct {
+	location int32
+	v0       float32
+	v1       float32
+	v2       float32
+	v3       float32
+}
+
+func (u *uniform4f) run() {
+	gl.Uniform4f(u.location, u.v0, u.v1, u.v2, u.v3)
 }
 
 // Uniform4f specifies the value of a uniform variable for the current program object
 func (g *context) Uniform4f(location int32, v0 float32, v1 float32, v2 float32, v3 float32) {
 	g.mutex.Lock()
 	defer g.mutex.Unlock()
-	g.runInOpenGLThread(func() {
-		gl.Uniform4f(location, v0, v1, v2, v3)
-	})
+	g.uniform4f.location = location
+	g.uniform4f.v0 = v0
+	g.uniform4f.v1 = v1
+	g.uniform4f.v2 = v2
+	g.uniform4f.v3 = v3
+	g.glThread.execute(g.uniform4f)
 }
 
 // Uniform1i specifies the value of a uniform variable for the current program object
