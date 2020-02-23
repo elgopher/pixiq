@@ -66,7 +66,7 @@ func (c *Context) NewFloatVertexBuffer(size int) *FloatVertexBuffer {
 	var id uint32
 	c.api.GenBuffers(1, &id)
 	c.api.BindBuffer(arrayBuffer, id)
-	c.api.BufferData(arrayBuffer, size*4, Ptr(nil), staticDraw) // FIXME: Parametrize usage
+	c.api.BufferData(arrayBuffer, size*4, c.api.Ptr(nil), staticDraw) // FIXME: Parametrize usage
 	vb := &FloatVertexBuffer{
 		id:   id,
 		size: size,

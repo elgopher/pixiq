@@ -396,6 +396,25 @@ func (g *context) GetError() uint32 {
 	return code
 }
 
+// Ptr takes a slice or pointer (to a singular scalar value or the first
+// element of an array or slice) and returns its GL-compatible address.
+//
+// For example:
+//
+// 	var data []uint8
+// 	...
+// 	api.TexImage2D(..., api.Ptr(&data[0]))
+func (g *context) Ptr(data interface{}) unsafe.Pointer {
+	return gl.Ptr(data)
+}
+
+// PtrOffset takes a pointer offset and returns a GL-compatible pointer.
+// Useful for functions such as glVertexAttribPointer that take pointer
+// parameters indicating an offset rather than an absolute memory address.
+func (g *context) PtrOffset(offset int) unsafe.Pointer {
+	return gl.PtrOffset(offset)
+}
+
 // GoStr takes a null-terminated string returned by OpenGL and constructs a
 // corresponding Go string.
 func (g *context) GoStr(cstr *uint8) string {

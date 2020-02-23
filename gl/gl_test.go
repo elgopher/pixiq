@@ -440,7 +440,8 @@ func (c *command) RunGL(renderer *gl.Renderer, selections []image.AcceleratedIma
 
 type apiStub struct{}
 
-func (a apiStub) GenBuffers(n int32, buffers *uint32)                                       {}
+func (a apiStub) GenBuffers(n int32, buffers *uint32) {}
+
 func (a apiStub) BindBuffer(target uint32, buffer uint32)                                   {}
 func (a apiStub) BufferData(target uint32, size int, data unsafe.Pointer, usage uint32)     {}
 func (a apiStub) BufferSubData(target uint32, offset int, size int, data unsafe.Pointer)    {}
@@ -521,6 +522,6 @@ func (a apiStub) TexSubImage2D(target uint32, level int32, xoffset int32, yoffse
 }
 func (a apiStub) GetTexImage(target uint32, level int32, format uint32, xtype uint32, pixels unsafe.Pointer) {
 }
-func (a apiStub) GetError() uint32 {
-	return 0
-}
+func (a apiStub) GetError() uint32                    { return 0 }
+func (a apiStub) Ptr(data interface{}) unsafe.Pointer { return nil }
+func (a apiStub) PtrOffset(offset int) unsafe.Pointer { return nil }

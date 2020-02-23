@@ -35,7 +35,7 @@ func (c *Context) NewAcceleratedImage(width, height int) *AcceleratedImage {
 		0,
 		rgba,
 		unsignedByte,
-		Ptr(nil),
+		c.api.Ptr(nil),
 	)
 	c.api.TexParameteri(texture2D, textureMinFilter, nearest)
 	c.api.TexParameteri(texture2D, textureMagFilter, nearest)
@@ -64,40 +64,40 @@ type AcceleratedImage struct {
 }
 
 // TextureID returns texture identifier (aka name)
-func (t *AcceleratedImage) TextureID() uint32 {
-	return t.textureID
+func (i *AcceleratedImage) TextureID() uint32 {
+	return i.textureID
 }
 
 // Upload send pixels to video card
-func (t *AcceleratedImage) Upload(pixels []image.Color) {
+func (i *AcceleratedImage) Upload(pixels []image.Color) {
 	if len(pixels) == 0 {
 		return
 	}
-	t.api.BindTexture(texture2D, t.textureID)
-	t.api.TexSubImage2D(
+	i.api.BindTexture(texture2D, i.textureID)
+	i.api.TexSubImage2D(
 		texture2D,
 		0,
 		int32(0),
 		int32(0),
-		int32(t.width),
-		int32(t.height),
+		int32(i.width),
+		int32(i.height),
 		rgba,
 		unsignedByte,
-		Ptr(pixels),
+		i.api.Ptr(pixels),
 	)
 }
 
 // Download gets pixels pixels from video card
-func (t *AcceleratedImage) Download(output []image.Color) {
+func (i *AcceleratedImage) Download(output []image.Color) {
 	if len(output) == 0 {
 		return
 	}
-	t.api.BindTexture(texture2D, t.textureID)
-	t.api.GetTexImage(
+	i.api.BindTexture(texture2D, i.textureID)
+	i.api.GetTexImage(
 		texture2D,
 		0,
 		rgba,
 		unsignedByte,
-		Ptr(output),
+		i.api.Ptr(output),
 	)
 }
