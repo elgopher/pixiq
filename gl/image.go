@@ -2,6 +2,7 @@ package gl
 
 import (
 	"fmt"
+
 	"github.com/jacekolszak/pixiq/image"
 )
 

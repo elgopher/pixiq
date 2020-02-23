@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/jacekolszak/pixiq/gl"
 	"log"
 
+	"github.com/jacekolszak/pixiq/gl"
 	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/loop"
 	"github.com/jacekolszak/pixiq/opengl"

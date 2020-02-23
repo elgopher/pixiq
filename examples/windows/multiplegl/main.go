@@ -1,11 +1,12 @@
 package main
 
 import (
+	"log"
+
 	"github.com/jacekolszak/pixiq/colornames"
 	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/loop"
 	"github.com/jacekolszak/pixiq/opengl"
-	"log"
 )
 
 // This example shows how too use two separate OpenGL instances. Each contains its

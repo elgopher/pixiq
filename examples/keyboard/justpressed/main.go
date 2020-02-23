@@ -1,11 +1,12 @@
 package main
 
 import (
+	"log"
+
 	"github.com/jacekolszak/pixiq/colornames"
 	"github.com/jacekolszak/pixiq/keyboard"
 	"github.com/jacekolszak/pixiq/loop"
 	"github.com/jacekolszak/pixiq/opengl"
-	"log"
 )
 
 func main() {

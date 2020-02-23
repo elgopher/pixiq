@@ -8,9 +8,10 @@ package gl
 
 import (
 	"fmt"
-	"github.com/jacekolszak/pixiq/image"
 	"reflect"
 	"unsafe"
+
+	"github.com/jacekolszak/pixiq/image"
 )
 
 // API is a gateway for directly accessing OpenGL driver.

@@ -3,8 +3,9 @@
 package opengl_test
 
 import (
-	"github.com/jacekolszak/pixiq/gl"
 	"testing"
+
+	"github.com/jacekolszak/pixiq/gl"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
