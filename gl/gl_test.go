@@ -2,6 +2,7 @@ package gl_test
 
 import (
 	"github.com/jacekolszak/pixiq/gl"
+	"github.com/jacekolszak/pixiq/image"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"unsafe"
@@ -269,6 +270,114 @@ func TestContext_NewAcceleratedImage(t *testing.T) {
 			context.NewAcceleratedImage(0, -1)
 		})
 	})
+	t.Run("should panic for too big width", func(t *testing.T) {
+		context := gl.ContextOf(apiStub{})
+		capabilities := context.Capabilities()
+		assert.Panics(t, func() {
+			// when
+			context.NewAcceleratedImage(capabilities.MaxTextureSize()+1, 1)
+		})
+	})
+	t.Run("should panic for too big height", func(t *testing.T) {
+		context := gl.ContextOf(apiStub{})
+		capabilities := context.Capabilities()
+		assert.Panics(t, func() {
+			// when
+			context.NewAcceleratedImage(1, capabilities.MaxTextureSize()+1)
+		})
+	})
+}
+func TestProgram_AcceleratedCommand(t *testing.T) {
+	t.Run("should return command", func(t *testing.T) {
+		context := gl.ContextOf(apiStub{})
+		program := workingProgram(context)
+		// when
+		cmd := program.AcceleratedCommand(&emptyCommand{})
+		assert.NotNil(t, cmd)
+	})
+}
+
+func TestAcceleratedCommand_Run(t *testing.T) {
+	t.Run("should execute command", func(t *testing.T) {
+		context := gl.ContextOf(apiStub{})
+		program := workingProgram(context)
+		texture := context.NewAcceleratedImage(1, 1)
+		output := image.AcceleratedImageSelection{
+			Image: texture,
+		}
+		tests := map[string]struct {
+			selections []image.AcceleratedImageSelection
+		}{
+			"empty selections": {
+				selections: []image.AcceleratedImageSelection{},
+			},
+			"one selection": {
+				selections: []image.AcceleratedImageSelection{{}},
+			},
+			"two selections": {
+				selections: []image.AcceleratedImageSelection{{}, {}},
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				command := &commandMock{}
+				acceleratedCommand := program.AcceleratedCommand(command)
+				// when
+				acceleratedCommand.Run(output, test.selections)
+				// then
+				assert.Equal(t, 1, command.executionCount)
+				assert.Equal(t, test.selections, command.selections)
+				assert.NotNil(t, command.renderer)
+			})
+		}
+	})
+	t.Run("should panic when output image is nil", func(t *testing.T) {
+		context := gl.ContextOf(apiStub{})
+		program := workingProgram(context)
+		command := program.AcceleratedCommand(&emptyCommand{})
+		assert.Panics(t, func() {
+			// when
+			command.Run(image.AcceleratedImageSelection{}, []image.AcceleratedImageSelection{})
+		})
+	})
+	t.Run("should panic when output image and program were created in different OpenGL contexts", func(t *testing.T) {
+		imageContext := gl.ContextOf(apiStub{})
+		programContext := gl.ContextOf(apiStub{})
+		img := imageContext.NewAcceleratedImage(1, 1)
+		program := workingProgram(programContext)
+		command := program.AcceleratedCommand(&emptyCommand{})
+		assert.Panics(t, func() {
+			// when
+			command.Run(image.AcceleratedImageSelection{
+				Image: img,
+			}, []image.AcceleratedImageSelection{})
+		})
+	})
+}
+
+func workingProgram(context *gl.Context) *gl.Program {
+	var (
+		vertexShader, _   = context.CompileVertexShader("")
+		fragmentShader, _ = context.CompileFragmentShader("")
+		program, _        = context.LinkProgram(vertexShader, fragmentShader)
+	)
+	return program
+}
+
+type emptyCommand struct{}
+
+func (e emptyCommand) RunGL(_ *gl.Renderer, _ []image.AcceleratedImageSelection) {}
+
+type commandMock struct {
+	executionCount int
+	selections     []image.AcceleratedImageSelection
+	renderer       *gl.Renderer
+}
+
+func (f *commandMock) RunGL(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
+	f.executionCount++
+	f.selections = selections
+	f.renderer = renderer
 }
 
 type apiStub struct{}
@@ -284,20 +393,32 @@ func (a apiStub) DeleteVertexArrays(n int32, arrays *uint32)                    
 func (a apiStub) BindVertexArray(array uint32)                                              {}
 func (a apiStub) VertexAttribPointer(index uint32, size int32, xtype uint32, normalized bool, stride int32, pointer unsafe.Pointer) {
 }
-func (a apiStub) EnableVertexAttribArray(index uint32)                                         {}
-func (a apiStub) CreateShader(xtype uint32) uint32                                             { return 0 }
-func (a apiStub) ShaderSource(shader uint32, count int32, xstring **uint8, length *int32)      {}
-func (a apiStub) CompileShader(shader uint32)                                                  {}
-func (a apiStub) GetShaderiv(shader uint32, pname uint32, params *int32)                       {}
+func (a apiStub) EnableVertexAttribArray(index uint32)                                    {}
+func (a apiStub) CreateShader(xtype uint32) uint32                                        { return 0 }
+func (a apiStub) ShaderSource(shader uint32, count int32, xstring **uint8, length *int32) {}
+func (a apiStub) CompileShader(shader uint32)                                             {}
+func (a apiStub) GetShaderiv(shader uint32, pname uint32, params *int32) {
+	const compileStatus = 0x8B81
+	const glTrue = 1
+	if pname == compileStatus {
+		*params = glTrue
+	}
+}
 func (a apiStub) GetShaderInfoLog(shader uint32, bufSize int32, length *int32, infoLog *uint8) {}
 func (a apiStub) DeleteShader(shader uint32)                                                   {}
 func (a apiStub) GoStr(cstr *uint8) string                                                     { return "" }
 func (a apiStub) Strs(strs ...string) (cstrs **uint8, free func()) {
 	return nil, func() {}
 }
-func (a apiStub) AttachShader(program uint32, shader uint32)                                     {}
-func (a apiStub) LinkProgram(program uint32)                                                     {}
-func (a apiStub) GetProgramiv(program uint32, pname uint32, params *int32)                       {}
+func (a apiStub) AttachShader(program uint32, shader uint32) {}
+func (a apiStub) LinkProgram(program uint32)                 {}
+func (a apiStub) GetProgramiv(program uint32, pname uint32, params *int32) {
+	const linkStatus = 0x8B82
+	const glTrue = 1
+	if pname == linkStatus {
+		*params = glTrue
+	}
+}
 func (a apiStub) GetProgramInfoLog(program uint32, bufSize int32, length *int32, infoLog *uint8) {}
 func (a apiStub) UseProgram(program uint32)                                                      {}
 func (a apiStub) CreateProgram() uint32                                                          { return 0 }
@@ -325,8 +446,13 @@ func (a apiStub) UniformMatrix3fv(location int32, count int32, transpose bool, v
 func (a apiStub) UniformMatrix4fv(location int32, count int32, transpose bool, value *float32) {}
 func (a apiStub) ActiveTexture(texture uint32)                                                 {}
 func (a apiStub) BindTexture(target uint32, texture uint32)                                    {}
-func (a apiStub) GetIntegerv(pname uint32, data *int32)                                        {}
-func (a apiStub) GenTextures(n int32, textures *uint32)                                        {}
+func (a apiStub) GetIntegerv(pname uint32, data *int32) {
+	const maxTextureSize = 0x0D33
+	if pname == maxTextureSize {
+		*data = 1024 * 1024
+	}
+}
+func (a apiStub) GenTextures(n int32, textures *uint32) {}
 func (a apiStub) TexImage2D(target uint32, level int32, internalformat int32, width int32, height int32, border int32, format uint32, xtype uint32, pixels unsafe.Pointer) {
 }
 func (a apiStub) TexParameteri(target uint32, pname uint32, param int32) {}

@@ -1138,3 +1138,16 @@ func compileProgram(t *testing.T, openGL *opengl.OpenGL,
 	require.NoError(t, err)
 	return program
 }
+
+type command struct {
+	runGL func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection)
+}
+
+func (c *command) RunGL(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
+	c.runGL(renderer, selections)
+}
+
+type emptyCommand struct {
+}
+
+func (e emptyCommand) RunGL(_ *opengl.Renderer, _ []image.AcceleratedImageSelection) {}

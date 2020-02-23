@@ -151,6 +151,7 @@ func (c *Context) LinkProgram(vertexShader *VertexShader, fragmentShader *Fragme
 		api:              c.api,
 		uniformLocations: uniformLocations,
 		attributes:       attributes,
+		allImages:        c.allImages,
 	}, err
 }
 
@@ -224,13 +225,15 @@ type Program struct {
 	uniformLocations map[string]int32
 	attributes       map[int32]attribute
 	api              API
+	allImages        allImages
 }
 
 // AcceleratedCommand returns a potentially cached instance of *AcceleratedCommand.
 func (p *Program) AcceleratedCommand(command Command) *AcceleratedCommand {
 	return &AcceleratedCommand{
-		command: command,
-		api:     p.api,
-		program: p,
+		command:   command,
+		api:       p.api,
+		program:   p,
+		allImages: p.allImages,
 	}
 }

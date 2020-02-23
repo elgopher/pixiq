@@ -332,17 +332,6 @@ func TestOpenGL_OpenWindow(t *testing.T) {
 	})
 }
 
-func TestProgram_AcceleratedCommand(t *testing.T) {
-	t.Run("should return command", func(t *testing.T) {
-		openGL, _ := opengl.New(mainThreadLoop)
-		defer openGL.Destroy()
-		program := workingProgram(t, openGL)
-		// when
-		cmd := program.AcceleratedCommand(&commandMock{})
-		assert.NotNil(t, cmd)
-	})
-}
-
 func assertColors(t *testing.T, expected []image.Color, img *opengl.AcceleratedImage) {
 	output := make([]image.Color, len(expected))
 	img.Download(output)
@@ -371,16 +360,3 @@ func (f *commandMock) RunGL(renderer *opengl.Renderer, selections []image.Accele
 	f.selections = selections
 	f.renderer = renderer
 }
-
-type command struct {
-	runGL func(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection)
-}
-
-func (c *command) RunGL(renderer *opengl.Renderer, selections []image.AcceleratedImageSelection) {
-	c.runGL(renderer, selections)
-}
-
-type emptyCommand struct {
-}
-
-func (e emptyCommand) RunGL(_ *opengl.Renderer, _ []image.AcceleratedImageSelection) {}
