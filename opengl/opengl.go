@@ -225,6 +225,9 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 	if err != nil {
 		return nil, err
 	}
+	// in this window context there is only one program used with one texture
+	win.api.UseProgram(win.program.ID())
+	win.api.BindTexture(gl33.TEXTURE_2D, win.screenAcceleratedImage.TextureID())
 	return win, nil
 }
 

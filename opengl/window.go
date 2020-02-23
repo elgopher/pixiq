@@ -1,7 +1,6 @@
 package opengl
 
 import (
-	gl33 "github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
 
 	"github.com/jacekolszak/pixiq/gl"
@@ -30,14 +29,11 @@ type Window struct {
 // after SwapImages is called.
 func (w *Window) Draw() {
 	w.screenImage.Upload()
-	w.api.UseProgram(w.program.ID())
 	var width, height int
 	w.mainThreadLoop.Execute(func() {
 		width, height = w.glfwWindow.GetFramebufferSize()
 	})
-	w.api.BindFramebuffer(gl33.FRAMEBUFFER, 0)
 	w.api.Viewport(0, 0, int32(width), int32(height))
-	w.api.BindTexture(gl33.TEXTURE_2D, w.screenAcceleratedImage.TextureID())
 	w.screenPolygon.draw()
 }
 
