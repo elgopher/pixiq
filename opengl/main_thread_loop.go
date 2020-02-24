@@ -20,6 +20,7 @@ func StartMainThreadLoop(runInDifferentGoroutine func(*MainThreadLoop)) {
 		panic("opengl.StartMainThreadLoop must be executed from main goroutine")
 	}
 	runtime.LockOSThread()
+	// TODO Replace with some faster mechanism
 	jobs := make(chan func())
 	loop := &MainThreadLoop{
 		jobs: jobs,
