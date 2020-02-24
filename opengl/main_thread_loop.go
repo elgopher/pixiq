@@ -5,7 +5,6 @@ import (
 	"log"
 	"runtime"
 	"strconv"
-	"sync"
 
 	"github.com/go-gl/glfw/v3.3/glfw"
 )
@@ -46,7 +45,6 @@ func isMainGoroutine() bool {
 type MainThreadLoop struct {
 	jobs        chan func()
 	boundWindow *glfw.Window
-	mutex       sync.Mutex
 	done        chan struct{}
 }
 
@@ -70,9 +68,6 @@ func logPanic() {
 
 // Execute runs job blocking the current goroutine.
 func (g *MainThreadLoop) Execute(job func()) {
-	// Maybe mutex looks ugly but it saves 2 allocations.
-	g.mutex.Lock()
-	defer g.mutex.Unlock()
 	g.jobs <- job
 	<-g.done
 }
