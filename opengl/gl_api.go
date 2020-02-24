@@ -98,7 +98,7 @@ func (g *context) BindBuffer(target uint32, buffer uint32) {
 	defer g.mutex.Unlock()
 	g.bindBuffer.target = target
 	g.bindBuffer.buffer = buffer
-	g.glThread.execute(g.bindBuffer)
+	g.glThread.executeAsync(g.bindBuffer)
 }
 
 // BufferData creates and initializes a buffer object's data store
@@ -168,7 +168,7 @@ func (g *context) BindVertexArray(array uint32) {
 	g.mutex.Lock()
 	defer g.mutex.Unlock()
 	g.bindVertexArray.array = array
-	g.glThread.execute(g.bindVertexArray)
+	g.glThread.executeAsync(g.bindVertexArray)
 }
 
 // VertexAttribPointer defines an array of generic vertex attribute data
@@ -294,7 +294,7 @@ func (g *context) UseProgram(program uint32) {
 	g.mutex.Lock()
 	defer g.mutex.Unlock()
 	g.useProgram.program = program
-	g.glThread.execute(g.useProgram)
+	g.glThread.executeAsync(g.useProgram)
 }
 
 // CreateProgram creates a program object
@@ -361,7 +361,7 @@ func (g *context) BindFramebuffer(target uint32, framebuffer uint32) {
 	defer g.mutex.Unlock()
 	g.bindFramebuffer.target = target
 	g.bindFramebuffer.framebuffer = framebuffer
-	g.glThread.execute(g.bindFramebuffer)
+	g.glThread.executeAsync(g.bindFramebuffer)
 }
 
 type scissor struct {
@@ -383,7 +383,7 @@ func (g *context) Scissor(x int32, y int32, width int32, height int32) {
 	g.scissor.y = y
 	g.scissor.width = width
 	g.scissor.height = height
-	g.glThread.execute(g.scissor)
+	g.glThread.executeAsync(g.scissor)
 }
 
 type viewport struct {
@@ -405,7 +405,7 @@ func (g *context) Viewport(x int32, y int32, width int32, height int32) {
 	g.viewport.y = y
 	g.viewport.width = width
 	g.viewport.height = height
-	g.glThread.execute(g.viewport)
+	g.glThread.executeAsync(g.viewport)
 }
 
 // ClearColor specifies clear values for the color buffers
@@ -450,7 +450,7 @@ func (g *context) DrawArrays(mode uint32, first int32, count int32) {
 	g.drawArrays.mode = mode
 	g.drawArrays.first = first
 	g.drawArrays.count = count
-	g.glThread.execute(g.drawArrays)
+	g.glThread.executeAsync(g.drawArrays)
 }
 
 type uniform1f struct {
@@ -468,7 +468,7 @@ func (g *context) Uniform1f(location int32, v0 float32) {
 	defer g.mutex.Unlock()
 	g.uniform1f.location = location
 	g.uniform1f.v0 = v0
-	g.glThread.execute(g.uniform1f)
+	g.glThread.executeAsync(g.uniform1f)
 }
 
 type uniform2f struct {
@@ -488,7 +488,7 @@ func (g *context) Uniform2f(location int32, v0 float32, v1 float32) {
 	g.uniform2f.location = location
 	g.uniform2f.v0 = v0
 	g.uniform2f.v1 = v1
-	g.glThread.execute(g.uniform2f)
+	g.glThread.executeAsync(g.uniform2f)
 }
 
 type uniform3f struct {
@@ -510,7 +510,7 @@ func (g *context) Uniform3f(location int32, v0 float32, v1 float32, v2 float32) 
 	g.uniform3f.v0 = v0
 	g.uniform3f.v1 = v1
 	g.uniform3f.v2 = v2
-	g.glThread.execute(g.uniform3f)
+	g.glThread.executeAsync(g.uniform3f)
 }
 
 type uniform4f struct {
@@ -534,7 +534,7 @@ func (g *context) Uniform4f(location int32, v0 float32, v1 float32, v2 float32, 
 	g.uniform4f.v1 = v1
 	g.uniform4f.v2 = v2
 	g.uniform4f.v3 = v3
-	g.glThread.execute(g.uniform4f)
+	g.glThread.executeAsync(g.uniform4f)
 }
 
 type uniform1i struct {
@@ -552,7 +552,7 @@ func (g *context) Uniform1i(location int32, v0 int32) {
 	defer g.mutex.Unlock()
 	g.uniform1i.location = location
 	g.uniform1i.v0 = v0
-	g.glThread.execute(g.uniform1i)
+	g.glThread.executeAsync(g.uniform1i)
 }
 
 type uniform2i struct {
@@ -572,7 +572,7 @@ func (g *context) Uniform2i(location int32, v0 int32, v1 int32) {
 	g.uniform2i.location = location
 	g.uniform2i.v0 = v0
 	g.uniform2i.v1 = v1
-	g.glThread.execute(g.uniform2i)
+	g.glThread.executeAsync(g.uniform2i)
 }
 
 type uniform3i struct {
@@ -594,7 +594,7 @@ func (g *context) Uniform3i(location int32, v0 int32, v1 int32, v2 int32) {
 	g.uniform3i.v0 = v0
 	g.uniform3i.v1 = v1
 	g.uniform3i.v2 = v2
-	g.glThread.execute(g.uniform3i)
+	g.glThread.executeAsync(g.uniform3i)
 }
 
 type uniform4i struct {
@@ -618,7 +618,7 @@ func (g *context) Uniform4i(location int32, v0 int32, v1 int32, v2 int32, v3 int
 	g.uniform4i.v1 = v1
 	g.uniform4i.v2 = v2
 	g.uniform4i.v3 = v3
-	g.glThread.execute(g.uniform4i)
+	g.glThread.executeAsync(g.uniform4i)
 }
 
 type uniformMatrix3fv struct {
@@ -640,7 +640,7 @@ func (g *context) UniformMatrix3fv(location int32, count int32, transpose bool, 
 	g.uniformMatrix3fv.count = count
 	g.uniformMatrix3fv.transpose = transpose
 	g.uniformMatrix3fv.value = value
-	g.glThread.execute(g.uniformMatrix3fv)
+	g.glThread.execute(g.uniformMatrix3fv) // fixme: async maybe?
 }
 
 type uniformMatrix4fv struct {
@@ -662,7 +662,7 @@ func (g *context) UniformMatrix4fv(location int32, count int32, transpose bool, 
 	g.uniformMatrix4fv.count = count
 	g.uniformMatrix4fv.transpose = transpose
 	g.uniformMatrix4fv.value = value
-	g.glThread.execute(g.uniformMatrix4fv)
+	g.glThread.execute(g.uniformMatrix4fv) // fixme: async maybe?
 }
 
 type activeTexture struct {
@@ -678,7 +678,7 @@ func (g *context) ActiveTexture(texture uint32) {
 	g.mutex.Lock()
 	defer g.mutex.Unlock()
 	g.activeTexture.texture = texture
-	g.glThread.execute(g.activeTexture)
+	g.glThread.executeAsync(g.activeTexture)
 }
 
 type bindTexture struct {
@@ -696,7 +696,7 @@ func (g *context) BindTexture(target uint32, texture uint32) {
 	defer g.mutex.Unlock()
 	g.bindTexture.target = target
 	g.bindTexture.texture = texture
-	g.glThread.execute(g.bindTexture)
+	g.glThread.executeAsync(g.bindTexture)
 }
 
 // GetIntegerv returns the value or values of the specified parameter
@@ -803,6 +803,15 @@ func (g *context) GetError() uint32 {
 		code = gl.GetError()
 	})
 	return code
+}
+
+// ReadPixels reads a block of pixels from the frame buffer
+func (g *context) ReadPixels(x int32, y int32, width int32, height int32, format uint32, xtype uint32, pixels unsafe.Pointer) {
+	g.mutex.Lock()
+	defer g.mutex.Unlock()
+	g.runInOpenGLThread(func() {
+		gl.ReadPixels(x, y, width, height, format, xtype, pixels)
+	})
 }
 
 // Ptr takes a slice or pointer (to a singular scalar value or the first

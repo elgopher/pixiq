@@ -2,11 +2,12 @@ package opengl
 
 import (
 	"bytes"
-	"github.com/go-gl/glfw/v3.3/glfw"
 	"log"
 	"runtime"
 	"strconv"
 	"sync"
+
+	"github.com/go-gl/glfw/v3.3/glfw"
 )
 
 // StartMainThreadLoop starts a loop assigned to main thread. It has to be
@@ -20,10 +21,15 @@ func StartMainThreadLoop(runInDifferentGoroutine func(*MainThreadLoop)) {
 	}
 	runtime.LockOSThread()
 	jobs := make(chan func(), 4096)
+	synchronousJob := &synchronousJob{
+		done: make(chan struct{}),
+	}
 	loop := &MainThreadLoop{
-		jobs: jobs,
-		synchronousJob: &synchronousJob{
-			done: make(chan struct{}),
+		jobs:           jobs,
+		synchronousJob: synchronousJob,
+		runSynchronousJob: func() {
+			synchronousJob.job()
+			synchronousJob.done <- struct{}{}
 		},
 	}
 	go func() {
@@ -44,20 +50,16 @@ func isMainGoroutine() bool {
 
 // MainThreadLoop is a loop for executing jobs in main thread.
 type MainThreadLoop struct {
-	synchronousJob *synchronousJob
-	jobs           chan func()
-	boundWindow    *glfw.Window
+	synchronousJob    *synchronousJob
+	runSynchronousJob func()
+	jobs              chan func()
+	boundWindow       *glfw.Window
 }
 
 type synchronousJob struct {
 	sync.Mutex
 	job  func()
 	done chan struct{}
-}
-
-func (j *synchronousJob) run() {
-	j.job()
-	j.done <- struct{}{}
 }
 
 func (g *MainThreadLoop) run() {
@@ -82,7 +84,7 @@ func (g *MainThreadLoop) Execute(job func()) {
 	g.synchronousJob.Lock()
 	defer g.synchronousJob.Unlock()
 	g.synchronousJob.job = job
-	g.jobs <- g.synchronousJob.run
+	g.jobs <- g.runSynchronousJob
 	<-g.synchronousJob.done
 }
 
