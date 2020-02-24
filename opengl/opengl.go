@@ -261,8 +261,15 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 }
 
 // Context returns OpenGL's context. It's methods can be invoked from any goroutine.
+// Each invocation will return the same instance.
 func (g *OpenGL) Context() *gl.Context {
 	return g.context
+}
+
+// ContextAPI returns gl.API, which can be used to OpenGL direct access.
+// It's methods can be invoked from any goroutine.
+func (g *OpenGL) ContextAPI() gl.API {
+	return g.api
 }
 
 // WindowOption is an option used when opening the window.

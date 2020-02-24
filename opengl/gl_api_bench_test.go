@@ -13,7 +13,7 @@ func BenchmarkContext_Clear(b *testing.B) {
 		panic(err)
 	}
 	defer openGL.Destroy()
-	gl := openGL.Context().API()
+	gl := openGL.ContextAPI()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		gl.Clear(0x4000)
