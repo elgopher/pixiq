@@ -430,7 +430,7 @@ func (g *context) Clear(mask uint32) {
 	g.mutex.Lock()
 	defer g.mutex.Unlock()
 	g.clear.mask = mask
-	g.glThread.execute(g.clear)
+	g.glThread.executeAsync(g.clear)
 }
 
 type drawArrays struct {

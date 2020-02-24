@@ -97,6 +97,12 @@ func (t *glThread) execute(job glJob) {
 	t.mainThreadLoop.Execute(t.job)
 }
 
+// This function is not thread-safe
+func (t *glThread) executeAsync(job glJob) {
+	t.glJob = job
+	t.mainThreadLoop.ExecuteAsync(t.job)
+}
+
 // RunOrDie is a shorthand method for starting MainThreadLoop and creating
 // OpenGL instance. It runs the given callback function and blocks. It was created
 // mainly for educational purposes to save a few keystrokes. In production

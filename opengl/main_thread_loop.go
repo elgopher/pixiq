@@ -2,11 +2,11 @@ package opengl
 
 import (
 	"bytes"
+	"github.com/go-gl/glfw/v3.3/glfw"
 	"log"
 	"runtime"
 	"strconv"
-
-	"github.com/go-gl/glfw/v3.3/glfw"
+	"sync"
 )
 
 // StartMainThreadLoop starts a loop assigned to main thread. It has to be
@@ -19,11 +19,12 @@ func StartMainThreadLoop(runInDifferentGoroutine func(*MainThreadLoop)) {
 		panic("opengl.StartMainThreadLoop must be executed from main goroutine")
 	}
 	runtime.LockOSThread()
-	// TODO Replace with some faster mechanism
-	jobs := make(chan func())
+	jobs := make(chan func(), 4096)
 	loop := &MainThreadLoop{
 		jobs: jobs,
-		done: make(chan struct{}),
+		synchronousJob: &synchronousJob{
+			done: make(chan struct{}),
+		},
 	}
 	go func() {
 		runInDifferentGoroutine(loop)
@@ -43,9 +44,20 @@ func isMainGoroutine() bool {
 
 // MainThreadLoop is a loop for executing jobs in main thread.
 type MainThreadLoop struct {
-	jobs        chan func()
-	boundWindow *glfw.Window
-	done        chan struct{}
+	synchronousJob *synchronousJob
+	jobs           chan func()
+	boundWindow    *glfw.Window
+}
+
+type synchronousJob struct {
+	sync.Mutex
+	job  func()
+	done chan struct{}
+}
+
+func (j *synchronousJob) run() {
+	j.job()
+	j.done <- struct{}{}
 }
 
 func (g *MainThreadLoop) run() {
@@ -56,7 +68,6 @@ func (g *MainThreadLoop) run() {
 			return
 		}
 		job()
-		g.done <- struct{}{}
 	}
 }
 
@@ -68,8 +79,16 @@ func logPanic() {
 
 // Execute runs job blocking the current goroutine.
 func (g *MainThreadLoop) Execute(job func()) {
+	g.synchronousJob.Lock()
+	defer g.synchronousJob.Unlock()
+	g.synchronousJob.job = job
+	g.jobs <- g.synchronousJob.run
+	<-g.synchronousJob.done
+}
+
+// ExecuteAsync runs job asynchronously.
+func (g *MainThreadLoop) ExecuteAsync(job func()) {
 	g.jobs <- job
-	<-g.done
 }
 
 func (g *MainThreadLoop) bind(window *glfw.Window) {

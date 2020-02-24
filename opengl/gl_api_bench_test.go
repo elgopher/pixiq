@@ -19,4 +19,5 @@ func BenchmarkContext_Clear(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		gl.Clear(0x4000)
 	}
+	mainThreadLoop.Execute(func() {}) // wait until all commands are processed
 }
