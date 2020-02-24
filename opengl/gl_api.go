@@ -12,25 +12,28 @@ type context struct {
 	glThread          *glThread
 	mutex             sync.Mutex
 
-	genBuffers      *genBuffers
-	clear           *clear
-	bindTexture     *bindTexture
-	texSubImage2D   *texSubImage2D
-	bindBuffer      *bindBuffer
-	drawArrays      *drawArrays
-	bindVertexArray *bindVertexArray
-	uniform1f       *uniform1f
-	uniform2f       *uniform2f
-	uniform3f       *uniform3f
-	uniform4f       *uniform4f
-	uniform1i       *uniform1i
-	uniform2i       *uniform2i
-	uniform3i       *uniform3i
-	uniform4i       *uniform4i
-	useProgram      *useProgram
-	bindFramebuffer *bindFramebuffer
-	scissor         *scissor
-	viewport        *viewport
+	genBuffers       *genBuffers
+	clear            *clear
+	bindTexture      *bindTexture
+	texSubImage2D    *texSubImage2D
+	bindBuffer       *bindBuffer
+	drawArrays       *drawArrays
+	bindVertexArray  *bindVertexArray
+	uniform1f        *uniform1f
+	uniform2f        *uniform2f
+	uniform3f        *uniform3f
+	uniform4f        *uniform4f
+	uniform1i        *uniform1i
+	uniform2i        *uniform2i
+	uniform3i        *uniform3i
+	uniform4i        *uniform4i
+	useProgram       *useProgram
+	bindFramebuffer  *bindFramebuffer
+	scissor          *scissor
+	viewport         *viewport
+	uniformMatrix3fv *uniformMatrix3fv
+	uniformMatrix4fv *uniformMatrix4fv
+	activeTexture    *activeTexture
 }
 
 func newContext(runInOpenGLThread func(func()), glThread *glThread) *context {
@@ -56,6 +59,9 @@ func newContext(runInOpenGLThread func(func()), glThread *glThread) *context {
 		bindFramebuffer:   &bindFramebuffer{},
 		scissor:           &scissor{},
 		viewport:          &viewport{},
+		uniformMatrix3fv:  &uniformMatrix3fv{},
+		uniformMatrix4fv:  &uniformMatrix4fv{},
+		activeTexture:     &activeTexture{},
 	}
 }
 
@@ -615,31 +621,64 @@ func (g *context) Uniform4i(location int32, v0 int32, v1 int32, v2 int32, v3 int
 	g.glThread.execute(g.uniform4i)
 }
 
+type uniformMatrix3fv struct {
+	location  int32
+	count     int32
+	transpose bool
+	value     *float32
+}
+
+func (u *uniformMatrix3fv) run() {
+	gl.UniformMatrix3fv(u.location, u.count, u.transpose, u.value)
+}
+
 // UniformMatrix3fv specifies the value of a uniform variable for the current program object
 func (g *context) UniformMatrix3fv(location int32, count int32, transpose bool, value *float32) {
 	g.mutex.Lock()
 	defer g.mutex.Unlock()
-	g.runInOpenGLThread(func() {
-		gl.UniformMatrix3fv(location, count, transpose, value)
-	})
+	g.uniformMatrix3fv.location = location
+	g.uniformMatrix3fv.count = count
+	g.uniformMatrix3fv.transpose = transpose
+	g.uniformMatrix3fv.value = value
+	g.glThread.execute(g.uniformMatrix3fv)
+}
+
+type uniformMatrix4fv struct {
+	location  int32
+	count     int32
+	transpose bool
+	value     *float32
+}
+
+func (u *uniformMatrix4fv) run() {
+	gl.UniformMatrix4fv(u.location, u.count, u.transpose, u.value)
 }
 
 // UniformMatrix4fv specifies the value of a uniform variable for the current program object
 func (g *context) UniformMatrix4fv(location int32, count int32, transpose bool, value *float32) {
 	g.mutex.Lock()
 	defer g.mutex.Unlock()
-	g.runInOpenGLThread(func() {
-		gl.UniformMatrix4fv(location, count, transpose, value)
-	})
+	g.uniformMatrix4fv.location = location
+	g.uniformMatrix4fv.count = count
+	g.uniformMatrix4fv.transpose = transpose
+	g.uniformMatrix4fv.value = value
+	g.glThread.execute(g.uniformMatrix4fv)
+}
+
+type activeTexture struct {
+	texture uint32
+}
+
+func (a *activeTexture) run() {
+	gl.ActiveTexture(a.texture)
 }
 
 // ActiveTexture selects active texture unit
 func (g *context) ActiveTexture(texture uint32) {
 	g.mutex.Lock()
 	defer g.mutex.Unlock()
-	g.runInOpenGLThread(func() {
-		gl.ActiveTexture(texture)
-	})
+	g.activeTexture.texture = texture
+	g.glThread.execute(g.activeTexture)
 }
 
 type bindTexture struct {
