@@ -46,6 +46,7 @@ func BenchmarkImage_Selection(b *testing.B) {
 	var (
 		img = image.New(1, 1, acceleratedImageStub{})
 	)
+	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		img.Selection(1, 2).WithSize(3, 4)
@@ -58,6 +59,7 @@ func BenchmarkSelection_Selection(b *testing.B) {
 		img       = image.New(1, 1, acceleratedImageStub{})
 		selection = img.WholeImageSelection()
 	)
+	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		selection.Selection(1, 2).WithSize(3, 4)
@@ -72,6 +74,7 @@ func BenchmarkSelection_Modify(b *testing.B) {
 		command         = &acceleratedCommandStub{}
 		sourceSelection = img.WholeImageSelection()
 	)
+	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		selection.Modify(command, sourceSelection)
