@@ -5,7 +5,6 @@ import (
 	"log"
 	"runtime"
 	"strconv"
-	"sync"
 
 	"github.com/go-gl/glfw/v3.3/glfw"
 )
@@ -20,18 +19,8 @@ func StartMainThreadLoop(runInDifferentGoroutine func(*MainThreadLoop)) {
 		panic("opengl.StartMainThreadLoop must be executed from main goroutine")
 	}
 	runtime.LockOSThread()
-	jobs := make(chan func(), 4096)
-	synchronousJob := &synchronousJob{
-		done: make(chan struct{}),
-	}
-	loop := &MainThreadLoop{
-		jobs:           jobs,
-		synchronousJob: synchronousJob,
-		runSynchronousJob: func() {
-			synchronousJob.job()
-			synchronousJob.done <- struct{}{}
-		},
-	}
+	jobs := make(chan func())
+	loop := &MainThreadLoop{jobs: jobs}
 	go func() {
 		runInDifferentGoroutine(loop)
 		close(jobs)
@@ -50,16 +39,8 @@ func isMainGoroutine() bool {
 
 // MainThreadLoop is a loop for executing jobs in main thread.
 type MainThreadLoop struct {
-	synchronousJob    *synchronousJob
-	runSynchronousJob func()
-	jobs              chan func()
-	boundWindow       *glfw.Window
-}
-
-type synchronousJob struct {
-	sync.Mutex
-	job  func()
-	done chan struct{}
+	jobs        chan func()
+	boundWindow *glfw.Window
 }
 
 func (g *MainThreadLoop) run() {
@@ -81,16 +62,12 @@ func logPanic() {
 
 // Execute runs job blocking the current goroutine.
 func (g *MainThreadLoop) Execute(job func()) {
-	g.synchronousJob.Lock()
-	defer g.synchronousJob.Unlock()
-	g.synchronousJob.job = job
-	g.jobs <- g.runSynchronousJob
-	<-g.synchronousJob.done
-}
-
-// ExecuteAsync runs job asynchronously.
-func (g *MainThreadLoop) ExecuteAsync(job func()) {
-	g.jobs <- job
+	done := make(chan struct{})
+	g.jobs <- func() {
+		job()
+		done <- struct{}{}
+	}
+	<-done
 }
 
 func (g *MainThreadLoop) bind(window *glfw.Window) {

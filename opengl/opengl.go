@@ -55,7 +55,7 @@ func New(mainThreadLoop *MainThreadLoop) (*OpenGL, error) {
 			job()
 		})
 	}
-	api := newContext(runInOpenGLThread, newGlThread(mainThreadLoop, mainWindow))
+	api := &context{runInOpenGLThread: runInOpenGLThread}
 	openGL := &OpenGL{
 		mainThreadLoop:    mainThreadLoop,
 		runInOpenGLThread: runInOpenGLThread,
@@ -66,41 +66,6 @@ func New(mainThreadLoop *MainThreadLoop) (*OpenGL, error) {
 	}
 	go openGL.startPollingEvents(openGL.stopPollingEvents)
 	return openGL, nil
-}
-
-type glThread struct {
-	mainThreadLoop *MainThreadLoop
-	window         *glfw.Window
-	glJob          glJob
-	job            func()
-}
-
-func newGlThread(mainThreadLoop *MainThreadLoop, window *glfw.Window) *glThread {
-	thread := &glThread{
-		mainThreadLoop: mainThreadLoop,
-		window:         window,
-	}
-	thread.job = func() {
-		mainThreadLoop.bind(window)
-		thread.glJob.run()
-	}
-	return thread
-}
-
-type glJob interface {
-	run()
-}
-
-// This function is not thread-safe
-func (t *glThread) execute(job glJob) {
-	t.glJob = job
-	t.mainThreadLoop.Execute(t.job)
-}
-
-// This function is not thread-safe
-func (t *glThread) executeAsync(job glJob) {
-	t.glJob = job
-	t.mainThreadLoop.ExecuteAsync(t.job)
 }
 
 // RunOrDie is a shorthand method for starting MainThreadLoop and creating
@@ -253,7 +218,7 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 			job()
 		})
 	}
-	win.api = newContext(runInOpenGLThread, newGlThread(g.mainThreadLoop, win.glfwWindow))
+	win.api = &context{runInOpenGLThread: runInOpenGLThread}
 	win.context = gl.NewContext(win.api)
 	win.screenPolygon = newScreenPolygon(win.context, win.api)
 	win.program, err = compileProgram(win.context, vertexShaderSrc, fragmentShaderSrc)
