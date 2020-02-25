@@ -4,16 +4,24 @@ import (
 	"unsafe"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
+	"github.com/go-gl/glfw/v3.3/glfw"
 )
 
 type context struct {
 	runInOpenGLThread func(func())
+	mainThreadLoop    *MainThreadLoop
+	window            *glfw.Window
 }
 
 // GenBuffers generates buffer object names
 func (g *context) GenBuffers(n int32, buffers *uint32) {
-	g.runInOpenGLThread(func() {
-		gl.GenBuffers(n, buffers)
+	g.mainThreadLoop.executeCommand(command{
+		window:  g.window,
+		int32:   [4]int32{n},
+		puint32: buffers,
+		execute: func(cmd command) {
+			gl.GenBuffers(cmd.int32[0], cmd.puint32)
+		},
 	})
 }
 
@@ -221,22 +229,34 @@ func (g *context) Scissor(x int32, y int32, width int32, height int32) {
 
 // Viewport sets the viewport
 func (g *context) Viewport(x int32, y int32, width int32, height int32) {
-	g.runInOpenGLThread(func() {
-		gl.Viewport(x, y, width, height)
+	g.mainThreadLoop.executeAsyncCommand(command{
+		window: g.window,
+		int32:  [4]int32{x, y, width, height},
+		execute: func(cmd command) {
+			gl.Viewport(cmd.int32[0], cmd.int32[1], cmd.int32[2], cmd.int32[3])
+		},
 	})
 }
 
 // ClearColor specifies clear values for the color buffers
 func (g *context) ClearColor(red float32, green float32, blue float32, alpha float32) {
-	g.runInOpenGLThread(func() {
-		gl.ClearColor(red, green, blue, alpha)
+	g.mainThreadLoop.executeAsyncCommand(command{
+		window:  g.window,
+		float32: [4]float32{red, green, blue, alpha},
+		execute: func(cmd command) {
+			gl.ClearColor(cmd.float32[0], cmd.float32[1], cmd.float32[2], cmd.float32[3])
+		},
 	})
 }
 
 // Clear clears buffers to preset values
 func (g *context) Clear(mask uint32) {
-	g.runInOpenGLThread(func() {
-		gl.Clear(mask)
+	g.mainThreadLoop.executeAsyncCommand(command{
+		window: g.window,
+		uint32: [2]uint32{mask},
+		execute: func(cmd command) {
+			gl.Clear(cmd.uint32[0])
+		},
 	})
 }
 

@@ -55,7 +55,11 @@ func New(mainThreadLoop *MainThreadLoop) (*OpenGL, error) {
 			job()
 		})
 	}
-	api := &context{runInOpenGLThread: runInOpenGLThread}
+	api := &context{
+		runInOpenGLThread: runInOpenGLThread,
+		mainThreadLoop:    mainThreadLoop,
+		window:            mainWindow,
+	}
 	openGL := &OpenGL{
 		mainThreadLoop:    mainThreadLoop,
 		runInOpenGLThread: runInOpenGLThread,
@@ -218,7 +222,11 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 			job()
 		})
 	}
-	win.api = &context{runInOpenGLThread: runInOpenGLThread}
+	win.api = &context{
+		runInOpenGLThread: runInOpenGLThread,
+		mainThreadLoop:    g.mainThreadLoop,
+		window:            win.glfwWindow,
+	}
 	win.context = gl.NewContext(win.api)
 	win.screenPolygon = newScreenPolygon(win.context, win.api)
 	win.program, err = compileProgram(win.context, vertexShaderSrc, fragmentShaderSrc)
