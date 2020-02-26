@@ -102,3 +102,9 @@ func (w *Window) Poll() (keyboard.Event, bool) {
 func (w *Window) Image() *image.Image {
 	return w.screenImage
 }
+
+// ContextAPI returns window-specific OpenGL's context. Useful for accessing
+// window's framebuffer.
+func (w *Window) ContextAPI() gl.API {
+	return w.api
+}
