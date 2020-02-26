@@ -67,6 +67,9 @@ func logPanic() {
 
 // Execute runs job blocking the current goroutine.
 func (g *MainThreadLoop) Execute(job func()) {
+	if job == nil {
+		return
+	}
 	done := make(chan struct{})
 	g.commands <- command{
 		execute: func() {
