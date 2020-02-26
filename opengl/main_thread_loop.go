@@ -94,8 +94,14 @@ func (g *MainThreadLoop) executeAsyncCommand(command command) {
 	g.commands <- command
 }
 
-func (g *MainThreadLoop) executeCommand(command command) {
-	g.Execute(func() {
-		command.execute()
-	})
+func (g *MainThreadLoop) executeCommand(cmd command) {
+	done := make(chan struct{})
+	g.commands <- command{
+		window: cmd.window,
+		execute: func() {
+			cmd.execute()
+			done <- struct{}{}
+		},
+	}
+	<-done
 }

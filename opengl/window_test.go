@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	gl2 "github.com/jacekolszak/pixiq/gl"
 	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/keyboard"
 	"github.com/jacekolszak/pixiq/opengl"
@@ -32,7 +33,7 @@ func TestWindow_Draw(t *testing.T) {
 			window.Draw()
 			// then
 			expected := []image.Color{color1}
-			assert.Equal(t, expected, framebufferPixels(0, 0, 1, 1))
+			assert.Equal(t, expected, framebufferPixels(openGL.ContextAPI(), 0, 0, 1, 1))
 		})
 		t.Run("1x2", func(t *testing.T) {
 			openGL, err := opengl.New(mainThreadLoop)
@@ -48,7 +49,7 @@ func TestWindow_Draw(t *testing.T) {
 			window.Draw()
 			// then
 			expected := []image.Color{color2, color1}
-			assert.Equal(t, expected, framebufferPixels(0, 0, 1, 2))
+			assert.Equal(t, expected, framebufferPixels(openGL.ContextAPI(), 0, 0, 1, 2))
 		})
 		t.Run("2x1", func(t *testing.T) {
 			openGL, err := opengl.New(mainThreadLoop)
@@ -64,7 +65,7 @@ func TestWindow_Draw(t *testing.T) {
 			window.Draw()
 			// then
 			expected := []image.Color{color1, color2}
-			assert.Equal(t, expected, framebufferPixels(0, 0, 2, 1))
+			assert.Equal(t, expected, framebufferPixels(openGL.ContextAPI(), 0, 0, 2, 1))
 		})
 		t.Run("2x2", func(t *testing.T) {
 			openGL, err := opengl.New(mainThreadLoop)
@@ -83,7 +84,7 @@ func TestWindow_Draw(t *testing.T) {
 			window.Draw()
 			// then
 			expected := []image.Color{color3, color4, color1, color2}
-			assert.Equal(t, expected, framebufferPixels(0, 0, 2, 2))
+			assert.Equal(t, expected, framebufferPixels(openGL.ContextAPI(), 0, 0, 2, 2))
 		})
 
 		t.Run("zoom < 1 should not change the framebuffer size", func(t *testing.T) {
@@ -102,7 +103,7 @@ func TestWindow_Draw(t *testing.T) {
 					window.Draw()
 					// then
 					expected := []image.Color{color1}
-					assert.Equal(t, expected, framebufferPixels(0, 0, 1, 1))
+					assert.Equal(t, expected, framebufferPixels(openGL.ContextAPI(), 0, 0, 1, 1))
 				})
 			}
 		})
@@ -126,7 +127,7 @@ func TestWindow_Draw(t *testing.T) {
 					for i := 0; i < len(expected); i++ {
 						expected[i] = color1
 					}
-					assert.Equal(t, expected, framebufferPixels(0, 0, int32(zoom), int32(zoom)))
+					assert.Equal(t, expected, framebufferPixels(openGL.ContextAPI(), 0, 0, int32(zoom), int32(zoom)))
 				})
 			}
 		})
@@ -145,12 +146,12 @@ func TestWindow_Draw(t *testing.T) {
 			window1.Draw()
 			// then
 			expected := []image.Color{color1}
-			assert.Equal(t, expected, framebufferPixels(0, 0, 1, 1))
+			assert.Equal(t, expected, framebufferPixels(openGL.ContextAPI(), 0, 0, 1, 1))
 			// when
 			window2.Draw()
 			// then
 			expected = []image.Color{color2}
-			assert.Equal(t, expected, framebufferPixels(0, 0, 1, 1))
+			assert.Equal(t, expected, framebufferPixels(openGL.ContextAPI(), 0, 0, 1, 1))
 		})
 
 		t.Run("two OpenGL instances", func(t *testing.T) {
@@ -170,12 +171,12 @@ func TestWindow_Draw(t *testing.T) {
 			window1.Draw()
 			// then
 			expected := []image.Color{color1}
-			assert.Equal(t, expected, framebufferPixels(0, 0, 1, 1))
+			assert.Equal(t, expected, framebufferPixels(openGL1.ContextAPI(), 0, 0, 1, 1))
 			// when
 			window2.Draw()
 			// then
 			expected = []image.Color{color2}
-			assert.Equal(t, expected, framebufferPixels(0, 0, 1, 1))
+			assert.Equal(t, expected, framebufferPixels(openGL1.ContextAPI(), 0, 0, 1, 1))
 		})
 	})
 }
@@ -190,12 +191,10 @@ func windowOfColor(openGL *opengl.OpenGL, color image.Color) (*opengl.Window, er
 	return window, err
 }
 
-func framebufferPixels(x, y, width, height int32) []image.Color {
+func framebufferPixels(context gl2.API, x, y, width, height int32) []image.Color {
 	size := (height - y) * (width - x)
 	frameBuffer := make([]image.Color, size)
-	mainThreadLoop.Execute(func() {
-		gl.ReadPixels(x, y, width, height, gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(frameBuffer))
-	})
+	context.ReadPixels(x, y, width, height, gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(frameBuffer))
 	return frameBuffer
 }
 
