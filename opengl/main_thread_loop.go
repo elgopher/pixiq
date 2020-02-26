@@ -19,11 +19,13 @@ func StartMainThreadLoop(runInDifferentGoroutine func(*MainThreadLoop)) {
 		panic("opengl.StartMainThreadLoop must be executed from main goroutine")
 	}
 	runtime.LockOSThread()
-	jobs := make(chan func())
-	loop := &MainThreadLoop{jobs: jobs}
+	commands := make(chan command, 4096)
+	loop := &MainThreadLoop{
+		commands: commands,
+	}
 	go func() {
 		runInDifferentGoroutine(loop)
-		close(jobs)
+		close(commands)
 	}()
 	loop.run()
 }
@@ -39,18 +41,21 @@ func isMainGoroutine() bool {
 
 // MainThreadLoop is a loop for executing jobs in main thread.
 type MainThreadLoop struct {
-	jobs        chan func()
+	commands    chan command
 	boundWindow *glfw.Window
 }
 
 func (g *MainThreadLoop) run() {
 	defer logPanic()
 	for {
-		job, ok := <-g.jobs
+		cmd, ok := <-g.commands
 		if !ok {
 			return
 		}
-		job()
+		if cmd.window != nil {
+			g.bind(cmd.window)
+		}
+		cmd.execute()
 	}
 }
 
@@ -62,12 +67,10 @@ func logPanic() {
 
 // Execute runs job blocking the current goroutine.
 func (g *MainThreadLoop) Execute(job func()) {
-	done := make(chan struct{})
-	g.jobs <- func() {
-		job()
-		done <- struct{}{}
+	if job == nil {
+		return
 	}
-	<-done
+	g.executeCommand(command{execute: job})
 }
 
 func (g *MainThreadLoop) bind(window *glfw.Window) {
@@ -75,4 +78,26 @@ func (g *MainThreadLoop) bind(window *glfw.Window) {
 		window.MakeContextCurrent()
 		g.boundWindow = window
 	}
+}
+
+// better use an array and create a function which will decode arguments
+type command struct {
+	window  *glfw.Window
+	execute func()
+}
+
+func (g *MainThreadLoop) executeAsyncCommand(command command) {
+	g.commands <- command
+}
+
+func (g *MainThreadLoop) executeCommand(cmd command) {
+	done := make(chan struct{})
+	g.commands <- command{
+		window: cmd.window,
+		execute: func() {
+			cmd.execute()
+			done <- struct{}{}
+		},
+	}
+	<-done
 }

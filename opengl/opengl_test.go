@@ -44,6 +44,37 @@ func TestNew(t *testing.T) {
 	})
 }
 
+func TestOpenGL_ContextAPI(t *testing.T) {
+	t.Run("should return context API", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		// when
+		api := openGL.ContextAPI()
+		// then
+		assert.NotNil(t, api)
+	})
+}
+
+func TestOpenGL_Context(t *testing.T) {
+	t.Run("should return context", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		// when
+		context := openGL.Context()
+		// then
+		assert.NotNil(t, context)
+	})
+	t.Run("on each invocation same context should be returned", func(t *testing.T) {
+		openGL, _ := opengl.New(mainThreadLoop)
+		defer openGL.Destroy()
+		// when
+		context1 := openGL.Context()
+		context2 := openGL.Context()
+		// then
+		assert.Same(t, context1, context2)
+	})
+}
+
 func TestOpenGL_NewImage(t *testing.T) {
 	t.Run("should panic for negative width", func(t *testing.T) {
 		openGL, err := opengl.New(mainThreadLoop)

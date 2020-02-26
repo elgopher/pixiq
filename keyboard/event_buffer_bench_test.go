@@ -10,6 +10,7 @@ import (
 func BenchmarkKeyboardEvents(b *testing.B) {
 	const size = 8
 	events := keyboard.NewEventBuffer(size)
+	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < size*2; j++ {
