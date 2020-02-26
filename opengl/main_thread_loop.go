@@ -70,14 +70,7 @@ func (g *MainThreadLoop) Execute(job func()) {
 	if job == nil {
 		return
 	}
-	done := make(chan struct{})
-	g.commands <- command{
-		execute: func() {
-			job()
-			done <- struct{}{}
-		},
-	}
-	<-done
+	g.executeCommand(command{execute: job})
 }
 
 func (g *MainThreadLoop) bind(window *glfw.Window) {
