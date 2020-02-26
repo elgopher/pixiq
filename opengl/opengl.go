@@ -56,9 +56,18 @@ func New(mainThreadLoop *MainThreadLoop) (*OpenGL, error) {
 		})
 	}
 	api := &context{
-		runInOpenGLThread: runInOpenGLThread,
-		mainThreadLoop:    mainThreadLoop,
-		window:            mainWindow,
+		run: func(f func()) {
+			mainThreadLoop.executeCommand(command{
+				window:  mainWindow,
+				execute: f,
+			})
+		},
+		runAsync: func(f func()) {
+			mainThreadLoop.executeAsyncCommand(command{
+				window:  mainWindow,
+				execute: f,
+			})
+		},
 	}
 	openGL := &OpenGL{
 		mainThreadLoop:    mainThreadLoop,
@@ -216,16 +225,19 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 	if err != nil {
 		return nil, err
 	}
-	runInOpenGLThread := func(job func()) {
-		g.mainThreadLoop.Execute(func() {
-			g.mainThreadLoop.bind(win.glfwWindow)
-			job()
-		})
-	}
 	win.api = &context{
-		runInOpenGLThread: runInOpenGLThread,
-		mainThreadLoop:    g.mainThreadLoop,
-		window:            win.glfwWindow,
+		run: func(f func()) {
+			g.mainThreadLoop.executeCommand(command{
+				window:  win.glfwWindow,
+				execute: f,
+			})
+		},
+		runAsync: func(f func()) {
+			g.mainThreadLoop.executeAsyncCommand(command{
+				window:  win.glfwWindow,
+				execute: f,
+			})
+		},
 	}
 	win.context = gl.NewContext(win.api)
 	win.screenPolygon = newScreenPolygon(win.context, win.api)

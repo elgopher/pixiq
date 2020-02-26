@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-// Must be 0 allocs/op
+// Must be at most 2 allocs/op
 func BenchmarkMainThreadLoop_Execute(b *testing.B) {
 	f := func() {}
 	b.ReportAllocs()

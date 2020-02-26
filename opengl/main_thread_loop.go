@@ -55,7 +55,7 @@ func (g *MainThreadLoop) run() {
 		if cmd.window != nil {
 			g.bind(cmd.window)
 		}
-		cmd.execute(cmd)
+		cmd.execute()
 	}
 }
 
@@ -69,7 +69,7 @@ func logPanic() {
 func (g *MainThreadLoop) Execute(job func()) {
 	done := make(chan struct{})
 	g.commands <- command{
-		execute: func(name command) {
+		execute: func() {
 			job()
 			done <- struct{}{}
 		},
@@ -86,12 +86,8 @@ func (g *MainThreadLoop) bind(window *glfw.Window) {
 
 // better use an array and create a function which will decode arguments
 type command struct {
-	int32   [4]int32
-	uint32  [2]uint32
-	puint32 *uint32
-	float32 [4]float32
 	window  *glfw.Window
-	execute func(cmd command)
+	execute func()
 }
 
 func (g *MainThreadLoop) executeAsyncCommand(command command) {
@@ -100,6 +96,6 @@ func (g *MainThreadLoop) executeAsyncCommand(command command) {
 
 func (g *MainThreadLoop) executeCommand(command command) {
 	g.Execute(func() {
-		command.execute(command)
+		command.execute()
 	})
 }
