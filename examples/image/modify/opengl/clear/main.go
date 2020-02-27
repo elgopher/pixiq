@@ -13,8 +13,8 @@ func main() {
 			panic(err)
 		}
 		context := gl.Context()
-		clear := context.ClearCommand()
-		clear.Color = &colornames.Indianred
+		clear := context.NewClearCommand()
+		clear.Color = colornames.Wheat
 		loop.Run(window, func(frame *loop.Frame) {
 			screen := frame.Screen()
 			var (
