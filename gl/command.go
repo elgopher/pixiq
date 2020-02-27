@@ -199,7 +199,7 @@ func (c *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selecti
 		panic("output image created in a different OpenGL context than program")
 	}
 
-	c.api.UseProgram(c.program.id)
+	c.program.use()
 	c.api.Enable(scissorTest)
 	c.api.BindFramebuffer(framebuffer, img.frameBufferID)
 	loc := output.Location

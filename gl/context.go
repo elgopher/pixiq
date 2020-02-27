@@ -2,6 +2,8 @@ package gl
 
 import (
 	"fmt"
+
+	"github.com/jacekolszak/pixiq/image"
 )
 
 // Context is an OpenGL context
@@ -274,4 +276,45 @@ func (p *Program) AcceleratedCommand(command Command) *AcceleratedCommand {
 // ID returns program identifier (aka name)
 func (p *Program) ID() uint32 {
 	return p.id
+}
+
+func (p *Program) use() {
+	if p.program != nil {
+		p.api.UseProgram(p.id)
+	}
+}
+
+func (c *Context) ClearCommand() *ClearCommand {
+	// TODO reuse program
+	nilProgram := &Program{
+		program:          nil,
+		uniformLocations: map[string]int32{},
+		attributes:       map[int32]attribute{},
+		api:              c.api,
+		allImages:        c.allImages,
+	}
+	// TODO reuse command
+	cmd := &ClearCommand{
+		Color: &image.Transparent,
+		AcceleratedCommand: AcceleratedCommand{
+			program:   nilProgram,
+			api:       c.api,
+			allImages: c.allImages,
+		},
+	}
+	cmd.AcceleratedCommand.command = &clearCommand{color: cmd.Color}
+	return cmd
+}
+
+type clearCommand struct {
+	color *image.Color
+}
+
+func (c *clearCommand) RunGL(renderer *Renderer, _ []image.AcceleratedImageSelection) {
+	renderer.Clear(*c.color)
+}
+
+type ClearCommand struct {
+	AcceleratedCommand
+	Color *image.Color
 }
