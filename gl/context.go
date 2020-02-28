@@ -273,13 +273,6 @@ func (p *Program) AcceleratedCommand(command Command) *AcceleratedCommand {
 	}
 }
 
-// NewAcceleratedCommand returns a new instance of *AcceleratedCommand. After
-// creating one should run AcceleratedCommand.SetCommand to set a piece of code
-// which will be executed during selection modification.
-func (p *Program) NewAcceleratedCommand() *AcceleratedCommand {
-	return p.AcceleratedCommand(nil)
-}
-
 // ID returns program identifier (aka name)
 func (p *Program) ID() uint32 {
 	return p.id
@@ -292,7 +285,6 @@ func (p *Program) use() {
 }
 
 func (c *Context) NewClearCommand() *ClearCommand {
-	// TODO reuse program
 	nilProgram := &Program{
 		program:          nil,
 		uniformLocations: map[string]int32{},
@@ -300,19 +292,20 @@ func (c *Context) NewClearCommand() *ClearCommand {
 		api:              c.api,
 		allImages:        c.allImages,
 	}
-	// TODO reuse command
-	cmd := &ClearCommand{
-		AcceleratedCommand: nilProgram.NewAcceleratedCommand(),
-	}
-	cmd.AcceleratedCommand.SetCommand(cmd)
+	cmd := &ClearCommand{}
+	cmd.AcceleratedCommand = nilProgram.AcceleratedCommand(cmd)
 	return cmd
 }
 
 type ClearCommand struct {
 	*AcceleratedCommand
-	Color image.Color
+	color image.Color
+}
+
+func (c *ClearCommand) SetColor(color image.Color) {
+	c.color = color
 }
 
 func (c *ClearCommand) RunGL(renderer *Renderer, _ []image.AcceleratedImageSelection) {
-	renderer.Clear(c.Color)
+	renderer.Clear(c.color)
 }

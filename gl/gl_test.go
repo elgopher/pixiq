@@ -309,18 +309,6 @@ func TestProgram_AcceleratedCommand(t *testing.T) {
 	})
 }
 
-func TestProgram_NewAcceleratedCommand(t *testing.T) {
-	t.Run("should create AcceleratedCommand without command", func(t *testing.T) {
-		context := gl.NewContext(apiStub{})
-		program := workingProgram(context)
-		// when
-		cmd1 := program.NewAcceleratedCommand()
-		// then
-		cmd2 := program.AcceleratedCommand(nil)
-		assert.Equal(t, cmd1, cmd2)
-	})
-}
-
 func TestAcceleratedCommand_Run(t *testing.T) {
 	t.Run("should execute command", func(t *testing.T) {
 		context := gl.NewContext(apiStub{})
