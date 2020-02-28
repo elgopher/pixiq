@@ -3,14 +3,15 @@ package opengl_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/jacekolszak/pixiq/opengl"
 )
 
 func BenchmarkWindow_Draw(b *testing.B) {
 	openGL, err := opengl.New(mainThreadLoop)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(b, err)
+	defer openGL.Destroy()
 	win, err := openGL.OpenWindow(640, 360)
 	if err != nil {
 		panic(err)

@@ -346,6 +346,38 @@ func TestContext_NewAcceleratedImage(t *testing.T) {
 	})
 }
 
+func TestAcceleratedImage_Download(t *testing.T) {
+	t.Run("new AcceleratedImage should be transparent", func(t *testing.T) {
+		tests := map[string]struct {
+			width, height int
+		}{
+			"1x1": {
+				width:  1,
+				height: 1,
+			},
+			"2x3": {
+				width:  2,
+				height: 3,
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				openGL, _ := opengl.New(mainThreadLoop)
+				defer openGL.Destroy()
+				context := openGL.Context()
+				img := context.NewAcceleratedImage(test.width, test.height)
+				output := make([]image.Color, test.width*test.height)
+				// when
+				img.Download(output)
+				// then
+				for i, color := range output {
+					assert.Equal(t, image.Transparent, color, "index: %d", i)
+				}
+			})
+		}
+	})
+}
+
 func TestAcceleratedImage_Upload(t *testing.T) {
 	color1 := image.RGBA(10, 20, 30, 40)
 	color2 := image.RGBA(50, 60, 70, 80)
@@ -457,89 +489,96 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 		defer openGL.Destroy()
 		context := openGL.Context()
 		color := image.RGBA(1, 2, 3, 4)
-		tests := map[string]struct {
-			width, height  int
-			location       image.AcceleratedImageLocation
-			expectedColors []image.Color
-		}{
-			"empty location": {
-				width: 1, height: 1,
-				location:       image.AcceleratedImageLocation{},
-				expectedColors: []image.Color{image.Transparent},
-			},
-			"x out of bounds": {
-				width: 1, height: 1,
-				location:       image.AcceleratedImageLocation{X: 1, Width: 1, Height: 1},
-				expectedColors: []image.Color{image.Transparent},
-			},
-			"y out of bounds": {
-				width: 1, height: 1,
-				location:       image.AcceleratedImageLocation{Y: 1, Width: 1, Height: 1},
-				expectedColors: []image.Color{image.Transparent},
-			},
-			"whole image": {
-				width: 1, height: 1,
-				location:       image.AcceleratedImageLocation{Width: 1, Height: 1},
-				expectedColors: []image.Color{color},
-			},
-			"height out of bound": {
-				width: 1, height: 1,
-				location:       image.AcceleratedImageLocation{Width: 1, Height: 2},
-				expectedColors: []image.Color{color},
-			},
-			"top left corner": {
-				width: 2, height: 2,
-				location:       image.AcceleratedImageLocation{Width: 1, Height: 1},
-				expectedColors: []image.Color{image.Transparent, image.Transparent, color, image.Transparent},
-			},
-			"top row": {
-				width: 2, height: 2,
-				location:       image.AcceleratedImageLocation{Width: 2, Height: 1},
-				expectedColors: []image.Color{image.Transparent, image.Transparent, color, color},
-			},
-			"left column": {
-				width: 2, height: 2,
-				location:       image.AcceleratedImageLocation{Width: 1, Height: 2},
-				expectedColors: []image.Color{color, image.Transparent, color, image.Transparent},
-			},
-			"top right corner": {
-				width: 2, height: 2,
-				location:       image.AcceleratedImageLocation{X: 1, Width: 1, Height: 1},
-				expectedColors: []image.Color{image.Transparent, image.Transparent, image.Transparent, color},
-			},
-			"bottom left corner": {
-				width: 2, height: 2,
-				location:       image.AcceleratedImageLocation{Y: 1, Width: 1, Height: 1},
-				expectedColors: []image.Color{color, image.Transparent, image.Transparent, image.Transparent},
-			},
-			"bottom right corner": {
-				width: 2, height: 2,
-				location:       image.AcceleratedImageLocation{X: 1, Y: 1, Width: 1, Height: 1},
-				expectedColors: []image.Color{image.Transparent, color, image.Transparent, image.Transparent},
-			},
-			"middle row": {
-				width: 1, height: 3,
-				location:       image.AcceleratedImageLocation{Y: 1, Width: 1, Height: 1},
-				expectedColors: []image.Color{image.Transparent, color, image.Transparent},
-			},
+		program := workingProgram(t, context)
+
+		clearCmd := context.NewClearCommand()
+		clearCmd.SetColor(color)
+
+		commands := map[string]image.AcceleratedCommand{
+			"AcceleratedCommand": program.AcceleratedCommand(&clearCommand{color: color}),
+			"ClearCommand":       clearCmd,
 		}
-		for name, test := range tests {
-			t.Run(name, func(t *testing.T) {
-				img := context.NewAcceleratedImage(test.width, test.height)
-				img.Upload(make([]image.Color, test.width*test.height))
-				program := workingProgram(t, context)
-				glCommand := &command{runGL: func(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
-					renderer.Clear(color)
-				}}
-				command := program.AcceleratedCommand(glCommand)
-				// when
-				command.Run(image.AcceleratedImageSelection{
-					Location: test.location,
-					Image:    img,
-				}, []image.AcceleratedImageSelection{})
-				// then
-				assertColors(t, test.expectedColors, img)
-			})
+
+		for cmdName, cmd := range commands {
+			tests := map[string]struct {
+				width, height  int
+				location       image.AcceleratedImageLocation
+				expectedColors []image.Color
+			}{
+				"empty location": {
+					width: 1, height: 1,
+					location:       image.AcceleratedImageLocation{},
+					expectedColors: []image.Color{image.Transparent},
+				},
+				"x out of bounds": {
+					width: 1, height: 1,
+					location:       image.AcceleratedImageLocation{X: 1, Width: 1, Height: 1},
+					expectedColors: []image.Color{image.Transparent},
+				},
+				"y out of bounds": {
+					width: 1, height: 1,
+					location:       image.AcceleratedImageLocation{Y: 1, Width: 1, Height: 1},
+					expectedColors: []image.Color{image.Transparent},
+				},
+				"whole image": {
+					width: 1, height: 1,
+					location:       image.AcceleratedImageLocation{Width: 1, Height: 1},
+					expectedColors: []image.Color{color},
+				},
+				"height out of bound": {
+					width: 1, height: 1,
+					location:       image.AcceleratedImageLocation{Width: 1, Height: 2},
+					expectedColors: []image.Color{color},
+				},
+				"top left corner": {
+					width: 2, height: 2,
+					location:       image.AcceleratedImageLocation{Width: 1, Height: 1},
+					expectedColors: []image.Color{image.Transparent, image.Transparent, color, image.Transparent},
+				},
+				"top row": {
+					width: 2, height: 2,
+					location:       image.AcceleratedImageLocation{Width: 2, Height: 1},
+					expectedColors: []image.Color{image.Transparent, image.Transparent, color, color},
+				},
+				"left column": {
+					width: 2, height: 2,
+					location:       image.AcceleratedImageLocation{Width: 1, Height: 2},
+					expectedColors: []image.Color{color, image.Transparent, color, image.Transparent},
+				},
+				"top right corner": {
+					width: 2, height: 2,
+					location:       image.AcceleratedImageLocation{X: 1, Width: 1, Height: 1},
+					expectedColors: []image.Color{image.Transparent, image.Transparent, image.Transparent, color},
+				},
+				"bottom left corner": {
+					width: 2, height: 2,
+					location:       image.AcceleratedImageLocation{Y: 1, Width: 1, Height: 1},
+					expectedColors: []image.Color{color, image.Transparent, image.Transparent, image.Transparent},
+				},
+				"bottom right corner": {
+					width: 2, height: 2,
+					location:       image.AcceleratedImageLocation{X: 1, Y: 1, Width: 1, Height: 1},
+					expectedColors: []image.Color{image.Transparent, color, image.Transparent, image.Transparent},
+				},
+				"middle row": {
+					width: 1, height: 3,
+					location:       image.AcceleratedImageLocation{Y: 1, Width: 1, Height: 1},
+					expectedColors: []image.Color{image.Transparent, color, image.Transparent},
+				},
+			}
+			for name, test := range tests {
+				t.Run(cmdName+" "+name, func(t *testing.T) {
+					img := context.NewAcceleratedImage(test.width, test.height)
+					img.Upload(make([]image.Color, test.width*test.height))
+					// when
+					cmd.Run(image.AcceleratedImageSelection{
+						Location: test.location,
+						Image:    img,
+					}, []image.AcceleratedImageSelection{})
+					// then
+					assertColors(t, test.expectedColors, img)
+				})
+			}
 		}
 	})
 	t.Run("should not change the image pixels when command does not do anything", func(t *testing.T) {
@@ -575,37 +614,59 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 }
 
 func TestRenderer_Clear(t *testing.T) {
-	tests := map[string]struct {
-		color image.Color
-	}{
-		"1": {
-			color: image.RGBA(1, 2, 3, 4),
-		},
-		"2": {
-			color: image.RGBA(5, 6, 7, 8),
-		},
-	}
-	for name, test := range tests {
-		t.Run(name, func(t *testing.T) {
-			openGL, _ := opengl.New(mainThreadLoop)
-			defer openGL.Destroy()
-			context := openGL.Context()
-			img := context.NewAcceleratedImage(1, 1)
-			img.Upload(make([]image.Color, 1))
-			program := workingProgram(t, context)
-			glCommand := &command{runGL: func(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
-				// when
-				renderer.Clear(test.color)
-			}}
-			command := program.AcceleratedCommand(glCommand)
-			command.Run(image.AcceleratedImageSelection{
-				Location: image.AcceleratedImageLocation{Width: 1, Height: 1},
-				Image:    img,
-			}, []image.AcceleratedImageSelection{})
-			// then
-			assertColors(t, []image.Color{test.color}, img)
-		})
-	}
+	openGL, _ := opengl.New(mainThreadLoop)
+	defer openGL.Destroy()
+	context := openGL.Context()
+	img := context.NewAcceleratedImage(1, 1)
+	img.Upload(make([]image.Color, 1))
+	program := workingProgram(t, context)
+
+	color1 := image.RGBA(1, 2, 3, 4)
+	color2 := image.RGBA(5, 6, 7, 8)
+
+	clearCommandWithColor1 := context.NewClearCommand()
+	clearCommandWithColor1.SetColor(color1)
+
+	clearCommandWithColor2 := context.NewClearCommand()
+	clearCommandWithColor2.SetColor(color2)
+
+	t.Run("should fill using given color", func(t *testing.T) {
+		tests := map[string]struct {
+			command       image.AcceleratedCommand
+			expectedColor image.Color
+		}{
+			"1": {
+				command:       program.AcceleratedCommand(&clearCommand{color: color1}),
+				expectedColor: color1,
+			},
+			"1 ClearCommand": {
+				command:       clearCommandWithColor1,
+				expectedColor: color1,
+			},
+			"2": {
+				command:       program.AcceleratedCommand(&clearCommand{color: color2}),
+				expectedColor: color2,
+			},
+			"2 ClearCommand": {
+				command:       clearCommandWithColor2,
+				expectedColor: color2,
+			},
+			"ClearCommand without color specified": {
+				command:       context.NewClearCommand(),
+				expectedColor: image.Transparent,
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				test.command.Run(image.AcceleratedImageSelection{
+					Location: image.AcceleratedImageLocation{Width: 1, Height: 1},
+					Image:    img,
+				}, []image.AcceleratedImageSelection{})
+				// then
+				assertColors(t, []image.Color{test.expectedColor}, img)
+			})
+		}
+	})
 }
 
 func TestRenderer_DrawArrays(t *testing.T) {
@@ -1465,6 +1526,14 @@ type command struct {
 
 func (c *command) RunGL(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
 	c.runGL(renderer, selections)
+}
+
+type clearCommand struct {
+	color image.Color
+}
+
+func (c *clearCommand) RunGL(renderer *gl.Renderer, _ []image.AcceleratedImageSelection) {
+	renderer.Clear(c.color)
 }
 
 type emptyCommand struct {

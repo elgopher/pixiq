@@ -2,6 +2,8 @@ package gl
 
 import (
 	"fmt"
+
+	"github.com/jacekolszak/pixiq/image"
 )
 
 // Context is an OpenGL context
@@ -274,4 +276,41 @@ func (p *Program) AcceleratedCommand(command Command) *AcceleratedCommand {
 // ID returns program identifier (aka name)
 func (p *Program) ID() uint32 {
 	return p.id
+}
+
+func (p *Program) use() {
+	if p.program != nil {
+		p.api.UseProgram(p.id)
+	}
+}
+
+// NewClearCommand returns a command clearing all pixels in image.Selection
+func (c *Context) NewClearCommand() *ClearCommand {
+	nilProgram := &Program{
+		program:          nil,
+		uniformLocations: map[string]int32{},
+		attributes:       map[int32]attribute{},
+		api:              c.api,
+		allImages:        c.allImages,
+	}
+	cmd := &ClearCommand{}
+	cmd.AcceleratedCommand = nilProgram.AcceleratedCommand(cmd)
+	return cmd
+}
+
+// ClearCommand clears the image.Selection using given color. By default color
+// is transparent.
+type ClearCommand struct {
+	*AcceleratedCommand
+	color image.Color
+}
+
+// SetColor sets color which will be used to clear all pixels in image.Selection
+func (c *ClearCommand) SetColor(color image.Color) {
+	c.color = color
+}
+
+// RunGL implements gl.Command
+func (c *ClearCommand) RunGL(renderer *Renderer, _ []image.AcceleratedImageSelection) {
+	renderer.Clear(c.color)
 }
