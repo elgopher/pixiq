@@ -3,15 +3,15 @@ package opengl_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/jacekolszak/pixiq/opengl"
 )
 
 // Must be at most 1 allocs/op
 func BenchmarkContext_Clear(b *testing.B) {
 	openGL, err := opengl.New(mainThreadLoop)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(b, err)
 	defer openGL.Destroy()
 	gl := openGL.ContextAPI()
 	b.ReportAllocs()
