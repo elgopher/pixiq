@@ -35,7 +35,7 @@ func (c *Context) NewAcceleratedImage(width, height int) *AcceleratedImage {
 		0,
 		rgba,
 		unsignedByte,
-		c.api.Ptr(nil), // TODO Set transparent colors either by sending zeroes or using gl.Clear
+		c.api.Ptr(nil),
 	)
 	c.api.TexParameteri(texture2D, textureMinFilter, nearest)
 	c.api.TexParameteri(texture2D, textureMagFilter, nearest)
@@ -51,6 +51,8 @@ func (c *Context) NewAcceleratedImage(width, height int) *AcceleratedImage {
 		api:           c.api,
 	}
 	c.allImages[img] = img
+	clearWithTransparentColor := c.NewClearCommand()
+	clearWithTransparentColor.Run(img.wholeSelection(), []image.AcceleratedImageSelection{})
 	return img
 }
 
@@ -61,6 +63,13 @@ type AcceleratedImage struct {
 	frameBufferID uint32
 	width, height int
 	api           API
+}
+
+func (i *AcceleratedImage) wholeSelection() image.AcceleratedImageSelection {
+	return image.AcceleratedImageSelection{
+		Location: image.AcceleratedImageLocation{Width: i.width, Height: i.height},
+		Image:    i,
+	}
 }
 
 // TextureID returns texture identifier (aka name)

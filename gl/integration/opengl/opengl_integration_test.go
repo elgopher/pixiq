@@ -651,6 +651,10 @@ func TestRenderer_Clear(t *testing.T) {
 				command:       clearCommandWithColor2,
 				expectedColor: color2,
 			},
+			"ClearCommand without color specified": {
+				command:       context.NewClearCommand(),
+				expectedColor: image.Transparent,
+			},
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
