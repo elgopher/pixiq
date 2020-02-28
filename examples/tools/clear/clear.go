@@ -26,8 +26,8 @@ func main() {
 			glclear.New(context.NewClearCommand()), // GPU one
 			clear.New(),                            // CPU one
 		}
-		tools[0].SetColor(colornames.Magenta)
-		tools[1].SetColor(colornames.Mediumaquamarine)
+		tools[0].SetColor(colornames.Cornflowerblue)
+		tools[1].SetColor(colornames.Hotpink)
 		currentTool := 0
 		keys := keyboard.New(window)
 		loop.Run(window, func(frame *loop.Frame) {
