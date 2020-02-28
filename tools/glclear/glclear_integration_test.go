@@ -27,6 +27,7 @@ func TestNew_Integration(t *testing.T) {
 	t.Run("should create tool", func(t *testing.T) {
 		openGL, err := opengl.New(mainThreadLoop)
 		require.NoError(t, err)
+		defer openGL.Destroy()
 		command := openGL.Context().NewClearCommand()
 		// when
 		tool := glclear.New(command)
@@ -37,6 +38,7 @@ func TestNew_Integration(t *testing.T) {
 func TestTool_Clear(t *testing.T) {
 	openGL, err := opengl.New(mainThreadLoop)
 	require.NoError(t, err)
+	defer openGL.Destroy()
 	command := openGL.Context().NewClearCommand()
 	t.Run("should clear selection", func(t *testing.T) {
 		colors := []image.Color{
