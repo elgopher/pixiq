@@ -436,6 +436,26 @@ func TestSelection_SetColor(t *testing.T) {
 			})
 		})
 	})
+
+	t.Run("SetColor overrides color set by AcceleratedCommand", func(t *testing.T) {
+		var (
+			color        = image.RGBA(10, 20, 30, 40)
+			commandColor = image.RGBA(50, 60, 70, 80)
+			accImg       = fake.NewAcceleratedImage(1, 1)
+			img          = image.New(1, 1, accImg)
+			selection    = img.Selection(0, 0)
+		)
+		selection.Modify(&acceleratedCommandMock{
+			command: func(image.AcceleratedImageSelection, []image.AcceleratedImageSelection) {
+				accImg.Upload([]image.Color{commandColor})
+			},
+		})
+		// when
+		selection.SetColor(0, 0, color)
+		// then
+		assert.Equal(t, color, selection.Color(0, 0))
+	})
+
 }
 
 func TestImage_Upload(t *testing.T) {
@@ -744,6 +764,7 @@ func TestSelection_Modify(t *testing.T) {
 		assert.Equal(t, color01, outputSelection.Color(0, 1))
 		assert.Equal(t, color11, outputSelection.Color(1, 1))
 	})
+
 }
 
 func assertColors(t *testing.T, selection image.Selection, expectedColorLines [][]image.Color) {
