@@ -441,19 +441,21 @@ func TestSelection_SetColor(t *testing.T) {
 		var (
 			color        = image.RGBA(10, 20, 30, 40)
 			commandColor = image.RGBA(50, 60, 70, 80)
-			accImg       = fake.NewAcceleratedImage(1, 1)
-			img          = image.New(1, 1, accImg)
+			accImg       = fake.NewAcceleratedImage(2, 1)
+			img          = image.New(2, 1, accImg)
 			selection    = img.Selection(0, 0)
 		)
 		selection.Modify(&acceleratedCommandMock{
 			command: func(image.AcceleratedImageSelection, []image.AcceleratedImageSelection) {
-				accImg.Upload([]image.Color{commandColor})
+				accImg.Upload([]image.Color{commandColor, commandColor})
 			},
 		})
 		// when
 		selection.SetColor(0, 0, color)
 		// then
 		assert.Equal(t, color, selection.Color(0, 0))
+		// and
+		assert.Equal(t, commandColor, selection.Color(1, 0))
 	})
 
 }

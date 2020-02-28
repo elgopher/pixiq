@@ -14,6 +14,7 @@ func BenchmarkSelection_SetColor(b *testing.B) {
 		height    = selection.Height()
 		width     = selection.Width()
 	)
+	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for y := 0; y < height; y++ {
@@ -31,6 +32,7 @@ func BenchmarkSelection_Color(b *testing.B) {
 		height    = selection.Height()
 		width     = selection.Width()
 	)
+	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for y := 0; y < height; y++ {
