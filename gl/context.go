@@ -310,6 +310,7 @@ func (c *ClearCommand) SetColor(color image.Color) {
 	c.color = color
 }
 
+// RunGL implements gl.Command
 func (c *ClearCommand) RunGL(renderer *Renderer, _ []image.AcceleratedImageSelection) {
 	renderer.Clear(c.color)
 }

@@ -10,7 +10,9 @@ func New() *Tool {
 }
 
 // Tool is a clearing tool. It clears the image.Selection with specific color
-// which basically means setting color for each pixel in the selection.
+// which basically means setting the color for each pixel in the selection.
+//
+// Tool is using CPU.
 type Tool struct {
 	color image.Color
 }
