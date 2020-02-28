@@ -18,6 +18,7 @@ func BenchmarkAcceleratedImage_Upload(b *testing.B) {
 	}
 	img := openGL.Context().NewAcceleratedImage(1, 1)
 	pixels := []image.Color{image.Transparent, image.Transparent}
+	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		img.Upload(pixels)

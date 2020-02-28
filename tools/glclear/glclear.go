@@ -18,7 +18,7 @@ func New(command *gl.ClearCommand) *Tool {
 // Tool is a clearing tool. It clears the image.Selection with specific color
 // which basically means setting the color for each pixel in the selection.
 //
-// Tool is using GPU through use of *gl.ClearCommand
+// Tool uses GPU through use of *gl.ClearCommand
 type Tool struct {
 	command *gl.ClearCommand
 }
