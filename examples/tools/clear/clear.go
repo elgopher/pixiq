@@ -10,7 +10,7 @@ import (
 	"github.com/jacekolszak/pixiq/tools/glclear"
 )
 
-type ClearTool interface {
+type clearTool interface {
 	SetColor(image.Color)
 	Clear(image.Selection)
 }
@@ -22,7 +22,7 @@ func main() {
 			panic(err)
 		}
 		context := gl.Context()
-		tools := []ClearTool{
+		tools := []clearTool{
 			glclear.New(context.NewClearCommand()), // GPU one
 			clear.New(),                            // CPU one
 		}
@@ -45,7 +45,7 @@ func main() {
 			tool.Clear(mouth)
 			keys.Update()
 			if keys.JustReleased(keyboard.Space) {
-				currentTool += 1
+				currentTool++
 				currentTool = currentTool % len(tools)
 			}
 		})

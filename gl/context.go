@@ -284,6 +284,7 @@ func (p *Program) use() {
 	}
 }
 
+// NewClearCommand returns a command clearing all pixels in image.Selection
 func (c *Context) NewClearCommand() *ClearCommand {
 	nilProgram := &Program{
 		program:          nil,
@@ -297,11 +298,14 @@ func (c *Context) NewClearCommand() *ClearCommand {
 	return cmd
 }
 
+// ClearCommand clears the image.Selection using given color. By default color
+// is transparent.
 type ClearCommand struct {
 	*AcceleratedCommand
 	color image.Color
 }
 
+// SetColor sets color which will be used to clear all pixels in image.Selection
 func (c *ClearCommand) SetColor(color image.Color) {
 	c.color = color
 }
