@@ -35,7 +35,7 @@ func (c *Context) NewAcceleratedImage(width, height int) *AcceleratedImage {
 		0,
 		rgba,
 		unsignedByte,
-		c.api.Ptr(nil),
+		c.api.Ptr(nil), // TODO Set transparent colors either by sending zeroes or using gl.Clear
 	)
 	c.api.TexParameteri(texture2D, textureMinFilter, nearest)
 	c.api.TexParameteri(texture2D, textureMagFilter, nearest)

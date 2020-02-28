@@ -346,6 +346,38 @@ func TestContext_NewAcceleratedImage(t *testing.T) {
 	})
 }
 
+func TestAcceleratedImage_Download(t *testing.T) {
+	t.Run("new AcceleratedImage should be transparent", func(t *testing.T) {
+		tests := map[string]struct {
+			width, height int
+		}{
+			"1x1": {
+				width:  1,
+				height: 1,
+			},
+			"2x3": {
+				width:  2,
+				height: 3,
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				openGL, _ := opengl.New(mainThreadLoop)
+				defer openGL.Destroy()
+				context := openGL.Context()
+				img := context.NewAcceleratedImage(test.width, test.height)
+				output := make([]image.Color, test.width*test.height)
+				// when
+				img.Download(output)
+				// then
+				for i, color := range output {
+					assert.Equal(t, image.Transparent, color, "index: %d", i)
+				}
+			})
+		}
+	})
+}
+
 func TestAcceleratedImage_Upload(t *testing.T) {
 	color1 := image.RGBA(10, 20, 30, 40)
 	color2 := image.RGBA(50, 60, 70, 80)
