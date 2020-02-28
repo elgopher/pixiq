@@ -1,24 +1,43 @@
-package clear_test
+package glclear_test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/jacekolszak/pixiq/image"
-	"github.com/jacekolszak/pixiq/image/fake"
-	"github.com/jacekolszak/pixiq/tools/clear"
+	"github.com/jacekolszak/pixiq/opengl"
+	"github.com/jacekolszak/pixiq/tools/glclear"
 )
 
+var mainThreadLoop *opengl.MainThreadLoop
+
+func TestMain(m *testing.M) {
+	var exit int
+	opengl.StartMainThreadLoop(func(main *opengl.MainThreadLoop) {
+		mainThreadLoop = main
+		exit = m.Run()
+	})
+	os.Exit(exit)
+}
 func TestNew(t *testing.T) {
 	t.Run("should create tool", func(t *testing.T) {
-		tool := clear.New()
+		openGL, err := opengl.New(mainThreadLoop)
+		require.NoError(t, err)
+		command := openGL.Context().NewClearCommand()
+		// when
+		tool := glclear.New(command)
 		assert.NotNil(t, tool)
 	})
 }
 
-func TestClear(t *testing.T) {
+func TestTool_Clear(t *testing.T) {
+	openGL, err := opengl.New(mainThreadLoop)
+	require.NoError(t, err)
+	command := openGL.Context().NewClearCommand()
 	t.Run("should clear selection", func(t *testing.T) {
 		colors := []image.Color{
 			image.RGBA(10, 20, 30, 40),
@@ -54,9 +73,9 @@ func TestClear(t *testing.T) {
 			for name, test := range tests {
 				testName := fmt.Sprintf("%s %v", name, color)
 				t.Run(testName, func(t *testing.T) {
-					img := image.New(2, 2, fake.NewAcceleratedImage(2, 2))
+					img := openGL.NewImage(2, 2)
 					selection := img.Selection(0, 0).WithSize(test.width, test.height)
-					tool := clear.New()
+					tool := glclear.New(command)
 					tool.SetColor(color)
 					// when
 					tool.Clear(selection)
