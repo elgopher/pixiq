@@ -24,6 +24,12 @@ func TestMain(m *testing.M) {
 	os.Exit(exit)
 }
 func TestNew(t *testing.T) {
+	t.Run("should panic for nil command", func(t *testing.T) {
+		assert.Panics(t, func() {
+			// when
+			glclear.New(nil)
+		})
+	})
 	t.Run("should create tool", func(t *testing.T) {
 		openGL, err := opengl.New(mainThreadLoop)
 		require.NoError(t, err)

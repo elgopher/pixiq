@@ -6,6 +6,9 @@ import (
 )
 
 func New(command *gl.ClearCommand) *Tool {
+	if command == nil {
+		panic("nil command")
+	}
 	return &Tool{
 		command: command,
 	}
