@@ -251,6 +251,7 @@ func (s Selection) Modify(command AcceleratedCommand, selections ...Selection) {
 	}
 	convertedSelections := s.image.selectionsCache[:0]
 	for _, selection := range selections {
+		// TODO This will fail
 		selection.image.acceleratedImage.Upload(selection.image.pixels)
 		convertedSelections = append(convertedSelections, selection.toAcceleratedImageSelection())
 	}
