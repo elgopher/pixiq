@@ -184,7 +184,7 @@ func (s Selection) Color(localX, localY int) Color {
 		return Transparent
 	}
 	index := x + y*s.image.width
-	if len(s.image.pixels) <= index {
+	if index >= len(s.image.pixels) {
 		return Transparent
 	}
 	return s.image.pixels[index]
@@ -212,7 +212,7 @@ func (s Selection) SetColor(localX, localY int, color Color) {
 		return
 	}
 	index := x + y*s.image.width
-	if len(s.image.pixels) <= index {
+	if index >= len(s.image.pixels) {
 		return
 	}
 	s.image.pixels[index] = color
