@@ -288,41 +288,53 @@ func (s Selection) Line(y int) Line {
 	if start >= len(s.image.pixels) {
 		start = len(s.image.pixels) - 1
 	}
-	if stop >= len(s.image.pixels) {
-		stop = len(s.image.pixels) - 1
+	if stop > len(s.image.pixels) {
+		stop = len(s.image.pixels)
 	}
 	return Line{
-		pixels: s.image.pixels[start:stop],
-		x:      s.x}
+		line:      s.image.pixels[start:stop],
+		imageLine: s.image.pixels[start:stop],
+		x:         s.x,
+		width:     s.width,
+	}
 }
 
 type Line struct {
-	x      int
-	pixels []Color
+	x         int
+	width     int
+	line      []Color
+	imageLine []Color
 }
 
 func (l Line) Width() int {
-	return len(l.pixels)
+	return l.width
 }
 
 func (l Line) SetColor(x int, color Color) {
-	x = l.x + x
-	if x < 0 {
+	if x >= 0 && x < len(l.line) {
+		l.line[x] = color
 		return
 	}
-	if x >= len(l.pixels) {
+	imageX := l.x + x
+	if imageX < 0 {
 		return
 	}
-	l.pixels[x] = color
+	if imageX >= len(l.imageLine) {
+		return
+	}
+	l.imageLine[x] = color
 }
 
 func (l Line) Color(x int) Color {
-	x = l.x + x
-	if x < 0 {
+	if x >= 0 && x < len(l.line) {
+		return l.line[x]
+	}
+	imageX := l.x + x
+	if imageX < 0 {
 		return Transparent
 	}
-	if x >= len(l.pixels) {
+	if imageX >= len(l.imageLine) {
 		return Transparent
 	}
-	return l.pixels[x]
+	return l.imageLine[x]
 }

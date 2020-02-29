@@ -55,7 +55,8 @@ func BenchmarkLine_SetColor(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		for y := 0; y < height; y++ {
 			line := selection.Line(y)
-			for x := 0; x < line.Width(); x++ {
+			width := line.Width()
+			for x := 0; x < width; x++ {
 				line.SetColor(x, color)
 			}
 		}
