@@ -1,9 +1,9 @@
-// Package opengl makes it possible to use Pixiq on PCs with Linux, Windows or MacOS.
+// Package glfw makes it possible to use Pixiq on PCs with Linux, Windows or MacOS.
 // It provides a method for creating OpenGL-accelerated image.Image and Window which
 // is an implementation of loop.Screen and keyboard.EventSource.
 // Under the hood it is using OpenGL API and GLFW for manipulating windows
 // and handling user input.
-package opengl
+package glfw
 
 import (
 	"log"
@@ -13,12 +13,12 @@ import (
 	"github.com/go-gl/glfw/v3.3/glfw"
 
 	"github.com/jacekolszak/pixiq/gl"
+	"github.com/jacekolszak/pixiq/glfw/internal"
 	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/keyboard"
-	"github.com/jacekolszak/pixiq/opengl/internal"
 )
 
-// New creates OpenGL instance.
+// NewOpenGL creates OpenGL instance.
 // MainThreadLoop is needed because some GLFW functions has to be called
 // from the main thread.
 //
@@ -27,11 +27,11 @@ import (
 // always remember to destroy the object after test by executing Destroy method,
 // because eventually the number of objects may reach the mentioned limit.
 //
-// New may return error for different reasons, such as OpenGL is not supported
+// NewOpenGL may return error for different reasons, such as OpenGL is not supported
 // on the platform.
 //
-// New will panic if mainThreadLoop is nil.
-func New(mainThreadLoop *MainThreadLoop) (*OpenGL, error) {
+// NewOpenGL will panic if mainThreadLoop is nil.
+func NewOpenGL(mainThreadLoop *MainThreadLoop) (*OpenGL, error) {
 	if mainThreadLoop == nil {
 		panic("nil MainThreadLoop")
 	}
@@ -90,7 +90,7 @@ func New(mainThreadLoop *MainThreadLoop) (*OpenGL, error) {
 // Will panic if OpenGL cannot be created.
 func RunOrDie(main func(gl *OpenGL)) {
 	StartMainThreadLoop(func(mainThreadLoop *MainThreadLoop) {
-		openGL, err := New(mainThreadLoop)
+		openGL, err := NewOpenGL(mainThreadLoop)
 		if err != nil {
 			panic(err)
 		}
@@ -110,7 +110,7 @@ func createWindow(mainThreadLoop *MainThreadLoop, share *glfw.Window) (*glfw.Win
 	// FIXME: For some reason XVFB does not change the frame buffer size after
 	// resizing the window to higher values than initial ones. That's why the window
 	// created here has size equal to the biggest window used in integration tests
-	// See: TestWindow_Draw() in opengl_test.go
+	// See: TestWindow_Draw() in glfw_test.go
 	win, err := glfw.CreateWindow(3, 3, "OpenGL Pixiq Window", nil, share)
 	if err != nil {
 		return nil, err
@@ -163,12 +163,12 @@ func (g *OpenGL) startPollingEvents(stop <-chan struct{}) {
 //
 // Example:
 //
-//	   gl := opengl.New(loop)
-//	   defer gl.Destroy()
-//	   img, err := gl.NewImage(2, 2)
+//	   openGL := glfw.NewOpenGL(loop)
+//	   defer openGL.Destroy()
+//	   img, err := openGL.NewImage(2, 2)
 //
-// To avoid coupling with opengl you should define your own factory function
-// for creating images and use it instead of directly accessing opengl.OpenGL:
+// To avoid coupling with glfw you should define your own factory function
+// for creating images and use it instead of directly accessing glfw.OpenGL:
 //
 //	   type NewImage func(width, height int) *image.Image
 //

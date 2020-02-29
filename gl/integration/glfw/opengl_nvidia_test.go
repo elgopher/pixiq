@@ -1,6 +1,6 @@
 // +build nvidia
 
-package opengl_test
+package glfw_test
 
 import (
 	"testing"
@@ -10,12 +10,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/jacekolszak/pixiq/opengl"
+	"github.com/jacekolszak/pixiq/glfw"
 )
 
 func TestContext_Error_Nvidia(t *testing.T) {
 	t.Run("should return out-of-memory error for too big vertex buffer", func(t *testing.T) {
-		openGL, _ := opengl.New(mainThreadLoop)
+		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
 		defer openGL.Destroy()
 		context := openGL.Context()
 		petabyte := 1024 * 1024 * 1024 * 1024 * 1024

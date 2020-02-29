@@ -5,23 +5,23 @@ import (
 	"log"
 
 	"github.com/jacekolszak/pixiq/colornames"
-	"github.com/jacekolszak/pixiq/opengl"
+	"github.com/jacekolszak/pixiq/glfw"
 )
 
 // This program shows how to create an Image and manipulate its pixels.
 // It does not open any windows.
 func main() {
 	// OpenGL object is needed for creating image.AcceleratedImage instances.
-	// Unfortunately some functions used by opengl package must be executed
+	// Unfortunately some functions used by glfw package must be executed
 	// from the main thread. This program is executed in the main thread,
-	// so we can pass it to the opengl by executing StartMainThreadLoop.
+	// so we can pass it to the glfw by executing StartMainThreadLoop.
 	// The function will block and will execute our callback in a different
 	// thread.
-	opengl.StartMainThreadLoop(func(loop *opengl.MainThreadLoop) {
+	glfw.StartMainThreadLoop(func(loop *glfw.MainThreadLoop) {
 		// Create OpenGL object.
-		gl, err := opengl.New(loop)
+		gl, err := glfw.NewOpenGL(loop)
 		if err != nil {
-			log.Panicf("New failed: %v", err)
+			log.Panicf("NewOpenGL failed: %v", err)
 		}
 		// Destroy OpenGL when the function ends
 		defer gl.Destroy()

@@ -4,14 +4,14 @@ import (
 	"log"
 
 	"github.com/jacekolszak/pixiq/colornames"
+	"github.com/jacekolszak/pixiq/glfw"
 	"github.com/jacekolszak/pixiq/keyboard"
 	"github.com/jacekolszak/pixiq/loop"
-	"github.com/jacekolszak/pixiq/opengl"
 )
 
 func main() {
-	opengl.RunOrDie(func(gl *opengl.OpenGL) {
-		window, err := gl.OpenWindow(80, 40, opengl.Title("Use WSAD and ESC to close window"), opengl.Zoom(4))
+	glfw.RunOrDie(func(openGL *glfw.OpenGL) {
+		window, err := openGL.OpenWindow(80, 40, glfw.Title("Use WSAD and ESC to close window"), glfw.Zoom(4))
 		if err != nil {
 			log.Panicf("OpenWindow failed: %v", err)
 		}

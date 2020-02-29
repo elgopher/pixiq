@@ -1,16 +1,16 @@
-package opengl_test
+package glfw_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/jacekolszak/pixiq/opengl"
+	"github.com/jacekolszak/pixiq/glfw"
 )
 
 // Must be at most 1 allocs/op
 func BenchmarkContext_Clear(b *testing.B) {
-	openGL, err := opengl.New(mainThreadLoop)
+	openGL, err := glfw.NewOpenGL(mainThreadLoop)
 	require.NoError(b, err)
 	defer openGL.Destroy()
 	gl := openGL.ContextAPI()

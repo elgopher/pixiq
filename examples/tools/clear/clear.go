@@ -2,10 +2,10 @@ package main
 
 import (
 	"github.com/jacekolszak/pixiq/colornames"
+	"github.com/jacekolszak/pixiq/glfw"
 	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/keyboard"
 	"github.com/jacekolszak/pixiq/loop"
-	"github.com/jacekolszak/pixiq/opengl"
 	"github.com/jacekolszak/pixiq/tools/clear"
 	"github.com/jacekolszak/pixiq/tools/glclear"
 )
@@ -16,12 +16,12 @@ type clearTool interface {
 }
 
 func main() {
-	opengl.RunOrDie(func(gl *opengl.OpenGL) {
-		window, err := gl.OpenWindow(10, 10, opengl.Zoom(30))
+	glfw.RunOrDie(func(openGL *glfw.OpenGL) {
+		window, err := openGL.OpenWindow(10, 10, glfw.Zoom(30))
 		if err != nil {
 			panic(err)
 		}
-		context := gl.Context()
+		context := openGL.Context()
 		tools := []clearTool{
 			glclear.New(context.NewClearCommand()), // GPU one
 			clear.New(),                            // CPU one

@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/jacekolszak/pixiq/glfw"
 	"github.com/jacekolszak/pixiq/keyboard"
 	"github.com/jacekolszak/pixiq/loop"
-	"github.com/jacekolszak/pixiq/opengl"
 )
 
 func main() {
-	opengl.RunOrDie(func(gl *opengl.OpenGL) {
-		win, err := gl.OpenWindow(320, 10, opengl.Title("Press any key..."))
+	glfw.RunOrDie(func(openGL *glfw.OpenGL) {
+		win, err := openGL.OpenWindow(320, 10, glfw.Title("Press any key..."))
 		if err != nil {
 			log.Panicf("OpenWindow failed: %v", err)
 		}

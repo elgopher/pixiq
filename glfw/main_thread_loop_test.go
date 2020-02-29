@@ -1,4 +1,4 @@
-package opengl_test
+package glfw_test
 
 import (
 	"testing"

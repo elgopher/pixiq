@@ -3,14 +3,14 @@ package main
 import (
 	"log"
 
+	"github.com/jacekolszak/pixiq/glfw"
 	"github.com/jacekolszak/pixiq/loop"
-	"github.com/jacekolszak/pixiq/opengl"
 )
 
 // This example shows how to properly close the window.
 func main() {
-	opengl.RunOrDie(func(gl *opengl.OpenGL) {
-		window, err := gl.OpenWindow(320, 180)
+	glfw.RunOrDie(func(openGL *glfw.OpenGL) {
+		window, err := openGL.OpenWindow(320, 180)
 		if err != nil {
 			log.Panicf("OpenWindow failed: %v", err)
 		}

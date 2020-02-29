@@ -1,4 +1,4 @@
-package opengl_test
+package glfw_test
 
 import (
 	"fmt"
@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	gl2 "github.com/jacekolszak/pixiq/gl"
+	"github.com/jacekolszak/pixiq/glfw"
 	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/keyboard"
-	"github.com/jacekolszak/pixiq/opengl"
 )
 
 func TestWindow_Draw(t *testing.T) {
@@ -22,10 +22,10 @@ func TestWindow_Draw(t *testing.T) {
 		color4 := image.RGBA(130, 140, 150, 160)
 
 		t.Run("1x1", func(t *testing.T) {
-			openGL, err := opengl.New(mainThreadLoop)
+			openGL, err := glfw.NewOpenGL(mainThreadLoop)
 			require.NoError(t, err)
 			defer openGL.Destroy()
-			window, err := openGL.OpenWindow(1, 1, opengl.NoDecorationHint())
+			window, err := openGL.OpenWindow(1, 1, glfw.NoDecorationHint())
 			require.NoError(t, err)
 			defer window.Close()
 			window.Image().WholeImageSelection().SetColor(0, 0, color1)
@@ -36,10 +36,10 @@ func TestWindow_Draw(t *testing.T) {
 			assert.Equal(t, expected, framebufferPixels(window.ContextAPI(), 0, 0, 1, 1))
 		})
 		t.Run("1x2", func(t *testing.T) {
-			openGL, err := opengl.New(mainThreadLoop)
+			openGL, err := glfw.NewOpenGL(mainThreadLoop)
 			require.NoError(t, err)
 			defer openGL.Destroy()
-			window, err := openGL.OpenWindow(1, 2, opengl.NoDecorationHint())
+			window, err := openGL.OpenWindow(1, 2, glfw.NoDecorationHint())
 			require.NoError(t, err)
 			defer window.Close()
 			img := window.Image()
@@ -52,10 +52,10 @@ func TestWindow_Draw(t *testing.T) {
 			assert.Equal(t, expected, framebufferPixels(window.ContextAPI(), 0, 0, 1, 2))
 		})
 		t.Run("2x1", func(t *testing.T) {
-			openGL, err := opengl.New(mainThreadLoop)
+			openGL, err := glfw.NewOpenGL(mainThreadLoop)
 			require.NoError(t, err)
 			defer openGL.Destroy()
-			window, err := openGL.OpenWindow(2, 1, opengl.NoDecorationHint())
+			window, err := openGL.OpenWindow(2, 1, glfw.NoDecorationHint())
 			require.NoError(t, err)
 			defer window.Close()
 			img := window.Image()
@@ -68,10 +68,10 @@ func TestWindow_Draw(t *testing.T) {
 			assert.Equal(t, expected, framebufferPixels(window.ContextAPI(), 0, 0, 2, 1))
 		})
 		t.Run("2x2", func(t *testing.T) {
-			openGL, err := opengl.New(mainThreadLoop)
+			openGL, err := glfw.NewOpenGL(mainThreadLoop)
 			require.NoError(t, err)
 			defer openGL.Destroy()
-			window, err := openGL.OpenWindow(2, 2, opengl.NoDecorationHint())
+			window, err := openGL.OpenWindow(2, 2, glfw.NoDecorationHint())
 			require.NoError(t, err)
 			defer window.Close()
 			img := window.Image()
@@ -91,10 +91,10 @@ func TestWindow_Draw(t *testing.T) {
 			for zoom := -1; zoom < 1; zoom++ {
 				name := fmt.Sprintf("zoom=%d", zoom)
 				t.Run(name, func(t *testing.T) {
-					openGL, err := opengl.New(mainThreadLoop)
+					openGL, err := glfw.NewOpenGL(mainThreadLoop)
 					require.NoError(t, err)
 					defer openGL.Destroy()
-					window, err := openGL.OpenWindow(1, 1, opengl.NoDecorationHint(), opengl.Zoom(zoom))
+					window, err := openGL.OpenWindow(1, 1, glfw.NoDecorationHint(), glfw.Zoom(zoom))
 					require.NoError(t, err)
 					defer window.Close()
 					img := window.Image()
@@ -112,10 +112,10 @@ func TestWindow_Draw(t *testing.T) {
 			for zoom := 2; zoom < 4; zoom++ {
 				name := fmt.Sprintf("zoom=%d", zoom)
 				t.Run(name, func(t *testing.T) {
-					openGL, err := opengl.New(mainThreadLoop)
+					openGL, err := glfw.NewOpenGL(mainThreadLoop)
 					require.NoError(t, err)
 					defer openGL.Destroy()
-					window, err := openGL.OpenWindow(1, 1, opengl.NoDecorationHint(), opengl.Zoom(zoom))
+					window, err := openGL.OpenWindow(1, 1, glfw.NoDecorationHint(), glfw.Zoom(zoom))
 					require.NoError(t, err)
 					defer window.Close()
 					img := window.Image()
@@ -133,7 +133,7 @@ func TestWindow_Draw(t *testing.T) {
 		})
 
 		t.Run("two windows", func(t *testing.T) {
-			openGL, err := opengl.New(mainThreadLoop)
+			openGL, err := glfw.NewOpenGL(mainThreadLoop)
 			require.NoError(t, err)
 			defer openGL.Destroy()
 			window1, err := windowOfColor(openGL, color1)
@@ -155,10 +155,10 @@ func TestWindow_Draw(t *testing.T) {
 		})
 
 		t.Run("two OpenGL instances", func(t *testing.T) {
-			openGL1, err := opengl.New(mainThreadLoop)
+			openGL1, err := glfw.NewOpenGL(mainThreadLoop)
 			require.NoError(t, err)
 			defer openGL1.Destroy()
-			openGL2, err := opengl.New(mainThreadLoop)
+			openGL2, err := glfw.NewOpenGL(mainThreadLoop)
 			require.NoError(t, err)
 			defer openGL2.Destroy()
 			window1, err := windowOfColor(openGL1, color1)
@@ -181,8 +181,8 @@ func TestWindow_Draw(t *testing.T) {
 	})
 }
 
-func windowOfColor(openGL *opengl.OpenGL, color image.Color) (*opengl.Window, error) {
-	window, err := openGL.OpenWindow(1, 1, opengl.NoDecorationHint())
+func windowOfColor(openGL *glfw.OpenGL, color image.Color) (*glfw.Window, error) {
+	window, err := openGL.OpenWindow(1, 1, glfw.NoDecorationHint())
 	if err != nil {
 		return nil, err
 	}
@@ -200,7 +200,7 @@ func framebufferPixels(context gl2.API, x, y, width, height int32) []image.Color
 
 func TestWindow_Poll(t *testing.T) {
 	t.Run("should return EmptyEvent and false when there is no keyboard events", func(t *testing.T) {
-		openGL, err := opengl.New(mainThreadLoop)
+		openGL, err := glfw.NewOpenGL(mainThreadLoop)
 		require.NoError(t, err)
 		defer openGL.Destroy()
 		win, err := openGL.OpenWindow(1, 1)
@@ -239,10 +239,10 @@ func TestWindow_Zoom(t *testing.T) {
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
-				openGL, err := opengl.New(mainThreadLoop)
+				openGL, err := glfw.NewOpenGL(mainThreadLoop)
 				require.NoError(t, err)
 				defer openGL.Destroy()
-				win, err := openGL.OpenWindow(0, 0, opengl.Zoom(test.zoom))
+				win, err := openGL.OpenWindow(0, 0, glfw.Zoom(test.zoom))
 				require.NoError(t, err)
 				defer win.Close()
 				// when
@@ -270,10 +270,10 @@ func TestWindow_Image(t *testing.T) {
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
-				openGL, err := opengl.New(mainThreadLoop)
+				openGL, err := glfw.NewOpenGL(mainThreadLoop)
 				require.NoError(t, err)
 				defer openGL.Destroy()
-				win, err := openGL.OpenWindow(test.width, test.height, opengl.NoDecorationHint())
+				win, err := openGL.OpenWindow(test.width, test.height, glfw.NoDecorationHint())
 				require.NoError(t, err)
 				defer win.Close()
 				// when
@@ -304,10 +304,10 @@ func TestWindow_Image(t *testing.T) {
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
-				openGL, err := opengl.New(mainThreadLoop)
+				openGL, err := glfw.NewOpenGL(mainThreadLoop)
 				require.NoError(t, err)
 				defer openGL.Destroy()
-				win, err := openGL.OpenWindow(640, 360, opengl.Zoom(test.zoom))
+				win, err := openGL.OpenWindow(640, 360, glfw.Zoom(test.zoom))
 				require.NoError(t, err)
 				// when
 				screen := win.Image()
@@ -318,10 +318,10 @@ func TestWindow_Image(t *testing.T) {
 		}
 	})
 	t.Run("initial screen is transparent", func(t *testing.T) {
-		openGL, err := opengl.New(mainThreadLoop)
+		openGL, err := glfw.NewOpenGL(mainThreadLoop)
 		require.NoError(t, err)
 		defer openGL.Destroy()
-		win, err := openGL.OpenWindow(1, 1, opengl.NoDecorationHint())
+		win, err := openGL.OpenWindow(1, 1, glfw.NoDecorationHint())
 		require.NoError(t, err)
 		transparent := image.RGBA(0, 0, 0, 0)
 		// when
@@ -334,7 +334,7 @@ func TestWindow_Image(t *testing.T) {
 
 func TestWindow_ContextAPI(t *testing.T) {
 	t.Run("should return context API", func(t *testing.T) {
-		openGL, _ := opengl.New(mainThreadLoop)
+		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
 		defer openGL.Destroy()
 		win, _ := openGL.OpenWindow(1, 1)
 		// when
