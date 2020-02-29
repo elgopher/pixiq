@@ -272,21 +272,49 @@ func (s Selection) toAcceleratedImageSelection() AcceleratedImageSelection {
 	}
 }
 
+// Line returns all pixels in a line which can be used for efficient pixel processing.
+//
+// It is not safe to retain Line for future use. The image might be modified by
+// AcceleratedCommand and changes will not be reflected in cached Line.
 func (s Selection) Line(y int) Line {
-	return Line{}
+	start := (s.y+y)*s.width + s.x
+	stop := start + s.width
+	if start < 0 {
+		start = 0
+	}
+	if stop < 0 {
+		stop = 0
+	}
+	if start >= len(s.image.pixels) {
+		start = len(s.image.pixels) - 1
+	}
+	if stop >= len(s.image.pixels) {
+		stop = len(s.image.pixels) - 1
+	}
+	return Line{pixels: s.image.pixels[start:stop], width: s.image.width}
 }
 
 type Line struct {
+	x, width int
+	//image    *Image
+	pixels []Color
 }
 
 func (l Line) Width() int {
-	return 0
+	return len(l.pixels)
 }
 
 func (l Line) SetColor(x int, color Color) {
-
+	x = l.x + x
+	if x < 0 {
+		return
+	}
+	if x >= l.width {
+		return
+	}
+	l.pixels[x] = color
 }
 
 func (l Line) Color(x int) Color {
-	return Transparent
+	return l.pixels[x]
 }

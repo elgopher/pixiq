@@ -801,7 +801,57 @@ func TestSelection_Modify(t *testing.T) {
 		// then
 		assert.Equal(t, [][]image.Color{{color}}, accImg.PixelsTable())
 	})
+}
 
+func TestLine_Width(t *testing.T) {
+	t.Skip()
+	img0x0 := newImage(0, 0)
+	img1x1 := newImage(1, 1)
+
+	tests := map[string]struct {
+		image         *image.Image
+		line          image.Line
+		expectedWidth int
+	}{
+		"0x0": {
+			image:         img0x0,
+			line:          img0x0.Selection(0, 0).Line(0),
+			expectedWidth: 0,
+		},
+		"1x1, selection 1,0": {
+			image:         img1x1,
+			line:          img1x1.Selection(1, 0).Line(0),
+			expectedWidth: 0,
+		},
+		"1x1, selection 0,1": {
+			image:         img1x1,
+			line:          img1x1.Selection(0, 1).Line(0),
+			expectedWidth: 0,
+		},
+		"1x1, selection -1,0": {
+			image:         img1x1,
+			line:          img1x1.Selection(-1, 0).Line(0),
+			expectedWidth: 1,
+		},
+		"1x1, selection 0,0": {
+			image:         img1x1,
+			line:          img1x1.Selection(0, 0).Line(0),
+			expectedWidth: 1,
+		},
+		"1x1, nested selection": {
+			image:         img1x1,
+			line:          img1x1.Selection(1, 0).Selection(-1, 0).Line(0),
+			expectedWidth: 1,
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			// when
+			width := test.line.Width()
+			// then
+			assert.Equal(t, test.expectedWidth, width)
+		})
+	}
 }
 
 func assertColors(t *testing.T, selection image.Selection, expectedColorLines [][]image.Color) {
