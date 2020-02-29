@@ -53,12 +53,13 @@ func New(width, height int, acceleratedImage AcceleratedImage) *Image {
 // The cost of creating an Image is huge therefore new images should be created
 // sporadically, ideally when the application starts.
 type Image struct {
-	width            int
-	height           int
-	heightMinusOne   int
-	pixels           []Color
-	acceleratedImage AcceleratedImage
-	selectionsCache  []AcceleratedImageSelection
+	width                    int
+	height                   int
+	heightMinusOne           int
+	pixels                   []Color
+	acceleratedImage         AcceleratedImage
+	selectionsCache          []AcceleratedImageSelection
+	acceleratedImageModified bool
 }
 
 // Width returns the number of pixels in a row.
@@ -93,7 +94,9 @@ func (i *Image) WholeImageSelection() Selection {
 //
 // DEPRECATED - this method will be removed in next release
 func (i *Image) Upload() {
-	i.acceleratedImage.Upload(i.pixels)
+	if !i.acceleratedImageModified {
+		i.acceleratedImage.Upload(i.pixels)
+	}
 }
 
 // Selection points to a specific area of the image. It has a starting position
@@ -165,6 +168,10 @@ func (s Selection) Selection(localX, localY int) Selection {
 // If pixel is outside the image boundaries then transparent color is returned.
 // It is possible to get the color outside the selection.
 func (s Selection) Color(localX, localY int) Color {
+	if s.image.acceleratedImageModified {
+		s.image.acceleratedImage.Download(s.image.pixels)
+		s.image.acceleratedImageModified = false
+	}
 	x := localX + s.x
 	if x < 0 {
 		return Transparent
@@ -189,6 +196,10 @@ func (s Selection) Color(localX, localY int) Color {
 // If pixel is outside the image boundaries then nothing happens.
 // It is possible to set the color outside the selection.
 func (s Selection) SetColor(localX, localY int, color Color) {
+	if s.image.acceleratedImageModified {
+		s.image.acceleratedImage.Download(s.image.pixels)
+		s.image.acceleratedImageModified = false
+	}
 	x := localX + s.x
 	if x < 0 {
 		return
@@ -242,11 +253,11 @@ func (s Selection) Modify(command AcceleratedCommand, selections ...Selection) {
 	}
 	convertedSelections := s.image.selectionsCache[:0]
 	for _, selection := range selections {
-		selection.image.acceleratedImage.Upload(selection.image.pixels)
+		selection.image.Upload()
 		convertedSelections = append(convertedSelections, selection.toAcceleratedImageSelection())
 	}
 	command.Run(s.toAcceleratedImageSelection(), convertedSelections)
-	s.image.acceleratedImage.Download(s.image.pixels)
+	s.image.acceleratedImageModified = true
 }
 
 func (s Selection) toAcceleratedImageSelection() AcceleratedImageSelection {

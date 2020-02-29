@@ -436,6 +436,28 @@ func TestSelection_SetColor(t *testing.T) {
 			})
 		})
 	})
+
+	t.Run("SetColor overrides color set by AcceleratedCommand", func(t *testing.T) {
+		var (
+			color        = image.RGBA(10, 20, 30, 40)
+			commandColor = image.RGBA(50, 60, 70, 80)
+			accImg       = fake.NewAcceleratedImage(2, 1)
+			img          = image.New(2, 1, accImg)
+			selection    = img.Selection(0, 0)
+		)
+		selection.Modify(&acceleratedCommandMock{
+			command: func(image.AcceleratedImageSelection, []image.AcceleratedImageSelection) {
+				accImg.Upload([]image.Color{commandColor, commandColor})
+			},
+		})
+		// when
+		selection.SetColor(0, 0, color)
+		// then
+		assert.Equal(t, color, selection.Color(0, 0))
+		// and
+		assert.Equal(t, commandColor, selection.Color(1, 0))
+	})
+
 }
 
 func TestImage_Upload(t *testing.T) {
@@ -479,6 +501,23 @@ func TestImage_Upload(t *testing.T) {
 			}
 			assert.Equal(t, table, acceleratedImage.PixelsTable())
 		})
+	})
+	t.Run("Upload should not override colors set by AcceleratedCommand", func(t *testing.T) {
+		var (
+			color            = image.RGBA(50, 60, 70, 80)
+			acceleratedImage = fake.NewAcceleratedImage(1, 1)
+			img              = image.New(1, 1, acceleratedImage)
+			selection        = img.Selection(0, 0)
+		)
+		selection.Modify(&acceleratedCommandMock{
+			command: func(image.AcceleratedImageSelection, []image.AcceleratedImageSelection) {
+				acceleratedImage.Upload([]image.Color{color})
+			},
+		})
+		// when
+		img.Upload()
+		// then
+		assert.Equal(t, [][]image.Color{{color}}, acceleratedImage.PixelsTable())
 	})
 }
 
@@ -744,6 +783,25 @@ func TestSelection_Modify(t *testing.T) {
 		assert.Equal(t, color01, outputSelection.Color(0, 1))
 		assert.Equal(t, color11, outputSelection.Color(1, 1))
 	})
+
+	t.Run("should use results from last Modify", func(t *testing.T) {
+		var (
+			color     = image.RGBA(10, 20, 30, 40)
+			accImg    = fake.NewAcceleratedImage(1, 1)
+			img       = image.New(1, 1, accImg)
+			selection = img.Selection(0, 0)
+		)
+		selection.Modify(&acceleratedCommandMock{
+			command: func(image.AcceleratedImageSelection, []image.AcceleratedImageSelection) {
+				accImg.Upload([]image.Color{color})
+			},
+		})
+		// when
+		selection.Modify(&acceleratedCommandStub{}, selection)
+		// then
+		assert.Equal(t, [][]image.Color{{color}}, accImg.PixelsTable())
+	})
+
 }
 
 func assertColors(t *testing.T, selection image.Selection, expectedColorLines [][]image.Color) {
