@@ -7,8 +7,6 @@
 package gl
 
 import (
-	"unsafe"
-
 	"github.com/jacekolszak/pixiq/image"
 )
 
@@ -200,18 +198,11 @@ func (a *VertexArray) Set(location int, pointer VertexBufferPointer) {
 		typ.xtype,
 		false,
 		int32(pointer.Stride*4),
-		PtrOffset(pointer.Offset*4),
+		a.api.PtrOffset(pointer.Offset*4),
 	)
 }
 
 // ID returns VertexArray identifier (aka name)
 func (a *VertexArray) ID() uint32 {
 	return a.id
-}
-
-// PtrOffset takes a pointer offset and returns a GL-compatible pointer.
-// Useful for functions such as glVertexAttribPointer that take pointer
-// parameters indicating an offset rather than an absolute memory address.
-func PtrOffset(offset int) unsafe.Pointer {
-	return unsafe.Pointer(uintptr(offset))
 }

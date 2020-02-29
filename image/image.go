@@ -94,7 +94,9 @@ func (i *Image) WholeImageSelection() Selection {
 //
 // DEPRECATED - this method will be removed in next release
 func (i *Image) Upload() {
-	i.acceleratedImage.Upload(i.pixels)
+	if !i.acceleratedImageModified {
+		i.acceleratedImage.Upload(i.pixels)
+	}
 }
 
 // Selection points to a specific area of the image. It has a starting position
@@ -251,8 +253,7 @@ func (s Selection) Modify(command AcceleratedCommand, selections ...Selection) {
 	}
 	convertedSelections := s.image.selectionsCache[:0]
 	for _, selection := range selections {
-		// TODO This will fail
-		selection.image.acceleratedImage.Upload(selection.image.pixels)
+		selection.image.Upload()
 		convertedSelections = append(convertedSelections, selection.toAcceleratedImageSelection())
 	}
 	command.Run(s.toAcceleratedImageSelection(), convertedSelections)
