@@ -57,9 +57,8 @@ More examples you can find in [examples](examples) directory.
 
 ## Project status
 
-At the moment I have a vision how the API should look like and how it should be programmed.
-I have made a quick and dirty implementation as a proof of concept. 
-Now it is time to start from scratch in order to deliver the highest possible quality.
+The project is under heavy development at the moment, and some of its features are experimental/missing
+and might change in the near future.
 
 The project is using [semantic versioning](https://semver.org/). Current version 
 is `0.X.Y` which basically means that future versions may introduce incompatible 
