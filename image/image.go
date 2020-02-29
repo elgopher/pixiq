@@ -271,3 +271,22 @@ func (s Selection) toAcceleratedImageSelection() AcceleratedImageSelection {
 		Image: s.image.acceleratedImage,
 	}
 }
+
+func (s Selection) Line(y int) Line {
+	return Line{}
+}
+
+type Line struct {
+}
+
+func (l Line) Width() int {
+	return 0
+}
+
+func (l Line) SetColor(x int, color Color) {
+
+}
+
+func (l Line) Color(x int) Color {
+	return Transparent
+}

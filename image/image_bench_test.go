@@ -43,6 +43,43 @@ func BenchmarkSelection_Color(b *testing.B) {
 	}
 }
 
+func BenchmarkSelection_Line_SetColor(b *testing.B) {
+	var (
+		color     = image.RGBA(10, 20, 30, 40)
+		img       = image.New(1920, 1080, acceleratedImageStub{})
+		selection = img.WholeImageSelection()
+		height    = selection.Height()
+	)
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for y := 0; y < height; y++ {
+			line := selection.Line(y)
+			for x := 0; x < line.Width(); x++ {
+				line.SetColor(x, color)
+			}
+		}
+	}
+}
+
+func BenchmarkSelection_Line_Color(b *testing.B) {
+	var (
+		img       = image.New(1920, 1080, acceleratedImageStub{})
+		selection = img.WholeImageSelection()
+		height    = selection.Height()
+	)
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for y := 0; y < height; y++ {
+			line := selection.Line(y)
+			for x := 0; x < line.Width(); x++ {
+				line.Color(x)
+			}
+		}
+	}
+}
+
 // Must be 0 allocs/op
 func BenchmarkImage_Selection(b *testing.B) {
 	var (
