@@ -4,9 +4,9 @@ import (
 	"log"
 
 	"github.com/jacekolszak/pixiq/colornames"
+	"github.com/jacekolszak/pixiq/glfw"
 	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/loop"
-	"github.com/jacekolszak/pixiq/opengl"
 )
 
 // This example shows how to open two windows at the same time.
@@ -14,12 +14,12 @@ import (
 // Please note that this functionality is experimental and may change in the
 // near future. Such feature may be harmful for overall performance of Pixiq.
 func main() {
-	opengl.RunOrDie(func(gl *opengl.OpenGL) {
-		redWindow, err := gl.OpenWindow(320, 180, opengl.Title("red"))
+	glfw.RunOrDie(func(openGL *glfw.OpenGL) {
+		redWindow, err := openGL.OpenWindow(320, 180, glfw.Title("red"))
 		if err != nil {
 			log.Panicf("red OpenWindow failed: %v", err)
 		}
-		blueWindow, err := gl.OpenWindow(250, 90, opengl.Title("blue"))
+		blueWindow, err := openGL.OpenWindow(250, 90, glfw.Title("blue"))
 		if err != nil {
 			log.Panicf("blue OpenWindow failed: %v", err)
 		}

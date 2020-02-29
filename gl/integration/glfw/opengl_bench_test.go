@@ -1,16 +1,16 @@
-package opengl_test
+package glfw_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/jacekolszak/pixiq/glfw"
 	"github.com/jacekolszak/pixiq/image"
-	"github.com/jacekolszak/pixiq/opengl"
 )
 
 func BenchmarkAcceleratedImage_Upload(b *testing.B) {
-	openGL, err := opengl.New(mainThreadLoop)
+	openGL, err := glfw.NewOpenGL(mainThreadLoop)
 	require.NoError(b, err)
 	defer openGL.Destroy()
 	if err != nil {

@@ -2,7 +2,7 @@
 // manipulated in real-time using Pixel-Perfect API.
 //
 // Instance of the Image should be created either by directly using a New function
-// or using an external factory function such as opengl.OpenGL.NewImage:
+// or using an external factory function such as glfw.OpenGL.NewImage:
 //
 //	   image := images.New(2, 2, acceleratedImage)
 //

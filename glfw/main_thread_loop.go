@@ -1,4 +1,4 @@
-package opengl
+package glfw
 
 import (
 	"bytes"
@@ -16,7 +16,7 @@ import (
 // inside the main thread.
 func StartMainThreadLoop(runInDifferentGoroutine func(*MainThreadLoop)) {
 	if !isMainGoroutine() {
-		panic("opengl.StartMainThreadLoop must be executed from main goroutine")
+		panic("glfw.StartMainThreadLoop must be executed from main goroutine")
 	}
 	runtime.LockOSThread()
 	commands := make(chan command, 4096)

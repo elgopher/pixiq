@@ -1,12 +1,12 @@
-package opengl
+package glfw
 
 import (
 	"github.com/go-gl/glfw/v3.3/glfw"
 
 	"github.com/jacekolszak/pixiq/gl"
+	"github.com/jacekolszak/pixiq/glfw/internal"
 	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/keyboard"
-	"github.com/jacekolszak/pixiq/opengl/internal"
 )
 
 // Window is an implementation of loop.Screen and keyboard.EventSource

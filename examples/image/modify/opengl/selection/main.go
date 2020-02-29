@@ -4,22 +4,22 @@ import (
 	"log"
 
 	"github.com/jacekolszak/pixiq/gl"
+	"github.com/jacekolszak/pixiq/glfw"
 	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/loop"
-	"github.com/jacekolszak/pixiq/opengl"
 )
 
 func main() {
-	opengl.RunOrDie(func(gl *opengl.OpenGL) {
+	glfw.RunOrDie(func(openGL *glfw.OpenGL) {
 		var (
-			context = gl.Context()
+			context = openGL.Context()
 			buffer  = makeVertexBuffer(context)
 			array   = makeVertexArray(context, buffer)
 			program = compileProgram(context)
 			cmd     = program.AcceleratedCommand(&drawSelection{vertexArray: array})
-			window  = openWindow(gl)
+			window  = openWindow(openGL)
 		)
-		sampledImage := gl.NewImage(2, 2)
+		sampledImage := openGL.NewImage(2, 2)
 		selection := sampledImage.WholeImageSelection()
 		selection.SetColor(0, 0, image.RGB(255, 0, 0))
 		selection.SetColor(1, 0, image.RGB(0, 255, 0))
@@ -108,8 +108,8 @@ func (c drawSelection) RunGL(renderer *gl.Renderer, selections []image.Accelerat
 	renderer.DrawArrays(c.vertexArray, gl.TriangleFan, 0, 4)
 }
 
-func openWindow(gl *opengl.OpenGL) *opengl.Window {
-	window, err := gl.OpenWindow(200, 200, opengl.Zoom(2))
+func openWindow(openGL *glfw.OpenGL) *glfw.Window {
+	window, err := openGL.OpenWindow(200, 200, glfw.Zoom(2))
 	if err != nil {
 		log.Panicf("OpenWindow failed: %v", err)
 	}

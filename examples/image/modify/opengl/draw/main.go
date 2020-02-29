@@ -5,13 +5,13 @@ import (
 	"time"
 
 	"github.com/jacekolszak/pixiq/gl"
+	"github.com/jacekolszak/pixiq/glfw"
 	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/loop"
-	"github.com/jacekolszak/pixiq/opengl"
 )
 
 func main() {
-	opengl.RunOrDie(func(openGL *opengl.OpenGL) {
+	glfw.RunOrDie(func(openGL *glfw.OpenGL) {
 		var (
 			context = openGL.Context()
 			buffer  = makeVertexBuffer(context)
@@ -101,8 +101,8 @@ func compileProgram(context *gl.Context) *gl.Program {
 	return program
 }
 
-func openWindow(gl *opengl.OpenGL) *opengl.Window {
-	window, err := gl.OpenWindow(200, 200, opengl.Zoom(2))
+func openWindow(openGL *glfw.OpenGL) *glfw.Window {
+	window, err := openGL.OpenWindow(200, 200, glfw.Zoom(2))
 	if err != nil {
 		log.Panicf("OpenWindow failed: %v", err)
 	}

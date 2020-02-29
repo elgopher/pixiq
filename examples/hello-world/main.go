@@ -2,15 +2,15 @@ package main
 
 import (
 	"github.com/jacekolszak/pixiq/colornames"
+	"github.com/jacekolszak/pixiq/glfw"
 	"github.com/jacekolszak/pixiq/loop"
-	"github.com/jacekolszak/pixiq/opengl"
 )
 
 func main() {
-	// Use OpenGL on PCs with Linux, Windows and MacOS.
+	// Use glfw on PCs with Linux, Windows and MacOS.
 	// This package can open windows and draw images on them.
-	opengl.RunOrDie(func(gl *opengl.OpenGL) {
-		window, err := gl.OpenWindow(80, 16, opengl.Zoom(5))
+	glfw.RunOrDie(func(openGL *glfw.OpenGL) {
+		window, err := openGL.OpenWindow(80, 16, glfw.Zoom(5))
 		if err != nil {
 			panic(err)
 		}

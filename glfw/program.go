@@ -1,4 +1,4 @@
-package opengl
+package glfw
 
 import (
 	"github.com/jacekolszak/pixiq/gl"

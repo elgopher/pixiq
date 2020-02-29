@@ -8,16 +8,16 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/jacekolszak/pixiq/glfw"
 	"github.com/jacekolszak/pixiq/image"
-	"github.com/jacekolszak/pixiq/opengl"
 	"github.com/jacekolszak/pixiq/tools/glclear"
 )
 
-var mainThreadLoop *opengl.MainThreadLoop
+var mainThreadLoop *glfw.MainThreadLoop
 
 func TestMain(m *testing.M) {
 	var exit int
-	opengl.StartMainThreadLoop(func(main *opengl.MainThreadLoop) {
+	glfw.StartMainThreadLoop(func(main *glfw.MainThreadLoop) {
 		mainThreadLoop = main
 		exit = m.Run()
 	})
@@ -25,7 +25,7 @@ func TestMain(m *testing.M) {
 }
 func TestNew_Integration(t *testing.T) {
 	t.Run("should create tool", func(t *testing.T) {
-		openGL, err := opengl.New(mainThreadLoop)
+		openGL, err := glfw.NewOpenGL(mainThreadLoop)
 		require.NoError(t, err)
 		defer openGL.Destroy()
 		command := openGL.Context().NewClearCommand()
@@ -36,7 +36,7 @@ func TestNew_Integration(t *testing.T) {
 }
 
 func TestTool_Clear(t *testing.T) {
-	openGL, err := opengl.New(mainThreadLoop)
+	openGL, err := glfw.NewOpenGL(mainThreadLoop)
 	require.NoError(t, err)
 	defer openGL.Destroy()
 	command := openGL.Context().NewClearCommand()

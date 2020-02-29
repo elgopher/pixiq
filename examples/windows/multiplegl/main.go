@@ -4,9 +4,9 @@ import (
 	"log"
 
 	"github.com/jacekolszak/pixiq/colornames"
+	"github.com/jacekolszak/pixiq/glfw"
 	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/loop"
-	"github.com/jacekolszak/pixiq/opengl"
 )
 
 // This example shows how too use two separate OpenGL instances. Each contains its
@@ -15,19 +15,19 @@ import (
 // Please note that this functionality is experimental and may change in the
 // near future. Such feature may be harmful for overall performance of Pixiq.
 func main() {
-	opengl.StartMainThreadLoop(func(mainThreadLoop *opengl.MainThreadLoop) {
+	glfw.StartMainThreadLoop(func(mainThreadLoop *glfw.MainThreadLoop) {
 		go startOpenGL(mainThreadLoop, "Lime", colornames.Lime)
 		startOpenGL(mainThreadLoop, "Pink", colornames.Pink)
 	})
 }
 
-func startOpenGL(mainThreadLoop *opengl.MainThreadLoop, title string, color image.Color) {
-	gl, err := opengl.New(mainThreadLoop)
+func startOpenGL(mainThreadLoop *glfw.MainThreadLoop, title string, color image.Color) {
+	gl, err := glfw.NewOpenGL(mainThreadLoop)
 	if err != nil {
-		log.Panicf("%s New failed: %v", title, err)
+		log.Panicf("%s NewOpenGL failed: %v", title, err)
 	}
 	defer gl.Destroy()
-	win, err := gl.OpenWindow(2, 1, opengl.Zoom(100), opengl.Title(title))
+	win, err := gl.OpenWindow(2, 1, glfw.Zoom(100), glfw.Title(title))
 	if err != nil {
 		log.Panicf("%s OpenWindow failed: %v", title, err)
 	}

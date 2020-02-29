@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/jacekolszak/pixiq/glfw/internal"
 	"github.com/jacekolszak/pixiq/keyboard"
-	"github.com/jacekolszak/pixiq/opengl/internal"
 )
 
 func TestNewKeyboardEvents(t *testing.T) {

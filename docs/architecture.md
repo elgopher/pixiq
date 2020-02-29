@@ -51,7 +51,7 @@ a chance that it will be feasible to create such abstraction just for PCs
 (Win, Mac and Linux).
 
 
-The [opengl](../opengl) package uses [GLFW](https://www.glfw.org/), but for 
+The [glfw](../glfw) package uses [GLFW](https://www.glfw.org/), but for 
 some reason it does not provide all the features of the mentioned library,
 for example it does not allow to change the look of the cursor or to set
 the window transparency. Why?
@@ -59,7 +59,7 @@ the window transparency. Why?
 > Because we haven't had time to do it yet. If something is really important
 for you then propably it is time to submit an  [Issue](https://github.com/jacekolszak/pixiq/issues) 
 or maybe even make a change by submitting a [Pull Request](https://github.com/jacekolszak/pixiq/pulls).
-The `opengl.OpenGL` struct does not need to implement any abstractions
+The `glfw.OpenGL` struct does not need to implement any abstractions
 for opening windows, therefore it might be extended freely.
 
 
