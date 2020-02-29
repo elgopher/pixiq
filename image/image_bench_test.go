@@ -43,7 +43,7 @@ func BenchmarkSelection_Color(b *testing.B) {
 	}
 }
 
-func BenchmarkSelection_Line_SetColor(b *testing.B) {
+func BenchmarkLine_SetColor(b *testing.B) {
 	var (
 		color     = image.RGBA(10, 20, 30, 40)
 		img       = image.New(1920, 1080, acceleratedImageStub{})
@@ -62,7 +62,7 @@ func BenchmarkSelection_Line_SetColor(b *testing.B) {
 	}
 }
 
-func BenchmarkSelection_Line_Color(b *testing.B) {
+func BenchmarkLine_Color(b *testing.B) {
 	var (
 		img       = image.New(1920, 1080, acceleratedImageStub{})
 		selection = img.WholeImageSelection()
