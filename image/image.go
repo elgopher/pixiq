@@ -60,6 +60,7 @@ type Image struct {
 	acceleratedImage         AcceleratedImage
 	selectionsCache          []AcceleratedImageSelection
 	acceleratedImageModified bool
+	ramModified              bool
 }
 
 // Width returns the number of pixels in a row.
@@ -216,6 +217,7 @@ func (s Selection) SetColor(localX, localY int, color Color) {
 		return
 	}
 	s.image.pixels[index] = color
+	s.image.ramModified = true
 }
 
 // AcceleratedImageLocation is a location of a AcceleratedImage
@@ -272,69 +274,46 @@ func (s Selection) toAcceleratedImageSelection() AcceleratedImageSelection {
 	}
 }
 
-// Line returns all pixels in a line which can be used for efficient pixel processing.
+// LineForRead returns Selection pixels in a given line which can be used for
+// efficient pixel processing. It was created solely for performance reasons.
+//
+// You may only read from returned slice. Trying to update the returned slice will
+// not generate panic, but modified pixels will not be uploaded to AcceleratedImage
+// when Modify is run. If you want to update the line contents please use LineForWrite
+// instead.
+//
+// Please note that return slice behaves differently than Selection. Line contains only
+// real pixels and trying to access out-of-bounds pixels generates panic.
 //
 // It is not safe to retain Line for future use. The image might be modified by
-// AcceleratedCommand and changes will not be reflected in cached Line.
-func (s Selection) Line(y int) Line {
-	start := (s.y + y) * s.image.width
-	stop := start + s.image.width
-	if start < 0 {
-		start = 0
+// AcceleratedCommand and changes will not be reflected in a slice.
+func (s Selection) LineForRead(y int) []Color {
+	if s.image.acceleratedImageModified {
+		s.image.acceleratedImage.Download(s.image.pixels)
+		s.image.acceleratedImageModified = false
 	}
-	if stop < 0 {
-		stop = 0
-	}
-	if start >= len(s.image.pixels) {
-		start = len(s.image.pixels) - 1
-	}
-	if stop > len(s.image.pixels) {
-		stop = len(s.image.pixels)
-	}
-	return Line{
-		line:      s.image.pixels[start:stop],
-		imageLine: s.image.pixels[start:stop],
-		x:         s.x,
-		width:     s.width,
-	}
+	start := (s.y+y)*s.image.width + s.x
+	stop := start + s.width
+	return s.image.pixels[start:stop]
 }
 
-type Line struct {
-	x         int
-	width     int
-	line      []Color
-	imageLine []Color
-}
-
-func (l Line) Width() int {
-	return l.width
-}
-
-func (l Line) SetColor(x int, color Color) {
-	if x >= 0 && x < len(l.line) {
-		l.line[x] = color
-		return
+// LineForWrite returns Selection pixels in a given line which can be used for
+// efficient pixel processing. It was created solely for performance reasons.
+//
+// You may read and write to returned slice.
+//
+// Please note that return slice behaves differently than Selection. Line contains only
+// real pixels and trying to access out-of-bounds pixels generates panic.
+//
+// It is not safe to retain Line for future use. The image might be modified by
+// AcceleratedCommand and changes will not be reflected in a slice.
+func (s Selection) LineForWrite(y int) []Color {
+	if s.image.acceleratedImageModified {
+		s.image.acceleratedImage.Download(s.image.pixels)
+		s.image.acceleratedImageModified = false
 	}
-	imageX := l.x + x
-	if imageX < 0 {
-		return
-	}
-	if imageX >= len(l.imageLine) {
-		return
-	}
-	l.imageLine[x] = color
-}
-
-func (l Line) Color(x int) Color {
-	if x >= 0 && x < len(l.line) {
-		return l.line[x]
-	}
-	imageX := l.x + x
-	if imageX < 0 {
-		return Transparent
-	}
-	if imageX >= len(l.imageLine) {
-		return Transparent
-	}
-	return l.imageLine[x]
+	s.image.ramModified = true
+	start := (s.y+y)*s.image.width + s.x
+	stop := start + s.width
+	return s.image.pixels[start:stop]
 }

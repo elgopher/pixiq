@@ -43,7 +43,7 @@ func BenchmarkSelection_Color(b *testing.B) {
 	}
 }
 
-func BenchmarkLine_SetColor(b *testing.B) {
+func BenchmarkSelection_LineForWrite(b *testing.B) {
 	var (
 		color     = image.RGBA(10, 20, 30, 40)
 		img       = image.New(1920, 1080, acceleratedImageStub{})
@@ -54,16 +54,15 @@ func BenchmarkLine_SetColor(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for y := 0; y < height; y++ {
-			line := selection.Line(y)
-			width := line.Width()
-			for x := 0; x < width; x++ {
-				line.SetColor(x, color)
+			line := selection.LineForWrite(y)
+			for x := 0; x < len(line); x++ {
+				line[x] = color
 			}
 		}
 	}
 }
 
-func BenchmarkLine_Color(b *testing.B) {
+func BenchmarkSelection_LineForRead(b *testing.B) {
 	var (
 		img       = image.New(1920, 1080, acceleratedImageStub{})
 		selection = img.WholeImageSelection()
@@ -73,9 +72,9 @@ func BenchmarkLine_Color(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for y := 0; y < height; y++ {
-			line := selection.Line(y)
-			for x := 0; x < line.Width(); x++ {
-				line.Color(x)
+			line := selection.LineForRead(y)
+			for x := 0; x < len(line); x++ {
+				_ = line[x]
 			}
 		}
 	}

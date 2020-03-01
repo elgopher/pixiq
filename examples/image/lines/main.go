@@ -18,9 +18,9 @@ func main() {
 		loop.Run(window, func(frame *loop.Frame) {
 			screen := frame.Screen()
 			for y := 0; y < screen.Height(); y++ {
-				line := screen.Line(y)
-				for x := 0; x < line.Width(); x++ {
-					line.SetColor(x, colornames.Blue)
+				line := screen.LineForWrite(y)
+				for x := 0; x < len(line); x++ {
+					line[x] = colornames.Blue
 				}
 			}
 		})
