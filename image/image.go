@@ -292,10 +292,15 @@ func (s Selection) Lines() Lines {
 	if s.y < 0 {
 		yOffset = -s.y
 	}
+	xOffset := 0
+	if s.x < 0 {
+		xOffset = -s.x
+	}
 	return Lines{
 		y:       s.y,
 		length:  length,
 		image:   s.image,
+		xOffset: xOffset,
 		yOffset: yOffset,
 	}
 }
@@ -303,8 +308,8 @@ func (s Selection) Lines() Lines {
 type Lines struct {
 	y       int
 	length  int
-	xOffset int // X selection offset
-	yOffset int // Y selection offset
+	xOffset int
+	yOffset int
 	image   *Image
 }
 
@@ -313,7 +318,7 @@ func (l Lines) Length() int {
 }
 
 func (l Lines) XOffset() int {
-	return 0
+	return l.xOffset
 }
 
 func (l Lines) YOffset() int {

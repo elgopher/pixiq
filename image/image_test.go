@@ -903,6 +903,39 @@ func TestLines_YOffset(t *testing.T) {
 	}
 }
 
+func TestLines_XOffset(t *testing.T) {
+	img := newImage(0, 0)
+	tests := map[string]struct {
+		selection       image.Selection
+		expectedXOffset int
+	}{
+		"-1": {
+			selection:       img.Selection(-1, 0),
+			expectedXOffset: 1,
+		},
+		"-2": {
+			selection:       img.Selection(-2, 0),
+			expectedXOffset: 2,
+		},
+		"0": {
+			selection:       img.Selection(0, 0),
+			expectedXOffset: 0,
+		},
+		"1": {
+			selection:       img.Selection(1, 0),
+			expectedXOffset: 0,
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			lines := test.selection.Lines()
+			// when
+			offset := lines.XOffset()
+			assert.Equal(t, test.expectedXOffset, offset)
+		})
+	}
+}
+
 // TODO Reuse
 func TestSelection_LineForRead(t *testing.T) {
 	t.Run("should panic when line is out-of-bounds the image", func(t *testing.T) {
