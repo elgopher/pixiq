@@ -833,9 +833,19 @@ func TestSelection_Lines(t *testing.T) {
 				selection:        image1x1.Selection(0, -1).WithSize(0, 1),
 				expectedLinesLen: 0,
 			},
+			"selection y -2, height 1": {
+				image:            image1x1,
+				selection:        image1x1.Selection(0, -2).WithSize(0, 1),
+				expectedLinesLen: 0,
+			},
 			"selection height 1": {
 				image:            image1x1,
 				selection:        image1x1.Selection(0, 0).WithSize(0, 1),
+				expectedLinesLen: 1,
+			},
+			"selection height 2": {
+				image:            image1x1,
+				selection:        image1x1.Selection(0, 0).WithSize(0, 2),
 				expectedLinesLen: 1,
 			},
 			"selection y -1, height 2": {

@@ -280,7 +280,7 @@ func (s Selection) Lines() Lines {
 	if s.y < 0 {
 		length += s.y
 	}
-	if s.image.height < length+s.y {
+	if s.image.height-s.y < length {
 		length = s.image.height - s.y
 	}
 	return Lines{
