@@ -54,7 +54,7 @@ func BenchmarkSelection_LineForWrite(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for y := 0; y < height; y++ {
-			line := selection.LineForWrite(y)
+			line, _ := selection.LineForWrite(y)
 			for x := 0; x < len(line); x++ {
 				line[x] = color
 			}
@@ -72,7 +72,7 @@ func BenchmarkSelection_LineForRead(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for y := 0; y < height; y++ {
-			line := selection.LineForRead(y)
+			line, _ := selection.LineForRead(y)
 			for x := 0; x < len(line); x++ {
 				_ = line[x]
 			}

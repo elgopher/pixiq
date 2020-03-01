@@ -283,18 +283,20 @@ func (s Selection) toAcceleratedImageSelection() AcceleratedImageSelection {
 // instead.
 //
 // Please note that return slice behaves differently than Selection. Line contains only
-// real pixels and trying to access out-of-bounds pixels generates panic.
+// real pixels and trying to access out-of-bounds pixels generates panic. Therefore
+// the len of returned slice might be lower than Selection. The starting offset is
+// returned as a second return value.
 //
 // It is not safe to retain Line for future use. The image might be modified by
 // AcceleratedCommand and changes will not be reflected in a slice.
-func (s Selection) LineForRead(y int) []Color {
+func (s Selection) LineForRead(y int) (slice []Color, offset int) {
 	if s.image.acceleratedImageModified {
 		s.image.acceleratedImage.Download(s.image.pixels)
 		s.image.acceleratedImageModified = false
 	}
 	start := (s.y+y)*s.image.width + s.x
 	stop := start + s.width
-	return s.image.pixels[start:stop]
+	return s.image.pixels[start:stop], 0
 }
 
 // LineForWrite returns Selection pixels in a given line which can be used for
@@ -303,11 +305,13 @@ func (s Selection) LineForRead(y int) []Color {
 // You may read and write to returned slice.
 //
 // Please note that return slice behaves differently than Selection. Line contains only
-// real pixels and trying to access out-of-bounds pixels generates panic.
+// real pixels and trying to access out-of-bounds pixels generates panic. Therefore
+// the len of returned slice might be lower than Selection. The starting offset is
+// returned as a second return value.
 //
 // It is not safe to retain Line for future use. The image might be modified by
 // AcceleratedCommand and changes will not be reflected in a slice.
-func (s Selection) LineForWrite(y int) []Color {
+func (s Selection) LineForWrite(y int) (slice []Color, offset int) {
 	if s.image.acceleratedImageModified {
 		s.image.acceleratedImage.Download(s.image.pixels)
 		s.image.acceleratedImageModified = false
@@ -315,5 +319,5 @@ func (s Selection) LineForWrite(y int) []Color {
 	s.image.ramModified = true
 	start := (s.y+y)*s.image.width + s.x
 	stop := start + s.width
-	return s.image.pixels[start:stop]
+	return s.image.pixels[start:stop], 0
 }
