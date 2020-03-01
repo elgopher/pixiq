@@ -53,9 +53,10 @@ func New(width, height int, acceleratedImage AcceleratedImage) *Image {
 // The cost of creating an Image is huge therefore new images should be created
 // sporadically, ideally when the application starts.
 type Image struct {
-	width                    int
-	height                   int
-	heightMinusOne           int
+	width          int
+	height         int
+	heightMinusOne int
+	// pixel colors line by line, starting from the bottom
 	pixels                   []Color
 	acceleratedImage         AcceleratedImage
 	selectionsCache          []AcceleratedImageSelection
@@ -301,10 +302,12 @@ func (s Selection) LineForRead(y int) (slice []Color, offset int) {
 	//	s.image.acceleratedImage.Download(s.image.pixels)
 	//	s.image.acceleratedImageModified = false
 	//}
+	start := 0
 	//start := (s.y+y)*s.image.width + s.x
+	stop := s.image.width
 	//stop := start + s.width
 	//return s.image.pixels[start:stop], 0
-	return nil, 0
+	return s.image.pixels[start:stop], 0
 }
 
 // LineForWrite returns Selection pixels in a given line which can be used for

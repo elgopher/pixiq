@@ -1,6 +1,7 @@
 package image_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -803,6 +804,7 @@ func TestSelection_Modify(t *testing.T) {
 	})
 }
 
+// TODO Reuse
 func TestSelection_LineForRead(t *testing.T) {
 	t.Run("should panic when line is out-of-bounds the image", func(t *testing.T) {
 		image0x0 := newImage(0, 0)
@@ -858,14 +860,73 @@ func TestSelection_LineForRead(t *testing.T) {
 		}
 	})
 	t.Run("should return line", func(t *testing.T) {
-		img := newImage(1, 1)
-		selection := img.Selection(0, 0)
-		// when
-		line, offset := selection.LineForRead(0)
-		// then
-		require.NotNil(t, line)
-		assert.Equal(t, []image.Color{transparent}, line)
-		assert.Equal(t, 0, offset)
+		color1 := image.RGBA(10, 20, 30, 40)
+		color2 := image.RGBA(50, 50, 60, 70)
+		//color3 := image.RGBA(80, 90, 100, 110)
+		//color4 := image.RGBA(120, 130, 140, 150)
+
+		image1x1 := newImage(1, 1)
+		image1x1.Selection(0, 0).SetColor(0, 0, color1)
+
+		image1x2 := newImage(1, 2)
+		image1x2.Selection(0, 0).SetColor(0, 0, color1)
+		image1x2.Selection(0, 1).SetColor(0, 0, color2)
+
+		tests := map[string]struct {
+			image          *image.Image
+			selection      image.Selection
+			line           int
+			expectedOffset int
+			expected       []image.Color
+		}{
+			"1": {
+				image:          image1x1,
+				selection:      image1x1.Selection(0, 0),
+				line:           0,
+				expectedOffset: 0,
+				expected:       []image.Color{color1},
+			},
+			"2": {
+				image:          image1x1,
+				selection:      image1x1.Selection(0, 1),
+				line:           -1,
+				expectedOffset: 0,
+				expected:       []image.Color{color1},
+			},
+			"3": {
+				image:          image1x2,
+				selection:      image1x2.Selection(0, 0),
+				line:           1,
+				expectedOffset: 0,
+				expected:       []image.Color{color2},
+			},
+			"4": {
+				image:          image1x2,
+				selection:      image1x2.Selection(0, 1),
+				line:           0,
+				expectedOffset: 0,
+				expected:       []image.Color{color2},
+			},
+			//"5": {
+			//	image:          image1x1,
+			//	selection:      image1x1.Selection(1, 0),
+			//	line:           0,
+			//	expectedOffset: 0,
+			//	expected:       []image.Color{},
+			//},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				// when
+				line, offset := test.selection.LineForRead(test.line)
+				// then
+				require.NotNil(t, line)
+				assert.Equal(t, test.expectedOffset, offset)
+				fmt.Println(line)
+				assert.Equal(t, test.expected, line)
+			})
+		}
+
 	})
 }
 
