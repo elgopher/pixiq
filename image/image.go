@@ -276,12 +276,17 @@ func (s Selection) toAcceleratedImageSelection() AcceleratedImageSelection {
 }
 
 func (s Selection) Lines() Lines {
-	length := s.height
-	if s.y < 0 {
-		length += s.y
+	start := s.y
+	if start < 0 {
+		start = 0
 	}
-	if s.image.height-s.y < length {
-		length = s.image.height - s.y
+	end := s.y + s.height
+	if end > s.image.height {
+		end = s.image.height
+	}
+	length := end - start
+	if length < 0 {
+		length = 0
 	}
 	return Lines{
 		y:      s.y,
