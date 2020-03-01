@@ -337,8 +337,8 @@ func (l Lines) LineForRead(y int) []Color {
 	if imageY >= l.image.height {
 		panic("line out-of-bounds the image")
 	}
-	start := 0
-	stop := l.image.width
+	start := (l.image.heightMinusOne - y - l.y) * l.image.width
+	stop := start + l.image.width
 	return l.image.pixels[start:stop]
 }
 

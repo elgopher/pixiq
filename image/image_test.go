@@ -1035,13 +1035,12 @@ func TestSelection_LineForRead(t *testing.T) {
 				line:      0,
 				expected:  []image.Color{color2},
 			},
-			//"5": {
-			//	image:          image1x1,
-			//	selection:      image1x1.Selection(1, 0),
-			//	line:           0,
-			//	expectedOffset: 0,
-			//	expected:       []image.Color{},
-			//},
+			"5": {
+				image:     image1x2,
+				selection: image1x2.Selection(0, 0),
+				line:      0,
+				expected:  []image.Color{color1},
+			},
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
