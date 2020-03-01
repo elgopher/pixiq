@@ -1,7 +1,6 @@
 package image_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -804,6 +803,63 @@ func TestSelection_Modify(t *testing.T) {
 	})
 }
 
+func TestSelection_Lines(t *testing.T) {
+	t.Run("should return lines", func(t *testing.T) {
+		image0x0 := newImage(0, 0)
+		image1x1 := newImage(1, 1)
+		image1x2 := newImage(1, 2)
+		tests := map[string]struct {
+			image            *image.Image
+			selection        image.Selection
+			expectedLinesLen int
+		}{
+			"image height 0": {
+				image:            image0x0,
+				selection:        image0x0.Selection(0, 0).WithSize(0, 1),
+				expectedLinesLen: 0,
+			},
+			"selection height 0": {
+				image:            image1x1,
+				selection:        image1x1.Selection(0, 0).WithSize(0, 0),
+				expectedLinesLen: 0,
+			},
+			"selection y 1, height 1": {
+				image:            image1x1,
+				selection:        image1x1.Selection(0, 1).WithSize(0, 1),
+				expectedLinesLen: 0,
+			},
+			"selection y -1, height 1": {
+				image:            image1x1,
+				selection:        image1x1.Selection(0, -1).WithSize(0, 1),
+				expectedLinesLen: 0,
+			},
+			"selection height 1": {
+				image:            image1x1,
+				selection:        image1x1.Selection(0, 0).WithSize(0, 1),
+				expectedLinesLen: 1,
+			},
+			"selection y -1, height 2": {
+				image:            image1x1,
+				selection:        image1x1.Selection(0, -1).WithSize(0, 2),
+				expectedLinesLen: 1,
+			},
+			"image height 2, selection y 1, height 1": {
+				image:            image1x2,
+				selection:        image1x2.Selection(0, 1).WithSize(0, 1),
+				expectedLinesLen: 1,
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				// when
+				lines := test.selection.Lines()
+				// then
+				assert.Equal(t, test.expectedLinesLen, lines.Length())
+			})
+		}
+	})
+}
+
 // TODO Reuse
 func TestSelection_LineForRead(t *testing.T) {
 	t.Run("should panic when line is out-of-bounds the image", func(t *testing.T) {
@@ -852,9 +908,10 @@ func TestSelection_LineForRead(t *testing.T) {
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
+				lines := test.selection.Lines()
 				assert.Panics(t, func() {
 					// when
-					test.selection.LineForRead(test.line)
+					lines.LineForRead(test.line)
 				})
 			})
 		}
@@ -873,39 +930,34 @@ func TestSelection_LineForRead(t *testing.T) {
 		image1x2.Selection(0, 1).SetColor(0, 0, color2)
 
 		tests := map[string]struct {
-			image          *image.Image
-			selection      image.Selection
-			line           int
-			expectedOffset int
-			expected       []image.Color
+			image     *image.Image
+			selection image.Selection
+			line      int
+			expected  []image.Color
 		}{
 			"1": {
-				image:          image1x1,
-				selection:      image1x1.Selection(0, 0),
-				line:           0,
-				expectedOffset: 0,
-				expected:       []image.Color{color1},
+				image:     image1x1,
+				selection: image1x1.Selection(0, 0),
+				line:      0,
+				expected:  []image.Color{color1},
 			},
 			"2": {
-				image:          image1x1,
-				selection:      image1x1.Selection(0, 1),
-				line:           -1,
-				expectedOffset: 0,
-				expected:       []image.Color{color1},
+				image:     image1x1,
+				selection: image1x1.Selection(0, 1),
+				line:      -1,
+				expected:  []image.Color{color1},
 			},
 			"3": {
-				image:          image1x2,
-				selection:      image1x2.Selection(0, 0),
-				line:           1,
-				expectedOffset: 0,
-				expected:       []image.Color{color2},
+				image:     image1x2,
+				selection: image1x2.Selection(0, 0),
+				line:      1,
+				expected:  []image.Color{color2},
 			},
 			"4": {
-				image:          image1x2,
-				selection:      image1x2.Selection(0, 1),
-				line:           0,
-				expectedOffset: 0,
-				expected:       []image.Color{color2},
+				image:     image1x2,
+				selection: image1x2.Selection(0, 1),
+				line:      0,
+				expected:  []image.Color{color2},
 			},
 			//"5": {
 			//	image:          image1x1,
@@ -917,12 +969,11 @@ func TestSelection_LineForRead(t *testing.T) {
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
+				lines := test.selection.Lines()
 				// when
-				line, offset := test.selection.LineForRead(test.line)
+				line := lines.LineForRead(test.line)
 				// then
 				require.NotNil(t, line)
-				assert.Equal(t, test.expectedOffset, offset)
-				fmt.Println(line)
 				assert.Equal(t, test.expected, line)
 			})
 		}

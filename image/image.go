@@ -275,6 +275,50 @@ func (s Selection) toAcceleratedImageSelection() AcceleratedImageSelection {
 	}
 }
 
+func (s Selection) Lines() Lines {
+	length := s.height
+	if s.y < 0 {
+		length += s.y
+	}
+	if s.image.height < length+s.y {
+		length = s.image.height - s.y
+	}
+	return Lines{
+		y:      s.y,
+		length: length,
+		image:  s.image,
+	}
+}
+
+type Lines struct {
+	y       int
+	length  int
+	XOffset int // X selection offset
+	YOffset int // Y selection offset
+	image   *Image
+}
+
+func (l Lines) Length() int {
+	return l.length
+}
+
+func (l Lines) LineForWrite(y int) []Color {
+	return nil
+}
+
+func (l Lines) LineForRead(y int) []Color {
+	imageY := y + l.y
+	if imageY < 0 {
+		panic("line out-of-bounds the image")
+	}
+	if imageY >= l.image.height {
+		panic("line out-of-bounds the image")
+	}
+	start := 0
+	stop := l.image.width
+	return l.image.pixels[start:stop]
+}
+
 // LineForRead returns Selection pixels in a given line which can be used for
 // efficient pixel processing. It was created solely for performance reasons.
 //

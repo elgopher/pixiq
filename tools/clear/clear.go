@@ -24,8 +24,9 @@ func (t *Tool) SetColor(color image.Color) {
 
 // Clear clears selection with previously set color
 func (t *Tool) Clear(selection image.Selection) {
-	for y := 0; y < selection.Height(); y++ {
-		line, _ := selection.LineForWrite(y)
+	lines := selection.Lines()
+	for y := 0; y < lines.Length(); y++ {
+		line := lines.LineForWrite(y)
 		for x := 0; x < len(line); x++ {
 			line[x] = t.color
 		}
