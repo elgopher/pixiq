@@ -803,6 +803,72 @@ func TestSelection_Modify(t *testing.T) {
 	})
 }
 
+func TestSelection_LineForRead(t *testing.T) {
+	t.Run("should panic when line is out-of-bounds the image", func(t *testing.T) {
+		image0x0 := newImage(0, 0)
+		image1x1 := newImage(1, 1)
+		tests := map[string]struct {
+			line      int
+			image     *image.Image
+			selection image.Selection
+		}{
+			"image 0x0, line 0": {
+				image:     image0x0,
+				selection: image0x0.Selection(0, 0),
+				line:      0,
+			},
+			"image 0x0, line -1": {
+				image:     image0x0,
+				selection: image0x0.Selection(0, 0),
+				line:      -1,
+			},
+			"image 0x0": {
+				image:     image0x0,
+				selection: image0x0.Selection(0, 0),
+				line:      1,
+			},
+			"image 1x1, line -1": {
+				image:     image1x1,
+				selection: image1x1.Selection(0, 0),
+				line:      -1,
+			},
+			"image 1x1, line 1": {
+				image:     image1x1,
+				selection: image1x1.Selection(0, 0),
+				line:      1,
+			},
+			"image 1x1, selection with y=1, line 0": {
+				image:     image1x1,
+				selection: image1x1.Selection(0, 1),
+				line:      0,
+			},
+			"image 1x1, selection with y=-1, line 0": {
+				image:     image1x1,
+				selection: image1x1.Selection(0, -1),
+				line:      0,
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				assert.Panics(t, func() {
+					// when
+					test.selection.LineForRead(test.line)
+				})
+			})
+		}
+	})
+	t.Run("should return line", func(t *testing.T) {
+		img := newImage(1, 1)
+		selection := img.Selection(0, 0)
+		// when
+		line, offset := selection.LineForRead(0)
+		// then
+		require.NotNil(t, line)
+		assert.Equal(t, []image.Color{transparent}, line)
+		assert.Equal(t, 0, offset)
+	})
+}
+
 func assertColors(t *testing.T, selection image.Selection, expectedColorLines [][]image.Color) {
 	assert.Equal(t, len(expectedColorLines), selection.Height(), "number of lines should be equal to selection height")
 	for y := 0; y < selection.Height(); y++ {
