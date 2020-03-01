@@ -936,124 +936,130 @@ func TestLines_XOffset(t *testing.T) {
 	}
 }
 
-// TODO Reuse
-func TestSelection_LineForRead(t *testing.T) {
-	t.Run("should panic when line is out-of-bounds the image", func(t *testing.T) {
-		image0x0 := newImage(0, 0)
-		image1x1 := newImage(1, 1)
-		tests := map[string]struct {
-			line      int
-			image     *image.Image
-			selection image.Selection
-		}{
-			"image 0x0, line 0": {
-				image:     image0x0,
-				selection: image0x0.Selection(0, 0),
-				line:      0,
-			},
-			"image 0x0, line -1": {
-				image:     image0x0,
-				selection: image0x0.Selection(0, 0),
-				line:      -1,
-			},
-			"image 0x0": {
-				image:     image0x0,
-				selection: image0x0.Selection(0, 0),
-				line:      1,
-			},
-			"image 1x1, line -1": {
-				image:     image1x1,
-				selection: image1x1.Selection(0, 0),
-				line:      -1,
-			},
-			"image 1x1, line 1": {
-				image:     image1x1,
-				selection: image1x1.Selection(0, 0),
-				line:      1,
-			},
-			"image 1x1, selection with y=1, line 0": {
-				image:     image1x1,
-				selection: image1x1.Selection(0, 1),
-				line:      0,
-			},
-			"image 1x1, selection with y=-1, line 0": {
-				image:     image1x1,
-				selection: image1x1.Selection(0, -1),
-				line:      0,
-			},
-		}
-		for name, test := range tests {
-			t.Run(name, func(t *testing.T) {
-				lines := test.selection.Lines()
-				assert.Panics(t, func() {
-					// when
-					lines.LineForRead(test.line)
-				})
+func TestSelection_Lines(t *testing.T) {
+	functions := map[string]func(image.Lines, int) []image.Color{
+		"LineForRead":  image.Lines.LineForRead,
+		"LineForWrite": image.Lines.LineForWrite,
+	}
+	for name, function := range functions {
+		t.Run(name, func(t *testing.T) {
+			t.Run("should panic when line is out-of-bounds the image", func(t *testing.T) {
+				image0x0 := newImage(0, 0)
+				image1x1 := newImage(1, 1)
+				tests := map[string]struct {
+					line      int
+					image     *image.Image
+					selection image.Selection
+				}{
+					"image 0x0, line 0": {
+						image:     image0x0,
+						selection: image0x0.Selection(0, 0),
+						line:      0,
+					},
+					"image 0x0, line -1": {
+						image:     image0x0,
+						selection: image0x0.Selection(0, 0),
+						line:      -1,
+					},
+					"image 0x0": {
+						image:     image0x0,
+						selection: image0x0.Selection(0, 0),
+						line:      1,
+					},
+					"image 1x1, line -1": {
+						image:     image1x1,
+						selection: image1x1.Selection(0, 0),
+						line:      -1,
+					},
+					"image 1x1, line 1": {
+						image:     image1x1,
+						selection: image1x1.Selection(0, 0),
+						line:      1,
+					},
+					"image 1x1, selection with y=1, line 0": {
+						image:     image1x1,
+						selection: image1x1.Selection(0, 1),
+						line:      0,
+					},
+					"image 1x1, selection with y=-1, line 0": {
+						image:     image1x1,
+						selection: image1x1.Selection(0, -1),
+						line:      0,
+					},
+				}
+				for name, test := range tests {
+					t.Run(name, func(t *testing.T) {
+						lines := test.selection.Lines()
+						assert.Panics(t, func() {
+							// when
+							function(lines, test.line)
+						})
+					})
+				}
 			})
-		}
-	})
-	t.Run("should return line", func(t *testing.T) {
-		color1 := image.RGBA(10, 20, 30, 40)
-		color2 := image.RGBA(50, 50, 60, 70)
-		//color3 := image.RGBA(80, 90, 100, 110)
-		//color4 := image.RGBA(120, 130, 140, 150)
+			t.Run("should return line", func(t *testing.T) {
+				color1 := image.RGBA(10, 20, 30, 40)
+				color2 := image.RGBA(50, 50, 60, 70)
 
-		image1x1 := newImage(1, 1)
-		image1x1.Selection(0, 0).SetColor(0, 0, color1)
+				image1x1 := newImage(1, 1)
+				image1x1.Selection(0, 0).SetColor(0, 0, color1)
 
-		image1x2 := newImage(1, 2)
-		image1x2.Selection(0, 0).SetColor(0, 0, color1)
-		image1x2.Selection(0, 1).SetColor(0, 0, color2)
+				image1x2 := newImage(1, 2)
+				image1x2.Selection(0, 0).SetColor(0, 0, color1)
+				image1x2.Selection(0, 1).SetColor(0, 0, color2)
 
-		tests := map[string]struct {
-			image     *image.Image
-			selection image.Selection
-			line      int
-			expected  []image.Color
-		}{
-			"1": {
-				image:     image1x1,
-				selection: image1x1.Selection(0, 0),
-				line:      0,
-				expected:  []image.Color{color1},
-			},
-			"2": {
-				image:     image1x1,
-				selection: image1x1.Selection(0, 1),
-				line:      -1,
-				expected:  []image.Color{color1},
-			},
-			"3": {
-				image:     image1x2,
-				selection: image1x2.Selection(0, 0),
-				line:      1,
-				expected:  []image.Color{color2},
-			},
-			"4": {
-				image:     image1x2,
-				selection: image1x2.Selection(0, 1),
-				line:      0,
-				expected:  []image.Color{color2},
-			},
-			"5": {
-				image:     image1x2,
-				selection: image1x2.Selection(0, 0),
-				line:      0,
-				expected:  []image.Color{color1},
-			},
-		}
-		for name, test := range tests {
-			t.Run(name, func(t *testing.T) {
-				lines := test.selection.Lines()
-				// when
-				line := lines.LineForRead(test.line)
-				// then
-				require.NotNil(t, line)
-				assert.Equal(t, test.expected, line)
+				tests := map[string]struct {
+					image     *image.Image
+					selection image.Selection
+					line      int
+					expected  []image.Color
+				}{
+					"1": {
+						image:     image1x1,
+						selection: image1x1.Selection(0, 0),
+						line:      0,
+						expected:  []image.Color{color1},
+					},
+					"2": {
+						image:     image1x1,
+						selection: image1x1.Selection(0, 1),
+						line:      -1,
+						expected:  []image.Color{color1},
+					},
+					"3": {
+						image:     image1x2,
+						selection: image1x2.Selection(0, 0),
+						line:      1,
+						expected:  []image.Color{color2},
+					},
+					"4": {
+						image:     image1x2,
+						selection: image1x2.Selection(0, 1),
+						line:      0,
+						expected:  []image.Color{color2},
+					},
+					"5": {
+						image:     image1x2,
+						selection: image1x2.Selection(0, 0),
+						line:      0,
+						expected:  []image.Color{color1},
+					},
+				}
+				for name, test := range tests {
+					t.Run(name, func(t *testing.T) {
+						lines := test.selection.Lines()
+						// when
+						line := function(lines, test.line)
+						// then
+						require.NotNil(t, line)
+						assert.Equal(t, test.expected, line)
+					})
+				}
+
 			})
-		}
+		})
+	}
 
-	})
 }
 
 func assertColors(t *testing.T, selection image.Selection, expectedColorLines [][]image.Color) {
