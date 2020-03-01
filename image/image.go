@@ -276,35 +276,48 @@ func (s Selection) toAcceleratedImageSelection() AcceleratedImageSelection {
 }
 
 func (s Selection) Lines() Lines {
-	start := s.y
-	if start < 0 {
-		start = 0
+	startLine := s.y
+	if startLine < 0 {
+		startLine = 0
 	}
-	end := s.y + s.height
-	if end > s.image.height {
-		end = s.image.height
+	endLine := s.y + s.height
+	if endLine > s.image.height {
+		endLine = s.image.height
 	}
-	length := end - start
+	length := endLine - startLine
 	if length < 0 {
 		length = 0
 	}
+	yOffset := 0
+	if s.y < 0 {
+		yOffset = -s.y
+	}
 	return Lines{
-		y:      s.y,
-		length: length,
-		image:  s.image,
+		y:       s.y,
+		length:  length,
+		image:   s.image,
+		yOffset: yOffset,
 	}
 }
 
 type Lines struct {
 	y       int
 	length  int
-	XOffset int // X selection offset
-	YOffset int // Y selection offset
+	xOffset int // X selection offset
+	yOffset int // Y selection offset
 	image   *Image
 }
 
 func (l Lines) Length() int {
 	return l.length
+}
+
+func (l Lines) XOffset() int {
+	return 0
+}
+
+func (l Lines) YOffset() int {
+	return l.yOffset
 }
 
 func (l Lines) LineForWrite(y int) []Color {

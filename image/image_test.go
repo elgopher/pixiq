@@ -803,71 +803,104 @@ func TestSelection_Modify(t *testing.T) {
 	})
 }
 
-func TestSelection_Lines(t *testing.T) {
-	t.Run("should return lines", func(t *testing.T) {
+func TestLines_Length(t *testing.T) {
+	t.Run("should return lines length", func(t *testing.T) {
 		image0x0 := newImage(0, 0)
 		image1x1 := newImage(1, 1)
 		image1x2 := newImage(1, 2)
 		tests := map[string]struct {
-			image            *image.Image
-			selection        image.Selection
-			expectedLinesLen int
+			image          *image.Image
+			selection      image.Selection
+			expectedLength int
 		}{
 			"image height 0": {
-				image:            image0x0,
-				selection:        image0x0.Selection(0, 0).WithSize(0, 1),
-				expectedLinesLen: 0,
+				image:          image0x0,
+				selection:      image0x0.Selection(0, 0).WithSize(0, 1),
+				expectedLength: 0,
 			},
 			"selection height 0": {
-				image:            image1x1,
-				selection:        image1x1.Selection(0, 0).WithSize(0, 0),
-				expectedLinesLen: 0,
+				image:          image1x1,
+				selection:      image1x1.Selection(0, 0).WithSize(0, 0),
+				expectedLength: 0,
 			},
 			"selection y 1, height 1": {
-				image:            image1x1,
-				selection:        image1x1.Selection(0, 1).WithSize(0, 1),
-				expectedLinesLen: 0,
+				image:          image1x1,
+				selection:      image1x1.Selection(0, 1).WithSize(0, 1),
+				expectedLength: 0,
 			},
 			"selection y -1, height 1": {
-				image:            image1x1,
-				selection:        image1x1.Selection(0, -1).WithSize(0, 1),
-				expectedLinesLen: 0,
+				image:          image1x1,
+				selection:      image1x1.Selection(0, -1).WithSize(0, 1),
+				expectedLength: 0,
 			},
 			"selection y -2, height 1": {
-				image:            image1x1,
-				selection:        image1x1.Selection(0, -2).WithSize(0, 1),
-				expectedLinesLen: 0,
+				image:          image1x1,
+				selection:      image1x1.Selection(0, -2).WithSize(0, 1),
+				expectedLength: 0,
 			},
 			"selection height 1": {
-				image:            image1x1,
-				selection:        image1x1.Selection(0, 0).WithSize(0, 1),
-				expectedLinesLen: 1,
+				image:          image1x1,
+				selection:      image1x1.Selection(0, 0).WithSize(0, 1),
+				expectedLength: 1,
 			},
 			"selection height 2": {
-				image:            image1x1,
-				selection:        image1x1.Selection(0, 0).WithSize(0, 2),
-				expectedLinesLen: 1,
+				image:          image1x1,
+				selection:      image1x1.Selection(0, 0).WithSize(0, 2),
+				expectedLength: 1,
 			},
 			"selection y -1, height 2": {
-				image:            image1x1,
-				selection:        image1x1.Selection(0, -1).WithSize(0, 2),
-				expectedLinesLen: 1,
+				image:          image1x1,
+				selection:      image1x1.Selection(0, -1).WithSize(0, 2),
+				expectedLength: 1,
 			},
 			"image height 2, selection y 1, height 1": {
-				image:            image1x2,
-				selection:        image1x2.Selection(0, 1).WithSize(0, 1),
-				expectedLinesLen: 1,
+				image:          image1x2,
+				selection:      image1x2.Selection(0, 1).WithSize(0, 1),
+				expectedLength: 1,
 			},
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
-				// when
 				lines := test.selection.Lines()
-				// then
-				assert.Equal(t, test.expectedLinesLen, lines.Length())
+				// when
+				length := lines.Length()
+				assert.Equal(t, test.expectedLength, length)
 			})
 		}
 	})
+}
+
+func TestLines_YOffset(t *testing.T) {
+	img := newImage(0, 0)
+	tests := map[string]struct {
+		selection       image.Selection
+		expectedYOffset int
+	}{
+		"-1": {
+			selection:       img.Selection(0, -1),
+			expectedYOffset: 1,
+		},
+		"-2": {
+			selection:       img.Selection(0, -2),
+			expectedYOffset: 2,
+		},
+		"0": {
+			selection:       img.Selection(0, 0),
+			expectedYOffset: 0,
+		},
+		"1": {
+			selection:       img.Selection(0, 1),
+			expectedYOffset: 0,
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			lines := test.selection.Lines()
+			// when
+			offset := lines.YOffset()
+			assert.Equal(t, test.expectedYOffset, offset)
+		})
+	}
 }
 
 // TODO Reuse
