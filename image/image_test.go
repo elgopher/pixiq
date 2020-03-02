@@ -946,45 +946,51 @@ func TestSelection_Lines(t *testing.T) {
 			t.Run("should panic when line is out-of-bounds the image", func(t *testing.T) {
 				image0x0 := newImage(0, 0)
 				image1x1 := newImage(1, 1)
+				image1x2 := newImage(1, 2)
 				tests := map[string]struct {
 					line      int
 					image     *image.Image
 					selection image.Selection
 				}{
-					"image 0x0, line 0": {
-						image:     image0x0,
-						selection: image0x0.Selection(0, 0),
+					"selection height 0": {
+						image:     image1x1,
+						selection: image1x1.Selection(0, 0).WithSize(0, 0),
 						line:      0,
 					},
-					"image 0x0, line -1": {
+					"image height 0": {
 						image:     image0x0,
-						selection: image0x0.Selection(0, 0),
+						selection: image0x0.Selection(0, 0).WithSize(0, 1),
+						line:      0,
+					},
+					"line negative": {
+						image:     image1x1,
+						selection: image1x1.Selection(0, 0).WithSize(0, 1),
 						line:      -1,
 					},
-					"image 0x0": {
-						image:     image0x0,
-						selection: image0x0.Selection(0, 0),
+					"line equal to selection height": {
+						image:     image1x1,
+						selection: image1x1.Selection(0, 0).WithSize(0, 1),
 						line:      1,
 					},
-					"image 1x1, line -1": {
+					"line higher than selection height": {
 						image:     image1x1,
-						selection: image1x1.Selection(0, 0),
-						line:      -1,
+						selection: image1x1.Selection(0, 0).WithSize(0, 1),
+						line:      2,
 					},
-					"image 1x1, line 1": {
+					"line higher than image height": {
 						image:     image1x1,
-						selection: image1x1.Selection(0, 0),
+						selection: image1x1.Selection(0, 1).WithSize(0, 1),
+						line:      0,
+					},
+					"line above the image": {
+						image:     image1x1,
+						selection: image1x1.Selection(0, -1).WithSize(0, 1),
+						line:      0,
+					},
+					"line higher than selection height but inside image": {
+						image:     image1x2,
+						selection: image1x2.Selection(0, 0).WithSize(0, 1),
 						line:      1,
-					},
-					"image 1x1, selection with y=1, line 0": {
-						image:     image1x1,
-						selection: image1x1.Selection(0, 1),
-						line:      0,
-					},
-					"image 1x1, selection with y=-1, line 0": {
-						image:     image1x1,
-						selection: image1x1.Selection(0, -1),
-						line:      0,
 					},
 				}
 				for name, test := range tests {
@@ -1016,31 +1022,25 @@ func TestSelection_Lines(t *testing.T) {
 				}{
 					"1": {
 						image:     image1x1,
-						selection: image1x1.Selection(0, 0),
+						selection: image1x1.Selection(0, 0).WithSize(0, 1),
 						line:      0,
 						expected:  []image.Color{color1},
 					},
 					"2": {
-						image:     image1x1,
-						selection: image1x1.Selection(0, 1),
-						line:      -1,
-						expected:  []image.Color{color1},
+						image:     image1x2,
+						selection: image1x2.Selection(0, 0).WithSize(0, 2),
+						line:      1,
+						expected:  []image.Color{color2},
 					},
 					"3": {
 						image:     image1x2,
-						selection: image1x2.Selection(0, 0),
-						line:      1,
+						selection: image1x2.Selection(0, 1).WithSize(0, 1),
+						line:      0,
 						expected:  []image.Color{color2},
 					},
 					"4": {
 						image:     image1x2,
-						selection: image1x2.Selection(0, 1),
-						line:      0,
-						expected:  []image.Color{color2},
-					},
-					"5": {
-						image:     image1x2,
-						selection: image1x2.Selection(0, 0),
+						selection: image1x2.Selection(0, 0).WithSize(0, 2),
 						line:      0,
 						expected:  []image.Color{color1},
 					},

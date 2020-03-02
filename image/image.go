@@ -325,28 +325,32 @@ func (l Lines) YOffset() int {
 	return l.yOffset
 }
 
-func (l Lines) LineForWrite(y int) []Color {
-	imageY := y + l.y
-	if imageY < 0 {
+func (l Lines) LineForWrite(line int) []Color {
+	if l.Length() == 0 {
+		panic("zero lines length")
+	}
+	if line < 0 {
+		panic("negative line")
+	}
+	if line >= l.Length() {
 		panic("line out-of-bounds the image")
 	}
-	if imageY >= l.image.height {
-		panic("line out-of-bounds the image")
-	}
-	start := (l.image.heightMinusOne - y - l.y) * l.image.width
+	start := (l.image.heightMinusOne - line - l.y) * l.image.width
 	stop := start + l.image.width
 	return l.image.pixels[start:stop]
 }
 
-func (l Lines) LineForRead(y int) []Color {
-	imageY := y + l.y
-	if imageY < 0 {
+func (l Lines) LineForRead(line int) []Color {
+	if l.Length() == 0 {
+		panic("zero lines length")
+	}
+	if line < 0 {
+		panic("negative line")
+	}
+	if line >= l.Length() {
 		panic("line out-of-bounds the image")
 	}
-	if imageY >= l.image.height {
-		panic("line out-of-bounds the image")
-	}
-	start := (l.image.heightMinusOne - y - l.y) * l.image.width
+	start := (l.image.heightMinusOne - line - l.y) * l.image.width
 	stop := start + l.image.width
 	return l.image.pixels[start:stop]
 }
