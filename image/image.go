@@ -297,7 +297,8 @@ func (s Selection) Lines() Lines {
 		xOffset = -s.x
 	}
 	return Lines{
-		y:       s.y,
+		startY:  s.y,
+		startX:  s.x,
 		length:  length,
 		image:   s.image,
 		xOffset: xOffset,
@@ -306,7 +307,8 @@ func (s Selection) Lines() Lines {
 }
 
 type Lines struct {
-	y       int
+	startY  int
+	startX  int
 	length  int
 	xOffset int
 	yOffset int
@@ -335,8 +337,14 @@ func (l Lines) LineForWrite(line int) []Color {
 	if line >= l.Length() {
 		panic("line out-of-bounds the image")
 	}
-	start := (l.image.heightMinusOne - line - l.y) * l.image.width
-	stop := start + l.image.width
+	start := (l.image.heightMinusOne-line-l.startY)*l.image.width + l.xOffset
+	stop := start + l.image.width - l.xOffset
+	if start < 0 {
+		start = 0
+	}
+	if stop < start {
+		return []Color{}
+	}
 	return l.image.pixels[start:stop]
 }
 
@@ -350,8 +358,14 @@ func (l Lines) LineForRead(line int) []Color {
 	if line >= l.Length() {
 		panic("line out-of-bounds the image")
 	}
-	start := (l.image.heightMinusOne - line - l.y) * l.image.width
-	stop := start + l.image.width
+	start := (l.image.heightMinusOne-line-l.startY)*l.image.width + l.xOffset
+	stop := start + l.image.width - l.xOffset
+	if start < 0 {
+		start = 0
+	}
+	if stop < start {
+		return []Color{}
+	}
 	return l.image.pixels[start:stop]
 }
 

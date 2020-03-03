@@ -1011,8 +1011,14 @@ func TestSelection_Lines(t *testing.T) {
 				image1x1.Selection(0, 0).SetColor(0, 0, color1)
 
 				image1x2 := newImage(1, 2)
-				image1x2.Selection(0, 0).SetColor(0, 0, color1)
-				image1x2.Selection(0, 1).SetColor(0, 0, color2)
+				image1x2Selection := image1x2.WholeImageSelection()
+				image1x2Selection.SetColor(0, 0, color1)
+				image1x2Selection.SetColor(0, 1, color2)
+
+				image2x1 := newImage(2, 1)
+				image2x1Selection := image2x1.WholeImageSelection()
+				image2x1Selection.SetColor(0, 0, color1)
+				image2x1Selection.SetColor(1, 0, color2)
 
 				tests := map[string]struct {
 					image     *image.Image
@@ -1043,6 +1049,18 @@ func TestSelection_Lines(t *testing.T) {
 						selection: image1x2.Selection(0, 0).WithSize(0, 2),
 						line:      0,
 						expected:  []image.Color{color1},
+					},
+					"5": {
+						image:     image1x1,
+						selection: image1x1.Selection(1, 0).WithSize(1, 1),
+						line:      0,
+						expected:  []image.Color{},
+					},
+					"6": {
+						image:     image1x1,
+						selection: image1x1.Selection(-1, 0).WithSize(1, 1),
+						line:      0,
+						expected:  []image.Color{},
 					},
 				}
 				for name, test := range tests {
