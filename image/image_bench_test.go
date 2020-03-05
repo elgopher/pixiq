@@ -62,46 +62,21 @@ func BenchmarkLines_LineForWrite(b *testing.B) {
 	}
 }
 
-func BenchmarkSelection_LineForWrite(b *testing.B) {
+func BenchmarkLines_LineForRead(b *testing.B) {
 	var (
-		color     = image.RGBA(10, 20, 30, 40)
 		img       = image.New(1920, 1080, acceleratedImageStub{})
 		selection = img.WholeImageSelection()
-		height    = selection.Height()
 	)
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		for y := 0; y < height; y++ {
-			line, _ := selection.LineForWrite(y)
-			for x := 0; x < len(line); x++ {
-				line[x] = color
-			}
-		}
-	}
-}
-
-func BenchmarkSelection_LineForRead(b *testing.B) {
-	var (
-		img       = image.New(1920, 1080, acceleratedImageStub{})
-		selection = img.WholeImageSelection()
-		height    = selection.Height()
-	)
-	b.ReportAllocs()
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		for y := 0; y < height; y++ {
-			line, _ := selection.LineForRead(y)
+		lines := selection.Lines()
+		for y := 0; y < lines.Length(); y++ {
+			line := lines.LineForRead(y)
 			for x := 0; x < len(line); x++ {
 				_ = line[x]
 			}
 		}
-	}
-}
-
-func BenchmarkLines_LineForRead(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-
 	}
 }
 

@@ -274,6 +274,7 @@ func (s Selection) toAcceleratedImageSelection() AcceleratedImageSelection {
 	}
 }
 
+// Lines returns Selection pixels as line slices.
 func (s Selection) Lines() Lines {
 	startLine := s.y
 	if startLine < 0 {
@@ -303,35 +304,51 @@ func (s Selection) Lines() Lines {
 		startY:  s.y,
 		startX:  s.x,
 		length:  length,
-		image:   s.image,
 		xOffset: xOffset,
 		yOffset: yOffset,
 		width:   width,
+		image:   s.image,
 	}
 }
 
+// Lines represents lines of pixels created from Selection.
 type Lines struct {
 	startY  int
 	startX  int
-	width   int
 	length  int
 	xOffset int
 	yOffset int
+	width   int
 	image   *Image
 }
 
+// Length return the number of lines
 func (l Lines) Length() int {
 	return l.length
 }
 
+// XOffset returns the offset to the Selection X.
 func (l Lines) XOffset() int {
 	return l.xOffset
 }
 
+// YOffset returns the offset to the Selection Y
 func (l Lines) YOffset() int {
 	return l.yOffset
 }
 
+// LineForWrite returns pixels in a given line which can be used for
+// efficient pixel processing. It was created solely for performance reasons.
+//
+// You may read and write to returned slice.
+//
+// Please note that returned slice behaves differently than Selection. Line contains only
+// real pixels and trying to access out-of-bounds pixels generates panic. Therefore
+// the len of returned slice might be lower than Selection width. The starting offset
+// can be read by executing Lines.XOffset().
+//
+// It is not safe to retain Line for future use. The image might be modified by
+// AcceleratedCommand and changes will not be reflected in a slice.
 func (l Lines) LineForWrite(line int) []Color {
 	if l.Length() == 0 {
 		panic("zero lines length")
@@ -353,6 +370,21 @@ func (l Lines) LineForWrite(line int) []Color {
 	return l.image.pixels[start:stop]
 }
 
+// LineForRead returns pixels in a given line which can be used for
+// efficient pixel processing. It was created solely for performance reasons.
+//
+// You may only read from returned slice. Trying to update the returned slice will
+// not generate panic, but modified pixels will not be uploaded to AcceleratedImage
+// when Modify is run. If you want to update the line contents please use LineForWrite
+// instead.
+//
+// Please note that returned slice behaves differently than Selection. Line contains only
+// real pixels and trying to access out-of-bounds pixels generates panic. Therefore
+// the len of returned slice might be lower than Selection width. The starting offset
+// can be read by executing Lines.XOffset().
+//
+// It is not safe to retain Line for future use. The image might be modified by
+// AcceleratedCommand and changes will not be reflected in a slice.
 func (l Lines) LineForRead(line int) []Color {
 	if l.Length() == 0 {
 		panic("zero lines length")
@@ -372,63 +404,4 @@ func (l Lines) LineForRead(line int) []Color {
 		return []Color{}
 	}
 	return l.image.pixels[start:stop]
-}
-
-// LineForRead returns Selection pixels in a given line which can be used for
-// efficient pixel processing. It was created solely for performance reasons.
-//
-// You may only read from returned slice. Trying to update the returned slice will
-// not generate panic, but modified pixels will not be uploaded to AcceleratedImage
-// when Modify is run. If you want to update the line contents please use LineForWrite
-// instead.
-//
-// Please note that returned slice behaves differently than Selection. Line contains only
-// real pixels and trying to access out-of-bounds pixels generates panic. Therefore
-// the len of returned slice might be lower than Selection. The starting offset is
-// returned as a second return value.
-//
-// It is not safe to retain Line for future use. The image might be modified by
-// AcceleratedCommand and changes will not be reflected in a slice.
-func (s Selection) LineForRead(y int) (slice []Color, offset int) {
-	imageY := y + s.y
-	if imageY < 0 {
-		panic("line out-of-bounds the image")
-	}
-	if imageY >= s.image.height {
-		panic("line out-of-bounds the image")
-	}
-	//if s.image.acceleratedImageModified {
-	//	s.image.acceleratedImage.Download(s.image.pixels)
-	//	s.image.acceleratedImageModified = false
-	//}
-	start := 0
-	//start := (s.y+y)*s.image.width + s.x
-	stop := s.image.width
-	//stop := start + s.width
-	//return s.image.pixels[start:stop], 0
-	return s.image.pixels[start:stop], 0
-}
-
-// LineForWrite returns Selection pixels in a given line which can be used for
-// efficient pixel processing. It was created solely for performance reasons.
-//
-// You may read and write to returned slice.
-//
-// Please note that returned slice behaves differently than Selection. Line contains only
-// real pixels and trying to access out-of-bounds pixels generates panic. Therefore
-// the len of returned slice might be lower than Selection. The starting offset is
-// returned as a second return value.
-//
-// It is not safe to retain Line for future use. The image might be modified by
-// AcceleratedCommand and changes will not be reflected in a slice.
-func (s Selection) LineForWrite(y int) (slice []Color, offset int) {
-	//if s.image.acceleratedImageModified {
-	//	s.image.acceleratedImage.Download(s.image.pixels)
-	//	s.image.acceleratedImageModified = false
-	//}
-	//s.image.ramModified = true
-	//start := (s.y+y)*s.image.width + s.x
-	//stop := start + s.width
-	//return s.image.pixels[start:stop], 0
-	return nil, 0
 }
