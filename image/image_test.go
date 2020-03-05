@@ -1028,25 +1028,25 @@ func TestSelection_Lines(t *testing.T) {
 				}{
 					"1": {
 						image:     image1x1,
-						selection: image1x1.Selection(0, 0).WithSize(0, 1),
+						selection: image1x1.Selection(0, 0).WithSize(1, 1),
 						line:      0,
 						expected:  []image.Color{color1},
 					},
 					"2": {
 						image:     image1x2,
-						selection: image1x2.Selection(0, 0).WithSize(0, 2),
+						selection: image1x2.Selection(0, 0).WithSize(1, 2),
 						line:      1,
 						expected:  []image.Color{color2},
 					},
 					"3": {
 						image:     image1x2,
-						selection: image1x2.Selection(0, 1).WithSize(0, 1),
+						selection: image1x2.Selection(0, 1).WithSize(1, 1),
 						line:      0,
 						expected:  []image.Color{color2},
 					},
 					"4": {
 						image:     image1x2,
-						selection: image1x2.Selection(0, 0).WithSize(0, 2),
+						selection: image1x2.Selection(0, 0).WithSize(1, 2),
 						line:      0,
 						expected:  []image.Color{color1},
 					},
@@ -1061,6 +1061,18 @@ func TestSelection_Lines(t *testing.T) {
 						selection: image1x1.Selection(-1, 0).WithSize(1, 1),
 						line:      0,
 						expected:  []image.Color{},
+					},
+					"7": {
+						image:     image2x1,
+						selection: image2x1.Selection(0, 0).WithSize(1, 1),
+						line:      0,
+						expected:  []image.Color{color1},
+					},
+					"8": {
+						image:     image1x2,
+						selection: image1x2.Selection(0, 0).WithSize(1, 2),
+						line:      1,
+						expected:  []image.Color{color2},
 					},
 				}
 				for name, test := range tests {

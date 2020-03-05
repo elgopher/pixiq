@@ -218,7 +218,6 @@ func (s Selection) SetColor(localX, localY int, color Color) {
 		return
 	}
 	s.image.pixels[index] = color
-	s.image.ramModified = true
 }
 
 // AcceleratedImageLocation is a location of a AcceleratedImage
@@ -296,6 +295,10 @@ func (s Selection) Lines() Lines {
 	if s.x < 0 {
 		xOffset = -s.x
 	}
+	width := s.width - xOffset
+	if width > s.image.width {
+		width = s.image.width - xOffset
+	}
 	return Lines{
 		startY:  s.y,
 		startX:  s.x,
@@ -303,12 +306,14 @@ func (s Selection) Lines() Lines {
 		image:   s.image,
 		xOffset: xOffset,
 		yOffset: yOffset,
+		width:   width,
 	}
 }
 
 type Lines struct {
 	startY  int
 	startX  int
+	width   int
 	length  int
 	xOffset int
 	yOffset int
@@ -338,11 +343,11 @@ func (l Lines) LineForWrite(line int) []Color {
 		panic("line out-of-bounds the image")
 	}
 	start := (l.image.heightMinusOne-line-l.startY)*l.image.width + l.startX
-	stop := start + l.image.width
+	stop := start + l.width
 	if start < 0 {
 		start = 0
 	}
-	if stop > len(l.image.pixels) {
+	if stop > len(l.image.pixels) || stop < 0 {
 		return []Color{}
 	}
 	return l.image.pixels[start:stop]
@@ -359,11 +364,11 @@ func (l Lines) LineForRead(line int) []Color {
 		panic("line out-of-bounds the image")
 	}
 	start := (l.image.heightMinusOne-line-l.startY)*l.image.width + l.startX
-	stop := start + l.image.width
+	stop := start + l.width
 	if start < 0 {
 		start = 0
 	}
-	if stop > len(l.image.pixels) {
+	if stop > len(l.image.pixels) || stop < 0 {
 		return []Color{}
 	}
 	return l.image.pixels[start:stop]
