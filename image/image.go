@@ -337,12 +337,12 @@ func (l Lines) LineForWrite(line int) []Color {
 	if line >= l.Length() {
 		panic("line out-of-bounds the image")
 	}
-	start := (l.image.heightMinusOne-line-l.startY)*l.image.width + l.xOffset
-	stop := start + l.image.width - l.xOffset
+	start := (l.image.heightMinusOne-line-l.startY)*l.image.width + l.startX
+	stop := start + l.image.width
 	if start < 0 {
 		start = 0
 	}
-	if stop < start {
+	if stop > len(l.image.pixels) {
 		return []Color{}
 	}
 	return l.image.pixels[start:stop]
@@ -358,12 +358,12 @@ func (l Lines) LineForRead(line int) []Color {
 	if line >= l.Length() {
 		panic("line out-of-bounds the image")
 	}
-	start := (l.image.heightMinusOne-line-l.startY)*l.image.width + l.xOffset
-	stop := start + l.image.width - l.xOffset
+	start := (l.image.heightMinusOne-line-l.startY)*l.image.width + l.startX
+	stop := start + l.image.width
 	if start < 0 {
 		start = 0
 	}
-	if stop < start {
+	if stop > len(l.image.pixels) {
 		return []Color{}
 	}
 	return l.image.pixels[start:stop]
