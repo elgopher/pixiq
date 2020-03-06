@@ -312,7 +312,8 @@ func (s Selection) Lines() Lines {
 	}
 }
 
-// Lines represents lines of pixels created from Selection.
+// Lines represents lines of pixels created from Selection, which can be used for
+// efficient pixel processing. It was created solely for performance reasons.
 type Lines struct {
 	startY  int
 	startX  int
@@ -339,7 +340,7 @@ func (l Lines) YOffset() int {
 }
 
 // LineForWrite returns pixels in a given line which can be used for
-// efficient pixel processing. It was created solely for performance reasons.
+// efficient pixel processing.
 //
 // You may read and write to returned slice.
 //
@@ -351,29 +352,13 @@ func (l Lines) YOffset() int {
 // It is not safe to retain Line for future use. The image might be modified by
 // AcceleratedCommand and changes will not be reflected in a slice.
 func (l Lines) LineForWrite(line int) []Color {
-	if l.Length() == 0 {
-		panic("zero lines length")
-	}
-	if line < 0 {
-		panic("negative line")
-	}
-	if line >= l.Length() {
-		panic("line out-of-bounds the image")
-	}
-	start := (l.image.heightMinusOne-line-l.startY)*l.image.width + l.startX
-	stop := start + l.width
-	if start < 0 {
-		start = 0
-	}
-	if stop > len(l.image.pixels) || stop < 0 {
-		return []Color{}
-	}
+	pixels := l.line(line)
 	l.image.ramModified = true
-	return l.image.pixels[start:stop]
+	return pixels
 }
 
 // LineForRead returns pixels in a given line which can be used for
-// efficient pixel processing. It was created solely for performance reasons.
+// efficient pixel processing.
 //
 // You may only read from returned slice. Trying to update the returned slice will
 // not generate panic, but modified pixels will not be uploaded to AcceleratedImage
@@ -388,6 +373,10 @@ func (l Lines) LineForWrite(line int) []Color {
 // It is not safe to retain Line for future use. The image might be modified by
 // AcceleratedCommand and changes will not be reflected in a slice.
 func (l Lines) LineForRead(line int) []Color {
+	return l.line(line)
+}
+
+func (l Lines) line(line int) []Color {
 	if l.Length() == 0 {
 		panic("zero lines length")
 	}
