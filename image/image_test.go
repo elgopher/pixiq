@@ -687,34 +687,73 @@ func TestSelection_Modify(t *testing.T) {
 			})
 		}
 	})
-	t.Run("should upload passed selection", func(t *testing.T) {
+
+	t.Run("should upload selection", func(t *testing.T) {
 		var (
-			color00                = image.RGB(0, 0, 255)
-			color10                = image.RGB(255, 0, 255)
-			color01                = image.RGB(0, 255, 255)
-			color11                = image.RGB(255, 255, 255)
-			targetAcceleratedImage = fake.NewAcceleratedImage(1, 1)
-			targetImage            = image.New(1, 1, targetAcceleratedImage)
-			sourceAcceleratedImage = fake.NewAcceleratedImage(2, 2)
-			sourceImage            = image.New(2, 2, sourceAcceleratedImage)
-			uploadedPixels         = make([]image.Color, 4)
-			command                = &acceleratedCommandMock{
-				command: func(output image.AcceleratedImageSelection, selections []image.AcceleratedImageSelection) {
-					source := selections[0].Image
-					source.Download(uploadedPixels)
-				},
+			color00 = image.RGB(0, 0, 255)
+			color10 = image.RGB(255, 0, 255)
+			color01 = image.RGB(0, 255, 255)
+			color11 = image.RGB(255, 255, 255)
+
+			selections = map[string]image.Selection{
+				"selections modified by SetColor": func() image.Selection {
+					sourceAcceleratedImage := fake.NewAcceleratedImage(2, 2)
+					sourceImage := image.New(2, 2, sourceAcceleratedImage)
+					sourceSelection := sourceImage.WholeImageSelection()
+					sourceSelection.SetColor(0, 0, color00)
+					sourceSelection.SetColor(1, 0, color10)
+					sourceSelection.SetColor(0, 1, color01)
+					sourceSelection.SetColor(1, 1, color11)
+					return sourceSelection
+				}(),
+				"selection modified by Modify and then SetColor": func() image.Selection {
+					sourceAcceleratedImage := fake.NewAcceleratedImage(2, 2)
+					sourceImage := image.New(2, 2, sourceAcceleratedImage)
+					sourceSelection := sourceImage.WholeImageSelection()
+					sourceSelection.Modify(acceleratedCommandStub{})
+					sourceSelection.SetColor(0, 0, color00)
+					sourceSelection.SetColor(1, 0, color10)
+					sourceSelection.SetColor(0, 1, color01)
+					sourceSelection.SetColor(1, 1, color11)
+					return sourceSelection
+				}(),
+				"selection modified by Modify and then LineForWrite": func() image.Selection {
+					sourceAcceleratedImage := fake.NewAcceleratedImage(2, 2)
+					sourceImage := image.New(2, 2, sourceAcceleratedImage)
+					sourceSelection := sourceImage.WholeImageSelection()
+					sourceSelection.Modify(acceleratedCommandStub{})
+					lines := sourceSelection.Lines()
+					line0 := lines.LineForWrite(0)
+					line0[0] = color00
+					line0[1] = color10
+					lines1 := lines.LineForWrite(1)
+					lines1[0] = color01
+					lines1[1] = color11
+					return sourceSelection
+				}(),
 			}
-			outputSelection = targetImage.WholeImageSelection()
-			sourceSelection = sourceImage.WholeImageSelection()
 		)
-		sourceSelection.SetColor(0, 0, color00)
-		sourceSelection.SetColor(1, 0, color10)
-		sourceSelection.SetColor(0, 1, color01)
-		sourceSelection.SetColor(1, 1, color11)
-		// when
-		outputSelection.Modify(command, sourceSelection)
-		// then
-		assert.Equal(t, []image.Color{color01, color11, color00, color10}, uploadedPixels)
+
+		for name, sourceSelection := range selections {
+			t.Run(name, func(t *testing.T) {
+				var (
+					targetAcceleratedImage = fake.NewAcceleratedImage(1, 1)
+					targetImage            = image.New(1, 1, targetAcceleratedImage)
+					uploadedPixels         = make([]image.Color, 4)
+					command                = &acceleratedCommandMock{
+						command: func(output image.AcceleratedImageSelection, selections []image.AcceleratedImageSelection) {
+							source := selections[0].Image
+							source.Download(uploadedPixels)
+						},
+					}
+					outputSelection = targetImage.WholeImageSelection()
+				)
+				// when
+				outputSelection.Modify(command, sourceSelection)
+				// then
+				assert.Equal(t, []image.Color{color01, color11, color00, color10}, uploadedPixels)
+			})
+		}
 	})
 
 	t.Run("should upload passed selections", func(t *testing.T) {
@@ -936,7 +975,7 @@ func TestLines_XOffset(t *testing.T) {
 	}
 }
 
-func TestSelection_Lines(t *testing.T) {
+func TestSelection_LineForXXX(t *testing.T) {
 	functions := map[string]func(image.Lines, int) []image.Color{
 		"LineForRead":  image.Lines.LineForRead,
 		"LineForWrite": image.Lines.LineForWrite,
@@ -1072,6 +1111,18 @@ func TestSelection_Lines(t *testing.T) {
 						image:     image1x2,
 						selection: image1x2.Selection(0, 0).WithSize(1, 2),
 						line:      1,
+						expected:  []image.Color{color2},
+					},
+					"9": {
+						image:     image2x1,
+						selection: image2x1.Selection(1, 0).WithSize(1, 1),
+						line:      0,
+						expected:  []image.Color{color2},
+					},
+					"10": {
+						image:     image1x2,
+						selection: image1x2.Selection(0, 1).WithSize(1, 1),
+						line:      0,
 						expected:  []image.Color{color2},
 					},
 				}

@@ -96,8 +96,9 @@ func (i *Image) WholeImageSelection() Selection {
 //
 // DEPRECATED - this method will be removed in next release
 func (i *Image) Upload() {
-	if !i.acceleratedImageModified {
+	if !i.acceleratedImageModified || i.ramModified {
 		i.acceleratedImage.Upload(i.pixels)
+		i.ramModified = false
 	}
 }
 
@@ -367,6 +368,7 @@ func (l Lines) LineForWrite(line int) []Color {
 	if stop > len(l.image.pixels) || stop < 0 {
 		return []Color{}
 	}
+	l.image.ramModified = true
 	return l.image.pixels[start:stop]
 }
 
