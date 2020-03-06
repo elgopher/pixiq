@@ -349,9 +349,10 @@ func (l Lines) YOffset() int {
 // the len of returned slice might be lower than Selection width. The starting offset
 // can be read by executing Lines.XOffset().
 //
-// It is not safe to retain Line for future use. The image might be modified by
+// It is not safe to retain returned slice for future use. The image might be modified by
 // AcceleratedCommand and changes will not be reflected in a slice.
 func (l Lines) LineForWrite(line int) []Color {
+	// TODO Should download AcceleratedImage if it was modified first
 	pixels := l.line(line)
 	l.image.ramModified = true
 	return pixels
@@ -370,9 +371,10 @@ func (l Lines) LineForWrite(line int) []Color {
 // the len of returned slice might be lower than Selection width. The starting offset
 // can be read by executing Lines.XOffset().
 //
-// It is not safe to retain Line for future use. The image might be modified by
+// It is not safe to retain returned slice for future use. The image might be modified by
 // AcceleratedCommand and changes will not be reflected in a slice.
 func (l Lines) LineForRead(line int) []Color {
+	// TODO Should download AcceleratedImage if it was modified first
 	return l.line(line)
 }
 
