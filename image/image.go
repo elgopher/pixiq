@@ -353,6 +353,7 @@ func (l Lines) YOffset() int {
 // AcceleratedCommand and changes will not be reflected in a slice.
 func (l Lines) LineForWrite(line int) []Color {
 	// TODO Should download AcceleratedImage if it was modified first
+
 	pixels := l.line(line)
 	l.image.ramModified = true
 	return pixels
