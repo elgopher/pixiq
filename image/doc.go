@@ -1,4 +1,4 @@
-// Package image provides hardware-supported Image primitive which can be
+// Package image provides hardware-accelerated Image primitive which can be
 // manipulated in real-time using Pixel-Perfect API.
 //
 // Instance of the Image should be created either by directly using a New function

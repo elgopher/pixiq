@@ -70,8 +70,8 @@ func TestClear(t *testing.T) {
 
 func assertColors(t *testing.T, img *image.Image, expectedColorLines [2][2]image.Color) {
 	selection := img.WholeImageSelection()
-	assert.Equal(t, expectedColorLines[0][0], selection.Color(0, 0))
-	assert.Equal(t, expectedColorLines[0][1], selection.Color(1, 0))
-	assert.Equal(t, expectedColorLines[1][0], selection.Color(0, 1))
-	assert.Equal(t, expectedColorLines[1][1], selection.Color(1, 1))
+	assert.Equal(t, expectedColorLines[0][0], selection.Color(0, 0), "position(0,0)")
+	assert.Equal(t, expectedColorLines[0][1], selection.Color(1, 0), "position(1,0)")
+	assert.Equal(t, expectedColorLines[1][0], selection.Color(0, 1), "position(0,1)")
+	assert.Equal(t, expectedColorLines[1][1], selection.Color(1, 1), "position(1,1)")
 }

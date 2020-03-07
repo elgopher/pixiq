@@ -175,6 +175,7 @@ func (f *screenMock) Draw() {
 }
 
 func (f *screenMock) SwapImages() {
+	f.currentImage.Upload()
 	f.visibleImage = f.currentImage
 	newCurrentImage := image.New(f.width, f.height, &acceleratedImageStub{})
 	f.currentImage = newCurrentImage
