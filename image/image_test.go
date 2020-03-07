@@ -549,10 +549,8 @@ func TestSelection_Modify(t *testing.T) {
 				var (
 					acceleratedImage = fake.NewAcceleratedImage(0, 0)
 					img              = image.New(0, 0, acceleratedImage)
-					selection        = img.
-								Selection(test.x, test.y).
-								WithSize(test.width, test.height)
-					command = &acceleratedCommandMock{}
+					selection        = img.Selection(test.x, test.y).WithSize(test.width, test.height)
+					command          = &acceleratedCommandMock{}
 				)
 				// when
 				selection.Modify(command)
@@ -803,24 +801,47 @@ func TestSelection_Modify(t *testing.T) {
 			color10 = image.RGB(255, 0, 255)
 			color01 = image.RGB(0, 255, 255)
 			color11 = image.RGB(255, 255, 255)
-			//
-			targetAcceleratedImage = fake.NewAcceleratedImage(2, 2)
-			targetImage            = image.New(2, 2, targetAcceleratedImage)
-			//
-			command = &acceleratedCommandMock{
-				command: func(image.AcceleratedImageSelection, []image.AcceleratedImageSelection) {
-					targetAcceleratedImage.Upload([]image.Color{color01, color11, color00, color10})
-				},
-			}
-			outputSelection = targetImage.WholeImageSelection()
 		)
-		// when
-		outputSelection.Modify(command)
-		//then
-		assert.Equal(t, color00, outputSelection.Color(0, 0))
-		assert.Equal(t, color10, outputSelection.Color(1, 0))
-		assert.Equal(t, color01, outputSelection.Color(0, 1))
-		assert.Equal(t, color11, outputSelection.Color(1, 1))
+		tests := map[string]func(selection image.Selection){
+			"Selection.Color": func(outputSelection image.Selection) {
+				assert.Equal(t, color00, outputSelection.Color(0, 0))
+				assert.Equal(t, color10, outputSelection.Color(1, 0))
+				assert.Equal(t, color01, outputSelection.Color(0, 1))
+				assert.Equal(t, color11, outputSelection.Color(1, 1))
+			},
+			"Lines.LineForRead": func(outputSelection image.Selection) {
+				line0 := outputSelection.Lines().LineForRead(0)
+				assert.Equal(t, color00, line0[0])
+				assert.Equal(t, color10, line0[1])
+				line1 := outputSelection.Lines().LineForRead(1)
+				assert.Equal(t, color01, line1[0])
+				assert.Equal(t, color11, line1[1])
+			},
+			"Lines.LineForWrite": func(outputSelection image.Selection) {
+				line0 := outputSelection.Lines().LineForWrite(0)
+				assert.Equal(t, color00, line0[0])
+				assert.Equal(t, color10, line0[1])
+				line1 := outputSelection.Lines().LineForWrite(1)
+				assert.Equal(t, color01, line1[0])
+				assert.Equal(t, color11, line1[1])
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				targetAcceleratedImage := fake.NewAcceleratedImage(2, 2)
+				targetImage := image.New(2, 2, targetAcceleratedImage)
+				command := &acceleratedCommandMock{
+					command: func(image.AcceleratedImageSelection, []image.AcceleratedImageSelection) {
+						targetAcceleratedImage.Upload([]image.Color{color01, color11, color00, color10})
+					},
+				}
+				outputSelection := targetImage.WholeImageSelection()
+				// when
+				outputSelection.Modify(command)
+				// then
+				test(outputSelection)
+			})
+		}
 	})
 
 	t.Run("should use results from last Modify", func(t *testing.T) {

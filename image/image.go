@@ -352,8 +352,6 @@ func (l Lines) YOffset() int {
 // It is not safe to retain returned slice for future use. The image might be modified by
 // AcceleratedCommand and changes will not be reflected in a slice.
 func (l Lines) LineForWrite(line int) []Color {
-	// TODO Should download AcceleratedImage if it was modified first
-
 	pixels := l.line(line)
 	l.image.ramModified = true
 	return pixels
@@ -375,7 +373,6 @@ func (l Lines) LineForWrite(line int) []Color {
 // It is not safe to retain returned slice for future use. The image might be modified by
 // AcceleratedCommand and changes will not be reflected in a slice.
 func (l Lines) LineForRead(line int) []Color {
-	// TODO Should download AcceleratedImage if it was modified first
 	return l.line(line)
 }
 
@@ -396,6 +393,10 @@ func (l Lines) line(line int) []Color {
 	}
 	if stop > len(l.image.pixels) || stop < 0 {
 		return []Color{}
+	}
+	if l.image.acceleratedImageModified {
+		l.image.acceleratedImage.Download(l.image.pixels)
+		l.image.acceleratedImageModified = false
 	}
 	return l.image.pixels[start:stop]
 }
