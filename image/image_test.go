@@ -1129,20 +1129,8 @@ func TestSelection_LineForXXX(t *testing.T) {
 						expected:  []image.Color{color1},
 					},
 					"8": {
-						image:     image1x2,
-						selection: image1x2.Selection(0, 0).WithSize(1, 2),
-						line:      1,
-						expected:  []image.Color{color2},
-					},
-					"9": {
 						image:     image2x1,
 						selection: image2x1.Selection(1, 0).WithSize(1, 1),
-						line:      0,
-						expected:  []image.Color{color2},
-					},
-					"10": {
-						image:     image1x2,
-						selection: image1x2.Selection(0, 1).WithSize(1, 1),
 						line:      0,
 						expected:  []image.Color{color2},
 					},
