@@ -96,7 +96,7 @@ func (i *Image) WholeImageSelection() Selection {
 //
 // DEPRECATED - this method will be removed in next release
 func (i *Image) Upload() {
-	if !i.acceleratedImageModified || i.ramModified {
+	if i.ramModified {
 		i.acceleratedImage.Upload(i.pixels)
 		i.ramModified = false
 	}
@@ -218,6 +218,7 @@ func (s Selection) SetColor(localX, localY int, color Color) {
 	if index >= len(s.image.pixels) {
 		return
 	}
+	s.image.ramModified = true
 	s.image.pixels[index] = color
 }
 
