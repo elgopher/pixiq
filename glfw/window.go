@@ -29,6 +29,7 @@ type Window struct {
 // after SwapImages is called.
 func (w *Window) Draw() {
 	w.screenImage.Upload()
+	w.ContextAPI().Flush()
 	var width, height int
 	w.mainThreadLoop.Execute(func() {
 		width, height = w.glfwWindow.GetFramebufferSize()
