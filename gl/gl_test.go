@@ -535,5 +535,6 @@ func (a apiStub) GetTexImage(target uint32, level int32, format uint32, xtype ui
 func (a apiStub) GetError() uint32 { return 0 }
 func (a apiStub) ReadPixels(x int32, y int32, width int32, height int32, format uint32, xtype uint32, pixels unsafe.Pointer) {
 }
+func (a apiStub) Flush()                              {}
 func (a apiStub) Ptr(data interface{}) unsafe.Pointer { return nil }
 func (a apiStub) PtrOffset(offset int) unsafe.Pointer { return nil }
