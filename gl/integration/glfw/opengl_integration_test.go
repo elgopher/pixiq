@@ -510,10 +510,25 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 					location:       image.AcceleratedImageLocation{},
 					expectedColors: []image.Color{image.Transparent},
 				},
-				"x out of bounds": {
+				"x equal image width": {
 					width: 1, height: 1,
 					location:       image.AcceleratedImageLocation{X: 1, Width: 1, Height: 1},
 					expectedColors: []image.Color{image.Transparent},
+				},
+				"x higher than image width": {
+					width: 1, height: 1,
+					location:       image.AcceleratedImageLocation{X: 2, Width: 1, Height: 1},
+					expectedColors: []image.Color{image.Transparent},
+				},
+				"negative x": {
+					width: 1, height: 1,
+					location:       image.AcceleratedImageLocation{X: -1, Width: 1, Height: 1},
+					expectedColors: []image.Color{image.Transparent},
+				},
+				"negative x, width 2": {
+					width: 1, height: 1,
+					location:       image.AcceleratedImageLocation{X: -1, Width: 2, Height: 1},
+					expectedColors: []image.Color{color},
 				},
 				"y out of bounds": {
 					width: 1, height: 1,

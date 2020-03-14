@@ -211,6 +211,10 @@ func (c *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selecti
 	y := int32(img.height - locHeight - loc.Y)
 	w := int32(loc.Width)
 	h := int32(locHeight)
+	if x < 0 {
+		w += x
+		x = 0
+	}
 	if y < 0 {
 		h += y
 		y = 0
