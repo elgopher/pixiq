@@ -199,15 +199,15 @@ func (c *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selecti
 		panic("output image created in a different OpenGL context than program")
 	}
 
-	c.program.use()
-	c.api.Enable(scissorTest)
-	c.api.BindFramebuffer(framebuffer, img.frameBufferID)
 	loc := output.Location
 	locHeight := loc.Height
 	if locHeight > img.height {
 		locHeight = img.height
 	}
 	x := int32(loc.X)
+	if x >= int32(img.width) {
+		return
+	}
 	y := int32(img.height - locHeight - loc.Y)
 	w := int32(loc.Width)
 	h := int32(locHeight)
@@ -215,6 +215,10 @@ func (c *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selecti
 		h += y
 		y = 0
 	}
+
+	c.program.use()
+	c.api.Enable(scissorTest)
+	c.api.BindFramebuffer(framebuffer, img.frameBufferID)
 	c.api.Scissor(x, y, w, h)
 	c.api.Viewport(x, y, w, h)
 
