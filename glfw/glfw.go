@@ -203,6 +203,7 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 		requestedHeight:        height,
 		screenAcceleratedImage: screenAcceleratedImage,
 		screenImage:            screenImage,
+		mainContext:            g.context,
 		zoom:                   1,
 	}
 	var err error

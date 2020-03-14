@@ -23,12 +23,14 @@ type Window struct {
 	api                    gl.API
 	context                *gl.Context
 	program                *gl.Program
+	mainContext            *gl.Context
 }
 
 // Draw draws a screen image to the invisible buffer. It will be shown in window
 // after SwapImages is called.
 func (w *Window) Draw() {
 	w.screenImage.Upload()
+	w.mainContext.API().Finish()
 	var width, height int
 	w.mainThreadLoop.Execute(func() {
 		width, height = w.glfwWindow.GetFramebufferSize()
