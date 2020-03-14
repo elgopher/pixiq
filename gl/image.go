@@ -94,6 +94,7 @@ func (i *AcceleratedImage) Upload(pixels []image.Color) {
 		unsignedByte,
 		i.api.Ptr(pixels),
 	)
+	i.api.Flush()
 }
 
 // Download gets pixels pixels from video card
