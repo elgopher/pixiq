@@ -411,6 +411,12 @@ func (g *context) Flush() {
 	})
 }
 
+func (g *context) Finish() {
+	g.run(func() {
+		gl.Finish()
+	})
+}
+
 // Ptr takes a slice or pointer (to a singular scalar value or the first
 // element of an array or slice) and returns its GL-compatible address.
 //
