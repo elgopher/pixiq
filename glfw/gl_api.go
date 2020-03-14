@@ -404,13 +404,7 @@ func (g *context) ReadPixels(x int32, y int32, width int32, height int32, format
 	})
 }
 
-// Flush forces execution of GL commands in finite time
-func (g *context) Flush() {
-	g.run(func() {
-		gl.Flush()
-	})
-}
-
+// Finish blocks until all GL execution is complete
 func (g *context) Finish() {
 	g.run(func() {
 		gl.Finish()
