@@ -110,4 +110,5 @@ func (i *AcceleratedImage) Download(output []image.Color) {
 		unsignedByte,
 		i.api.Ptr(output),
 	)
+	i.api.Finish()
 }
