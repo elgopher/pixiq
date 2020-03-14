@@ -200,17 +200,19 @@ func (c *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selecti
 	}
 
 	loc := output.Location
-	locHeight := loc.Height
-	if locHeight > img.height {
-		locHeight = img.height
+	if loc.X >= img.width {
+		return
+	}
+	if loc.Y >= img.height {
+		return
 	}
 	x := int32(loc.X)
 	if x >= int32(img.width) {
 		return
 	}
-	y := int32(img.height - locHeight - loc.Y)
+	y := int32(loc.Y)
 	w := int32(loc.Width)
-	h := int32(locHeight)
+	h := int32(loc.Height)
 	if x < 0 {
 		w += x
 		x = 0
@@ -219,6 +221,7 @@ func (c *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selecti
 		h += y
 		y = 0
 	}
+	y = int32(img.height) - h - y
 
 	c.program.use()
 	c.api.Enable(scissorTest)
