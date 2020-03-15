@@ -21,7 +21,9 @@ func main() {
 		}
 		tools := []blender{
 			// TODO GPU
-			blend.Override(), // override on CPU
+			blend.New(blend.Source),
+			blend.New(blend.SourceOver),
+			blend.New(blend.SourceOverWithOpacity(100)),
 		}
 		currentTool := 0
 
