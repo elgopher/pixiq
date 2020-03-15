@@ -21,6 +21,11 @@ func main() {
 		loop.Run(window, func(frame *loop.Frame) {
 			screen := frame.Screen()
 			screen.SetColor(40, 8, colornames.White)
+			// If window was closed by the user ShouldClose will return true
+			if window.ShouldClose() {
+				// Stop the loop at the end of the iteration
+				frame.StopLoopEventually()
+			}
 		})
 	})
 }

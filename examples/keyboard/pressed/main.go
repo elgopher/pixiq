@@ -35,7 +35,7 @@ func main() {
 			if keys.Pressed(keyboard.S) {
 				y++
 			}
-			if keys.Pressed(keyboard.Esc) {
+			if keys.Pressed(keyboard.Esc) || window.ShouldClose() {
 				frame.StopLoopEventually()
 			}
 			screen := frame.Screen()

@@ -48,6 +48,10 @@ func main() {
 				currentTool++
 				currentTool = currentTool % len(tools)
 			}
+
+			if window.ShouldClose() {
+				frame.StopLoopEventually()
+			}
 		})
 
 	})

@@ -25,6 +25,10 @@ func main() {
 					line[x] = color
 				}
 			}
+
+			if window.ShouldClose() {
+				frame.StopLoopEventually()
+			}
 		})
 	})
 }
