@@ -206,6 +206,12 @@ func (c *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selecti
 	if loc.Y >= img.height {
 		return
 	}
+	if loc.Width == 0 {
+		return
+	}
+	if loc.Height == 0 {
+		return
+	}
 	x := int32(loc.X)
 	y := int32(loc.Y)
 	w := int32(loc.Width)
@@ -214,9 +220,15 @@ func (c *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selecti
 		w += x
 		x = 0
 	}
+	if x+w > int32(img.width) {
+		w = int32(img.width) - x
+	}
 	if y < 0 {
 		h += y
 		y = 0
+	}
+	if y+h > int32(img.height) {
+		h = int32(img.height) - y
 	}
 	y = int32(img.height) - h - y
 
