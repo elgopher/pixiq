@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"sync"
 
 	"github.com/jacekolszak/pixiq/colornames"
 	"github.com/jacekolszak/pixiq/glfw"
@@ -23,22 +24,46 @@ func main() {
 		if err != nil {
 			log.Panicf("blue OpenWindow failed: %v", err)
 		}
-		// Start the loop in the background, because Loop method blocks
+
+		var waitUntilAllClosed sync.WaitGroup
+		waitUntilAllClosed.Add(2)
+
+		// Start the loop in the background, because loop.Run blocks
 		// the current goroutine.
-		go loop.Run(redWindow, fillWith(colornames.Red))
+		go func() {
+			loop.Run(redWindow, func(frame *loop.Frame) {
+				fillScreenWith(frame.Screen(), colornames.Red)
+				if redWindow.ShouldClose() {
+					frame.StopLoopEventually()
+				}
+			})
+			// clean resources
+			redWindow.Close()
+			waitUntilAllClosed.Done()
+		}()
+
 		// Start another one.
-		loop.Run(blueWindow, fillWith(colornames.Blue))
+		go func() {
+			loop.Run(blueWindow, func(frame *loop.Frame) {
+				fillScreenWith(frame.Screen(), colornames.Blue)
+				if blueWindow.ShouldClose() {
+					frame.StopLoopEventually()
+				}
+			})
+			blueWindow.Close()
+			waitUntilAllClosed.Done()
+		}()
+
+		// wait for all windows to be closed
+		waitUntilAllClosed.Wait()
 	})
 }
 
-// fillWith returns a function filling whole Screen with specific color.
-func fillWith(color image.Color) func(frame *loop.Frame) {
-	return func(frame *loop.Frame) {
-		screen := frame.Screen()
-		for y := 0; y < screen.Height(); y++ {
-			for x := 0; x < screen.Width(); x++ {
-				screen.SetColor(x, y, color)
-			}
+// fillScreenWith returns a function filling whole Screen with specific color.
+func fillScreenWith(screen image.Selection, color image.Color) {
+	for y := 0; y < screen.Height(); y++ {
+		for x := 0; x < screen.Width(); x++ {
+			screen.SetColor(x, y, color)
 		}
 	}
 }

@@ -29,6 +29,10 @@ func main() {
 		loop.Run(window, func(frame *loop.Frame) {
 			screen := frame.Screen()
 			screen.Modify(cmd, selection)
+
+			if window.ShouldClose() {
+				frame.StopLoopEventually()
+			}
 		})
 	})
 }

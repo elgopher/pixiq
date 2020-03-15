@@ -25,6 +25,10 @@ func main() {
 			if len(pressedKeys) > 0 {
 				fmt.Println(pressedKeys)
 			}
+
+			if win.ShouldClose() {
+				frame.StopLoopEventually()
+			}
 		})
 	})
 }
