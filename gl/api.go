@@ -114,6 +114,8 @@ type API interface {
 	GetError() uint32
 	// ReadPixels reads a block of pixels from the frame buffer
 	ReadPixels(x int32, y int32, width int32, height int32, format uint32, xtype uint32, pixels unsafe.Pointer)
+	// Finish blocks until all GL execution is complete
+	Finish()
 	// Ptr takes a slice or pointer (to a singular scalar value or the first
 	// element of an array or slice) and returns its GL-compatible address.
 	//

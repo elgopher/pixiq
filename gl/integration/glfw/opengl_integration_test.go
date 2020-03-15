@@ -510,15 +510,45 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 					location:       image.AcceleratedImageLocation{},
 					expectedColors: []image.Color{image.Transparent},
 				},
-				"x out of bounds": {
+				"x equal image width": {
 					width: 1, height: 1,
 					location:       image.AcceleratedImageLocation{X: 1, Width: 1, Height: 1},
 					expectedColors: []image.Color{image.Transparent},
 				},
-				"y out of bounds": {
+				"x higher than image width": {
+					width: 1, height: 1,
+					location:       image.AcceleratedImageLocation{X: 2, Width: 1, Height: 1},
+					expectedColors: []image.Color{image.Transparent},
+				},
+				"negative x": {
+					width: 1, height: 1,
+					location:       image.AcceleratedImageLocation{X: -1, Width: 1, Height: 1},
+					expectedColors: []image.Color{image.Transparent},
+				},
+				"negative x, width 2": {
+					width: 1, height: 1,
+					location:       image.AcceleratedImageLocation{X: -1, Width: 2, Height: 1},
+					expectedColors: []image.Color{color},
+				},
+				"y equal image height": {
 					width: 1, height: 1,
 					location:       image.AcceleratedImageLocation{Y: 1, Width: 1, Height: 1},
 					expectedColors: []image.Color{image.Transparent},
+				},
+				"y higher than image height": {
+					width: 1, height: 1,
+					location:       image.AcceleratedImageLocation{Y: 2, Width: 1, Height: 1},
+					expectedColors: []image.Color{image.Transparent},
+				},
+				"negative y": {
+					width: 1, height: 1,
+					location:       image.AcceleratedImageLocation{Y: -1, Width: 1, Height: 1},
+					expectedColors: []image.Color{image.Transparent},
+				},
+				"negative y, height 2": {
+					width: 1, height: 1,
+					location:       image.AcceleratedImageLocation{Y: -1, Width: 1, Height: 2},
+					expectedColors: []image.Color{color},
 				},
 				"whole image": {
 					width: 1, height: 1,

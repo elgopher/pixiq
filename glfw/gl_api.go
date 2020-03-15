@@ -404,6 +404,13 @@ func (g *context) ReadPixels(x int32, y int32, width int32, height int32, format
 	})
 }
 
+// Finish blocks until all GL execution is complete
+func (g *context) Finish() {
+	g.run(func() {
+		gl.Finish()
+	})
+}
+
 // Ptr takes a slice or pointer (to a singular scalar value or the first
 // element of an array or slice) and returns its GL-compatible address.
 //
