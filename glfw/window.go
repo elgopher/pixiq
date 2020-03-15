@@ -27,6 +27,13 @@ type Window struct {
 
 // Draw draws a screen image in the window
 func (w *Window) Draw() {
+	w.DrawIntoBackBuffer()
+	w.SwapBuffers()
+}
+
+// DrawIntoBackBuffer draws a screen image into the back buffer. To make it visible
+// to the user SwapBuffers must be executed.
+func (w *Window) DrawIntoBackBuffer() {
 	w.screenImage.Upload()
 	w.screenContextAPI.Finish()
 	var width, height int
@@ -35,6 +42,10 @@ func (w *Window) Draw() {
 	})
 	w.api.Viewport(0, 0, int32(width), int32(height))
 	w.screenPolygon.draw()
+}
+
+// SwapBuffers makes current back buffer visible to the user.
+func (w *Window) SwapBuffers() {
 	w.mainThreadLoop.Execute(w.glfwWindow.SwapBuffers)
 }
 
