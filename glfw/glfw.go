@@ -197,14 +197,13 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 	screenAcceleratedImage := g.context.NewAcceleratedImage(width, height)
 	screenImage := image.New(width, height, screenAcceleratedImage)
 	win := &Window{
-		mainThreadLoop:         g.mainThreadLoop,
-		keyboardEvents:         keyboardEvents,
-		requestedWidth:         width,
-		requestedHeight:        height,
-		screenAcceleratedImage: screenAcceleratedImage,
-		screenImage:            screenImage,
-		mainContext:            g.context,
-		zoom:                   1,
+		mainThreadLoop:   g.mainThreadLoop,
+		keyboardEvents:   keyboardEvents,
+		requestedWidth:   width,
+		requestedHeight:  height,
+		screenImage:      screenImage,
+		screenContextAPI: g.context.API(),
+		zoom:             1,
 	}
 	var err error
 	g.mainThreadLoop.Execute(func() {
@@ -248,7 +247,7 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 	}
 	// in this window context there is only one program used with one texture
 	win.api.UseProgram(win.program.ID())
-	win.api.BindTexture(gl33.TEXTURE_2D, win.screenAcceleratedImage.TextureID())
+	win.api.BindTexture(gl33.TEXTURE_2D, screenAcceleratedImage.TextureID())
 	return win, nil
 }
 
