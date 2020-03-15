@@ -58,6 +58,10 @@ func main() {
 
 More examples you can find in [examples](examples) directory.
 
+## Basic primitives
+
+![](docs/pixiq-primitives.gif)
+
 ## Project status
 
 The project is under heavy development at the moment, and some of its features are experimental/missing
