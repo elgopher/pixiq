@@ -316,6 +316,10 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 		texture := context.NewAcceleratedImage(1, 1)
 		output := image.AcceleratedImageSelection{
 			Image: texture,
+			Location: image.AcceleratedImageLocation{
+				Width:  1,
+				Height: 1,
+			},
 		}
 		tests := map[string]struct {
 			selections []image.AcceleratedImageSelection
