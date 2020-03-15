@@ -8,11 +8,7 @@ type Screen interface {
 	// Returns the image spanning the whole screen.
 	Image() *image.Image
 	// Draw draws the image on the screen.
-	// If double buffering is used it may draw to the invisible buffer.
 	Draw()
-	// SwapImages makes last drawn image visible (if double buffering was used,
-	// otherwise it may be a no-op)
-	SwapImages()
 }
 
 // Run starts the screen loop. It will execute onEachFrame function for each frame,
@@ -23,7 +19,6 @@ func Run(screen Screen, onEachFrame func(frame *Frame)) {
 		frame.screen = screen.Image().WholeImageSelection()
 		onEachFrame(frame)
 		screen.Draw()
-		screen.SwapImages()
 	}
 }
 
