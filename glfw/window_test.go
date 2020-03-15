@@ -14,7 +14,7 @@ import (
 	"github.com/jacekolszak/pixiq/keyboard"
 )
 
-func TestWindow_Draw(t *testing.T) {
+func TestWindow_DrawIntoBackBuffer(t *testing.T) {
 	t.Run("should draw screen image", func(t *testing.T) {
 		color1 := image.RGBA(10, 20, 30, 40)
 		color2 := image.RGBA(50, 60, 70, 80)
@@ -30,7 +30,7 @@ func TestWindow_Draw(t *testing.T) {
 			defer window.Close()
 			window.Image().WholeImageSelection().SetColor(0, 0, color1)
 			// when
-			window.Draw()
+			window.DrawIntoBackBuffer()
 			// then
 			expected := []image.Color{color1}
 			assert.Equal(t, expected, framebufferPixels(window.ContextAPI(), 0, 0, 1, 1))
@@ -46,7 +46,7 @@ func TestWindow_Draw(t *testing.T) {
 			img.WholeImageSelection().SetColor(0, 0, color1)
 			img.WholeImageSelection().SetColor(0, 1, color2)
 			// when
-			window.Draw()
+			window.DrawIntoBackBuffer()
 			// then
 			expected := []image.Color{color2, color1}
 			assert.Equal(t, expected, framebufferPixels(window.ContextAPI(), 0, 0, 1, 2))
@@ -62,7 +62,7 @@ func TestWindow_Draw(t *testing.T) {
 			img.WholeImageSelection().SetColor(0, 0, color1)
 			img.WholeImageSelection().SetColor(1, 0, color2)
 			// when
-			window.Draw()
+			window.DrawIntoBackBuffer()
 			// then
 			expected := []image.Color{color1, color2}
 			assert.Equal(t, expected, framebufferPixels(window.ContextAPI(), 0, 0, 2, 1))
@@ -81,7 +81,7 @@ func TestWindow_Draw(t *testing.T) {
 			selection.SetColor(0, 1, color3)
 			selection.SetColor(1, 1, color4)
 			// when
-			window.Draw()
+			window.DrawIntoBackBuffer()
 			// then
 			expected := []image.Color{color3, color4, color1, color2}
 			assert.Equal(t, expected, framebufferPixels(window.ContextAPI(), 0, 0, 2, 2))
@@ -100,7 +100,7 @@ func TestWindow_Draw(t *testing.T) {
 					img := window.Image()
 					img.WholeImageSelection().SetColor(0, 0, color1)
 					// when
-					window.Draw()
+					window.DrawIntoBackBuffer()
 					// then
 					expected := []image.Color{color1}
 					assert.Equal(t, expected, framebufferPixels(window.ContextAPI(), 0, 0, 1, 1))
@@ -121,7 +121,7 @@ func TestWindow_Draw(t *testing.T) {
 					img := window.Image()
 					img.WholeImageSelection().SetColor(0, 0, color1)
 					// when
-					window.Draw()
+					window.DrawIntoBackBuffer()
 					// then
 					expected := make([]image.Color, zoom*zoom)
 					for i := 0; i < len(expected); i++ {
@@ -143,12 +143,12 @@ func TestWindow_Draw(t *testing.T) {
 			require.NoError(t, err)
 			defer window2.Close()
 			// when
-			window1.Draw()
+			window1.DrawIntoBackBuffer()
 			// then
 			expected := []image.Color{color1}
 			assert.Equal(t, expected, framebufferPixels(window1.ContextAPI(), 0, 0, 1, 1))
 			// when
-			window2.Draw()
+			window2.DrawIntoBackBuffer()
 			// then
 			expected = []image.Color{color2}
 			assert.Equal(t, expected, framebufferPixels(window2.ContextAPI(), 0, 0, 1, 1))
@@ -168,12 +168,12 @@ func TestWindow_Draw(t *testing.T) {
 			require.NoError(t, err)
 			defer window2.Close()
 			// when
-			window1.Draw()
+			window1.DrawIntoBackBuffer()
 			// then
 			expected := []image.Color{color1}
 			assert.Equal(t, expected, framebufferPixels(window1.ContextAPI(), 0, 0, 1, 1))
 			// when
-			window2.Draw()
+			window2.DrawIntoBackBuffer()
 			// then
 			expected = []image.Color{color2}
 			assert.Equal(t, expected, framebufferPixels(window2.ContextAPI(), 0, 0, 1, 1))
