@@ -25,7 +25,8 @@ type Window struct {
 	program          *gl.Program
 }
 
-// Draw draws a screen image in the window
+// Draw draws a screen image to the invisible buffer. It will be shown in window
+// after SwapImages is called.
 func (w *Window) Draw() {
 	w.screenImage.Upload()
 	w.screenContextAPI.Finish()
@@ -35,6 +36,10 @@ func (w *Window) Draw() {
 	})
 	w.api.Viewport(0, 0, int32(width), int32(height))
 	w.screenPolygon.draw()
+}
+
+// SwapImages makes last drawn image visible in window.
+func (w *Window) SwapImages() {
 	w.mainThreadLoop.Execute(w.glfwWindow.SwapBuffers)
 }
 

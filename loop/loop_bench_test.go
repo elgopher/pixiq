@@ -34,3 +34,6 @@ func (d *noopScreen) Image() *image.Image {
 
 func (d *noopScreen) Draw() {
 }
+
+func (d *noopScreen) SwapImages() {
+}
