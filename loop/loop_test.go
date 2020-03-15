@@ -117,35 +117,6 @@ func TestRun(t *testing.T) {
 		})
 	})
 
-	t.Run("should swap images", func(t *testing.T) {
-		t.Run("after first frame", func(t *testing.T) {
-			screen := newScreenMock(1, 1)
-			// when
-			loop.Run(screen, func(frame *loop.Frame) {
-				frame.StopLoopEventually()
-			})
-			// then
-			require.Len(t, screen.imagesDrawn, 1)
-			assert.Same(t, screen.imagesDrawn[0], screen.visibleImage)
-		})
-		t.Run("after second frame", func(t *testing.T) {
-			var (
-				screen     = newScreenMock(1, 1)
-				firstFrame = true
-			)
-			// when
-			loop.Run(screen, func(frame *loop.Frame) {
-				if !firstFrame {
-					frame.StopLoopEventually()
-				}
-				firstFrame = false
-			})
-			// then
-			require.Len(t, screen.imagesDrawn, 2)
-			assert.Same(t, screen.imagesDrawn[1], screen.visibleImage)
-		})
-	})
-
 }
 
 type screenMock struct {
@@ -153,7 +124,6 @@ type screenMock struct {
 	imagesDrawn  []*image.Image
 	width        int
 	height       int
-	visibleImage *image.Image
 }
 
 func newScreenMock(width, height int) *screenMock {
@@ -172,12 +142,6 @@ func (f *screenMock) Image() *image.Image {
 func (f *screenMock) Draw() {
 	f.currentImage = clone(f.currentImage)
 	f.imagesDrawn = append(f.imagesDrawn, f.currentImage)
-}
-
-func (f *screenMock) SwapImages() {
-	f.visibleImage = f.currentImage
-	newCurrentImage := image.New(f.width, f.height, &acceleratedImageStub{})
-	f.currentImage = newCurrentImage
 }
 
 func clone(original *image.Image) *image.Image {
