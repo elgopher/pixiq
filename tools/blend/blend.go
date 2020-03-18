@@ -2,44 +2,71 @@ package blend
 
 import "github.com/jacekolszak/pixiq/image"
 
+type ColorBlender interface {
+	BlendSourceToTargetColor(source, target image.Color) image.Color
+}
+
+func New(colorBlender ColorBlender) *Tool {
+	return &Tool{
+		colorBlender: colorBlender,
+	}
+}
+
 // TODO For optimization purposes there can be a dedicated tool which will override
-// colors without using a blendFunc
-var Source = func(source, target image.Color) image.Color {
+// colors without using a ColorBlender
+func NewSource() *Source {
+	s := &Source{}
+	s.Tool = New(s)
+	return s
+}
+
+type Source struct {
+	*Tool
+}
+
+func (s Source) BlendSourceToTargetColor(source, target image.Color) image.Color {
 	return source
+}
+
+func NewSourceOver() *SourceOver {
+	return NewSourceOverWithOpacity(100)
+}
+
+func NewSourceOverWithOpacity(opacity int) *SourceOver {
+	tool := &SourceOver{opacity: opacity}
+	tool.Tool = New(tool)
+	return tool
 }
 
 // Aka Normal
-var SourceOver = func(source, target image.Color) image.Color {
+type SourceOver struct {
+	*Tool
+	opacity int
+}
+
+func (s *SourceOver) BlendSourceToTargetColor(source, target image.Color) image.Color {
 	return source
 }
 
-func SourceOverWithOpacity(opacity byte) func(source, target image.Color) image.Color {
-	return func(source, target image.Color) image.Color {
-		return source
-	}
-}
-
-func New(blendFunc func(source, target image.Color) image.Color) *Tool {
-	return &Tool{
-		blendFunc: blendFunc,
-	}
+func (s *SourceOver) SetOpacity(opacity int) {
+	s.opacity = opacity
 }
 
 type Tool struct {
-	blendFunc func(source, target image.Color) image.Color
+	colorBlender ColorBlender
 }
 
-// BlendSource blends source into target.
+// BlendSourceToTarget blends source into target.
 //
 // If target has 0x0 size then whole source is blended, otherwise source is clamped.
-func (t *Tool) BlendSource(source, target image.Selection) {
+func (t *Tool) BlendSourceToTarget(source, target image.Selection) {
 	lines := source.Lines()
 	for y := 0; y < lines.Length(); y++ {
 		line := lines.LineForRead(y)
 		for x := 0; x < len(line); x++ {
 			sourceColor := line[x]
 			targetColor := target.Color(x, y)
-			target.SetColor(x, y, t.blendFunc(sourceColor, targetColor))
+			target.SetColor(x, y, t.colorBlender.BlendSourceToTargetColor(sourceColor, targetColor))
 		}
 	}
 }

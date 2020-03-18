@@ -10,7 +10,7 @@ import (
 )
 
 type blender interface {
-	BlendSource(source, target image.Selection)
+	BlendSourceToTarget(source, target image.Selection)
 }
 
 func main() {
@@ -21,9 +21,9 @@ func main() {
 		}
 		tools := []blender{
 			// TODO GPU
-			blend.New(blend.Source),
-			blend.New(blend.SourceOver),
-			blend.New(blend.SourceOverWithOpacity(100)),
+			blend.NewSource(),
+			blend.NewSourceOver(),
+			blend.NewSourceOverWithOpacity(100),
 		}
 		currentTool := 0
 
@@ -42,7 +42,7 @@ func main() {
 			tool := tools[currentTool]
 			// face will be blended into screen at a given position
 			target := frame.Screen().Selection(position.x, position.y)
-			tool.BlendSource(face, target)
+			tool.BlendSourceToTarget(face, target)
 
 			if window.ShouldClose() {
 				frame.StopLoopEventually()
