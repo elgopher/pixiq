@@ -60,10 +60,19 @@ type Tool struct {
 //
 // If target has 0x0 size then whole source is blended, otherwise source is clamped.
 func (t *Tool) BlendSourceToTarget(source, target image.Selection) {
-	lines := source.Lines()
-	for y := 0; y < lines.Length(); y++ {
-		line := lines.LineForRead(y)
-		for x := 0; x < len(line); x++ {
+	sourceLines := source.Lines()
+	targetLines := target.Lines()
+	lines := sourceLines.Length()
+	if targetLines.Length() > 0 && lines > targetLines.Length() {
+		lines = targetLines.Length()
+	}
+	for y := 0; y < lines; y++ {
+		line := sourceLines.LineForRead(y)
+		length := len(line)
+		if target.Width() > 0 && length > target.Width() {
+			length = target.Width()
+		}
+		for x := 0; x < length; x++ {
 			sourceColor := line[x]
 			targetColor := target.Color(x, y)
 			target.SetColor(x, y, t.colorBlender.BlendSourceToTargetColor(sourceColor, targetColor))
