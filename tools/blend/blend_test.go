@@ -26,8 +26,9 @@ func TestBlendSourceToTarget(t *testing.T) {
 	blenders := map[string]interface {
 		BlendSourceToTarget(source, target image.Selection)
 	}{
-		"Source": blend.NewSource(),
-		"Tool":   blend.New(multiplyColors{}),
+		"Tool":       blend.New(multiplyColors{}),
+		"Source":     blend.NewSource(),
+		"SourceOver": blend.NewSourceOver(),
 	}
 	for name, blender := range blenders {
 
