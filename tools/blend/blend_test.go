@@ -328,6 +328,43 @@ func TestTool_BlendSourceToTarget(t *testing.T) {
 					},
 				},
 			},
+			"target out boundaries 1": {
+				sourceSelection: newImage([][]image.Color{
+					{
+						image.RGBA(1, 2, 3, 4), image.RGBA(5, 6, 7, 8),
+					},
+				}).WholeImageSelection(),
+				targetSelection: newImage([][]image.Color{
+					{
+						image.RGBA(1, 2, 3, 4),
+					},
+				}).Selection(-1, 0),
+				expectedPixels: [][]image.Color{
+					{
+						image.RGBA(5, 12, 21, 32),
+					},
+				},
+			},
+			"target out boundaries 2": {
+				sourceSelection: newImage([][]image.Color{
+					{
+						image.RGBA(1, 2, 3, 4),
+					},
+					{
+						image.RGBA(5, 6, 7, 8),
+					},
+				}).WholeImageSelection(),
+				targetSelection: newImage([][]image.Color{
+					{
+						image.RGBA(1, 2, 3, 4),
+					},
+				}).Selection(0, -1),
+				expectedPixels: [][]image.Color{
+					{
+						image.RGBA(5, 12, 21, 32),
+					},
+				},
+			},
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
