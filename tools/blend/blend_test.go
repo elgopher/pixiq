@@ -260,6 +260,74 @@ func TestTool_BlendSourceToTarget(t *testing.T) {
 					},
 				},
 			},
+			"source out of boundaries 1": {
+				sourceSelection: newImage([][]image.Color{
+					{
+						image.RGBA(5, 6, 7, 8),
+					},
+				}).Selection(-1, 0).WithSize(1, 1),
+				targetSelection: newImage([][]image.Color{
+					{
+						image.RGBA(1, 2, 3, 4),
+					},
+				}).WholeImageSelection(),
+				expectedPixels: [][]image.Color{
+					{
+						image.RGBA(0, 0, 0, 0),
+					},
+				},
+			},
+			"source out of boundaries 2": {
+				sourceSelection: newImage([][]image.Color{
+					{
+						image.RGBA(5, 6, 7, 8),
+					},
+				}).Selection(1, 0).WithSize(1, 1),
+				targetSelection: newImage([][]image.Color{
+					{
+						image.RGBA(1, 2, 3, 4),
+					},
+				}).WholeImageSelection(),
+				expectedPixels: [][]image.Color{
+					{
+						image.RGBA(0, 0, 0, 0),
+					},
+				},
+			},
+			"source out of boundaries 3": {
+				sourceSelection: newImage([][]image.Color{
+					{
+						image.RGBA(5, 6, 7, 8),
+					},
+				}).Selection(0, -1).WithSize(1, 1),
+				targetSelection: newImage([][]image.Color{
+					{
+						image.RGBA(1, 2, 3, 4),
+					},
+				}).WholeImageSelection(),
+				expectedPixels: [][]image.Color{
+					{
+						image.RGBA(0, 0, 0, 0),
+					},
+				},
+			},
+			"source out of boundaries 4": {
+				sourceSelection: newImage([][]image.Color{
+					{
+						image.RGBA(5, 6, 7, 8),
+					},
+				}).Selection(0, 1).WithSize(1, 1),
+				targetSelection: newImage([][]image.Color{
+					{
+						image.RGBA(1, 2, 3, 4),
+					},
+				}).WholeImageSelection(),
+				expectedPixels: [][]image.Color{
+					{
+						image.RGBA(0, 0, 0, 0),
+					},
+				},
+			},
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
