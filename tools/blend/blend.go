@@ -7,6 +7,9 @@ type ColorBlender interface {
 }
 
 func New(colorBlender ColorBlender) *Tool {
+	if colorBlender == nil {
+		panic("nil colorBlender")
+	}
 	return &Tool{
 		colorBlender: colorBlender,
 	}
@@ -61,6 +64,12 @@ type Tool struct {
 // If target has 0x0 size then whole source is blended, otherwise source is clamped.
 func (t *Tool) BlendSourceToTarget(source, target image.Selection) {
 	sourceLines := source.Lines()
+	if sourceLines.Length() == 0 {
+		return
+	}
+	if len(sourceLines.LineForRead(0)) == 0 {
+		return
+	}
 	targetLines := target.Lines()
 	lines := sourceLines.Length()
 	if targetLines.Length() > 0 && lines > targetLines.Length() {
@@ -78,4 +87,7 @@ func (t *Tool) BlendSourceToTarget(source, target image.Selection) {
 			target.SetColor(x, y, t.colorBlender.BlendSourceToTargetColor(sourceColor, targetColor))
 		}
 	}
+	sourceColor := source.Color(0, 0)
+	targetColor := target.Color(0, 0)
+	target.SetColor(0, 0, t.colorBlender.BlendSourceToTargetColor(sourceColor, targetColor))
 }
