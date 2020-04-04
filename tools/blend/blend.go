@@ -17,8 +17,6 @@ func New(colorBlender ColorBlender) *Tool {
 	}
 }
 
-// TODO For optimization purposes there can be a dedicated tool which will override
-// colors without using a ColorBlender
 func NewSource() *Source {
 	s := &Source{}
 	s.Tool = New(s)
@@ -31,6 +29,22 @@ type Source struct {
 
 func (s Source) BlendSourceToTargetColor(source, target image.Color) image.Color {
 	return source
+}
+
+func (s *Source) BlendSourceToTarget(source, target image.Selection) {
+	width := source.Width()
+	if target.Width() > 0 && target.Width() < width {
+		width = target.Width()
+	}
+	height := source.Height()
+	if target.Height() > 0 && target.Height() < height {
+		height = target.Height()
+	}
+	for y := 0; y < height; y++ {
+		for x := 0; x < width; x++ {
+			target.SetColor(x, y, source.Color(x, y))
+		}
+	}
 }
 
 func NewSourceOver() *SourceOver {
@@ -77,11 +91,17 @@ func (t *Tool) BlendSourceToTarget(source, target image.Selection) {
 	//if targetLines.Length() > 0 && lines > targetLines.Length() {
 	//	lines = targetLines.Length()
 	//}
+	//xOffset := sourceLines.XOffset()
 	//for y := 0; y < lines; y++ {
 	//	line := sourceLines.LineForRead(y)
 	//	length := len(line)
 	//	if target.Width() > 0 && length > target.Width() {
 	//		length = target.Width()
+	//	}
+	//	for x := 0; x < xOffset; x++ {
+	//		sourceColor := image.Transparent
+	//		targetColor := target.Color(x, y)
+	//		target.SetColor(x, y, t.colorBlender.BlendSourceToTargetColor(sourceColor, targetColor))
 	//	}
 	//	for x := 0; x < length; x++ {
 	//		sourceColor := line[x]
