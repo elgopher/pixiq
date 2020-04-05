@@ -25,13 +25,15 @@ type Source struct{}
 
 func (s *Source) BlendSourceToTarget(source, target image.Selection) {
 	target = target.WithSize(source.Width(), source.Height())
-	sourceLines := source.Lines()
-	targetLines := target.Lines()
-	sourceXOffset := sourceLines.XOffset()
-	sourceYOffset := sourceLines.YOffset()
-	targetXOffset := targetLines.XOffset()
-	targetYOffset := targetLines.YOffset()
-	height := source.Height()
+	var (
+		sourceLines   = source.Lines()
+		targetLines   = target.Lines()
+		sourceXOffset = sourceLines.XOffset()
+		sourceYOffset = sourceLines.YOffset()
+		targetXOffset = targetLines.XOffset()
+		targetYOffset = targetLines.YOffset()
+		height        = source.Height()
+	)
 	if height > targetLines.Length()+targetYOffset {
 		height = targetLines.Length() + targetYOffset
 	}
@@ -44,8 +46,8 @@ func (s *Source) BlendSourceToTarget(source, target image.Selection) {
 			}
 			continue
 		}
-		targetLine := targetLines.LineForWrite(y - targetYOffset)
 		sourceLine := sourceLines.LineForRead(y - sourceYOffset)
+		targetLine := targetLines.LineForWrite(y - targetYOffset)
 		for x := targetXOffset; x < source.Width(); x++ {
 			sourceOfBounds := x < sourceXOffset || x >= len(sourceLine)
 			if sourceOfBounds {
@@ -85,8 +87,8 @@ type Tool struct {
 	colorBlender ColorBlender
 }
 
-// BlendSourceToTarget blends source into target. The source is not clamped by target
-// size.
+// BlendSourceToTarget blends source into target. Only position of the target Selection
+// is used and the source is not clamped by the target size.
 func (t *Tool) BlendSourceToTarget(source, target image.Selection) {
 	for y := 0; y < source.Height(); y++ {
 		for x := 0; x < source.Width(); x++ {
