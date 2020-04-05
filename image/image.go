@@ -387,7 +387,7 @@ func (l Lines) line(line int) []Color {
 	if line >= l.Length() {
 		panic("line out-of-bounds the image")
 	}
-	start := (l.image.heightMinusOne-line-l.startY-l.yOffset)*l.image.width + l.startX + l.xOffset // TODO it was a bug - test this fix
+	start := (l.image.heightMinusOne-line-l.startY-l.yOffset)*l.image.width + l.startX + l.xOffset
 	stop := start + l.width
 	if start < 0 {
 		start = 0

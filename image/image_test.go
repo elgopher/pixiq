@@ -1134,6 +1134,18 @@ func TestSelection_LineForXXX(t *testing.T) {
 						line:      0,
 						expected:  []image.Color{color2},
 					},
+					"9": {
+						image:     image1x1,
+						selection: image1x1.Selection(0, -1).WithSize(1, 2),
+						line:      0,
+						expected:  []image.Color{color1},
+					},
+					"10": {
+						image:     image1x1,
+						selection: image1x1.Selection(-1, 0).WithSize(2, 1),
+						line:      0,
+						expected:  []image.Color{color1},
+					},
 				}
 				for name, test := range tests {
 					t.Run(name, func(t *testing.T) {

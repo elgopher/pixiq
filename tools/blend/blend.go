@@ -25,14 +25,14 @@ type Source struct{}
 
 func (s *Source) BlendSourceToTarget(source, target image.Selection) {
 	target = target.WithSize(source.Width(), source.Height())
-	targetLines := target.Lines()
 	sourceLines := source.Lines()
+	targetLines := target.Lines()
 	sourceXOffset := sourceLines.XOffset()
 	sourceYOffset := sourceLines.YOffset()
 	targetXOffset := targetLines.XOffset()
 	targetYOffset := targetLines.YOffset()
 	height := source.Height()
-	if height >= targetLines.Length()+targetYOffset {
+	if height > targetLines.Length()+targetYOffset {
 		height = targetLines.Length() + targetYOffset
 	}
 	for y := targetYOffset; y < height; y++ {
