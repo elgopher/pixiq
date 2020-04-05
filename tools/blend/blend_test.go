@@ -287,7 +287,7 @@ func TestTool_BlendSourceToTarget(t *testing.T) {
 					},
 				},
 			},
-			"target out boundaries 1": {
+			"target out boundaries x=-1": {
 				sourceSelection: newImage([][]image.Color{
 					{
 						image.RGBA(1, 2, 3, 4), image.RGBA(5, 6, 7, 8),
@@ -304,7 +304,7 @@ func TestTool_BlendSourceToTarget(t *testing.T) {
 					},
 				},
 			},
-			"target out boundaries 2": {
+			"target out boundaries y=-1": {
 				sourceSelection: newImage([][]image.Color{
 					{
 						image.RGBA(1, 2, 3, 4),
@@ -476,7 +476,7 @@ func TestSource_BlendSourceToTarget(t *testing.T) {
 					},
 				},
 			},
-			"target out boundaries 1": {
+			"target out boundaries x=-1": {
 				sourceSelection: newImage([][]image.Color{
 					{
 						image.RGBA(1, 2, 3, 4), image.RGBA(5, 6, 7, 8),
@@ -493,7 +493,7 @@ func TestSource_BlendSourceToTarget(t *testing.T) {
 					},
 				},
 			},
-			"target out boundaries 2": {
+			"target out boundaries y=-1": {
 				sourceSelection: newImage([][]image.Color{
 					{
 						image.RGBA(1, 2, 3, 4),
