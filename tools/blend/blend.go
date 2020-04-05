@@ -18,33 +18,32 @@ func New(colorBlender ColorBlender) *Tool {
 }
 
 func NewSource() *Source {
-	s := &Source{}
-	s.Tool = New(s)
-	return s
+	return &Source{}
 }
 
-type Source struct {
-	*Tool
-}
-
-func (s Source) BlendSourceToTargetColor(source, target image.Color) image.Color {
-	return source
-}
+type Source struct{}
 
 func (s *Source) BlendSourceToTarget(source, target image.Selection) {
-	width := source.Width()
-	if target.Width() > 0 && target.Width() < width {
-		width = target.Width()
-	}
-	height := source.Height()
-	if target.Height() > 0 && target.Height() < height {
-		height = target.Height()
-	}
-	for y := 0; y < height; y++ {
-		for x := 0; x < width; x++ {
+	for y := 0; y < source.Height(); y++ {
+		for x := 0; x < source.Width(); x++ {
 			target.SetColor(x, y, source.Color(x, y))
 		}
 	}
+	//if source.Width() == 0 || source.Height() == 0 {
+	//	return
+	//}
+	//sourceLines := source.Lines()
+	//if target.Width() == 0 && target.Height() == 0 {
+	//	target = target.WithSize(source.Width(), source.Height())
+	//}
+	//targetLines := target.Lines()
+	//for y := 0; y < targetLines.Length(); y++ {
+	//	targetLine := targetLines.LineForWrite(y)
+	//	sourceLine := sourceLines.LineForRead(y)
+	//	for x := 0; x < len(targetLine); x++ {
+	//		targetLine[x] = sourceLine[x]
+	//	}
+	//}
 }
 
 func NewSourceOver() *SourceOver {
@@ -75,50 +74,11 @@ type Tool struct {
 	colorBlender ColorBlender
 }
 
-// BlendSourceToTarget blends source into target.
-//
-// If target has 0x0 size then whole source is blended, otherwise source is clamped.
+// BlendSourceToTarget blends source into target. The source is not clamped by target
+// size.
 func (t *Tool) BlendSourceToTarget(source, target image.Selection) {
-	//sourceLines := source.Lines()
-	//if sourceLines.Length() == 0 {
-	//	return
-	//}
-	//if len(sourceLines.LineForRead(0)) == 0 {
-	//	return
-	//}
-	//targetLines := target.Lines()
-	//lines := sourceLines.Length()
-	//if targetLines.Length() > 0 && lines > targetLines.Length() {
-	//	lines = targetLines.Length()
-	//}
-	//xOffset := sourceLines.XOffset()
-	//for y := 0; y < lines; y++ {
-	//	line := sourceLines.LineForRead(y)
-	//	length := len(line)
-	//	if target.Width() > 0 && length > target.Width() {
-	//		length = target.Width()
-	//	}
-	//	for x := 0; x < xOffset; x++ {
-	//		sourceColor := image.Transparent
-	//		targetColor := target.Color(x, y)
-	//		target.SetColor(x, y, t.colorBlender.BlendSourceToTargetColor(sourceColor, targetColor))
-	//	}
-	//	for x := 0; x < length; x++ {
-	//		sourceColor := line[x]
-	//		targetColor := target.Color(x, y)
-	//		target.SetColor(x, y, t.colorBlender.BlendSourceToTargetColor(sourceColor, targetColor))
-	//	}
-	//}
-	width := source.Width()
-	if target.Width() > 0 && target.Width() < width {
-		width = target.Width()
-	}
-	height := source.Height()
-	if target.Height() > 0 && target.Height() < height {
-		height = target.Height()
-	}
-	for y := 0; y < height; y++ {
-		for x := 0; x < width; x++ {
+	for y := 0; y < source.Height(); y++ {
+		for x := 0; x < source.Width(); x++ {
 			sourceColor := source.Color(x, y)
 			targetColor := target.Color(x, y)
 			color := t.colorBlender.BlendSourceToTargetColor(sourceColor, targetColor)

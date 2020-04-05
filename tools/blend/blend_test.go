@@ -60,36 +60,6 @@ func TestBlendSourceToTarget(t *testing.T) {
 				}
 			})
 
-			t.Run("should blend whole source when target is 0 size", func(t *testing.T) {
-				tests := map[string]struct {
-					width, height int
-				}{
-					"height 0": {
-						width: 1,
-					},
-					"width 0": {
-						height: 1,
-					},
-				}
-				for name, test := range tests {
-					t.Run(name, func(t *testing.T) {
-						source := image.New(1, 1, fake.NewAcceleratedImage(1, 1)).WholeImageSelection()
-						target := image.New(1, 1,
-							fake.NewAcceleratedImage(1, 1)).
-							Selection(0, 0).
-							WithSize(test.width, test.height)
-						source.SetColor(0, 0, image.RGBA(1, 2, 3, 4))
-						target.SetColor(0, 0, image.RGBA(5, 6, 7, 8))
-						tool := blend.New(multiplyColors{})
-						// when
-						tool.BlendSourceToTarget(source, target)
-						// then
-						// target == source
-						assert.Equal(t, image.RGBA(5, 12, 21, 32), target.Color(0, 0))
-					})
-				}
-			})
-
 			t.Run("source selection of boundaries", func(t *testing.T) {
 				tests := map[string]struct {
 					sourceSelection, targetSelection image.Selection
@@ -105,7 +75,7 @@ func TestBlendSourceToTarget(t *testing.T) {
 							{
 								image.RGBA(1, 2, 3, 4),
 							},
-						}).WholeImageSelection(),
+						}).Selection(0, 0),
 						expectedPixels: [][]image.Color{
 							{
 								image.RGBA(0, 0, 0, 0),
@@ -122,7 +92,7 @@ func TestBlendSourceToTarget(t *testing.T) {
 							{
 								image.RGBA(1, 2, 3, 4),
 							},
-						}).WholeImageSelection(),
+						}).Selection(0, 0),
 						expectedPixels: [][]image.Color{
 							{
 								image.RGBA(0, 0, 0, 0),
@@ -139,7 +109,7 @@ func TestBlendSourceToTarget(t *testing.T) {
 							{
 								image.RGBA(1, 2, 3, 4),
 							},
-						}).WholeImageSelection(),
+						}).Selection(0, 0),
 						expectedPixels: [][]image.Color{
 							{
 								image.RGBA(0, 0, 0, 0),
@@ -156,7 +126,7 @@ func TestBlendSourceToTarget(t *testing.T) {
 							{
 								image.RGBA(1, 2, 3, 4),
 							},
-						}).WholeImageSelection(),
+						}).Selection(0, 0),
 						expectedPixels: [][]image.Color{
 							{
 								image.RGBA(0, 0, 0, 0),
@@ -194,7 +164,7 @@ func TestTool_BlendSourceToTarget(t *testing.T) {
 					{
 						image.RGBA(5, 6, 7, 8),
 					},
-				}).WholeImageSelection(),
+				}).Selection(0, 0),
 				expectedPixels: [][]image.Color{
 					{
 						image.RGBA(5, 12, 21, 32),
@@ -211,7 +181,7 @@ func TestTool_BlendSourceToTarget(t *testing.T) {
 					{
 						image.RGBA(5, 6, 7, 8), image.RGBA(9, 10, 11, 12),
 					},
-				}).WholeImageSelection(),
+				}).Selection(0, 0),
 				expectedPixels: [][]image.Color{
 					{
 						image.RGBA(5, 12, 21, 32), image.RGBA(9, 10, 11, 12),
@@ -225,7 +195,7 @@ func TestTool_BlendSourceToTarget(t *testing.T) {
 				targetSelection: newImage([][]image.Color{
 					{image.RGBA(5, 6, 7, 8)},
 					{image.RGBA(9, 10, 11, 12)},
-				}).WholeImageSelection(),
+				}).Selection(0, 0),
 				expectedPixels: [][]image.Color{
 					{image.RGBA(5, 12, 21, 32)},
 					{image.RGBA(9, 10, 11, 12)},
@@ -241,7 +211,7 @@ func TestTool_BlendSourceToTarget(t *testing.T) {
 					{
 						image.RGBA(1, 2, 3, 4), image.RGBA(6, 7, 8, 9),
 					},
-				}).WholeImageSelection(),
+				}).Selection(0, 0),
 				expectedPixels: [][]image.Color{
 					{
 						image.RGBA(5, 12, 21, 32), image.RGBA(54, 70, 88, 108),
@@ -258,7 +228,7 @@ func TestTool_BlendSourceToTarget(t *testing.T) {
 					{
 						image.RGBA(1, 2, 3, 4), image.RGBA(6, 7, 8, 9),
 					},
-				}).WholeImageSelection(),
+				}).Selection(0, 0),
 				expectedPixels: [][]image.Color{
 					{
 						image.RGBA(5, 12, 21, 32), image.RGBA(6, 7, 8, 9),
@@ -281,50 +251,7 @@ func TestTool_BlendSourceToTarget(t *testing.T) {
 					{
 						image.RGBA(6, 7, 8, 9),
 					},
-				}).WholeImageSelection(),
-				expectedPixels: [][]image.Color{
-					{
-						image.RGBA(5, 12, 21, 32),
-					},
-					{
-						image.RGBA(6, 7, 8, 9),
-					},
-				},
-			},
-			"target clamped x": {
-				sourceSelection: newImage([][]image.Color{
-					{
-						image.RGBA(5, 6, 7, 8), image.RGBA(9, 10, 11, 12),
-					},
-				}).WholeImageSelection(),
-				targetSelection: newImage([][]image.Color{
-					{
-						image.RGBA(1, 2, 3, 4), image.RGBA(6, 7, 8, 9),
-					},
-				}).Selection(0, 0).WithSize(1, 1),
-				expectedPixels: [][]image.Color{
-					{
-						image.RGBA(5, 12, 21, 32), image.RGBA(6, 7, 8, 9),
-					},
-				},
-			},
-			"target clamped y": {
-				sourceSelection: newImage([][]image.Color{
-					{
-						image.RGBA(5, 6, 7, 8),
-					},
-					{
-						image.RGBA(9, 10, 11, 12),
-					},
-				}).WholeImageSelection(),
-				targetSelection: newImage([][]image.Color{
-					{
-						image.RGBA(1, 2, 3, 4),
-					},
-					{
-						image.RGBA(6, 7, 8, 9),
-					},
-				}).Selection(0, 0).WithSize(1, 1),
+				}).Selection(0, 0),
 				expectedPixels: [][]image.Color{
 					{
 						image.RGBA(5, 12, 21, 32),
@@ -350,7 +277,7 @@ func TestTool_BlendSourceToTarget(t *testing.T) {
 					{
 						image.RGBA(6, 7, 8, 9),
 					},
-				}).WholeImageSelection(),
+				}).Selection(0, 0),
 				expectedPixels: [][]image.Color{
 					{
 						image.RGBA(5, 12, 21, 32),
@@ -426,7 +353,7 @@ func TestSource_BlendSourceToTarget(t *testing.T) {
 					{
 						image.RGBA(5, 6, 7, 8),
 					},
-				}).WholeImageSelection(),
+				}).Selection(0, 0),
 				expectedPixels: [][]image.Color{
 					{
 						image.RGBA(1, 2, 3, 4),
@@ -443,7 +370,7 @@ func TestSource_BlendSourceToTarget(t *testing.T) {
 					{
 						image.RGBA(5, 6, 7, 8), image.RGBA(9, 10, 11, 12),
 					},
-				}).WholeImageSelection(),
+				}).Selection(0, 0),
 				expectedPixels: [][]image.Color{
 					{
 						image.RGBA(1, 2, 3, 4), image.RGBA(9, 10, 11, 12),
@@ -457,7 +384,7 @@ func TestSource_BlendSourceToTarget(t *testing.T) {
 				targetSelection: newImage([][]image.Color{
 					{image.RGBA(5, 6, 7, 8)},
 					{image.RGBA(9, 10, 11, 12)},
-				}).WholeImageSelection(),
+				}).Selection(0, 0),
 				expectedPixels: [][]image.Color{
 					{image.RGBA(1, 2, 3, 4)},
 					{image.RGBA(9, 10, 11, 12)},
@@ -473,7 +400,7 @@ func TestSource_BlendSourceToTarget(t *testing.T) {
 					{
 						image.RGBA(1, 2, 3, 4), image.RGBA(6, 7, 8, 9),
 					},
-				}).WholeImageSelection(),
+				}).Selection(0, 0),
 				expectedPixels: [][]image.Color{
 					{
 						image.RGBA(5, 6, 7, 8), image.RGBA(9, 10, 11, 12),
@@ -490,7 +417,7 @@ func TestSource_BlendSourceToTarget(t *testing.T) {
 					{
 						image.RGBA(1, 2, 3, 4), image.RGBA(6, 7, 8, 9),
 					},
-				}).WholeImageSelection(),
+				}).Selection(0, 0),
 				expectedPixels: [][]image.Color{
 					{
 						image.RGBA(5, 6, 7, 8), image.RGBA(6, 7, 8, 9),
@@ -513,50 +440,7 @@ func TestSource_BlendSourceToTarget(t *testing.T) {
 					{
 						image.RGBA(6, 7, 8, 9),
 					},
-				}).WholeImageSelection(),
-				expectedPixels: [][]image.Color{
-					{
-						image.RGBA(5, 6, 7, 8),
-					},
-					{
-						image.RGBA(6, 7, 8, 9),
-					},
-				},
-			},
-			"target clamped x": {
-				sourceSelection: newImage([][]image.Color{
-					{
-						image.RGBA(5, 6, 7, 8), image.RGBA(9, 10, 11, 12),
-					},
-				}).WholeImageSelection(),
-				targetSelection: newImage([][]image.Color{
-					{
-						image.RGBA(1, 2, 3, 4), image.RGBA(6, 7, 8, 9),
-					},
-				}).Selection(0, 0).WithSize(1, 1),
-				expectedPixels: [][]image.Color{
-					{
-						image.RGBA(5, 6, 7, 8), image.RGBA(6, 7, 8, 9),
-					},
-				},
-			},
-			"target clamped y": {
-				sourceSelection: newImage([][]image.Color{
-					{
-						image.RGBA(5, 6, 7, 8),
-					},
-					{
-						image.RGBA(9, 10, 11, 12),
-					},
-				}).WholeImageSelection(),
-				targetSelection: newImage([][]image.Color{
-					{
-						image.RGBA(1, 2, 3, 4),
-					},
-					{
-						image.RGBA(6, 7, 8, 9),
-					},
-				}).Selection(0, 0).WithSize(1, 1),
+				}).Selection(0, 0),
 				expectedPixels: [][]image.Color{
 					{
 						image.RGBA(5, 6, 7, 8),
@@ -582,7 +466,7 @@ func TestSource_BlendSourceToTarget(t *testing.T) {
 					{
 						image.RGBA(6, 7, 8, 9),
 					},
-				}).WholeImageSelection(),
+				}).Selection(0, 0),
 				expectedPixels: [][]image.Color{
 					{
 						image.RGBA(5, 6, 7, 8),
