@@ -48,13 +48,18 @@ func (s *Source) BlendSourceToTarget(source, target image.Selection) {
 		}
 		sourceLine := sourceLines.LineForRead(y - sourceYOffset)
 		targetLine := targetLines.LineForWrite(y - targetYOffset)
-		for x := targetXOffset; x < source.Width(); x++ {
-			sourceOfBounds := x < sourceXOffset || x >= len(sourceLine)
-			if sourceOfBounds {
-				targetLine[x-targetXOffset] = image.Transparent
-			} else {
-				targetLine[x-targetXOffset] = sourceLine[x-sourceXOffset]
-			}
+		for x := 0; x < sourceXOffset-targetXOffset; x++ {
+			targetLine[x] = image.Transparent
+		}
+		width := source.Width()
+		if width > len(sourceLine) {
+			width = len(sourceLine)
+		}
+		for x := targetXOffset + sourceXOffset; x < width; x++ {
+			targetLine[x-targetXOffset] = sourceLine[x-sourceXOffset]
+		}
+		for x := width; x < source.Width(); x++ {
+			targetLine[x] = image.Transparent
 		}
 	}
 }
