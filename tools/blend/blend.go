@@ -27,18 +27,18 @@ func (s *Source) BlendSourceToTarget(source, target image.Selection) {
 	target = target.WithSize(source.Width(), source.Height())
 	targetLines := target.Lines()
 	sourceLines := source.Lines()
-	height := source.Height()
-	if height > target.Height() {
-		height = target.Height()
-	}
 	sourceXOffset := sourceLines.XOffset()
 	sourceYOffset := sourceLines.YOffset()
 	targetXOffset := targetLines.XOffset()
 	targetYOffset := targetLines.YOffset()
+	height := source.Height()
+	if height >= targetLines.Length()+targetYOffset {
+		height = targetLines.Length() + targetYOffset
+	}
 	for y := targetYOffset; y < height; y++ {
 		sourceOutOfBounds := y < sourceYOffset || y-sourceYOffset >= sourceLines.Length()
 		if sourceOutOfBounds {
-			targetLine := targetLines.LineForWrite(y - targetYOffset) // TODO not tested
+			targetLine := targetLines.LineForWrite(y - targetYOffset)
 			for x := 0; x < len(targetLine); x++ {
 				targetLine[x] = image.Transparent
 			}
@@ -47,7 +47,8 @@ func (s *Source) BlendSourceToTarget(source, target image.Selection) {
 		targetLine := targetLines.LineForWrite(y - targetYOffset)
 		sourceLine := sourceLines.LineForRead(y - sourceYOffset)
 		for x := targetXOffset; x < source.Width(); x++ {
-			if x < sourceXOffset || x >= len(sourceLine) {
+			sourceOfBounds := x < sourceXOffset || x >= len(sourceLine)
+			if sourceOfBounds {
 				targetLine[x-targetXOffset] = image.Transparent
 			} else {
 				targetLine[x-targetXOffset] = sourceLine[x-sourceXOffset]

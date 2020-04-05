@@ -133,6 +133,23 @@ func TestBlendSourceToTarget(t *testing.T) {
 							},
 						},
 					},
+					"y=-2 and target y=-1": {
+						sourceSelection: newImage([][]image.Color{
+							{
+								image.RGBA(1, 2, 3, 4),
+							},
+						}).Selection(0, -2).WithSize(1, 2),
+						targetSelection: newImage([][]image.Color{
+							{
+								image.RGBA(5, 6, 7, 8),
+							},
+						}).Selection(0, -1),
+						expectedPixels: [][]image.Color{
+							{
+								image.RGBA(0, 0, 0, 0),
+							},
+						},
+					},
 				}
 				for name, test := range tests {
 					t.Run(name, func(t *testing.T) {
@@ -143,6 +160,7 @@ func TestBlendSourceToTarget(t *testing.T) {
 					})
 				}
 			})
+
 		})
 	}
 	// TODO Test if source is left unmodified
@@ -321,6 +339,26 @@ func TestTool_BlendSourceToTarget(t *testing.T) {
 				expectedPixels: [][]image.Color{
 					{
 						image.RGBA(5, 12, 21, 32),
+					},
+				},
+			},
+			"source higher than target": {
+				sourceSelection: newImage([][]image.Color{
+					{
+						image.RGBA(1, 2, 3, 4),
+					},
+					{
+						image.RGBA(5, 6, 7, 8),
+					},
+				}).WholeImageSelection(),
+				targetSelection: newImage([][]image.Color{
+					{
+						image.RGBA(9, 10, 11, 12),
+					},
+				}).Selection(0, 0),
+				expectedPixels: [][]image.Color{
+					{
+						image.RGBA(9, 20, 33, 48),
 					},
 				},
 			},
@@ -510,6 +548,26 @@ func TestSource_BlendSourceToTarget(t *testing.T) {
 				expectedPixels: [][]image.Color{
 					{
 						image.RGBA(5, 6, 7, 8),
+					},
+				},
+			},
+			"source higher than target": {
+				sourceSelection: newImage([][]image.Color{
+					{
+						image.RGBA(1, 2, 3, 4),
+					},
+					{
+						image.RGBA(5, 6, 7, 8),
+					},
+				}).WholeImageSelection(),
+				targetSelection: newImage([][]image.Color{
+					{
+						image.RGBA(9, 10, 11, 12),
+					},
+				}).Selection(0, 0),
+				expectedPixels: [][]image.Color{
+					{
+						image.RGBA(1, 2, 3, 4),
 					},
 				},
 			},
