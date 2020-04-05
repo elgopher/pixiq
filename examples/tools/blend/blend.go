@@ -59,16 +59,16 @@ type position struct {
 
 func (p *position) update() {
 	if p.keyboard.Pressed(keyboard.Left) {
-		p.x -= 1
+		p.x--
 	}
 	if p.keyboard.Pressed(keyboard.Right) {
-		p.x += 1
+		p.x++
 	}
 	if p.keyboard.Pressed(keyboard.Up) {
-		p.y -= 1
+		p.y--
 	}
 	if p.keyboard.Pressed(keyboard.Down) {
-		p.y += 1
+		p.y++
 	}
 }
 
