@@ -150,6 +150,23 @@ func TestBlendSourceToTarget(t *testing.T) {
 							},
 						},
 					},
+					"y=-1 and target x=-1": {
+						sourceSelection: newImage([][]image.Color{
+							{
+								image.RGBA(5, 6, 7, 8),
+							},
+						}).Selection(0, -1).WithSize(2, 1),
+						targetSelection: newImage([][]image.Color{
+							{
+								image.RGBA(1, 2, 3, 4),
+							},
+						}).Selection(-1, 0),
+						expectedPixels: [][]image.Color{
+							{
+								image.RGBA(0, 0, 0, 0),
+							},
+						},
+					},
 				}
 				for name, test := range tests {
 					t.Run(name, func(t *testing.T) {
