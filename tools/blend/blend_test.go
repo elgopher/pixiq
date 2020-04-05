@@ -95,7 +95,7 @@ func TestBlendSourceToTarget(t *testing.T) {
 					sourceSelection, targetSelection image.Selection
 					expectedPixels                   [][]image.Color
 				}{
-					"x = -1": {
+					"x=-1": {
 						sourceSelection: newImage([][]image.Color{
 							{
 								image.RGBA(5, 6, 7, 8),
@@ -112,7 +112,7 @@ func TestBlendSourceToTarget(t *testing.T) {
 							},
 						},
 					},
-					"x = 1": {
+					"x=1": {
 						sourceSelection: newImage([][]image.Color{
 							{
 								image.RGBA(5, 6, 7, 8),
@@ -129,7 +129,7 @@ func TestBlendSourceToTarget(t *testing.T) {
 							},
 						},
 					},
-					"y = -1": {
+					"y=-1": {
 						sourceSelection: newImage([][]image.Color{
 							{
 								image.RGBA(5, 6, 7, 8),
@@ -146,7 +146,7 @@ func TestBlendSourceToTarget(t *testing.T) {
 							},
 						},
 					},
-					"y = 1": {
+					"y=1": {
 						sourceSelection: newImage([][]image.Color{
 							{
 								image.RGBA(5, 6, 7, 8),
