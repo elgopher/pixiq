@@ -164,16 +164,16 @@ func TestBlendSourceToTarget(t *testing.T) {
 
 			t.Run("should blend selections", func(t *testing.T) {
 				tests := map[string]struct {
-					sourceSelection, targetSelection image.Selection
-					expectedPixels                   [][]image.Color
+					source, target image.Selection
+					expectedPixels [][]image.Color
 				}{
 					"1x1 images": {
-						sourceSelection: newImage([][]image.Color{
+						source: newImage([][]image.Color{
 							{
 								color1,
 							},
 						}).WholeImageSelection(),
-						targetSelection: newImage([][]image.Color{
+						target: newImage([][]image.Color{
 							{
 								color2,
 							},
@@ -185,12 +185,12 @@ func TestBlendSourceToTarget(t *testing.T) {
 						},
 					},
 					"target bigger than source 1": {
-						sourceSelection: newImage([][]image.Color{
+						source: newImage([][]image.Color{
 							{
 								color1,
 							},
 						}).WholeImageSelection(),
-						targetSelection: newImage([][]image.Color{
+						target: newImage([][]image.Color{
 							{
 								color2, color3,
 							},
@@ -202,12 +202,12 @@ func TestBlendSourceToTarget(t *testing.T) {
 						},
 					},
 					"target bigger than source 2": {
-						sourceSelection: newImage([][]image.Color{
+						source: newImage([][]image.Color{
 							{
 								color1,
 							},
 						}).WholeImageSelection(),
-						targetSelection: newImage([][]image.Color{
+						target: newImage([][]image.Color{
 							{
 								color2,
 							},
@@ -225,12 +225,12 @@ func TestBlendSourceToTarget(t *testing.T) {
 						},
 					},
 					"2x1 images": {
-						sourceSelection: newImage([][]image.Color{
+						source: newImage([][]image.Color{
 							{
 								color1, color3,
 							},
 						}).WholeImageSelection(),
-						targetSelection: newImage([][]image.Color{
+						target: newImage([][]image.Color{
 							{
 								color2, color4,
 							},
@@ -242,12 +242,12 @@ func TestBlendSourceToTarget(t *testing.T) {
 						},
 					},
 					"source clamped x": {
-						sourceSelection: newImage([][]image.Color{
+						source: newImage([][]image.Color{
 							{
 								color1, color3,
 							},
 						}).Selection(0, 0).WithSize(1, 1),
-						targetSelection: newImage([][]image.Color{
+						target: newImage([][]image.Color{
 							{
 								color2, color4,
 							},
@@ -259,7 +259,7 @@ func TestBlendSourceToTarget(t *testing.T) {
 						},
 					},
 					"source clamped y": {
-						sourceSelection: newImage([][]image.Color{
+						source: newImage([][]image.Color{
 							{
 								color1,
 							},
@@ -267,7 +267,7 @@ func TestBlendSourceToTarget(t *testing.T) {
 								color3,
 							},
 						}).Selection(0, 0).WithSize(1, 1),
-						targetSelection: newImage([][]image.Color{
+						target: newImage([][]image.Color{
 							{
 								color2,
 							},
@@ -285,7 +285,7 @@ func TestBlendSourceToTarget(t *testing.T) {
 						},
 					},
 					"1x2 images": {
-						sourceSelection: newImage([][]image.Color{
+						source: newImage([][]image.Color{
 							{
 								color1,
 							},
@@ -293,7 +293,7 @@ func TestBlendSourceToTarget(t *testing.T) {
 								color3,
 							},
 						}).WholeImageSelection(),
-						targetSelection: newImage([][]image.Color{
+						target: newImage([][]image.Color{
 							{
 								color2,
 							},
@@ -311,12 +311,12 @@ func TestBlendSourceToTarget(t *testing.T) {
 						},
 					},
 					"target out boundaries x=-1": {
-						sourceSelection: newImage([][]image.Color{
+						source: newImage([][]image.Color{
 							{
 								color1, color3,
 							},
 						}).WholeImageSelection(),
-						targetSelection: newImage([][]image.Color{
+						target: newImage([][]image.Color{
 							{
 								color4,
 							},
@@ -328,7 +328,7 @@ func TestBlendSourceToTarget(t *testing.T) {
 						},
 					},
 					"target out boundaries y=-1": {
-						sourceSelection: newImage([][]image.Color{
+						source: newImage([][]image.Color{
 							{
 								color1,
 							},
@@ -336,7 +336,7 @@ func TestBlendSourceToTarget(t *testing.T) {
 								color3,
 							},
 						}).WholeImageSelection(),
-						targetSelection: newImage([][]image.Color{
+						target: newImage([][]image.Color{
 							{
 								color4,
 							},
@@ -348,7 +348,7 @@ func TestBlendSourceToTarget(t *testing.T) {
 						},
 					},
 					"source higher than target": {
-						sourceSelection: newImage([][]image.Color{
+						source: newImage([][]image.Color{
 							{
 								color1,
 							},
@@ -356,7 +356,7 @@ func TestBlendSourceToTarget(t *testing.T) {
 								color2,
 							},
 						}).WholeImageSelection(),
-						targetSelection: newImage([][]image.Color{
+						target: newImage([][]image.Color{
 							{
 								color3,
 							},
@@ -371,9 +371,9 @@ func TestBlendSourceToTarget(t *testing.T) {
 				for name, test := range tests {
 					t.Run(name, func(t *testing.T) {
 						// when
-						blender.tool.BlendSourceToTarget(test.sourceSelection, test.targetSelection)
+						blender.tool.BlendSourceToTarget(test.source, test.target)
 						// then
-						assertColors(t, test.targetSelection.Image(), test.expectedPixels)
+						assertColors(t, test.target.Image(), test.expectedPixels)
 					})
 				}
 			})
