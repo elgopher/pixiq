@@ -402,6 +402,10 @@ func TestTool_BlendSourceToTarget(t *testing.T) {
 
 func TestSource_BlendSourceToTarget(t *testing.T) {
 	t.Run("should blend selections", func(t *testing.T) {
+		color1 := image.RGBA(1, 2, 3, 4)
+		color2 := image.RGBA(5, 6, 7, 8)
+		color3 := image.RGBA(9, 10, 11, 12)
+		color4 := image.RGBA(6, 7, 8, 9)
 		tests := map[string]struct {
 			sourceSelection, targetSelection image.Selection
 			expectedPixels                   [][]image.Color
@@ -409,190 +413,190 @@ func TestSource_BlendSourceToTarget(t *testing.T) {
 			"1x1 images": {
 				sourceSelection: newImage([][]image.Color{
 					{
-						image.RGBA(1, 2, 3, 4),
+						color1,
 					},
 				}).WholeImageSelection(),
 				targetSelection: newImage([][]image.Color{
 					{
-						image.RGBA(5, 6, 7, 8),
+						color2,
 					},
 				}).Selection(0, 0),
 				expectedPixels: [][]image.Color{
 					{
-						image.RGBA(1, 2, 3, 4),
+						color1,
 					},
 				},
 			},
 			"target bigger than source 1": {
 				sourceSelection: newImage([][]image.Color{
 					{
-						image.RGBA(1, 2, 3, 4),
+						color1,
 					},
 				}).WholeImageSelection(),
 				targetSelection: newImage([][]image.Color{
 					{
-						image.RGBA(5, 6, 7, 8), image.RGBA(9, 10, 11, 12),
+						color2, color3,
 					},
 				}).Selection(0, 0),
 				expectedPixels: [][]image.Color{
 					{
-						image.RGBA(1, 2, 3, 4), image.RGBA(9, 10, 11, 12),
+						color1, color3,
 					},
 				},
 			},
 			"target bigger than source 2": {
 				sourceSelection: newImage([][]image.Color{
-					{image.RGBA(1, 2, 3, 4)},
+					{color1},
 				}).WholeImageSelection(),
 				targetSelection: newImage([][]image.Color{
-					{image.RGBA(5, 6, 7, 8)},
-					{image.RGBA(9, 10, 11, 12)},
+					{color2},
+					{color3},
 				}).Selection(0, 0),
 				expectedPixels: [][]image.Color{
-					{image.RGBA(1, 2, 3, 4)},
-					{image.RGBA(9, 10, 11, 12)},
+					{color1},
+					{color3},
 				},
 			},
 			"2x1 images": {
 				sourceSelection: newImage([][]image.Color{
 					{
-						image.RGBA(5, 6, 7, 8), image.RGBA(9, 10, 11, 12),
+						color2, color3,
 					},
 				}).WholeImageSelection(),
 				targetSelection: newImage([][]image.Color{
 					{
-						image.RGBA(1, 2, 3, 4), image.RGBA(6, 7, 8, 9),
+						color1, color4,
 					},
 				}).Selection(0, 0),
 				expectedPixels: [][]image.Color{
 					{
-						image.RGBA(5, 6, 7, 8), image.RGBA(9, 10, 11, 12),
+						color2, color3,
 					},
 				},
 			},
 			"source clamped x": {
 				sourceSelection: newImage([][]image.Color{
 					{
-						image.RGBA(5, 6, 7, 8), image.RGBA(9, 10, 11, 12),
+						color2, color3,
 					},
 				}).Selection(0, 0).WithSize(1, 1),
 				targetSelection: newImage([][]image.Color{
 					{
-						image.RGBA(1, 2, 3, 4), image.RGBA(6, 7, 8, 9),
+						color1, color4,
 					},
 				}).Selection(0, 0),
 				expectedPixels: [][]image.Color{
 					{
-						image.RGBA(5, 6, 7, 8), image.RGBA(6, 7, 8, 9),
+						color2, color4,
 					},
 				},
 			},
 			"source clamped y": {
 				sourceSelection: newImage([][]image.Color{
 					{
-						image.RGBA(5, 6, 7, 8),
+						color2,
 					},
 					{
-						image.RGBA(9, 10, 11, 12),
+						color3,
 					},
 				}).Selection(0, 0).WithSize(1, 1),
 				targetSelection: newImage([][]image.Color{
 					{
-						image.RGBA(1, 2, 3, 4),
+						color1,
 					},
 					{
-						image.RGBA(6, 7, 8, 9),
+						color4,
 					},
 				}).Selection(0, 0),
 				expectedPixels: [][]image.Color{
 					{
-						image.RGBA(5, 6, 7, 8),
+						color2,
 					},
 					{
-						image.RGBA(6, 7, 8, 9),
+						color4,
 					},
 				},
 			},
 			"1x2 images": {
 				sourceSelection: newImage([][]image.Color{
 					{
-						image.RGBA(5, 6, 7, 8),
+						color2,
 					},
 					{
-						image.RGBA(9, 10, 11, 12),
+						color3,
 					},
 				}).WholeImageSelection(),
 				targetSelection: newImage([][]image.Color{
 					{
-						image.RGBA(1, 2, 3, 4),
+						color1,
 					},
 					{
-						image.RGBA(6, 7, 8, 9),
+						color4,
 					},
 				}).Selection(0, 0),
 				expectedPixels: [][]image.Color{
 					{
-						image.RGBA(5, 6, 7, 8),
+						color2,
 					},
 					{
-						image.RGBA(9, 10, 11, 12),
+						color3,
 					},
 				},
 			},
 			"target out boundaries x=-1": {
 				sourceSelection: newImage([][]image.Color{
 					{
-						image.RGBA(1, 2, 3, 4), image.RGBA(5, 6, 7, 8),
+						color1, color2,
 					},
 				}).WholeImageSelection(),
 				targetSelection: newImage([][]image.Color{
 					{
-						image.RGBA(1, 2, 3, 4),
+						color1,
 					},
 				}).Selection(-1, 0),
 				expectedPixels: [][]image.Color{
 					{
-						image.RGBA(5, 6, 7, 8),
+						color2,
 					},
 				},
 			},
 			"target out boundaries y=-1": {
 				sourceSelection: newImage([][]image.Color{
 					{
-						image.RGBA(1, 2, 3, 4),
+						color1,
 					},
 					{
-						image.RGBA(5, 6, 7, 8),
+						color2,
 					},
 				}).WholeImageSelection(),
 				targetSelection: newImage([][]image.Color{
 					{
-						image.RGBA(1, 2, 3, 4),
+						color1,
 					},
 				}).Selection(0, -1),
 				expectedPixels: [][]image.Color{
 					{
-						image.RGBA(5, 6, 7, 8),
+						color2,
 					},
 				},
 			},
 			"source higher than target": {
 				sourceSelection: newImage([][]image.Color{
 					{
-						image.RGBA(1, 2, 3, 4),
+						color1,
 					},
 					{
-						image.RGBA(5, 6, 7, 8),
+						color2,
 					},
 				}).WholeImageSelection(),
 				targetSelection: newImage([][]image.Color{
 					{
-						image.RGBA(9, 10, 11, 12),
+						color3,
 					},
 				}).Selection(0, 0),
 				expectedPixels: [][]image.Color{
 					{
-						image.RGBA(1, 2, 3, 4),
+						color1,
 					},
 				},
 			},
