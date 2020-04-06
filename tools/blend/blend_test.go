@@ -386,6 +386,52 @@ func TestBlendSourceToTarget(t *testing.T) {
 	}
 }
 
+func TestSourceOver_BlendSourceToTarget(t *testing.T) {
+	t.Run("should blend color", func(t *testing.T) {
+		tests := map[string]struct {
+			source   image.Color
+			target   image.Color
+			expected image.Color
+		}{
+			"all transparent": {
+				source:   image.Transparent,
+				target:   image.Transparent,
+				expected: image.Transparent,
+			},
+			"transparent source, fully opaque target": {
+				source:   image.Transparent,
+				target:   image.RGBA(4, 5, 6, 255),
+				expected: image.RGBA(4, 5, 6, 255),
+			},
+			"fully opaque source": {
+				source:   image.RGBA(1, 2, 3, 255),
+				target:   image.RGBA(4, 5, 6, 100),
+				expected: image.RGBA(1, 2, 3, 255),
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				source := newImage([][]image.Color{
+					{
+						test.source,
+					},
+				}).WholeImageSelection()
+				target := newImage([][]image.Color{
+					{
+						test.target,
+					},
+				}).WholeImageSelection()
+				// when
+				blend.NewSourceOver().BlendSourceToTarget(source, target)
+				// then
+				assertColors(t, target.Image(), [][]image.Color{
+					{test.expected},
+				})
+			})
+		}
+	})
+}
+
 type multiplyColors struct{}
 
 func (c multiplyColors) BlendSourceToTargetColor(source, target image.Color) image.Color {

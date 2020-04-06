@@ -131,6 +131,7 @@ func (s *SourceOver) BlendSourceToTarget(source, target image.Selection) {
 }
 
 func (s *SourceOver) blendSourceToTargetColor(source, target image.Color) image.Color {
+	// TODO Create bunch of tests using 1x1 image
 	srcR, srcG, srcB, srcA := source.RGBAi()
 	dstR, dstG, dstB, dstA := target.RGBAi()
 	srcT := 255 - srcA
