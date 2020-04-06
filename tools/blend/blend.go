@@ -82,9 +82,7 @@ func NewSourceOver() *SourceOver {
 
 // SourceOver (aka Normal) is a blending tool which blends together source and target
 // taking into account alpha channel of both.
-type SourceOver struct {
-	opacity int
-}
+type SourceOver struct{}
 
 // BlendSourceToTarget blends source into target selection.
 // Only position of the target Selection is used and the source is not clamped by
@@ -131,7 +129,6 @@ func (s *SourceOver) BlendSourceToTarget(source, target image.Selection) {
 }
 
 func (s *SourceOver) blendSourceToTargetColor(source, target image.Color) image.Color {
-	// TODO Create bunch of tests using 1x1 image
 	srcR, srcG, srcB, srcA := source.RGBAi()
 	dstR, dstG, dstB, dstA := target.RGBAi()
 	srcT := 255 - srcA
