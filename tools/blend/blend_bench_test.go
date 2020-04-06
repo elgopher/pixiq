@@ -25,6 +25,23 @@ func BenchmarkSource_BlendSourceToTarget(b *testing.B) {
 	}
 }
 
+func BenchmarkSourceOver_BlendSourceToTarget(b *testing.B) {
+	var (
+		tool   = blend.NewSourceOver()
+		width  = 1920
+		height = 1080
+		source = image.New(width, height, fake.NewAcceleratedImage(width, height)).
+			WholeImageSelection()
+		target = image.New(width, height, fake.NewAcceleratedImage(width, height)).
+			WholeImageSelection()
+	)
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		tool.BlendSourceToTarget(source, target)
+	}
+}
+
 func BenchmarkTool_BlendSourceToTarget(b *testing.B) {
 	var (
 		tool   = blend.New(blenderStub{})

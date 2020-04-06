@@ -77,20 +77,60 @@ func (s *Source) BlendSourceToTarget(source, target image.Selection) {
 // NewSourceOver creates a new blending tool which blends together source and target
 // taking into account alpha channel of both.
 func NewSourceOver() *SourceOver {
-	tool := &SourceOver{}
-	tool.Tool = New(tool)
-	return tool
+	return &SourceOver{}
 }
 
 // SourceOver (aka Normal) is a blending tool which blends together source and target
-// taking into account alpha channel of both plus the additional opacity of the source.
+// taking into account alpha channel of both.
 type SourceOver struct {
-	*Tool
 	opacity int
 }
 
-// BlendSourceToTargetColor always return source color.
-func (s *SourceOver) BlendSourceToTargetColor(source, target image.Color) image.Color {
+// BlendSourceToTarget blends source into target selection.
+// Only position of the target Selection is used and the source is not clamped by
+// the target size.
+func (s *SourceOver) BlendSourceToTarget(source, target image.Selection) {
+	target = target.WithSize(source.Width(), source.Height())
+	var (
+		sourceLines   = source.Lines()
+		targetLines   = target.Lines()
+		sourceXOffset = sourceLines.XOffset()
+		sourceYOffset = sourceLines.YOffset()
+		targetXOffset = targetLines.XOffset()
+		targetYOffset = targetLines.YOffset()
+		height        = source.Height()
+	)
+	if height > targetLines.Length()+targetYOffset {
+		height = targetLines.Length() + targetYOffset
+	}
+	for y := targetYOffset; y < height; y++ {
+		sourceOutOfBounds := y < sourceYOffset || y-sourceYOffset >= sourceLines.Length()
+		if sourceOutOfBounds {
+			targetLine := targetLines.LineForWrite(y - targetYOffset)
+			for x := 0; x < len(targetLine); x++ {
+				targetLine[x] = s.blendSourceToTargetColor(image.Transparent, targetLine[x])
+			}
+			continue
+		}
+		sourceLine := sourceLines.LineForRead(y - sourceYOffset)
+		targetLine := targetLines.LineForWrite(y - targetYOffset)
+		for x := 0; x < sourceXOffset-targetXOffset; x++ {
+			targetLine[x] = s.blendSourceToTargetColor(image.Transparent, targetLine[x])
+		}
+		width := source.Width()
+		if width > len(sourceLine) {
+			width = len(sourceLine)
+		}
+		for x := targetXOffset + sourceXOffset; x < width; x++ {
+			targetLine[x-targetXOffset] = s.blendSourceToTargetColor(sourceLine[x-sourceXOffset], targetLine[x-targetXOffset])
+		}
+		for x := width; x < source.Width(); x++ {
+			targetLine[x] = s.blendSourceToTargetColor(image.Transparent, targetLine[x])
+		}
+	}
+}
+
+func (s *SourceOver) blendSourceToTargetColor(source, target image.Color) image.Color {
 	srcR, srcG, srcB, srcA := source.RGBAi()
 	dstR, dstG, dstB, dstA := target.RGBAi()
 	srcT := 255 - srcA
