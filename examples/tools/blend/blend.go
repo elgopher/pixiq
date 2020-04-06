@@ -73,7 +73,7 @@ func (p *position) update() {
 
 func face(gl *glfw.OpenGL) image.Selection {
 	var (
-		img       = gl.NewImage(10, 10)
+		img       = gl.NewImage(7, 9)
 		selection = img.WholeImageSelection()
 		color     = colornames.Lightyellow
 	)
