@@ -23,7 +23,6 @@ func main() {
 			// TODO Add GPU
 			blend.NewSource(),
 			blend.NewSourceOver(),
-			blend.NewSourceOverWithOpacity(100),
 		}
 		currentTool := 0
 
