@@ -33,6 +33,16 @@ func (c Color) A() byte {
 	return c.a
 }
 
+// RGBAi returns all color components as bytes in range 0 to 255.
+func (c Color) RGBA() (byte, byte, byte, byte) {
+	return c.r, c.g, c.b, c.a
+}
+
+// RGBAi returns all color components as integers in range 0 to 255.
+func (c Color) RGBAi() (int, int, int, int) {
+	return int(c.r), int(c.g), int(c.b), int(c.a)
+}
+
 // RGBAf returns all color components as floats in range 0.0 to 1.0.
 func (c Color) RGBAf() (float32, float32, float32, float32) {
 	return float32(c.r) / 255.0,

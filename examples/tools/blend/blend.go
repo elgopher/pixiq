@@ -20,7 +20,7 @@ func main() {
 			panic(err)
 		}
 		tools := []blender{
-			// TODO GPU
+			// TODO Add GPU
 			blend.NewSource(),
 			blend.NewSourceOver(),
 			blend.NewSourceOverWithOpacity(100),
