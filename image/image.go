@@ -169,7 +169,7 @@ func (s Selection) Selection(localX, localY int) Selection {
 // Passed coordinates are local, which means that the top-left corner of selection
 // is equivalent to localX=0, localY=0. Negative coordinates are supported.
 // If pixel is outside the image boundaries then transparent color is returned.
-// It is possible to get the color outside the selection.
+// It is also possible to get the color outside the selection.
 func (s Selection) Color(localX, localY int) Color {
 	if s.image.acceleratedImageModified {
 		s.image.acceleratedImage.Download(s.image.pixels)

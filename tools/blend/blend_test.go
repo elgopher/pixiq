@@ -178,9 +178,17 @@ func TestBlendSourceToTarget(t *testing.T) {
 				}
 			})
 
+			t.Run("source is not modified", func(t *testing.T) {
+				sourceOriginalColors := [][]image.Color{{image.RGBA(1, 2, 3, 4)}}
+				source := newImage(sourceOriginalColors).WholeImageSelection()
+				target := newImage([][]image.Color{{image.RGBA(5, 6, 7, 8)}}).WholeImageSelection()
+				// when
+				blender.BlendSourceToTarget(source, target)
+				// then
+				assertColors(t, source.Image(), sourceOriginalColors)
+			})
 		})
 	}
-	// TODO Test if source is left unmodified
 }
 
 func TestTool_BlendSourceToTarget(t *testing.T) {
