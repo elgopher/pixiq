@@ -77,13 +77,7 @@ func (s *Source) BlendSourceToTarget(source, target image.Selection) {
 // NewSourceOver creates a new blending tool which blends together source and target
 // taking into account alpha channel of both.
 func NewSourceOver() *SourceOver {
-	return NewSourceOverWithOpacity(100)
-}
-
-// NewSourceOverWithOpacity creates a new blending tool which blends together source and target
-// taking into account alpha channel of both plus the additional opacity of the source.
-func NewSourceOverWithOpacity(opacity int) *SourceOver {
-	tool := &SourceOver{opacity: opacity}
+	tool := &SourceOver{}
 	tool.Tool = New(tool)
 	return tool
 }
@@ -97,12 +91,24 @@ type SourceOver struct {
 
 // BlendSourceToTargetColor always return source color.
 func (s *SourceOver) BlendSourceToTargetColor(source, target image.Color) image.Color {
-	return source
+	srcR, srcG, srcB, srcA := source.RGBAi()
+	dstR, dstG, dstB, dstA := target.RGBAi()
+	srcT := 255 - srcA
+	tt := mul(dstA, srcT)
+	outA := srcA + tt
+	if outA == 0 {
+		return image.Transparent
+	}
+	outR := (srcR*srcA + dstR*tt) / outA
+	outG := (srcG*srcA + dstG*tt) / outA
+	outB := (srcB*srcA + dstB*tt) / outA
+	return image.RGBAi(outR, outG, outB, outA)
 }
 
-// SetOpacity specifies the opacity of source selection.
-func (s *SourceOver) SetOpacity(opacity int) {
-	s.opacity = opacity
+// mul is an optimized version of round(a * b / 255)
+func mul(a, b int) int {
+	t := (a)*(b) + 0x80
+	return (((t) >> 8) + (t)) >> 8
 }
 
 // Tool is a customizable blending tool which blends together two selections. It uses

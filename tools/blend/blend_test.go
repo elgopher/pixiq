@@ -34,25 +34,29 @@ func TestBlendSourceToTarget(t *testing.T) {
 			BlendSourceToTarget(source, target image.Selection)
 		}
 		color1x2, color1x3, color3x4 image.Color
+		// colorTx2 is a result of blending transparent color with color2
+		colorTx2 image.Color
 	}{
 		"Tool": {
 			tool:     blend.New(multiplyColors{}),
 			color1x2: image.RGBA(5, 12, 21, 32),
 			color1x3: image.RGBA(9, 20, 33, 48),
 			color3x4: image.RGBA(54, 70, 88, 108),
+			colorTx2: image.Transparent,
 		},
 		"Source": {
 			tool:     blend.NewSource(),
 			color1x2: color1,
 			color1x3: color1,
 			color3x4: color3,
+			colorTx2: image.Transparent,
 		},
-		// TODO SourceOver should behave differently than Source!
 		"SourceOver": {
 			tool:     blend.NewSourceOver(),
-			color1x2: color1,
-			color1x3: color1,
-			color3x4: color3,
+			color1x2: image.RGBA(3, 4, 5, 12),
+			color1x3: image.RGBA(7, 8, 9, 16),
+			color3x4: image.RGBA(7, 8, 9, 21),
+			colorTx2: image.RGBA(5, 6, 7, 8),
 		},
 	}
 	for name, blender := range blenders {
@@ -98,9 +102,9 @@ func TestBlendSourceToTarget(t *testing.T) {
 						color2,
 					},
 				}
-				transparent := [][]image.Color{
+				colorsTx2 := [][]image.Color{
 					{
-						image.Transparent,
+						blender.colorTx2,
 					},
 				}
 				tests := map[string]struct {
@@ -110,32 +114,32 @@ func TestBlendSourceToTarget(t *testing.T) {
 					"x=-1": {
 						source:         newImage(colors1).Selection(-1, 0).WithSize(1, 1),
 						target:         newImage(colors2).Selection(0, 0),
-						expectedPixels: transparent,
+						expectedPixels: colorsTx2,
 					},
 					"x=1": {
 						source:         newImage(colors1).Selection(1, 0).WithSize(1, 1),
 						target:         newImage(colors2).Selection(0, 0),
-						expectedPixels: transparent,
+						expectedPixels: colorsTx2,
 					},
 					"y=-1": {
 						source:         newImage(colors1).Selection(0, -1).WithSize(1, 1),
 						target:         newImage(colors2).Selection(0, 0),
-						expectedPixels: transparent,
+						expectedPixels: colorsTx2,
 					},
 					"y=1": {
 						source:         newImage(colors1).Selection(0, 1).WithSize(1, 1),
 						target:         newImage(colors2).Selection(0, 0),
-						expectedPixels: transparent,
+						expectedPixels: colorsTx2,
 					},
 					"y=-2 and target y=-1": {
 						source:         newImage(colors1).Selection(0, -2).WithSize(1, 2),
 						target:         newImage(colors2).Selection(0, -1),
-						expectedPixels: transparent,
+						expectedPixels: colorsTx2,
 					},
 					"y=-1 and target x=-1": {
 						source:         newImage(colors1).Selection(0, -1).WithSize(2, 1),
 						target:         newImage(colors2).Selection(-1, 0),
-						expectedPixels: transparent,
+						expectedPixels: colorsTx2,
 					},
 				}
 				for name, test := range tests {
