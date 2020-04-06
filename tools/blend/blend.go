@@ -30,8 +30,9 @@ func NewSource() *Source {
 // colors. It is like coping of source selection colors into target.
 type Source struct{}
 
-// BlendSourceToTarget blends source into target. Only position of the target Selection
-// is used and the source is not clamped by the target size.
+// BlendSourceToTarget blends source into target selection.
+// Only position of the target Selection is used and the source is not clamped by
+// the target size.
 func (s *Source) BlendSourceToTarget(source, target image.Selection) {
 	target = target.WithSize(source.Width(), source.Height())
 	var (
@@ -79,7 +80,7 @@ func NewSourceOver() *SourceOver {
 	return NewSourceOverWithOpacity(100)
 }
 
-// NewSourceOver creates a new blending tool which blends together source and target
+// NewSourceOverWithOpacity creates a new blending tool which blends together source and target
 // taking into account alpha channel of both plus the additional opacity of the source.
 func NewSourceOverWithOpacity(opacity int) *SourceOver {
 	tool := &SourceOver{opacity: opacity}
@@ -94,8 +95,7 @@ type SourceOver struct {
 	opacity int
 }
 
-// BlendSourceToTarget blends source into target. Only position of the target Selection
-// is used and the source is not clamped by the target size.
+// BlendSourceToTargetColor always return source color.
 func (s *SourceOver) BlendSourceToTargetColor(source, target image.Color) image.Color {
 	return source
 }
@@ -111,8 +111,9 @@ type Tool struct {
 	colorBlender ColorBlender
 }
 
-// BlendSourceToTarget blends source into target. Only position of the target Selection
-// is used and the source is not clamped by the target size.
+// BlendSourceToTarget blends source into target selection.
+// Only position of the target Selection is used and the source is not clamped by
+// the target size.
 func (t *Tool) BlendSourceToTarget(source, target image.Selection) {
 	for y := 0; y < source.Height(); y++ {
 		for x := 0; x < source.Width(); x++ {
