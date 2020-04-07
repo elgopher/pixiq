@@ -428,15 +428,20 @@ func TestSourceOver_BlendSourceToTarget(t *testing.T) {
 				target:   image.RGBA(0, 0, 0, 127),
 				expected: image.RGBA(169, 169, 169, 191),
 			},
-			// TODO Does not work as in Aseprite
-			//"semi-transparent violet source, semi-transparent blue target": {
-			//	source:   image.RGBA(118, 66, 138, 127),
-			//	target:   image.RGBA(99, 155, 255, 127),
-			//	expected: image.RGBA(106, 125, 215, 191),
-			//},
+			"semi-transparent violet source, semi-transparent blue target": {
+				source:   image.RGBA(118, 66, 138, 127),
+				target:   image.RGBA(99, 155, 255, 127),
+				expected: image.RGBA(111, 96, 178, 191),
+			},
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
+				pre := newImage([][]image.Color{
+					{
+						image.Transparent,
+					},
+				}).WholeImageSelection()
+
 				source := newImage([][]image.Color{
 					{
 						test.source,
@@ -448,6 +453,7 @@ func TestSourceOver_BlendSourceToTarget(t *testing.T) {
 					},
 				}).WholeImageSelection()
 				// when
+				blend.NewSourceOver().BlendSourceToTarget(pre, source)
 				blend.NewSourceOver().BlendSourceToTarget(source, target)
 				// then
 				result := target.Color(0, 0)
