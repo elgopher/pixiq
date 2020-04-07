@@ -92,16 +92,16 @@ func (s *SourceOver) BlendSourceToTarget(source, target image.Selection) {
 		sourceYOffset = sourceLines.YOffset()
 		targetXOffset = targetLines.XOffset()
 		targetYOffset = targetLines.YOffset()
-		height        = source.Height()
+		height        = sourceLines.Length()
 	)
 	if height > targetLines.Length()+targetYOffset {
 		height = targetLines.Length() + targetYOffset
 	}
-	for y := targetYOffset; y < height; y++ {
-		sourceOutOfBounds := y < sourceYOffset || y-sourceYOffset >= sourceLines.Length()
-		if sourceOutOfBounds {
-			continue
-		}
+	startY := targetYOffset
+	if startY < sourceYOffset {
+		startY = sourceYOffset
+	}
+	for y := startY; y < height; y++ {
 		sourceLine := sourceLines.LineForRead(y - sourceYOffset)
 		targetLine := targetLines.LineForWrite(y - targetYOffset)
 		for x := targetXOffset + sourceXOffset; x < len(sourceLine); x++ {
