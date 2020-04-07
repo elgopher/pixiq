@@ -61,14 +61,10 @@ func (s *Source) BlendSourceToTarget(source, target image.Selection) {
 		for x := 0; x < sourceXOffset-targetXOffset; x++ {
 			targetLine[x] = image.Transparent
 		}
-		width := source.Width()
-		if width > len(sourceLine) {
-			width = len(sourceLine)
-		}
-		for x := targetXOffset + sourceXOffset; x < width; x++ {
+		for x := targetXOffset + sourceXOffset; x < len(sourceLine); x++ {
 			targetLine[x-targetXOffset] = sourceLine[x-sourceXOffset]
 		}
-		for x := width; x < source.Width(); x++ {
+		for x := len(sourceLine); x < source.Width(); x++ {
 			targetLine[x] = image.Transparent
 		}
 	}
@@ -108,11 +104,7 @@ func (s *SourceOver) BlendSourceToTarget(source, target image.Selection) {
 		}
 		sourceLine := sourceLines.LineForRead(y - sourceYOffset)
 		targetLine := targetLines.LineForWrite(y - targetYOffset)
-		width := source.Width()
-		if width > len(sourceLine) {
-			width = len(sourceLine)
-		}
-		for x := targetXOffset + sourceXOffset; x < width; x++ {
+		for x := targetXOffset + sourceXOffset; x < len(sourceLine); x++ {
 			targetLine[x-targetXOffset] = s.blendSourceToTargetColor(sourceLine[x-sourceXOffset], targetLine[x-targetXOffset])
 		}
 	}
