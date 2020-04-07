@@ -105,30 +105,30 @@ func (s *SourceOver) BlendSourceToTarget(source, target image.Selection) {
 		sourceLine := sourceLines.LineForRead(y - sourceYOffset)
 		targetLine := targetLines.LineForWrite(y - targetYOffset)
 		for x := targetXOffset + sourceXOffset; x < len(sourceLine); x++ {
-			targetLine[x-targetXOffset] = s.blendSourceToTargetColor(sourceLine[x-sourceXOffset], targetLine[x-targetXOffset])
+			// blend source with target color (following code is inlined to improved performance)
+			source := sourceLine[x-sourceXOffset]
+			target := targetLine[x-targetXOffset]
+			srcR, srcG, srcB, srcA := source.RGBAi()
+			dstR, dstG, dstB, dstA := target.RGBAi()
+			srcT := 255 - srcA
+			tt := mul(dstA, srcT)
+			outA := srcA + tt
+			if outA == 0 {
+				targetLine[x-targetXOffset] = image.Transparent
+				continue
+			}
+			outR := (srcR*srcA + dstR*tt) / outA
+			outG := (srcG*srcA + dstG*tt) / outA
+			outB := (srcB*srcA + dstB*tt) / outA
+			targetLine[x-targetXOffset] = image.RGBAi(outR, outG, outB, outA)
 		}
 	}
 }
 
-func (s *SourceOver) blendSourceToTargetColor(source, target image.Color) image.Color {
-	srcR, srcG, srcB, srcA := source.RGBAi()
-	dstR, dstG, dstB, dstA := target.RGBAi()
-	srcT := 255 - srcA
-	tt := mul(dstA, srcT)
-	outA := srcA + tt
-	if outA == 0 {
-		return image.Transparent
-	}
-	outR := (srcR*srcA + dstR*tt) / outA
-	outG := (srcG*srcA + dstG*tt) / outA
-	outB := (srcB*srcA + dstB*tt) / outA
-	return image.RGBAi(outR, outG, outB, outA)
-}
-
 // mul is an optimized version of round(a * b / 255)
 func mul(a, b int) int {
-	t := (a)*(b) + 0x80
-	return (((t) >> 8) + (t)) >> 8
+	t := a*b + 0x80
+	return ((t >> 8) + t) >> 8
 }
 
 // Tool is a customizable blending tool which blends together two selections. It uses

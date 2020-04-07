@@ -433,6 +433,11 @@ func TestSourceOver_BlendSourceToTarget(t *testing.T) {
 				target:   image.RGBA(99, 155, 255, 127),
 				expected: image.RGBA(111, 96, 178, 191),
 			},
+			"alpha 0": {
+				source:   image.RGBA(1, 3, 5, 0),
+				target:   image.RGBA(2, 4, 6, 0),
+				expected: image.Transparent,
+			},
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {

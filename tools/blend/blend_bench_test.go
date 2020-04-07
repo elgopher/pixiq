@@ -26,7 +26,7 @@ func BenchmarkSource_BlendSourceToTarget(b *testing.B) {
 	}
 }
 
-// 10ms
+// 5ms
 func BenchmarkSourceOver_BlendSourceToTarget(b *testing.B) {
 	var (
 		tool   = blend.NewSourceOver()
