@@ -1,5 +1,7 @@
 package image
 
+import "fmt"
+
 // Transparent is a special color where each component is zero (including alpha)
 var Transparent = RGBA(0, 0, 0, 0)
 
@@ -49,6 +51,10 @@ func (c Color) RGBAf() (float32, float32, float32, float32) {
 		float32(c.g) / 255.0,
 		float32(c.b) / 255.0,
 		float32(c.a) / 255.0
+}
+
+func (c Color) String() string {
+	return fmt.Sprintf("RGBA(%d, %d, %d, %d)", c.r, c.g, c.b, c.a)
 }
 
 // RGBA creates Color using all four components: red, green, blue and alpha.

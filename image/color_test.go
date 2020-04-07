@@ -199,3 +199,26 @@ func TestColor_RGBA(t *testing.T) {
 		}
 	})
 }
+
+func TestColor_String(t *testing.T) {
+	tests := map[string]struct {
+		color    image.Color
+		expected string
+	}{
+		"RGBA(0, 1, 2, 3)": {
+			color:    image.RGBA(0, 1, 2, 3),
+			expected: "RGBA(0, 1, 2, 3)",
+		},
+		"RGBA(4, 5, 6, 7)": {
+			color:    image.RGBA(4, 5, 6, 7),
+			expected: "RGBA(4, 5, 6, 7)",
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			// when
+			str := test.color.String()
+			assert.Equal(t, test.expected, str)
+		})
+	}
+}

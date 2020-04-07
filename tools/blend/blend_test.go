@@ -418,6 +418,11 @@ func TestSourceOver_BlendSourceToTarget(t *testing.T) {
 				target:   image.RGBA(0, 0, 0, 255),
 				expected: image.RGBA(58, 32, 68, 255),
 			},
+			"semi-transparent violet source, blue opaque target": {
+				source:   image.RGBA(118, 66, 138, 127),
+				target:   image.RGBA(99, 155, 255, 255),
+				expected: image.RGBA(108, 111, 197, 255),
+			},
 			"semi-transparent white source, semi-transparent black target": {
 				source:   image.RGBA(255, 255, 255, 127),
 				target:   image.RGBA(0, 0, 0, 127),
@@ -445,9 +450,12 @@ func TestSourceOver_BlendSourceToTarget(t *testing.T) {
 				// when
 				blend.NewSourceOver().BlendSourceToTarget(source, target)
 				// then
-				assertColors(t, target.Image(), [][]image.Color{
-					{test.expected},
-				})
+				result := target.Color(0, 0)
+				const delta = 1
+				assert.InDelta(t, test.expected.R(), result.R(), delta, "Red")
+				assert.InDelta(t, test.expected.G(), result.G(), delta, "Green")
+				assert.InDelta(t, test.expected.B(), result.B(), delta, "Blue")
+				assert.InDelta(t, test.expected.A(), result.A(), delta, "Alpha")
 			})
 		}
 	})
