@@ -104,26 +104,16 @@ func (s *SourceOver) BlendSourceToTarget(source, target image.Selection) {
 	for y := targetYOffset; y < height; y++ {
 		sourceOutOfBounds := y < sourceYOffset || y-sourceYOffset >= sourceLines.Length()
 		if sourceOutOfBounds {
-			targetLine := targetLines.LineForWrite(y - targetYOffset)
-			for x := 0; x < len(targetLine); x++ {
-				targetLine[x] = s.blendSourceToTargetColor(image.Transparent, targetLine[x])
-			}
 			continue
 		}
 		sourceLine := sourceLines.LineForRead(y - sourceYOffset)
 		targetLine := targetLines.LineForWrite(y - targetYOffset)
-		for x := 0; x < sourceXOffset-targetXOffset; x++ {
-			targetLine[x] = s.blendSourceToTargetColor(image.Transparent, targetLine[x])
-		}
 		width := source.Width()
 		if width > len(sourceLine) {
 			width = len(sourceLine)
 		}
 		for x := targetXOffset + sourceXOffset; x < width; x++ {
 			targetLine[x-targetXOffset] = s.blendSourceToTargetColor(sourceLine[x-sourceXOffset], targetLine[x-targetXOffset])
-		}
-		for x := width; x < source.Width(); x++ {
-			targetLine[x] = s.blendSourceToTargetColor(image.Transparent, targetLine[x])
 		}
 	}
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/jacekolszak/pixiq/tools/blend"
 )
 
+// 3ms
 func BenchmarkSource_BlendSourceToTarget(b *testing.B) {
 	var (
 		tool   = blend.NewSource()
@@ -25,6 +26,7 @@ func BenchmarkSource_BlendSourceToTarget(b *testing.B) {
 	}
 }
 
+// 10ms
 func BenchmarkSourceOver_BlendSourceToTarget(b *testing.B) {
 	var (
 		tool   = blend.NewSourceOver()

@@ -56,7 +56,7 @@ func TestBlendSourceToTarget(t *testing.T) {
 			color1x2: image.RGBA(3, 4, 5, 12),
 			color1x3: image.RGBA(7, 8, 9, 16),
 			color3x4: image.RGBA(7, 8, 9, 21),
-			colorTx2: image.RGBA(5, 6, 7, 8),
+			colorTx2: color2,
 		},
 	}
 	for name, blender := range blenders {
