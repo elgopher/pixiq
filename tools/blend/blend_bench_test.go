@@ -44,6 +44,7 @@ func BenchmarkSourceOver_BlendSourceToTarget(b *testing.B) {
 	}
 }
 
+// 34ms
 func BenchmarkTool_BlendSourceToTarget(b *testing.B) {
 	var (
 		tool   = blend.New(blenderStub{})

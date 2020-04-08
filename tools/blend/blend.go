@@ -71,16 +71,19 @@ func (s *Source) BlendSourceToTarget(source, target image.Selection) {
 }
 
 // NewSourceOver creates a new blending tool which blends together source and target
-// taking into account alpha channel of both.
+// taking into account alpha channel of both. Source-over means that source will be
+// painted on top of the target.
 func NewSourceOver() *SourceOver {
 	return &SourceOver{}
 }
 
 // SourceOver (aka Normal) is a blending tool which blends together source and target
-// taking into account alpha channel of both.
+// taking into account alpha channel of both. Source-over means that source will be
+// painted on top of the target.
 type SourceOver struct{}
 
-// BlendSourceToTarget blends source into target selection.
+// BlendSourceToTarget blends source into target selection. Results will be stored
+// in the image pointed by target selection
 // Only position of the target Selection is used and the source is not clamped by
 // the target size.
 func (s *SourceOver) BlendSourceToTarget(source, target image.Selection) {
@@ -105,7 +108,7 @@ func (s *SourceOver) BlendSourceToTarget(source, target image.Selection) {
 		sourceLine := sourceLines.LineForRead(y - sourceYOffset)
 		targetLine := targetLines.LineForWrite(y - targetYOffset)
 		for x := targetXOffset + sourceXOffset; x < len(sourceLine); x++ {
-			// blend source with target color (following code is inlined to improved performance)
+			// blend source with target color (following block of code is inlined to improve performance)
 			source := sourceLine[x-sourceXOffset]
 			target := targetLine[x-targetXOffset]
 			srcR, srcG, srcB, srcA := source.RGBAi()
@@ -137,7 +140,8 @@ type Tool struct {
 	colorBlender ColorBlender
 }
 
-// BlendSourceToTarget blends source into target selection.
+// BlendSourceToTarget blends source into target selection. Results will be stored
+// in the image pointed by target selection.
 // Only position of the target Selection is used and the source is not clamped by
 // the target size.
 func (t *Tool) BlendSourceToTarget(source, target image.Selection) {
