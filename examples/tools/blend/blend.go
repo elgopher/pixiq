@@ -4,44 +4,38 @@ import (
 	"github.com/jacekolszak/pixiq/colornames"
 	"github.com/jacekolszak/pixiq/glfw"
 	"github.com/jacekolszak/pixiq/image"
-	"github.com/jacekolszak/pixiq/keyboard"
 	"github.com/jacekolszak/pixiq/loop"
 	"github.com/jacekolszak/pixiq/tools/blend"
+	"github.com/jacekolszak/pixiq/tools/clear"
 )
-
-type blender interface {
-	BlendSourceToTarget(source, target image.Selection)
-}
 
 func main() {
 	glfw.RunOrDie(func(gl *glfw.OpenGL) {
-		window, err := gl.OpenWindow(60, 60, glfw.Zoom(5))
+		window, err := gl.OpenWindow(37, 40, glfw.Zoom(10))
 		if err != nil {
 			panic(err)
 		}
-		tools := []blender{
-			// TODO Add GPU
-			blend.NewSource(),
-			blend.NewSourceOver(),
-		}
-		currentTool := 0
 
 		face := face(gl)
 
-		keys := keyboard.New(window)
-		position := position{keyboard: keys}
+		sourceBlender := blend.NewSource()
+		sourceOverBlender := blend.NewSourceOver()
+
+		clearTool := clear.New()
+		clearTool.SetColor(colornames.Aliceblue)
 
 		loop.Run(window, func(frame *loop.Frame) {
-			keys.Update()
-			if keys.JustReleased(keyboard.Space) {
-				currentTool++
-				currentTool = currentTool % len(tools)
-			}
-			position.update()
-			tool := tools[currentTool]
-			// face will be blended into screen at a given position
-			target := frame.Screen().Selection(position.x, position.y)
-			tool.BlendSourceToTarget(face, target)
+			screen := frame.Screen()
+			// first clear the screen with some opaque color
+			clearTool.Clear(screen)
+
+			// source blending overrides the target with source colors
+			// fully transparent pixels (RGBA 0x00000000) are rendered as black on the screen.
+			sourceBlender.BlendSourceToTarget(face, screen.Selection(15, 7))
+			// source-over blending mixes source and target colors together taking
+			// into account alpha channels of both. In places where source has
+			// transparent pixels the original target colors are preserved.
+			sourceOverBlender.BlendSourceToTarget(face, screen.Selection(15, 24))
 
 			if window.ShouldClose() {
 				frame.StopLoopEventually()
@@ -51,31 +45,11 @@ func main() {
 	})
 }
 
-type position struct {
-	x, y     int
-	keyboard *keyboard.Keyboard
-}
-
-func (p *position) update() {
-	if p.keyboard.Pressed(keyboard.Left) {
-		p.x--
-	}
-	if p.keyboard.Pressed(keyboard.Right) {
-		p.x++
-	}
-	if p.keyboard.Pressed(keyboard.Up) {
-		p.y--
-	}
-	if p.keyboard.Pressed(keyboard.Down) {
-		p.y++
-	}
-}
-
 func face(gl *glfw.OpenGL) image.Selection {
 	var (
 		img       = gl.NewImage(7, 9)
 		selection = img.WholeImageSelection()
-		color     = colornames.Lightyellow
+		color     = colornames.Violet
 	)
 	selection.SetColor(2, 2, color)
 	selection.SetColor(4, 2, color)
