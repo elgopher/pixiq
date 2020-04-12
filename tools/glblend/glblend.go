@@ -1,3 +1,4 @@
+// TODO Add Blender with fragment shader as a parameter. Add methods for setting uniforms
 package glblend
 
 import (
