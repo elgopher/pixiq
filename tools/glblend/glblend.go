@@ -77,6 +77,7 @@ type blendCommand struct {
 
 func (c *blendCommand) RunGL(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
 	renderer.BindTexture(0, "tex", selections[0].Image)
+	// TODO update vertex buffer based on selection
 	renderer.DrawArrays(c.vertexArray, gl.TriangleFan, 0, 4)
 }
 
