@@ -89,7 +89,7 @@ func TestRGBAi(t *testing.T) {
 }
 
 func TestColor_RGBAf(t *testing.T) {
-	t.Run("should convert to floats", func(t *testing.T) {
+	t.Run("should return all components as floats", func(t *testing.T) {
 		tests := map[string]struct {
 			color         image.Color
 			expectedRed   float32
@@ -97,14 +97,14 @@ func TestColor_RGBAf(t *testing.T) {
 			expectedBlue  float32
 			expectedAlpha float32
 		}{
-			"0.0, 0.2, 0.4, 0.6": {
+			"1": {
 				color:         image.RGBA(0, 51, 102, 153),
 				expectedRed:   0.0,
 				expectedGreen: 0.2,
 				expectedBlue:  0.4,
 				expectedAlpha: 0.6,
 			},
-			"0.8, 0.898, 0.95, 1": {
+			"2": {
 				color:         image.RGBA(204, 229, 242, 255),
 				expectedRed:   0.8,
 				expectedGreen: 0.898,
@@ -124,4 +124,101 @@ func TestColor_RGBAf(t *testing.T) {
 			})
 		}
 	})
+}
+
+func TestColor_RGBAi(t *testing.T) {
+	t.Run("should return all components as integers", func(t *testing.T) {
+		tests := map[string]struct {
+			color         image.Color
+			expectedRed   int
+			expectedGreen int
+			expectedBlue  int
+			expectedAlpha int
+		}{
+			"1": {
+				color:         image.RGBA(0, 51, 102, 153),
+				expectedRed:   0,
+				expectedGreen: 51,
+				expectedBlue:  102,
+				expectedAlpha: 153,
+			},
+			"2": {
+				color:         image.RGBA(204, 229, 242, 255),
+				expectedRed:   204,
+				expectedGreen: 229,
+				expectedBlue:  242,
+				expectedAlpha: 255,
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				// when
+				r, g, b, a := test.color.RGBAi()
+				assert.Equal(t, test.expectedRed, r)
+				assert.Equal(t, test.expectedGreen, g)
+				assert.Equal(t, test.expectedBlue, b)
+				assert.Equal(t, test.expectedAlpha, a)
+			})
+		}
+	})
+}
+
+func TestColor_RGBA(t *testing.T) {
+	t.Run("should returns all components as bytes", func(t *testing.T) {
+		tests := map[string]struct {
+			color         image.Color
+			expectedRed   byte
+			expectedGreen byte
+			expectedBlue  byte
+			expectedAlpha byte
+		}{
+			"1": {
+				color:         image.RGBA(0, 51, 102, 153),
+				expectedRed:   0,
+				expectedGreen: 51,
+				expectedBlue:  102,
+				expectedAlpha: 153,
+			},
+			"2": {
+				color:         image.RGBA(204, 229, 242, 255),
+				expectedRed:   204,
+				expectedGreen: 229,
+				expectedBlue:  242,
+				expectedAlpha: 255,
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				// when
+				r, g, b, a := test.color.RGBA()
+				assert.Equal(t, test.expectedRed, r)
+				assert.Equal(t, test.expectedGreen, g)
+				assert.Equal(t, test.expectedBlue, b)
+				assert.Equal(t, test.expectedAlpha, a)
+			})
+		}
+	})
+}
+
+func TestColor_String(t *testing.T) {
+	tests := map[string]struct {
+		color    image.Color
+		expected string
+	}{
+		"RGBA(0, 1, 2, 3)": {
+			color:    image.RGBA(0, 1, 2, 3),
+			expected: "RGBA(0, 1, 2, 3)",
+		},
+		"RGBA(4, 5, 6, 7)": {
+			color:    image.RGBA(4, 5, 6, 7),
+			expected: "RGBA(4, 5, 6, 7)",
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			// when
+			str := test.color.String()
+			assert.Equal(t, test.expected, str)
+		})
+	}
 }
