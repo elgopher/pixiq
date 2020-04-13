@@ -39,7 +39,7 @@ func main() {
 			sourceBlender.BlendSourceToTarget(face, screen.Selection(10, 7))
 
 			// similar source blending using video card
-			glSourceBlender.BlendSourceToTarget(face, screen.Selection(20, 7))
+			glSourceBlender.BlendSourceToTarget(face.Selection(1, 1).WithSize(5, 7), screen.Selection(21, 8))
 
 			// source-over blending mixes source and target colors together taking
 			// into account alpha channels of both. In places where source has

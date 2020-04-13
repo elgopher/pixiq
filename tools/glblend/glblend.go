@@ -43,9 +43,9 @@ func NewSource(context *gl.Context) (*Source, error) {
 	if err != nil {
 		return nil, err
 	}
-	vertexBuffer := makeVertexBuffer(context)
+	vertexBuffer := context.NewFloatVertexBuffer(16) // FIXME The buffer should not be not static
 	vertexArray := makeVertexArray(context, vertexBuffer)
-	command := program.AcceleratedCommand(&blendCommand{vertexArray: vertexArray})
+	command := program.AcceleratedCommand(&blendCommand{vertexBuffer: vertexBuffer, vertexArray: vertexArray})
 	return &Source{command: command}, nil
 }
 
@@ -58,26 +58,30 @@ func makeVertexArray(context *gl.Context, buffer *gl.FloatVertexBuffer) *gl.Vert
 	return array
 }
 
-func makeVertexBuffer(gl *gl.Context) *gl.FloatVertexBuffer {
-	// xy -> st
-	vertices := []float32{
-		-1, 1, 0, 1, // top-left
-		1, 1, 1, 1, // top-right
-		1, -1, 1, 0, // bottom-right
-		-1, -1, 0, 0, // bottom-left
-	}
-	buffer := gl.NewFloatVertexBuffer(len(vertices))
-	buffer.Upload(0, vertices)
-	return buffer
-}
-
 type blendCommand struct {
-	vertexArray *gl.VertexArray
+	vertexBuffer *gl.FloatVertexBuffer
+	vertexArray  *gl.VertexArray
 }
 
 func (c *blendCommand) RunGL(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
-	renderer.BindTexture(0, "tex", selections[0].Image)
-	// TODO update vertex buffer based on selection
+	source := selections[0]
+	renderer.BindTexture(0, "tex", source.Image)
+	var (
+		imageWidth  = float32(7) // TODO Take width from Image
+		left        = float32(source.Location.X) / imageWidth
+		right       = float32(source.Location.X+source.Location.Width) / imageWidth
+		imageHeight = float32(9) // TODO Take height from Image
+		top         = (imageHeight - float32(source.Location.Y)) / imageHeight
+		bottom      = (imageHeight - float32(source.Location.Y) - float32(source.Location.Height)) / imageHeight
+	)
+	// xy -> st
+	vertices := []float32{
+		-1, 1, left, top,
+		1, 1, right, top,
+		1, -1, right, bottom,
+		-1, -1, left, bottom,
+	}
+	c.vertexBuffer.Upload(0, vertices)
 	renderer.DrawArrays(c.vertexArray, gl.TriangleFan, 0, 4)
 }
 
@@ -87,5 +91,5 @@ type Source struct {
 
 func (o *Source) BlendSourceToTarget(source image.Selection, target image.Selection) {
 	target = target.WithSize(source.Width(), source.Height())
-	target.Modify(o.command, source)
+	target.Modify(o.command, source) // is it fast? is it better to use the whole texture as target? (and update xy in the vertextbuffer)
 }
