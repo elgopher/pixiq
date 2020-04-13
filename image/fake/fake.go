@@ -50,10 +50,12 @@ func (i *AcceleratedImage) Download(output []image.Color) {
 	}
 }
 
+// Width returns the number of pixels in a row.
 func (i *AcceleratedImage) Width() int {
 	return i.width
 }
 
+// Height returns the number of pixels in a column.
 func (i *AcceleratedImage) Height() int {
 	return i.height
 }

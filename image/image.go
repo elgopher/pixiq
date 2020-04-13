@@ -22,8 +22,9 @@ type AcceleratedImage interface {
 	//
 	// Implementations must not retain output.
 	Download(output []Color)
-
+	// Width returns the number of pixels in a row.
 	Width() int
+	// Height returns the number of pixels in a column.
 	Height() int
 }
 

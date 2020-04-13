@@ -298,6 +298,14 @@ func TestContext_NewAcceleratedImage(t *testing.T) {
 			context.NewAcceleratedImage(1, capabilities.MaxTextureSize()+1)
 		})
 	})
+	t.Run("should create AcceleratedImage", func(t *testing.T) {
+		context := gl.NewContext(apiStub{})
+		// when
+		img := context.NewAcceleratedImage(4, 2)
+		// then
+		assert.Equal(t, 4, img.Width())
+		assert.Equal(t, 2, img.Height())
+	})
 }
 func TestProgram_AcceleratedCommand(t *testing.T) {
 	t.Run("should return command", func(t *testing.T) {
