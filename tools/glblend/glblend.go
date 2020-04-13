@@ -67,10 +67,10 @@ func (c *blendCommand) RunGL(renderer *gl.Renderer, selections []image.Accelerat
 	source := selections[0]
 	renderer.BindTexture(0, "tex", source.Image)
 	var (
-		imageWidth  = float32(7) // TODO Take width from Image
+		imageWidth  = float32(source.Image.Width())
 		left        = float32(source.Location.X) / imageWidth
 		right       = float32(source.Location.X+source.Location.Width) / imageWidth
-		imageHeight = float32(9) // TODO Take height from Image
+		imageHeight = float32(source.Image.Height())
 		top         = (imageHeight - float32(source.Location.Y)) / imageHeight
 		bottom      = (imageHeight - float32(source.Location.Y) - float32(source.Location.Height)) / imageHeight
 	)

@@ -110,3 +110,11 @@ func (i *AcceleratedImage) Download(output []image.Color) {
 		i.api.Ptr(output),
 	)
 }
+
+func (i *AcceleratedImage) Width() int {
+	return i.width
+}
+
+func (i *AcceleratedImage) Height() int {
+	return i.height
+}

@@ -22,6 +22,9 @@ type AcceleratedImage interface {
 	//
 	// Implementations must not retain output.
 	Download(output []Color)
+
+	Width() int
+	Height() int
 }
 
 // New creates an Image with specified size given in pixels.
