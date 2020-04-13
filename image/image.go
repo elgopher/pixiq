@@ -27,12 +27,15 @@ type AcceleratedImage interface {
 	Height() int
 }
 
-// New creates an Image with specified size given in pixels.
-// Will panic if AcceleratedImage is nil or width and height are negative
-func New(width, height int, acceleratedImage AcceleratedImage) *Image {
+// New creates an Image with same size as provided AcceleratedImage.
+// Will panic if AcceleratedImage is nil or width and height of
+// AcceleratedImage are negative
+func New(acceleratedImage AcceleratedImage) *Image {
 	if acceleratedImage == nil {
 		panic("nil acceleratedImage")
 	}
+	width := acceleratedImage.Width()
+	height := acceleratedImage.Height()
 	if width < 0 {
 		panic("negative width")
 	}

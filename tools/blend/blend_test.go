@@ -77,9 +77,9 @@ func TestBlendSourceToTarget(t *testing.T) {
 				for name, test := range tests {
 					t.Run(name, func(t *testing.T) {
 						// when
-						source := image.New(test.width, test.height, fake.NewAcceleratedImage(test.width, test.height)).
+						source := image.New(fake.NewAcceleratedImage(test.width, test.height)).
 							WholeImageSelection()
-						target := image.New(1, 1, fake.NewAcceleratedImage(1, 1)).
+						target := image.New(fake.NewAcceleratedImage(1, 1)).
 							WholeImageSelection()
 						originalColor := image.RGBA(1, 2, 3, 4)
 						target.SetColor(0, 0, originalColor)
@@ -496,7 +496,7 @@ func assertColors(t *testing.T, img *image.Image, expectedColorLines [][]image.C
 func newImage(pixels [][]image.Color) *image.Image {
 	width := len(pixels[0])
 	height := len(pixels)
-	img := image.New(width, height, fake.NewAcceleratedImage(width, height))
+	img := image.New(fake.NewAcceleratedImage(width, height))
 	selection := img.WholeImageSelection()
 	for y := 0; y < height; y++ {
 		for x := 0; x < width; x++ {

@@ -14,9 +14,9 @@ func BenchmarkSource_BlendSourceToTarget(b *testing.B) {
 		tool   = blend.NewSource()
 		width  = 1920
 		height = 1080
-		source = image.New(width, height, fake.NewAcceleratedImage(width, height)).
+		source = image.New(fake.NewAcceleratedImage(width, height)).
 			WholeImageSelection()
-		target = image.New(width, height, fake.NewAcceleratedImage(width, height)).
+		target = image.New(fake.NewAcceleratedImage(width, height)).
 			WholeImageSelection()
 	)
 	b.ReportAllocs()
@@ -32,9 +32,9 @@ func BenchmarkSourceOver_BlendSourceToTarget(b *testing.B) {
 		tool   = blend.NewSourceOver()
 		width  = 1920
 		height = 1080
-		source = image.New(width, height, fake.NewAcceleratedImage(width, height)).
+		source = image.New(fake.NewAcceleratedImage(width, height)).
 			WholeImageSelection()
-		target = image.New(width, height, fake.NewAcceleratedImage(width, height)).
+		target = image.New(fake.NewAcceleratedImage(width, height)).
 			WholeImageSelection()
 	)
 	b.ReportAllocs()
@@ -50,9 +50,9 @@ func BenchmarkTool_BlendSourceToTarget(b *testing.B) {
 		tool   = blend.New(blenderStub{})
 		width  = 1920
 		height = 1080
-		source = image.New(width, height, fake.NewAcceleratedImage(width, height)).
+		source = image.New(fake.NewAcceleratedImage(width, height)).
 			WholeImageSelection()
-		target = image.New(width, height, fake.NewAcceleratedImage(width, height)).
+		target = image.New(fake.NewAcceleratedImage(width, height)).
 			WholeImageSelection()
 	)
 	b.ReportAllocs()

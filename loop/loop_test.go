@@ -158,7 +158,15 @@ func clone(original *image.Image) *image.Image {
 	return clone
 }
 
-type acceleratedImageStub struct{}
+type acceleratedImageStub struct {
+	width, height int
+}
 
 func (i acceleratedImageStub) Upload([]image.Color)   {}
 func (i acceleratedImageStub) Download([]image.Color) {}
+func (i acceleratedImageStub) Width() int {
+	return i.width
+}
+func (i acceleratedImageStub) Height() int {
+	return i.height
+}
