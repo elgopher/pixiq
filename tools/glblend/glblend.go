@@ -30,6 +30,8 @@ void main() {
 }
 `
 
+// NewSource creates a new blending tool which replaces target selection with source
+// colors. It is like coping of source selection colors into target.
 func NewSource(context *gl.Context) (*Source, error) {
 	vertexShader, err := context.CompileVertexShader(vertexShaderSrc)
 	if err != nil {
@@ -85,11 +87,16 @@ func (c *blendCommand) RunGL(renderer *gl.Renderer, selections []image.Accelerat
 	renderer.DrawArrays(c.vertexArray, gl.TriangleFan, 0, 4)
 }
 
+// Source is a blending tool which replaces target selection with source
+// colors. It is like coping of source selection colors into target.
 type Source struct {
 	command *gl.AcceleratedCommand
 }
 
-func (o *Source) BlendSourceToTarget(source image.Selection, target image.Selection) {
+// BlendSourceToTarget blends source into target selection.
+// Only position of the target Selection is used and the source is not clamped by
+// the target size.
+func (s *Source) BlendSourceToTarget(source image.Selection, target image.Selection) {
 	target = target.WithSize(source.Width(), source.Height())
-	target.Modify(o.command, source) // is it fast? is it better to use the whole texture as target? (and update xy in the vertextbuffer)
+	target.Modify(s.command, source) // is it fast? is it better to use the whole texture as target? (and update xy in the vertextbuffer)
 }
