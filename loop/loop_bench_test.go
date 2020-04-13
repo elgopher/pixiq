@@ -8,7 +8,7 @@ import (
 )
 
 func BenchmarkScreenLoops_Loop(b *testing.B) {
-	img := image.New(1, 1, &acceleratedImageStub{})
+	img := image.New(&acceleratedImageStub{width: 1, height: 1})
 	var (
 		screen = &noopScreen{image: img}
 	)

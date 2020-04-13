@@ -15,17 +15,17 @@ var transparent = image.RGBA(0, 0, 0, 0)
 func TestNew(t *testing.T) {
 	t.Run("should panic when AcceleratedImage is nil", func(t *testing.T) {
 		assert.Panics(t, func() {
-			image.New(1, 1, nil)
+			image.New(nil)
 		})
 	})
 	t.Run("should panic when width is less than 0", func(t *testing.T) {
 		assert.Panics(t, func() {
-			image.New(-1, 4, acceleratedImageStub{})
+			image.New(acceleratedImageStub{width: -1, height: 4})
 		})
 	})
 	t.Run("should panic when height is less than 0", func(t *testing.T) {
 		assert.Panics(t, func() {
-			image.New(2, -1, acceleratedImageStub{})
+			image.New(acceleratedImageStub{width: 2, height: -1})
 		})
 	})
 	t.Run("should create an image of given size", func(t *testing.T) {
