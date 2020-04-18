@@ -49,7 +49,7 @@ func NewSource(context *gl.Context) (*Source, error) {
 	if err != nil {
 		return nil, err
 	}
-	vertexBuffer := context.NewFloatVertexBuffer(16) // FIXME The buffer should not be not static
+	vertexBuffer := context.NewFloatVertexBuffer(16, gl.Dynamic)
 	vertexArray := makeVertexArray(context, vertexBuffer)
 	command := program.AcceleratedCommand(&blendCommand{vertexBuffer: vertexBuffer, vertexArray: vertexArray})
 	return &Source{command: command}, nil

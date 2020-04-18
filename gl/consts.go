@@ -3,7 +3,9 @@ package gl
 // Camel-cased GL constants
 const (
 	arrayBuffer              = 0x8892
+	streamDraw               = 0x88E0
 	staticDraw               = 0x88E4
+	dynamicDraw              = 0x88E8
 	float                    = 0x1406
 	floatVec2                = 0x8B50
 	floatVec3                = 0x8B51

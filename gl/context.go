@@ -66,15 +66,28 @@ func (c *Context) Error() error {
 	return glError(code)
 }
 
-// NewFloatVertexBuffer creates an OpenGL's Vertex Buffer Object (VBO) containing only float32 numbers.
-func (c *Context) NewFloatVertexBuffer(size int) *FloatVertexBuffer {
+type UsageFrequency uint32
+
+const (
+	// The data store contents will be modified once and used at most a few times.
+	Stream UsageFrequency = streamDraw
+	// The data store contents will be modified once and used many times.
+	Static UsageFrequency = staticDraw
+	// The data store contents will be modified repeatedly and used many times.
+	Dynamic UsageFrequency = dynamicDraw
+)
+
+type UsageNature int
+
+// NewFloatVertexBuffer creates an OpenGL's Vertex Buffer Object (VBO) containing only float32 numb)ers.
+func (c *Context) NewFloatVertexBuffer(size int, frequency UsageFrequency) *FloatVertexBuffer {
 	if size < 0 {
 		panic("negative size")
 	}
 	var id uint32
 	c.api.GenBuffers(1, &id)
 	c.api.BindBuffer(arrayBuffer, id)
-	c.api.BufferData(arrayBuffer, size*4, c.api.Ptr(nil), staticDraw) // FIXME: Parametrize usage
+	c.api.BufferData(arrayBuffer, size*4, c.api.Ptr(nil), uint32(frequency))
 	vb := &FloatVertexBuffer{
 		id:   id,
 		size: size,

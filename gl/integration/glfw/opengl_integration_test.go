@@ -29,10 +29,30 @@ func TestContext_NewFloatVertexBuffer(t *testing.T) {
 		defer openGL.Destroy()
 		context := openGL.Context()
 		// when
-		buffer1 := context.NewFloatVertexBuffer(1)
-		buffer2 := context.NewFloatVertexBuffer(1)
+		buffer1 := context.NewFloatVertexBuffer(1, gl.Static)
+		buffer2 := context.NewFloatVertexBuffer(1, gl.Static)
 		// then
 		assert.NotEqual(t, buffer1.ID(), buffer2.ID())
+	})
+	t.Run("should create buffers with different usage frequency", func(t *testing.T) {
+		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+		defer openGL.Destroy()
+		context := openGL.Context()
+		usageFrequencies := map[string]gl.UsageFrequency{
+			"static":  gl.Static,
+			"dynamic": gl.Dynamic,
+			"stream":  gl.Stream,
+		}
+		for name, frequency := range usageFrequencies {
+			t.Run(name, func(t *testing.T) {
+				// when
+				buffer := context.NewFloatVertexBuffer(1, frequency)
+				// then
+				assert.NotNil(t, buffer)
+				err := context.Error()
+				assert.NoError(t, err)
+			})
+		}
 	})
 }
 
@@ -68,7 +88,7 @@ func TestFloatVertexBuffer_Upload(t *testing.T) {
 				openGL, _ := glfw.NewOpenGL(mainThreadLoop)
 				defer openGL.Destroy()
 				context := openGL.Context()
-				buffer := context.NewFloatVertexBuffer(test.size)
+				buffer := context.NewFloatVertexBuffer(test.size, gl.Static)
 				defer buffer.Delete()
 				// when
 				buffer.Upload(test.offset, test.input)
@@ -132,7 +152,7 @@ func TestFloatVertexBuffer_Download(t *testing.T) {
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
 				context := openGL.Context()
-				buffer := context.NewFloatVertexBuffer(len(test.input))
+				buffer := context.NewFloatVertexBuffer(len(test.input), gl.Static)
 				defer buffer.Delete()
 				buffer.Upload(0, test.input)
 				// when
@@ -164,7 +184,7 @@ func TestVertexArray_Set(t *testing.T) {
 		context := openGL.Context()
 		vao := context.NewVertexArray(gl.VertexLayout{gl.Float})
 		defer vao.Delete()
-		buffer := context.NewFloatVertexBuffer(1)
+		buffer := context.NewFloatVertexBuffer(1, gl.Static)
 		defer buffer.Delete()
 		pointer := gl.VertexBufferPointer{
 			Buffer: buffer,
@@ -455,7 +475,7 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 		program := workingProgram(t, context)
 		output := context.NewAcceleratedImage(1, 1)
 		command := program.AcceleratedCommand(&command{runGL: func(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
-			buffer := context.NewFloatVertexBuffer(1)
+			buffer := context.NewFloatVertexBuffer(1, gl.Static)
 			values := []float32{1}
 			buffer.Upload(0, values)
 			buffer.Download(0, values)
@@ -473,7 +493,7 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 		command := program.AcceleratedCommand(&command{runGL: func(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
 			array := context.NewVertexArray(gl.VertexLayout{gl.Float})
 			defer array.Delete()
-			buffer := context.NewFloatVertexBuffer(1)
+			buffer := context.NewFloatVertexBuffer(1, gl.Static)
 			defer buffer.Delete()
 			array.Set(0, gl.VertexBufferPointer{
 				Buffer: buffer,
@@ -791,7 +811,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 				program, err := context.LinkProgram(vertexShader, fragmentShader)
 				require.NoError(t, err)
 				array := context.NewVertexArray(gl.VertexLayout{test.typ})
-				buffer := context.NewFloatVertexBuffer(len(test.data))
+				buffer := context.NewFloatVertexBuffer(len(test.data), gl.Static)
 				buffer.Upload(0, test.data)
 				vertexPosition := gl.VertexBufferPointer{Buffer: buffer, Stride: len(test.data)}
 				array.Set(0, vertexPosition)
@@ -839,7 +859,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 		require.NoError(t, err)
 		array := context.NewVertexArray(gl.VertexLayout{gl.Float, gl.Vec3})
 		require.NoError(t, err)
-		buffer := context.NewFloatVertexBuffer(4)
+		buffer := context.NewFloatVertexBuffer(4, gl.Static)
 		buffer.Upload(0, []float32{0, 0.2, 0.4, 0.6})
 		vertexPositionX := gl.VertexBufferPointer{Buffer: buffer, Offset: 0, Stride: 4}
 		array.Set(0, vertexPositionX)
@@ -934,7 +954,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 								`,
 				)
 				array := context.NewVertexArray(gl.VertexLayout{gl.Vec2})
-				buffer := context.NewFloatVertexBuffer(8)
+				buffer := context.NewFloatVertexBuffer(8, gl.Static)
 				buffer.Upload(0, []float32{
 					-1, 1, // top-left
 					1, 1, // top-right
@@ -982,7 +1002,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 		program, err := context.LinkProgram(vertexShader, fragmentShader)
 		require.NoError(t, err)
 		array := context.NewVertexArray(gl.VertexLayout{gl.Vec2})
-		buffer := context.NewFloatVertexBuffer(4)
+		buffer := context.NewFloatVertexBuffer(4, gl.Static)
 		buffer.Upload(0, []float32{-0.5, 0, 0.5, 0})
 		vertexPositionX := gl.VertexBufferPointer{Buffer: buffer, Offset: 0, Stride: 2}
 		array.Set(0, vertexPositionX)
@@ -1074,7 +1094,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 				program, err := context.LinkProgram(vertexShader, fragmentShader)
 				require.NoError(t, err)
 				array := context.NewVertexArray(test.layout)
-				buffer := context.NewFloatVertexBuffer(10)
+				buffer := context.NewFloatVertexBuffer(10, gl.Static)
 				buffer.Upload(0, []float32{0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
 				vertexPosition := gl.VertexBufferPointer{Buffer: buffer, Offset: 0, Stride: 10}
 				for i := range test.layout {
@@ -1124,7 +1144,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 		program, err := context.LinkProgram(vertexShader, fragmentShader)
 		require.NoError(t, err)
 		array := context.NewVertexArray(gl.VertexLayout{gl.Float})
-		buffer := context.NewFloatVertexBuffer(1)
+		buffer := context.NewFloatVertexBuffer(1, gl.Static)
 		buffer.Upload(0, []float32{0.392})
 		array.Set(0, gl.VertexBufferPointer{Buffer: buffer, Stride: 1})
 		glCommand := &command{runGL: func(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
@@ -1248,7 +1268,7 @@ func TestRenderer_BindTexture(t *testing.T) {
 				}
 				`)
 		array := context.NewVertexArray(gl.VertexLayout{gl.Vec2})
-		buffer := context.NewFloatVertexBuffer(2)
+		buffer := context.NewFloatVertexBuffer(2, gl.Static)
 		buffer.Upload(0, []float32{0.0, 0.0})
 		vertexPosition := gl.VertexBufferPointer{Buffer: buffer, Stride: 2}
 		array.Set(0, vertexPosition)
@@ -1294,7 +1314,7 @@ func TestRenderer_BindTexture(t *testing.T) {
 				}
 				`)
 		array := context.NewVertexArray(gl.VertexLayout{gl.Vec2})
-		buffer := context.NewFloatVertexBuffer(2)
+		buffer := context.NewFloatVertexBuffer(2, gl.Static)
 		buffer.Upload(0, []float32{0.0, 0.0})
 		vertexPosition := gl.VertexBufferPointer{Buffer: buffer, Stride: 2}
 		array.Set(0, vertexPosition)
@@ -1365,7 +1385,7 @@ func TestRenderer_BindTexture(t *testing.T) {
 				}
 				`)
 				array := context.NewVertexArray(gl.VertexLayout{gl.Vec2})
-				buffer := context.NewFloatVertexBuffer(2)
+				buffer := context.NewFloatVertexBuffer(2, gl.Static)
 				buffer.Upload(0, []float32{0.0, 0.0})
 				vertexPosition := gl.VertexBufferPointer{Buffer: buffer, Stride: 2}
 				array.Set(0, vertexPosition)
@@ -1596,7 +1616,7 @@ func TestRenderer_SetXXX(t *testing.T) {
 					test.fragmentShader,
 				)
 				array := context.NewVertexArray(gl.VertexLayout{gl.Vec2})
-				buffer := context.NewFloatVertexBuffer(2)
+				buffer := context.NewFloatVertexBuffer(2, gl.Static)
 				buffer.Upload(0, []float32{0.0, 0.0})
 				vertexPosition := gl.VertexBufferPointer{Buffer: buffer, Stride: 2}
 				array.Set(0, vertexPosition)

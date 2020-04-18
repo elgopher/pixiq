@@ -17,7 +17,7 @@ func newScreenPolygon(context *gl.Context, api gl.API) *screenPolygon {
 		1, -1, 1, 0,
 		-1, -1, 0, 0,
 	}
-	buffer := context.NewFloatVertexBuffer(len(data))
+	buffer := context.NewFloatVertexBuffer(len(data), gl.Static)
 	buffer.Upload(0, data)
 
 	vao := context.NewVertexArray(gl.VertexLayout{gl.Vec2, gl.Vec2})

@@ -43,7 +43,7 @@ func TestContext_NewFloatVertexBuffer(t *testing.T) {
 				context := gl.NewContext(apiStub{})
 				// when
 				assert.Panics(t, func() {
-					context.NewFloatVertexBuffer(size)
+					context.NewFloatVertexBuffer(size, gl.Static)
 				})
 			})
 		}
@@ -57,7 +57,7 @@ func TestContext_NewFloatVertexBuffer(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				context := gl.NewContext(apiStub{})
 				// when
-				buffer := context.NewFloatVertexBuffer(size)
+				buffer := context.NewFloatVertexBuffer(size, gl.Static)
 				// then
 				assert.NotNil(t, buffer)
 				// and
@@ -94,7 +94,7 @@ func TestFloatVertexBuffer_Upload(t *testing.T) {
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
 				context := gl.NewContext(apiStub{})
-				buffer := context.NewFloatVertexBuffer(test.size)
+				buffer := context.NewFloatVertexBuffer(test.size, gl.Static)
 				assert.Panics(t, func() {
 					// when
 					buffer.Upload(test.offset, test.data)
@@ -104,7 +104,7 @@ func TestFloatVertexBuffer_Upload(t *testing.T) {
 	})
 	t.Run("should panic when offset is negative", func(t *testing.T) {
 		context := gl.NewContext(apiStub{})
-		buffer := context.NewFloatVertexBuffer(1)
+		buffer := context.NewFloatVertexBuffer(1, gl.Static)
 		assert.Panics(t, func() {
 			// when
 			buffer.Upload(-1, []float32{1})
@@ -115,7 +115,7 @@ func TestFloatVertexBuffer_Upload(t *testing.T) {
 func TestFloatVertexBuffer_Download(t *testing.T) {
 	t.Run("should panic when offset is negative", func(t *testing.T) {
 		context := gl.NewContext(apiStub{})
-		buffer := context.NewFloatVertexBuffer(1)
+		buffer := context.NewFloatVertexBuffer(1, gl.Static)
 		defer buffer.Delete()
 		output := make([]float32, 1)
 		assert.Panics(t, func() {
@@ -125,7 +125,7 @@ func TestFloatVertexBuffer_Download(t *testing.T) {
 	})
 	t.Run("should panic when buffer has been deleted", func(t *testing.T) {
 		context := gl.NewContext(apiStub{})
-		buffer := context.NewFloatVertexBuffer(1)
+		buffer := context.NewFloatVertexBuffer(1, gl.Static)
 		buffer.Delete()
 		output := make([]float32, 1)
 		// when
@@ -167,7 +167,7 @@ func TestVertexArray_Set(t *testing.T) {
 		context := gl.NewContext(apiStub{})
 		vao := context.NewVertexArray(gl.VertexLayout{gl.Float})
 		defer vao.Delete()
-		buffer := context.NewFloatVertexBuffer(1)
+		buffer := context.NewFloatVertexBuffer(1, gl.Static)
 		pointer := gl.VertexBufferPointer{
 			Buffer: buffer,
 			Offset: -1,
@@ -181,7 +181,7 @@ func TestVertexArray_Set(t *testing.T) {
 	t.Run("should panic when stride is negative", func(t *testing.T) {
 		context := gl.NewContext(apiStub{})
 		vao := context.NewVertexArray(gl.VertexLayout{gl.Float})
-		buffer := context.NewFloatVertexBuffer(1)
+		buffer := context.NewFloatVertexBuffer(1, gl.Static)
 		pointer := gl.VertexBufferPointer{
 			Buffer: buffer,
 			Offset: 0,
@@ -195,7 +195,7 @@ func TestVertexArray_Set(t *testing.T) {
 	t.Run("should panic when location is negative", func(t *testing.T) {
 		context := gl.NewContext(apiStub{})
 		vao := context.NewVertexArray(gl.VertexLayout{gl.Float})
-		buffer := context.NewFloatVertexBuffer(1)
+		buffer := context.NewFloatVertexBuffer(1, gl.Static)
 		pointer := gl.VertexBufferPointer{
 			Buffer: buffer,
 			Offset: 0,
@@ -209,7 +209,7 @@ func TestVertexArray_Set(t *testing.T) {
 	t.Run("should panic when location is higher than number of arguments", func(t *testing.T) {
 		context := gl.NewContext(apiStub{})
 		vao := context.NewVertexArray(gl.VertexLayout{gl.Float})
-		buffer := context.NewFloatVertexBuffer(1)
+		buffer := context.NewFloatVertexBuffer(1, gl.Static)
 		pointer := gl.VertexBufferPointer{
 			Buffer: buffer,
 			Offset: 0,
