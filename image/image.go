@@ -267,7 +267,7 @@ func (s Selection) Modify(command AcceleratedCommand, selections ...Selection) {
 		selection.image.Upload()
 		convertedSelections = append(convertedSelections, selection.toAcceleratedImageSelection())
 	}
-	s.image.Upload() // TODO Temporary fix because Download overrides what was modified in RAM
+	s.image.Upload()
 	command.Run(s.toAcceleratedImageSelection(), convertedSelections)
 	s.image.acceleratedImageModified = true
 }

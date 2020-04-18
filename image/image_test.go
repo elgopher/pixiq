@@ -857,9 +857,24 @@ func TestSelection_Modify(t *testing.T) {
 			},
 		})
 		// when
-		selection.Modify(&acceleratedCommandStub{}, selection)
+		selection.Modify(&acceleratedCommandStub{})
 		// then
 		assert.Equal(t, [][]image.Color{{color}}, accImg.PixelsTable())
+	})
+
+	t.Run("should not override pixels modified in RAM", func(t *testing.T) {
+		var (
+			color  = image.RGBA(10, 20, 30, 40)
+			accImg = fake.NewAcceleratedImage(2, 1)
+			img    = image.New(accImg)
+		)
+		selection := img.Selection(0, 0)
+		selection.SetColor(0, 0, color)
+		target := img.Selection(1, 0).WithSize(1, 1)
+		// when
+		target.Modify(&acceleratedCommandStub{})
+		// then
+		assert.Equal(t, color, selection.Color(0, 0))
 	})
 }
 
