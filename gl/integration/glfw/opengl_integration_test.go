@@ -1312,6 +1312,80 @@ func TestRenderer_BindTexture(t *testing.T) {
 		// then
 		assertColors(t, []image.Color{image.RGBA(5+9, 6+10, 7+11, 8+12)}, img)
 	})
+	t.Run("should draw RGBA(0,0,0,0) when sampling outside of texture", func(t *testing.T) {
+		tests := map[string]struct {
+			x, y float32
+		}{
+			"y=-1": {
+				y: -1,
+			},
+			"x=-1": {
+				x: -1,
+			},
+			"x=-1,y=-1": {
+				x: -1,
+				y: -1,
+			},
+			"y=1": {
+				y: 1,
+			},
+			"x=1": {
+				x: 1,
+			},
+			"x=1,y=1": {
+				x: 1,
+				y: 1,
+			},
+		}
+		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+		defer openGL.Destroy()
+		context := openGL.Context()
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				img := context.NewAcceleratedImage(1, 1)
+				img.Upload(make([]image.Color, 1))
+				tex := context.NewAcceleratedImage(1, 1)
+				tex.Upload([]image.Color{image.RGBA(1, 2, 3, 4)})
+				program := compileProgram(t,
+					context,
+					`
+				#version 330 core
+				layout(location = 0) in vec2 xy;	
+				void main() {
+					gl_Position = vec4(xy, 0.0, 1.0);
+				}
+				`,
+					`
+				#version 330 core
+				uniform sampler2D tex;
+				uniform float x, y;
+				out vec4 color;
+				void main() {
+					color = texture(tex, vec2(x, y));
+				}
+				`)
+				array := context.NewVertexArray(gl.VertexLayout{gl.Vec2})
+				buffer := context.NewFloatVertexBuffer(2)
+				buffer.Upload(0, []float32{0.0, 0.0})
+				vertexPosition := gl.VertexBufferPointer{Buffer: buffer, Stride: 2}
+				array.Set(0, vertexPosition)
+				glCommand := &command{runGL: func(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
+					renderer.BindTexture(0, "tex", tex)
+					renderer.SetFloat("x", test.x)
+					renderer.SetFloat("y", test.y)
+					// when
+					renderer.DrawArrays(array, gl.Points, 0, 1)
+				}}
+				command := program.AcceleratedCommand(glCommand)
+				command.Run(image.AcceleratedImageSelection{
+					Location: image.AcceleratedImageLocation{Width: 1, Height: 1},
+					Image:    img,
+				}, []image.AcceleratedImageSelection{})
+				// then
+				assertColors(t, []image.Color{image.RGBA(0, 0, 0, 0)}, img)
+			})
+		}
+	})
 }
 
 func TestRenderer_SetXXX(t *testing.T) {

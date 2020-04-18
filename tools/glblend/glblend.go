@@ -34,6 +34,9 @@ void main() {
 // NewSource creates a new blending tool which replaces target selection with source
 // colors. It is like coping of source selection colors into target.
 func NewSource(context *gl.Context) (*Source, error) {
+	if context == nil {
+		panic("nil context")
+	}
 	vertexShader, err := context.CompileVertexShader(vertexShaderSrc)
 	if err != nil {
 		return nil, err
@@ -99,5 +102,5 @@ type Source struct {
 // the target size.
 func (s *Source) BlendSourceToTarget(source image.Selection, target image.Selection) {
 	target = target.WithSize(source.Width(), source.Height())
-	target.Modify(s.command, source) // is it fast? is it better to use the whole texture as target? (and update xy in the vertextbuffer)
+	target.Modify(s.command, source) // is it fast enough? or is it better to use the whole texture as a target and update xy in the vertextbuffer accordingly?
 }

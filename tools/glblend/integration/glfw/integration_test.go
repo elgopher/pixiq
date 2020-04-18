@@ -1,25 +1,42 @@
-package blend_test
+package glfw_test
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/jacekolszak/pixiq/glfw"
 	"github.com/jacekolszak/pixiq/image"
-	"github.com/jacekolszak/pixiq/image/fake"
-	"github.com/jacekolszak/pixiq/tools/blend"
+	"github.com/jacekolszak/pixiq/tools/glblend"
 )
 
-func TestNew(t *testing.T) {
-	t.Run("should panic when colorBlender is nil", func(t *testing.T) {
-		assert.Panics(t, func() {
-			blend.New(nil)
-		})
+var mainThreadLoop *glfw.MainThreadLoop
+
+func TestMain(m *testing.M) {
+	var exit int
+	glfw.StartMainThreadLoop(func(main *glfw.MainThreadLoop) {
+		mainThreadLoop = main
+		exit = m.Run()
 	})
-	t.Run("should create tool", func(t *testing.T) {
-		tool := blend.New(multiplyColors{})
-		assert.NotNil(t, tool)
+	os.Exit(exit)
+}
+
+func TestNewSource(t *testing.T) {
+	t.Run("should return source blender", func(t *testing.T) {
+		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+		defer openGL.Destroy()
+		context := openGL.Context()
+		// when
+		source, err := glblend.NewSource(context)
+		// then
+		assert.NotNil(t, source)
+		assert.NoError(t, err)
 	})
+}
+
+type blender interface {
+	BlendSourceToTarget(source, target image.Selection)
 }
 
 func TestBlendSourceToTarget(t *testing.T) {
@@ -29,34 +46,25 @@ func TestBlendSourceToTarget(t *testing.T) {
 		color3 = image.RGBA(9, 10, 11, 12)
 		color4 = image.RGBA(6, 7, 8, 9)
 	)
+	openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+	defer openGL.Destroy()
+	context := openGL.Context()
+
 	blenders := map[string]struct {
-		tool interface {
-			BlendSourceToTarget(source, target image.Selection)
-		}
+		tool                         func() blender
 		color1x2, color1x3, color3x4 image.Color
 		// colorTx2 is a result of blending transparent color with color2
 		colorTx2 image.Color
 	}{
-		"Tool": {
-			tool:     blend.New(multiplyColors{}),
-			color1x2: image.RGBA(5, 12, 21, 32),
-			color1x3: image.RGBA(9, 20, 33, 48),
-			color3x4: image.RGBA(54, 70, 88, 108),
-			colorTx2: image.Transparent,
-		},
 		"Source": {
-			tool:     blend.NewSource(),
+			tool: func() blender {
+				b, _ := glblend.NewSource(context)
+				return b
+			},
 			color1x2: color1,
 			color1x3: color1,
 			color3x4: color3,
 			colorTx2: image.Transparent,
-		},
-		"SourceOver": {
-			tool:     blend.NewSourceOver(),
-			color1x2: image.RGBA(3, 4, 5, 12),
-			color1x3: image.RGBA(7, 8, 9, 16),
-			color3x4: image.RGBA(7, 8, 9, 21),
-			colorTx2: color2,
 		},
 	}
 	for name, blender := range blenders {
@@ -77,14 +85,14 @@ func TestBlendSourceToTarget(t *testing.T) {
 				for name, test := range tests {
 					t.Run(name, func(t *testing.T) {
 						// when
-						source := image.New(fake.NewAcceleratedImage(test.width, test.height)).
+						source := openGL.NewImage(test.width, test.height).
 							WholeImageSelection()
-						target := image.New(fake.NewAcceleratedImage(1, 1)).
+						target := openGL.NewImage(1, 1).
 							WholeImageSelection()
 						originalColor := image.RGBA(1, 2, 3, 4)
 						target.SetColor(0, 0, originalColor)
 						// when
-						blender.tool.BlendSourceToTarget(source, target)
+						blender.tool().BlendSourceToTarget(source, target)
 						// then
 						assert.Equal(t, originalColor, target.Color(0, 0))
 					})
@@ -112,40 +120,40 @@ func TestBlendSourceToTarget(t *testing.T) {
 					expectedPixels [][]image.Color
 				}{
 					"x=-1": {
-						source:         newImage(colors1).Selection(-1, 0).WithSize(1, 1),
-						target:         newImage(colors2).Selection(0, 0),
+						source:         newImage(openGL, colors1).Selection(-1, 0).WithSize(1, 1),
+						target:         newImage(openGL, colors2).Selection(0, 0),
 						expectedPixels: colorsTx2,
 					},
 					"x=1": {
-						source:         newImage(colors1).Selection(1, 0).WithSize(1, 1),
-						target:         newImage(colors2).Selection(0, 0),
+						source:         newImage(openGL, colors1).Selection(1, 0).WithSize(1, 1),
+						target:         newImage(openGL, colors2).Selection(0, 0),
 						expectedPixels: colorsTx2,
 					},
 					"y=-1": {
-						source:         newImage(colors1).Selection(0, -1).WithSize(1, 1),
-						target:         newImage(colors2).Selection(0, 0),
+						source:         newImage(openGL, colors1).Selection(0, -1).WithSize(1, 1),
+						target:         newImage(openGL, colors2).Selection(0, 0),
 						expectedPixels: colorsTx2,
 					},
 					"y=1": {
-						source:         newImage(colors1).Selection(0, 1).WithSize(1, 1),
-						target:         newImage(colors2).Selection(0, 0),
+						source:         newImage(openGL, colors1).Selection(0, 1).WithSize(1, 1),
+						target:         newImage(openGL, colors2).Selection(0, 0),
 						expectedPixels: colorsTx2,
 					},
 					"y=-2 and target y=-1": {
-						source:         newImage(colors1).Selection(0, -2).WithSize(1, 2),
-						target:         newImage(colors2).Selection(0, -1),
+						source:         newImage(openGL, colors1).Selection(0, -2).WithSize(1, 2),
+						target:         newImage(openGL, colors2).Selection(0, -1),
 						expectedPixels: colorsTx2,
 					},
 					"y=-1 and target x=-1": {
-						source:         newImage(colors1).Selection(0, -1).WithSize(2, 1),
-						target:         newImage(colors2).Selection(-1, 0),
+						source:         newImage(openGL, colors1).Selection(0, -1).WithSize(2, 1),
+						target:         newImage(openGL, colors2).Selection(-1, 0),
 						expectedPixels: colorsTx2,
 					},
 				}
 				for name, test := range tests {
 					t.Run(name, func(t *testing.T) {
 						// when
-						blender.tool.BlendSourceToTarget(test.source, test.target)
+						blender.tool().BlendSourceToTarget(test.source, test.target)
 						// then
 						assertColors(t, test.target.Image(), test.expectedPixels)
 					})
@@ -156,12 +164,12 @@ func TestBlendSourceToTarget(t *testing.T) {
 				sourceOriginalColors := [][]image.Color{
 					{image.RGBA(1, 2, 3, 4)},
 				}
-				source := newImage(sourceOriginalColors).WholeImageSelection()
-				target := newImage([][]image.Color{
+				source := newImage(openGL, sourceOriginalColors).WholeImageSelection()
+				target := newImage(openGL, [][]image.Color{
 					{image.RGBA(5, 6, 7, 8)},
 				}).WholeImageSelection()
 				// when
-				blender.tool.BlendSourceToTarget(source, target)
+				blender.tool().BlendSourceToTarget(source, target)
 				// then
 				assertColors(t, source.Image(), sourceOriginalColors)
 			})
@@ -172,12 +180,12 @@ func TestBlendSourceToTarget(t *testing.T) {
 					expectedPixels [][]image.Color
 				}{
 					"1x1 images": {
-						source: newImage([][]image.Color{
+						source: newImage(openGL, [][]image.Color{
 							{
 								color1,
 							},
 						}).WholeImageSelection(),
-						target: newImage([][]image.Color{
+						target: newImage(openGL, [][]image.Color{
 							{
 								color2,
 							},
@@ -189,12 +197,12 @@ func TestBlendSourceToTarget(t *testing.T) {
 						},
 					},
 					"target bigger than source 1": {
-						source: newImage([][]image.Color{
+						source: newImage(openGL, [][]image.Color{
 							{
 								color1,
 							},
 						}).WholeImageSelection(),
-						target: newImage([][]image.Color{
+						target: newImage(openGL, [][]image.Color{
 							{
 								color2, color3,
 							},
@@ -206,12 +214,12 @@ func TestBlendSourceToTarget(t *testing.T) {
 						},
 					},
 					"target bigger than source 2": {
-						source: newImage([][]image.Color{
+						source: newImage(openGL, [][]image.Color{
 							{
 								color1,
 							},
 						}).WholeImageSelection(),
-						target: newImage([][]image.Color{
+						target: newImage(openGL, [][]image.Color{
 							{
 								color2,
 							},
@@ -229,12 +237,12 @@ func TestBlendSourceToTarget(t *testing.T) {
 						},
 					},
 					"2x1 images": {
-						source: newImage([][]image.Color{
+						source: newImage(openGL, [][]image.Color{
 							{
 								color1, color3,
 							},
 						}).WholeImageSelection(),
-						target: newImage([][]image.Color{
+						target: newImage(openGL, [][]image.Color{
 							{
 								color2, color4,
 							},
@@ -246,12 +254,12 @@ func TestBlendSourceToTarget(t *testing.T) {
 						},
 					},
 					"source clamped x": {
-						source: newImage([][]image.Color{
+						source: newImage(openGL, [][]image.Color{
 							{
 								color1, color3,
 							},
 						}).Selection(0, 0).WithSize(1, 1),
-						target: newImage([][]image.Color{
+						target: newImage(openGL, [][]image.Color{
 							{
 								color2, color4,
 							},
@@ -263,7 +271,7 @@ func TestBlendSourceToTarget(t *testing.T) {
 						},
 					},
 					"source clamped y": {
-						source: newImage([][]image.Color{
+						source: newImage(openGL, [][]image.Color{
 							{
 								color1,
 							},
@@ -271,7 +279,7 @@ func TestBlendSourceToTarget(t *testing.T) {
 								color3,
 							},
 						}).Selection(0, 0).WithSize(1, 1),
-						target: newImage([][]image.Color{
+						target: newImage(openGL, [][]image.Color{
 							{
 								color2,
 							},
@@ -289,7 +297,7 @@ func TestBlendSourceToTarget(t *testing.T) {
 						},
 					},
 					"1x2 images": {
-						source: newImage([][]image.Color{
+						source: newImage(openGL, [][]image.Color{
 							{
 								color1,
 							},
@@ -297,7 +305,7 @@ func TestBlendSourceToTarget(t *testing.T) {
 								color3,
 							},
 						}).WholeImageSelection(),
-						target: newImage([][]image.Color{
+						target: newImage(openGL, [][]image.Color{
 							{
 								color2,
 							},
@@ -315,12 +323,12 @@ func TestBlendSourceToTarget(t *testing.T) {
 						},
 					},
 					"target out of boundaries x=-1": {
-						source: newImage([][]image.Color{
+						source: newImage(openGL, [][]image.Color{
 							{
 								color1, color3,
 							},
 						}).WholeImageSelection(),
-						target: newImage([][]image.Color{
+						target: newImage(openGL, [][]image.Color{
 							{
 								color4,
 							},
@@ -332,7 +340,7 @@ func TestBlendSourceToTarget(t *testing.T) {
 						},
 					},
 					"target out of boundaries y=-1": {
-						source: newImage([][]image.Color{
+						source: newImage(openGL, [][]image.Color{
 							{
 								color1,
 							},
@@ -340,7 +348,7 @@ func TestBlendSourceToTarget(t *testing.T) {
 								color3,
 							},
 						}).WholeImageSelection(),
-						target: newImage([][]image.Color{
+						target: newImage(openGL, [][]image.Color{
 							{
 								color4,
 							},
@@ -352,7 +360,7 @@ func TestBlendSourceToTarget(t *testing.T) {
 						},
 					},
 					"source higher than target": {
-						source: newImage([][]image.Color{
+						source: newImage(openGL, [][]image.Color{
 							{
 								color1,
 							},
@@ -360,7 +368,7 @@ func TestBlendSourceToTarget(t *testing.T) {
 								color2,
 							},
 						}).WholeImageSelection(),
-						target: newImage([][]image.Color{
+						target: newImage(openGL, [][]image.Color{
 							{
 								color3,
 							},
@@ -375,7 +383,7 @@ func TestBlendSourceToTarget(t *testing.T) {
 				for name, test := range tests {
 					t.Run(name, func(t *testing.T) {
 						// when
-						blender.tool.BlendSourceToTarget(test.source, test.target)
+						blender.tool().BlendSourceToTarget(test.source, test.target)
 						// then
 						assertColors(t, test.target.Image(), test.expectedPixels)
 					})
@@ -384,102 +392,6 @@ func TestBlendSourceToTarget(t *testing.T) {
 
 		})
 	}
-}
-
-func TestSourceOver_BlendSourceToTarget(t *testing.T) {
-	t.Run("should blend color", func(t *testing.T) {
-		tests := map[string]struct {
-			source   image.Color
-			target   image.Color
-			expected image.Color
-		}{
-			"all transparent": {
-				source:   image.Transparent,
-				target:   image.Transparent,
-				expected: image.Transparent,
-			},
-			"transparent source, fully opaque target": {
-				source:   image.Transparent,
-				target:   image.RGBA(4, 5, 6, 255),
-				expected: image.RGBA(4, 5, 6, 255),
-			},
-			"fully opaque source": {
-				source:   image.RGBA(1, 2, 3, 255),
-				target:   image.RGBA(4, 5, 6, 100),
-				expected: image.RGBA(1, 2, 3, 255),
-			},
-			"semi-transparent white source, black opaque target": {
-				source:   image.RGBA(255, 255, 255, 127),
-				target:   image.RGBA(0, 0, 0, 255),
-				expected: image.RGBA(127, 127, 127, 255),
-			},
-			"semi-transparent violet source, black opaque target": {
-				source:   image.RGBA(118, 66, 138, 127),
-				target:   image.RGBA(0, 0, 0, 255),
-				expected: image.RGBA(58, 32, 68, 255),
-			},
-			"semi-transparent violet source, blue opaque target": {
-				source:   image.RGBA(118, 66, 138, 127),
-				target:   image.RGBA(99, 155, 255, 255),
-				expected: image.RGBA(108, 111, 197, 255),
-			},
-			"semi-transparent white source, semi-transparent black target": {
-				source:   image.RGBA(255, 255, 255, 127),
-				target:   image.RGBA(0, 0, 0, 127),
-				expected: image.RGBA(169, 169, 169, 191),
-			},
-			"semi-transparent violet source, semi-transparent blue target": {
-				source:   image.RGBA(118, 66, 138, 127),
-				target:   image.RGBA(99, 155, 255, 127),
-				expected: image.RGBA(111, 96, 178, 191),
-			},
-			"alpha 0": {
-				source:   image.RGBA(1, 3, 5, 0),
-				target:   image.RGBA(2, 4, 6, 0),
-				expected: image.Transparent,
-			},
-		}
-		for name, test := range tests {
-			t.Run(name, func(t *testing.T) {
-				pre := newImage([][]image.Color{
-					{
-						image.Transparent,
-					},
-				}).WholeImageSelection()
-
-				source := newImage([][]image.Color{
-					{
-						test.source,
-					},
-				}).WholeImageSelection()
-				target := newImage([][]image.Color{
-					{
-						test.target,
-					},
-				}).WholeImageSelection()
-				// when
-				blend.NewSourceOver().BlendSourceToTarget(pre, source)
-				blend.NewSourceOver().BlendSourceToTarget(source, target)
-				// then
-				result := target.Color(0, 0)
-				const delta = 1
-				assert.InDelta(t, test.expected.R(), result.R(), delta, "Red")
-				assert.InDelta(t, test.expected.G(), result.G(), delta, "Green")
-				assert.InDelta(t, test.expected.B(), result.B(), delta, "Blue")
-				assert.InDelta(t, test.expected.A(), result.A(), delta, "Alpha")
-			})
-		}
-	})
-}
-
-type multiplyColors struct{}
-
-func (c multiplyColors) BlendSourceToTargetColor(source, target image.Color) image.Color {
-	return image.RGBA(
-		source.R()*target.R(),
-		source.G()*target.G(),
-		source.B()*target.B(),
-		source.A()*target.A())
 }
 
 func assertColors(t *testing.T, img *image.Image, expectedColorLines [][]image.Color) {
@@ -493,10 +405,10 @@ func assertColors(t *testing.T, img *image.Image, expectedColorLines [][]image.C
 	}
 }
 
-func newImage(pixels [][]image.Color) *image.Image {
+func newImage(gl *glfw.OpenGL, pixels [][]image.Color) *image.Image {
 	width := len(pixels[0])
 	height := len(pixels)
-	img := image.New(fake.NewAcceleratedImage(width, height))
+	img := gl.NewImage(width, height)
 	selection := img.WholeImageSelection()
 	for y := 0; y < height; y++ {
 		for x := 0; x < width; x++ {

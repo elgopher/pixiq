@@ -39,6 +39,8 @@ func (c *Context) NewAcceleratedImage(width, height int) *AcceleratedImage {
 	)
 	c.api.TexParameteri(texture2D, textureMinFilter, nearest)
 	c.api.TexParameteri(texture2D, textureMagFilter, nearest)
+	c.api.TexParameteri(texture2D, textureWrapS, clampToBorder)
+	c.api.TexParameteri(texture2D, textureWrapT, clampToBorder)
 
 	c.api.GenFramebuffers(1, &frameBufferID)
 	c.api.BindFramebuffer(framebuffer, frameBufferID)
