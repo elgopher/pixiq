@@ -18,6 +18,7 @@ type Renderer struct {
 	program   *Program
 	api       API
 	allImages allImages
+	blend     Blend
 }
 
 // BindTexture assigns image.AcceleratedImage to a given textureUnit and uniform attribute.
@@ -146,12 +147,34 @@ var (
 	Triangles = Mode{glMode: triangles}
 )
 
+type BlendFactor uint32
+
+const (
+	Zero             = BlendFactor(0)
+	One              = BlendFactor(1)
+	OneMinusSrcAlpha = BlendFactor(0x0303)
+	SrcAlpha         = BlendFactor(0x0302)
+	DstAlpha         = BlendFactor(0x0304)
+)
+
+type Blend struct {
+	SrcFactor, DstFactor BlendFactor
+}
+
+var SourceBlend = Blend{SrcFactor: One, DstFactor: Zero}
+
+// TODO Test
+func (r *Renderer) SetBlend(blend Blend) {
+	r.blend = blend
+}
+
 // DrawArrays draws primitives (such as triangles) using vertices defined in VertexArray.
 //
 // Before primitive is drawn this method validates if
 func (r *Renderer) DrawArrays(array *VertexArray, mode Mode, first, count int) {
 	r.validateAttributeTypes(array)
 	r.api.BindVertexArray(array.id)
+	r.api.BlendFunc(uint32(r.blend.SrcFactor), uint32(r.blend.DstFactor))
 	r.api.DrawArrays(mode.glMode, int32(first), int32(count))
 }
 
@@ -234,6 +257,10 @@ func (c *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selecti
 		program:   c.program,
 		api:       c.api,
 		allImages: c.allImages,
+		blend:     SourceBlend,
 	}
+
+	c.api.Enable(blend)
+
 	c.command.RunGL(renderer, selections)
 }

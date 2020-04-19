@@ -66,28 +66,36 @@ func (c *Context) Error() error {
 	return glError(code)
 }
 
-type UsageFrequency uint32
+type Usage struct {
+	glUsage uint32
+}
 
-const (
+var (
 	// The data store contents will be modified once and used at most a few times.
-	Stream UsageFrequency = streamDraw
+	// The data store contents are modified by the application, and used as the source
+	// for GL drawing and image specification commands.
+	StreamDraw = Usage{glUsage: streamDraw}
 	// The data store contents will be modified once and used many times.
-	Static UsageFrequency = staticDraw
+	// The data store contents are modified by the application, and used as the source
+	// for GL drawing and image specification commands.
+	StaticDraw = Usage{glUsage: staticDraw}
 	// The data store contents will be modified repeatedly and used many times.
-	Dynamic UsageFrequency = dynamicDraw
+	// The data store contents are modified by the application, and used as the source
+	// for GL drawing and image specification commands.
+	DynamicDraw = Usage{glUsage: dynamicDraw}
 )
 
 type UsageNature int
 
 // NewFloatVertexBuffer creates an OpenGL's Vertex Buffer Object (VBO) containing only float32 numb)ers.
-func (c *Context) NewFloatVertexBuffer(size int, frequency UsageFrequency) *FloatVertexBuffer {
+func (c *Context) NewFloatVertexBuffer(size int, usage Usage) *FloatVertexBuffer {
 	if size < 0 {
 		panic("negative size")
 	}
 	var id uint32
 	c.api.GenBuffers(1, &id)
 	c.api.BindBuffer(arrayBuffer, id)
-	c.api.BufferData(arrayBuffer, size*4, c.api.Ptr(nil), uint32(frequency))
+	c.api.BufferData(arrayBuffer, size*4, c.api.Ptr(nil), usage.glUsage)
 	vb := &FloatVertexBuffer{
 		id:   id,
 		size: size,

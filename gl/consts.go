@@ -44,4 +44,5 @@ const (
 	clampToBorder            = 0x812D
 	noError                  = 0
 	outOfMemory              = 0x0505
+	blend                    = 0x0BE2
 )

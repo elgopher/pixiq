@@ -49,10 +49,48 @@ func NewSource(context *gl.Context) (*Source, error) {
 	if err != nil {
 		return nil, err
 	}
-	vertexBuffer := context.NewFloatVertexBuffer(16, gl.Dynamic)
+	vertexBuffer := context.NewFloatVertexBuffer(16, gl.DynamicDraw)
 	vertexArray := makeVertexArray(context, vertexBuffer)
-	command := program.AcceleratedCommand(&blendCommand{vertexBuffer: vertexBuffer, vertexArray: vertexArray})
+	command := program.AcceleratedCommand(
+		&blendCommand{
+			vertexBuffer: vertexBuffer,
+			vertexArray:  vertexArray,
+			blend:        gl.SourceBlend,
+		})
 	return &Source{command: command}, nil
+}
+
+// NewSourceOver creates a new blending tool which blends together source and target
+// taking into account alpha channel of both. Source-over means that source will be
+// painted on top of the target.
+func NewSourceOver(context *gl.Context) (*SourceOver, error) {
+	if context == nil {
+		panic("nil context")
+	}
+	vertexShader, err := context.CompileVertexShader(vertexShaderSrc)
+	if err != nil {
+		return nil, err
+	}
+	fragmentShader, err := context.CompileFragmentShader(fragmentShaderSrc)
+	if err != nil {
+		return nil, err
+	}
+	program, err := context.LinkProgram(vertexShader, fragmentShader)
+	if err != nil {
+		return nil, err
+	}
+	vertexBuffer := context.NewFloatVertexBuffer(16, gl.DynamicDraw)
+	vertexArray := makeVertexArray(context, vertexBuffer)
+	command := program.AcceleratedCommand(
+		&blendCommand{
+			vertexBuffer: vertexBuffer,
+			vertexArray:  vertexArray,
+			blend: gl.Blend{
+				SrcFactor: gl.One,
+				DstFactor: gl.OneMinusSrcAlpha,
+			},
+		})
+	return &SourceOver{source: &Source{command: command}}, nil
 }
 
 func makeVertexArray(context *gl.Context, buffer *gl.FloatVertexBuffer) *gl.VertexArray {
@@ -67,6 +105,7 @@ func makeVertexArray(context *gl.Context, buffer *gl.FloatVertexBuffer) *gl.Vert
 type blendCommand struct {
 	vertexBuffer *gl.FloatVertexBuffer
 	vertexArray  *gl.VertexArray
+	blend        gl.Blend
 }
 
 func (c *blendCommand) RunGL(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
@@ -88,6 +127,7 @@ func (c *blendCommand) RunGL(renderer *gl.Renderer, selections []image.Accelerat
 		-1, -1, left, bottom,
 	}
 	c.vertexBuffer.Upload(0, vertices)
+	renderer.SetBlend(c.blend)
 	renderer.DrawArrays(c.vertexArray, gl.TriangleFan, 0, 4)
 }
 
@@ -103,4 +143,12 @@ type Source struct {
 func (s *Source) BlendSourceToTarget(source image.Selection, target image.Selection) {
 	target = target.WithSize(source.Width(), source.Height())
 	target.Modify(s.command, source) // is it fast enough? or is it better to use the whole texture as a target and update xy in the vertextbuffer accordingly?
+}
+
+type SourceOver struct {
+	source *Source
+}
+
+func (s *SourceOver) BlendSourceToTarget(source image.Selection, target image.Selection) {
+	s.source.BlendSourceToTarget(source, target)
 }

@@ -66,6 +66,16 @@ func TestBlendSourceToTarget(t *testing.T) {
 			color3x4: color3,
 			colorTx2: image.Transparent,
 		},
+		"SourceOver": {
+			tool: func() blender {
+				b, _ := glblend.NewSourceOver(context)
+				return b
+			},
+			color1x2: image.RGBA(3, 4, 5, 12),
+			color1x3: image.RGBA(7, 8, 9, 16),
+			color3x4: image.RGBA(7, 8, 9, 21),
+			colorTx2: color2,
+		},
 	}
 	for name, blender := range blenders {
 

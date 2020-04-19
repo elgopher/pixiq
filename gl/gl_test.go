@@ -43,7 +43,7 @@ func TestContext_NewFloatVertexBuffer(t *testing.T) {
 				context := gl.NewContext(apiStub{})
 				// when
 				assert.Panics(t, func() {
-					context.NewFloatVertexBuffer(size, gl.Static)
+					context.NewFloatVertexBuffer(size, gl.StaticDraw)
 				})
 			})
 		}
@@ -57,7 +57,7 @@ func TestContext_NewFloatVertexBuffer(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				context := gl.NewContext(apiStub{})
 				// when
-				buffer := context.NewFloatVertexBuffer(size, gl.Static)
+				buffer := context.NewFloatVertexBuffer(size, gl.StaticDraw)
 				// then
 				assert.NotNil(t, buffer)
 				// and
@@ -94,7 +94,7 @@ func TestFloatVertexBuffer_Upload(t *testing.T) {
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
 				context := gl.NewContext(apiStub{})
-				buffer := context.NewFloatVertexBuffer(test.size, gl.Static)
+				buffer := context.NewFloatVertexBuffer(test.size, gl.StaticDraw)
 				assert.Panics(t, func() {
 					// when
 					buffer.Upload(test.offset, test.data)
@@ -104,7 +104,7 @@ func TestFloatVertexBuffer_Upload(t *testing.T) {
 	})
 	t.Run("should panic when offset is negative", func(t *testing.T) {
 		context := gl.NewContext(apiStub{})
-		buffer := context.NewFloatVertexBuffer(1, gl.Static)
+		buffer := context.NewFloatVertexBuffer(1, gl.StaticDraw)
 		assert.Panics(t, func() {
 			// when
 			buffer.Upload(-1, []float32{1})
@@ -115,7 +115,7 @@ func TestFloatVertexBuffer_Upload(t *testing.T) {
 func TestFloatVertexBuffer_Download(t *testing.T) {
 	t.Run("should panic when offset is negative", func(t *testing.T) {
 		context := gl.NewContext(apiStub{})
-		buffer := context.NewFloatVertexBuffer(1, gl.Static)
+		buffer := context.NewFloatVertexBuffer(1, gl.StaticDraw)
 		defer buffer.Delete()
 		output := make([]float32, 1)
 		assert.Panics(t, func() {
@@ -125,7 +125,7 @@ func TestFloatVertexBuffer_Download(t *testing.T) {
 	})
 	t.Run("should panic when buffer has been deleted", func(t *testing.T) {
 		context := gl.NewContext(apiStub{})
-		buffer := context.NewFloatVertexBuffer(1, gl.Static)
+		buffer := context.NewFloatVertexBuffer(1, gl.StaticDraw)
 		buffer.Delete()
 		output := make([]float32, 1)
 		// when
@@ -167,7 +167,7 @@ func TestVertexArray_Set(t *testing.T) {
 		context := gl.NewContext(apiStub{})
 		vao := context.NewVertexArray(gl.VertexLayout{gl.Float})
 		defer vao.Delete()
-		buffer := context.NewFloatVertexBuffer(1, gl.Static)
+		buffer := context.NewFloatVertexBuffer(1, gl.StaticDraw)
 		pointer := gl.VertexBufferPointer{
 			Buffer: buffer,
 			Offset: -1,
@@ -181,7 +181,7 @@ func TestVertexArray_Set(t *testing.T) {
 	t.Run("should panic when stride is negative", func(t *testing.T) {
 		context := gl.NewContext(apiStub{})
 		vao := context.NewVertexArray(gl.VertexLayout{gl.Float})
-		buffer := context.NewFloatVertexBuffer(1, gl.Static)
+		buffer := context.NewFloatVertexBuffer(1, gl.StaticDraw)
 		pointer := gl.VertexBufferPointer{
 			Buffer: buffer,
 			Offset: 0,
@@ -195,7 +195,7 @@ func TestVertexArray_Set(t *testing.T) {
 	t.Run("should panic when location is negative", func(t *testing.T) {
 		context := gl.NewContext(apiStub{})
 		vao := context.NewVertexArray(gl.VertexLayout{gl.Float})
-		buffer := context.NewFloatVertexBuffer(1, gl.Static)
+		buffer := context.NewFloatVertexBuffer(1, gl.StaticDraw)
 		pointer := gl.VertexBufferPointer{
 			Buffer: buffer,
 			Offset: 0,
@@ -209,7 +209,7 @@ func TestVertexArray_Set(t *testing.T) {
 	t.Run("should panic when location is higher than number of arguments", func(t *testing.T) {
 		context := gl.NewContext(apiStub{})
 		vao := context.NewVertexArray(gl.VertexLayout{gl.Float})
-		buffer := context.NewFloatVertexBuffer(1, gl.Static)
+		buffer := context.NewFloatVertexBuffer(1, gl.StaticDraw)
 		pointer := gl.VertexBufferPointer{
 			Buffer: buffer,
 			Offset: 0,
@@ -547,6 +547,7 @@ func (a apiStub) GetTexImage(target uint32, level int32, format uint32, xtype ui
 func (a apiStub) GetError() uint32 { return 0 }
 func (a apiStub) ReadPixels(x int32, y int32, width int32, height int32, format uint32, xtype uint32, pixels unsafe.Pointer) {
 }
-func (a apiStub) Finish()                             {}
-func (a apiStub) Ptr(data interface{}) unsafe.Pointer { return nil }
-func (a apiStub) PtrOffset(offset int) unsafe.Pointer { return nil }
+func (a apiStub) BlendFunc(sfactor uint32, dfactor uint32) {}
+func (a apiStub) Finish()                                  {}
+func (a apiStub) Ptr(data interface{}) unsafe.Pointer      { return nil }
+func (a apiStub) PtrOffset(offset int) unsafe.Pointer      { return nil }

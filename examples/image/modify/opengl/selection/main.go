@@ -54,7 +54,7 @@ func makeVertexBuffer(ctx *gl.Context) *gl.FloatVertexBuffer {
 		1, -1, 1, 0, // bottom-right
 		-1, -1, 0, 0, // bottom-left
 	}
-	buffer := ctx.NewFloatVertexBuffer(len(vertices), gl.Static)
+	buffer := ctx.NewFloatVertexBuffer(len(vertices), gl.StaticDraw)
 	buffer.Upload(0, vertices)
 	return buffer
 }

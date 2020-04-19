@@ -49,7 +49,7 @@ func makeVertexBuffer(context *gl.Context) *gl.FloatVertexBuffer {
 		1, -1, 0, 0, 1, // bottom-right -> blue
 		-1, -1, 1, 1, 1, // bottom-left -> white
 	}
-	buffer := context.NewFloatVertexBuffer(len(vertices), gl.Static)
+	buffer := context.NewFloatVertexBuffer(len(vertices), gl.StaticDraw)
 	buffer.Upload(0, vertices)
 	return buffer
 }

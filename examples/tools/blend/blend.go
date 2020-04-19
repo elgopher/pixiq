@@ -25,6 +25,10 @@ func main() {
 			panic(err)
 		}
 		sourceOverBlender := blend.NewSourceOver()
+		glSourceOverBlender, err := glblend.NewSourceOver(gl.Context())
+		if err != nil {
+			panic(err)
+		}
 
 		clearTool := clear.New()
 		clearTool.SetColor(colornames.Aliceblue)
@@ -45,6 +49,9 @@ func main() {
 			// into account alpha channels of both. In places where source has
 			// transparent pixels the original target colors are preserved.
 			sourceOverBlender.BlendSourceToTarget(face, screen.Selection(10, 24))
+
+			// similar source-over blending using video card
+			glSourceOverBlender.BlendSourceToTarget(face, screen.Selection(20, 24))
 
 			if window.ShouldClose() {
 				frame.StopLoopEventually()

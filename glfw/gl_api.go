@@ -199,7 +199,7 @@ func (g *context) GetAttribLocation(program uint32, name *uint8) int32 {
 	return loc
 }
 
-// Enable enables or disable server-side GL capabilities
+// Enable enables server-side GL capabilities
 func (g *context) Enable(cap uint32) {
 	g.runAsync(func() {
 		gl.Enable(cap)
@@ -401,6 +401,13 @@ func (g *context) GetError() uint32 {
 func (g *context) ReadPixels(x int32, y int32, width int32, height int32, format uint32, xtype uint32, pixels unsafe.Pointer) {
 	g.run(func() {
 		gl.ReadPixels(x, y, width, height, format, xtype, pixels)
+	})
+}
+
+// BlendFunc specifies pixel arithmetic
+func (g *context) BlendFunc(sfactor uint32, dfactor uint32) {
+	g.run(func() {
+		gl.BlendFunc(sfactor, dfactor)
 	})
 }
 
