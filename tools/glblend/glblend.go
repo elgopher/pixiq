@@ -133,7 +133,8 @@ type Source struct {
 // the target size.
 func (s *Source) BlendSourceToTarget(source image.Selection, target image.Selection) {
 	target = target.WithSize(source.Width(), source.Height())
-	target.Modify(s.command, source) // is it fast enough? or is it better to use the whole texture as a target and update xy in the vertextbuffer accordingly?
+	// FIXME is it fast enough? or is it better to use the whole texture as a target and update xy in the vertextbuffer accordingly?
+	target.Modify(s.command, source)
 }
 
 // SourceOver (aka Normal) is a blending tool which blends together source and target
