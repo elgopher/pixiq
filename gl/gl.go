@@ -16,7 +16,7 @@ func NewContext(api API) *Context {
 		panic("nil api")
 	}
 	return &Context{
-		api:             api,
+		api:             &apiCache{api: api},
 		vertexBufferIDs: vertexBufferIDs{},
 		allImages:       allImages{},
 		capabilities:    gatherCapabilities(api),
