@@ -13,7 +13,15 @@ type Command interface {
 	RunGL(renderer *Renderer, selections []image.AcceleratedImageSelection)
 }
 
-// Renderer is an API for drawing primitives
+// Renderer is an API for drawing primitives.
+//
+// It is using blending with formula:
+//   R = S*sf + D*df
+// where S is source color component, sf is a source factor, D is destination color
+// component, df is a destination factor.
+// By default sf is 1 and df is 0 (gl.SourceBlendFactors), which means that formula is
+//   R = S
+// BlendFactors can be changed by calling SetBlendFactors method.
 type Renderer struct {
 	program      *Program
 	api          API
@@ -173,7 +181,8 @@ type BlendFactors struct {
 	SrcFactor, DstFactor BlendFactor
 }
 
-var SourceBlend = BlendFactors{SrcFactor: One, DstFactor: Zero}
+// SourceBlendFactors is default BlendFactors used by AcceleratedCommand.
+var SourceBlendFactors = BlendFactors{SrcFactor: One, DstFactor: Zero}
 
 // SetBlendFactors sets source and dest factors for blending formula:
 // R = S*sf + D*df
@@ -270,7 +279,7 @@ func (c *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selecti
 		program:      c.program,
 		api:          c.api,
 		allImages:    c.allImages,
-		blendFactors: SourceBlend,
+		blendFactors: SourceBlendFactors,
 	}
 
 	c.api.Enable(blend)

@@ -10,7 +10,7 @@ import (
 // NewSource creates a new blending tool which replaces target selection with source
 // colors. It is like coping of source selection colors into target.
 func NewSource(context *gl.Context) (*Source, error) {
-	command, err := newBlendCommand(context, gl.SourceBlend)
+	command, err := newBlendCommand(context, gl.SourceBlendFactors)
 	if err != nil {
 		return nil, err
 	}

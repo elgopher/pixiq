@@ -1732,8 +1732,8 @@ func TestRenderer_SetBlend(t *testing.T) {
 			},
 			expectedColor: image.RGBA(2, 3, 5, 6),
 		},
-		"SourceBlend": {
-			blend:         gl.SourceBlend,
+		"SourceBlendFactors": {
+			blend:         gl.SourceBlendFactors,
 			expectedColor: srcColor,
 		},
 	}
