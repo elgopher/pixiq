@@ -163,8 +163,10 @@ type Blend struct {
 
 var SourceBlend = Blend{SrcFactor: One, DstFactor: Zero}
 
-// TODO Test
+// SetBlend sets blend factors (source and dest factor) for blending formula:
+// R = S*sf + D*df
 func (r *Renderer) SetBlend(blend Blend) {
+	// TODO Test
 	r.blend = blend
 }
 

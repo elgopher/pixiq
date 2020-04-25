@@ -1,3 +1,4 @@
+// Package glblend provides blend tools using video card
 // TODO Add Blender with fragment shader as a parameter. Add methods for setting uniforms
 package glblend
 
@@ -5,6 +6,30 @@ import (
 	"github.com/jacekolszak/pixiq/gl"
 	"github.com/jacekolszak/pixiq/image"
 )
+
+// NewSource creates a new blending tool which replaces target selection with source
+// colors. It is like coping of source selection colors into target.
+func NewSource(context *gl.Context) (*Source, error) {
+	command, err := newBlendCommand(context, gl.SourceBlend)
+	if err != nil {
+		return nil, err
+	}
+	return &Source{command: command}, nil
+}
+
+// NewSourceOver creates a new blending tool which blends together source and target
+// taking into account alpha channel of both. Source-over means that source will be
+// painted on top of the target.
+func NewSourceOver(context *gl.Context) (*SourceOver, error) {
+	command, err := newBlendCommand(context, gl.Blend{
+		SrcFactor: gl.One,
+		DstFactor: gl.OneMinusSrcAlpha,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &SourceOver{source: &Source{command: command}}, nil
+}
 
 const vertexShaderSrc = `
 #version 330 core
@@ -32,9 +57,7 @@ void main() {
 }
 `
 
-// NewSource creates a new blending tool which replaces target selection with source
-// colors. It is like coping of source selection colors into target.
-func NewSource(context *gl.Context) (*Source, error) {
+func newBlendCommand(context *gl.Context, blend gl.Blend) (*gl.AcceleratedCommand, error) {
 	if context == nil {
 		panic("nil context")
 	}
@@ -56,42 +79,9 @@ func NewSource(context *gl.Context) (*Source, error) {
 		&blendCommand{
 			vertexBuffer: vertexBuffer,
 			vertexArray:  vertexArray,
-			blend:        gl.SourceBlend,
+			blend:        blend,
 		})
-	return &Source{command: command}, nil
-}
-
-// NewSourceOver creates a new blending tool which blends together source and target
-// taking into account alpha channel of both. Source-over means that source will be
-// painted on top of the target.
-func NewSourceOver(context *gl.Context) (*SourceOver, error) {
-	if context == nil {
-		panic("nil context")
-	}
-	vertexShader, err := context.CompileVertexShader(vertexShaderSrc)
-	if err != nil {
-		return nil, err
-	}
-	fragmentShader, err := context.CompileFragmentShader(fragmentShaderSrc)
-	if err != nil {
-		return nil, err
-	}
-	program, err := context.LinkProgram(vertexShader, fragmentShader)
-	if err != nil {
-		return nil, err
-	}
-	vertexBuffer := context.NewFloatVertexBuffer(16, gl.DynamicDraw)
-	vertexArray := makeVertexArray(context, vertexBuffer)
-	command := program.AcceleratedCommand(
-		&blendCommand{
-			vertexBuffer: vertexBuffer,
-			vertexArray:  vertexArray,
-			blend: gl.Blend{
-				SrcFactor: gl.One,
-				DstFactor: gl.OneMinusSrcAlpha,
-			},
-		})
-	return &SourceOver{source: &Source{command: command}}, nil
+	return command, nil
 }
 
 func makeVertexArray(context *gl.Context, buffer *gl.FloatVertexBuffer) *gl.VertexArray {
@@ -146,10 +136,16 @@ func (s *Source) BlendSourceToTarget(source image.Selection, target image.Select
 	target.Modify(s.command, source) // is it fast enough? or is it better to use the whole texture as a target and update xy in the vertextbuffer accordingly?
 }
 
+// SourceOver (aka Normal) is a blending tool which blends together source and target
+// taking into account alpha channel of both. Source-over means that source will be
+// painted on top of the target.
 type SourceOver struct {
 	source *Source
 }
 
+// BlendSourceToTarget blends source into target selection.
+// Only position of the target Selection is used and the source is not clamped by
+// the target size.
 func (s *SourceOver) BlendSourceToTarget(source image.Selection, target image.Selection) {
 	s.source.BlendSourceToTarget(source, target)
 }
