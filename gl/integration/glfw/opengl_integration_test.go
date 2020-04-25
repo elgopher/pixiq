@@ -836,24 +836,24 @@ func TestRenderer_DrawArrays(t *testing.T) {
 		img := context.NewAcceleratedImage(1, 1)
 		img.Upload(make([]image.Color, 1))
 		vertexShader, err := context.CompileVertexShader(`
-								#version 330 core
-								layout(location = 0) in float vertexPositionX;
-								layout(location = 1) in vec3 vertexColor;
-								out vec4 interpolatedColor;
-								void main() {
-									gl_Position = vec4(vertexPositionX, 0, 0, 1);
-									interpolatedColor = vec4(vertexColor, 1.);
-								}
-								`)
+			#version 330 core
+			layout(location = 0) in float vertexPositionX;
+			layout(location = 1) in vec3 vertexColor;
+			out vec4 interpolatedColor;
+			void main() {
+				gl_Position = vec4(vertexPositionX, 0, 0, 1);
+				interpolatedColor = vec4(vertexColor, 1.);
+			}
+			`)
 		require.NoError(t, err)
 		fragmentShader, err := context.CompileFragmentShader(`
-								#version 330 core
-								in vec4 interpolatedColor;
-								out vec4 color;
-								void main() {
-									color = interpolatedColor;
-								}
-								`)
+			#version 330 core
+			in vec4 interpolatedColor;
+			out vec4 color;
+			void main() {
+				color = interpolatedColor;
+			}
+			`)
 		require.NoError(t, err)
 		program, err := context.LinkProgram(vertexShader, fragmentShader)
 		require.NoError(t, err)
@@ -1332,7 +1332,7 @@ func TestRenderer_BindTexture(t *testing.T) {
 		// then
 		assertColors(t, []image.Color{image.RGBA(5+9, 6+10, 7+11, 8+12)}, img)
 	})
-	t.Run("should draw RGBA(0,0,0,0) when sampling outside of texture", func(t *testing.T) {
+	t.Run("should draw RGBA(0,0,0,0) when sampling outside the texture", func(t *testing.T) {
 		tests := map[string]struct {
 			x, y float32
 		}{

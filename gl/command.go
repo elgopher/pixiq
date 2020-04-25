@@ -271,6 +271,7 @@ func (c *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selecti
 
 	c.program.use()
 	c.api.Enable(scissorTest)
+	c.api.Enable(blend)
 	c.api.BindFramebuffer(framebuffer, img.frameBufferID)
 	c.api.Scissor(x, y, w, h)
 	c.api.Viewport(x, y, w, h)
@@ -281,8 +282,6 @@ func (c *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selecti
 		allImages:    c.allImages,
 		blendFactors: SourceBlendFactors,
 	}
-
-	c.api.Enable(blend)
 
 	c.command.RunGL(renderer, selections)
 }
