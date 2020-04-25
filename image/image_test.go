@@ -1161,6 +1161,12 @@ func TestSelection_LineForXXX(t *testing.T) {
 						line:      0,
 						expected:  []image.Color{color1},
 					},
+					"selection bigger than image size": {
+						image:     image2x1,
+						selection: image2x1.Selection(1, 0).WithSize(2, 1),
+						line:      0,
+						expected:  []image.Color{color2},
+					},
 				}
 				for name, test := range tests {
 					t.Run(name, func(t *testing.T) {

@@ -400,7 +400,10 @@ func (l Lines) line(line int) []Color {
 	if start < 0 {
 		start = 0
 	}
-	if stop > len(l.image.pixels) || stop < 0 {
+	if stop > len(l.image.pixels) {
+		stop = len(l.image.pixels)
+	}
+	if stop < 0 {
 		return []Color{}
 	}
 	if l.image.acceleratedImageModified {
