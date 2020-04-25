@@ -66,26 +66,28 @@ func (c *Context) Error() error {
 	return glError(code)
 }
 
+// Usage defines how Vertex Buffer will be used. This is a hint for OpenGL implementation.
 type Usage struct {
 	glUsage uint32
 }
 
 var (
-	// The data store contents will be modified once and used at most a few times.
-	// The data store contents are modified by the application, and used as the source
+	// StreamDraw tells OpenGL implementation that vertex buffer will be modified once
+	// and used at most a few times.
+	// Vertex Buffer is modified by the application, and used as the source
 	// for GL drawing and image specification commands.
 	StreamDraw = Usage{glUsage: streamDraw}
-	// The data store contents will be modified once and used many times.
-	// The data store contents are modified by the application, and used as the source
+	// StaticDraw tells OpenGL implementation that vertex buffer will be modified once
+	// and used many times.
+	// Vertex Buffer is modified by the application, and used as the source
 	// for GL drawing and image specification commands.
 	StaticDraw = Usage{glUsage: staticDraw}
-	// The data store contents will be modified repeatedly and used many times.
-	// The data store contents are modified by the application, and used as the source
+	// DynamicDraw tells OpenGL implementation that vertex buffer will be modified
+	// repeatedly and used many times.
+	// Vertex Buffer is modified by the application, and used as the source
 	// for GL drawing and image specification commands.
 	DynamicDraw = Usage{glUsage: dynamicDraw}
 )
-
-type UsageNature int
 
 // NewFloatVertexBuffer creates an OpenGL's Vertex Buffer Object (VBO) containing only float32 numb)ers.
 func (c *Context) NewFloatVertexBuffer(size int, usage Usage) *FloatVertexBuffer {

@@ -147,17 +147,28 @@ var (
 	Triangles = Mode{glMode: triangles}
 )
 
+// BlendFactor is source or destination factor
 type BlendFactor uint32
 
 const (
-	Zero             = BlendFactor(0)
-	One              = BlendFactor(1)
+	// Zero is GL_ZERO. Multiplies all components by 0.
+	Zero = BlendFactor(0)
+	// One is GL_ONE. Multiplies all components by 1.
+	One = BlendFactor(1)
+	// OneMinusSrcAlpha is GL_ONE_MINUS_SRC_ALPHA. Multiplies all components by 1 minus
+	// the source alpha value.
 	OneMinusSrcAlpha = BlendFactor(0x0303)
-	SrcAlpha         = BlendFactor(0x0302)
-	DstAlpha         = BlendFactor(0x0304)
+	// SrcAlpha is GL_SRC_ALPHA. Multiplies all components by the source alpha value.
+	SrcAlpha = BlendFactor(0x0302)
+	// DstAlpha is GL_DST_ALPHA. Multiplies all components by the destination alpha value.
+	DstAlpha = BlendFactor(0x0304)
+	// OneMinusDstAlpha is GL_ONE_MINUS_DST_ALPHA. Multiplies all components by 1 minus
+	// the destination alpha value.
 	OneMinusDstAlpha = BlendFactor(0x0305)
 )
 
+// BlendFactors contains source and destination factors used by blending formula
+// R = S*sf + D*df
 type BlendFactors struct {
 	SrcFactor, DstFactor BlendFactor
 }
