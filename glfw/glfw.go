@@ -181,7 +181,7 @@ func (g *OpenGL) NewImage(width, height int) *image.Image {
 		panic("negative height")
 	}
 	acceleratedImage := g.context.NewAcceleratedImage(width, height)
-	return image.New(width, height, acceleratedImage)
+	return image.New(acceleratedImage)
 }
 
 // OpenWindow creates and shows Window.
@@ -195,7 +195,7 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 	// FIXME: EventBuffer size should be configurable
 	keyboardEvents := internal.NewKeyboardEvents(keyboard.NewEventBuffer(32))
 	screenAcceleratedImage := g.context.NewAcceleratedImage(width, height)
-	screenImage := image.New(width, height, screenAcceleratedImage)
+	screenImage := image.New(screenAcceleratedImage)
 	win := &Window{
 		mainThreadLoop:   g.mainThreadLoop,
 		keyboardEvents:   keyboardEvents,

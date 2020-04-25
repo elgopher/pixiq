@@ -66,15 +66,38 @@ func (c *Context) Error() error {
 	return glError(code)
 }
 
-// NewFloatVertexBuffer creates an OpenGL's Vertex Buffer Object (VBO) containing only float32 numbers.
-func (c *Context) NewFloatVertexBuffer(size int) *FloatVertexBuffer {
+// Usage defines how Vertex Buffer will be used. This is a hint for OpenGL implementation.
+type Usage struct {
+	glUsage uint32
+}
+
+var (
+	// StreamDraw tells OpenGL implementation that vertex buffer will be modified once
+	// and used at most a few times.
+	// Vertex Buffer is modified by the application, and used as the source
+	// for GL drawing and image specification commands.
+	StreamDraw = Usage{glUsage: streamDraw}
+	// StaticDraw tells OpenGL implementation that vertex buffer will be modified once
+	// and used many times.
+	// Vertex Buffer is modified by the application, and used as the source
+	// for GL drawing and image specification commands.
+	StaticDraw = Usage{glUsage: staticDraw}
+	// DynamicDraw tells OpenGL implementation that vertex buffer will be modified
+	// repeatedly and used many times.
+	// Vertex Buffer is modified by the application, and used as the source
+	// for GL drawing and image specification commands.
+	DynamicDraw = Usage{glUsage: dynamicDraw}
+)
+
+// NewFloatVertexBuffer creates an OpenGL's Vertex Buffer Object (VBO) containing only float32 numb)ers.
+func (c *Context) NewFloatVertexBuffer(size int, usage Usage) *FloatVertexBuffer {
 	if size < 0 {
 		panic("negative size")
 	}
 	var id uint32
 	c.api.GenBuffers(1, &id)
 	c.api.BindBuffer(arrayBuffer, id)
-	c.api.BufferData(arrayBuffer, size*4, c.api.Ptr(nil), staticDraw) // FIXME: Parametrize usage
+	c.api.BufferData(arrayBuffer, size*4, c.api.Ptr(nil), usage.glUsage)
 	vb := &FloatVertexBuffer{
 		id:   id,
 		size: size,

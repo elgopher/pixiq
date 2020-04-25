@@ -7,6 +7,7 @@ import (
 	"github.com/jacekolszak/pixiq/loop"
 	"github.com/jacekolszak/pixiq/tools/blend"
 	"github.com/jacekolszak/pixiq/tools/clear"
+	"github.com/jacekolszak/pixiq/tools/glblend"
 )
 
 func main() {
@@ -19,7 +20,15 @@ func main() {
 		face := face(gl)
 
 		sourceBlender := blend.NewSource()
+		glSourceBlender, err := glblend.NewSource(gl.Context())
+		if err != nil {
+			panic(err)
+		}
 		sourceOverBlender := blend.NewSourceOver()
+		glSourceOverBlender, err := glblend.NewSourceOver(gl.Context())
+		if err != nil {
+			panic(err)
+		}
 
 		clearTool := clear.New()
 		clearTool.SetColor(colornames.Aliceblue)
@@ -31,11 +40,18 @@ func main() {
 
 			// source blending overrides the target with source colors
 			// fully transparent pixels (RGBA 0x00000000) are rendered as black on the screen.
-			sourceBlender.BlendSourceToTarget(face, screen.Selection(15, 7))
+			sourceBlender.BlendSourceToTarget(face, screen.Selection(10, 7))
+
+			// similar source blending using video card
+			glSourceBlender.BlendSourceToTarget(face, screen.Selection(20, 7))
+
 			// source-over blending mixes source and target colors together taking
 			// into account alpha channels of both. In places where source has
 			// transparent pixels the original target colors are preserved.
-			sourceOverBlender.BlendSourceToTarget(face, screen.Selection(15, 24))
+			sourceOverBlender.BlendSourceToTarget(face, screen.Selection(10, 24))
+
+			// similar source-over blending using video card
+			glSourceOverBlender.BlendSourceToTarget(face, screen.Selection(20, 24))
 
 			if window.ShouldClose() {
 				frame.StopLoopEventually()

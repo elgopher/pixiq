@@ -31,6 +31,8 @@ func TestNewAcceleratedImage(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				img := fake.NewAcceleratedImage(test.width, test.height)
 				assert.NotNil(t, img)
+				assert.Equal(t, test.width, img.Width())
+				assert.Equal(t, test.height, img.Height())
 			})
 		}
 	})

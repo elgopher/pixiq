@@ -3,7 +3,9 @@ package gl
 // Camel-cased GL constants
 const (
 	arrayBuffer              = 0x8892
+	streamDraw               = 0x88E0
 	staticDraw               = 0x88E4
+	dynamicDraw              = 0x88E8
 	float                    = 0x1406
 	floatVec2                = 0x8B50
 	floatVec3                = 0x8B51
@@ -37,6 +39,10 @@ const (
 	textureMinFilter         = 0x2801
 	textureMagFilter         = 0x2800
 	nearest                  = 0x2600
+	textureWrapS             = 0x2802
+	textureWrapT             = 0x2803
+	clampToBorder            = 0x812D
 	noError                  = 0
 	outOfMemory              = 0x0505
+	blend                    = 0x0BE2
 )

@@ -39,6 +39,8 @@ func (c *Context) NewAcceleratedImage(width, height int) *AcceleratedImage {
 	)
 	c.api.TexParameteri(texture2D, textureMinFilter, nearest)
 	c.api.TexParameteri(texture2D, textureMagFilter, nearest)
+	c.api.TexParameteri(texture2D, textureWrapS, clampToBorder)
+	c.api.TexParameteri(texture2D, textureWrapT, clampToBorder)
 
 	c.api.GenFramebuffers(1, &frameBufferID)
 	c.api.BindFramebuffer(framebuffer, frameBufferID)
@@ -109,4 +111,14 @@ func (i *AcceleratedImage) Download(output []image.Color) {
 		unsignedByte,
 		i.api.Ptr(output),
 	)
+}
+
+// Width returns the number of pixels in a row.
+func (i *AcceleratedImage) Width() int {
+	return i.width
+}
+
+// Height returns the number of pixels in a column.
+func (i *AcceleratedImage) Height() int {
+	return i.height
 }

@@ -29,10 +29,30 @@ func TestContext_NewFloatVertexBuffer(t *testing.T) {
 		defer openGL.Destroy()
 		context := openGL.Context()
 		// when
-		buffer1 := context.NewFloatVertexBuffer(1)
-		buffer2 := context.NewFloatVertexBuffer(1)
+		buffer1 := context.NewFloatVertexBuffer(1, gl.StaticDraw)
+		buffer2 := context.NewFloatVertexBuffer(1, gl.StaticDraw)
 		// then
 		assert.NotEqual(t, buffer1.ID(), buffer2.ID())
+	})
+	t.Run("should create buffers with different usages", func(t *testing.T) {
+		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+		defer openGL.Destroy()
+		context := openGL.Context()
+		usages := map[string]gl.Usage{
+			"staticDraw":  gl.StaticDraw,
+			"dynamicDraw": gl.DynamicDraw,
+			"streamDraw":  gl.StreamDraw,
+		}
+		for name, usage := range usages {
+			t.Run(name, func(t *testing.T) {
+				// when
+				buffer := context.NewFloatVertexBuffer(1, usage)
+				// then
+				assert.NotNil(t, buffer)
+				err := context.Error()
+				assert.NoError(t, err)
+			})
+		}
 	})
 }
 
@@ -68,7 +88,7 @@ func TestFloatVertexBuffer_Upload(t *testing.T) {
 				openGL, _ := glfw.NewOpenGL(mainThreadLoop)
 				defer openGL.Destroy()
 				context := openGL.Context()
-				buffer := context.NewFloatVertexBuffer(test.size)
+				buffer := context.NewFloatVertexBuffer(test.size, gl.StaticDraw)
 				defer buffer.Delete()
 				// when
 				buffer.Upload(test.offset, test.input)
@@ -132,7 +152,7 @@ func TestFloatVertexBuffer_Download(t *testing.T) {
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
 				context := openGL.Context()
-				buffer := context.NewFloatVertexBuffer(len(test.input))
+				buffer := context.NewFloatVertexBuffer(len(test.input), gl.StaticDraw)
 				defer buffer.Delete()
 				buffer.Upload(0, test.input)
 				// when
@@ -164,7 +184,7 @@ func TestVertexArray_Set(t *testing.T) {
 		context := openGL.Context()
 		vao := context.NewVertexArray(gl.VertexLayout{gl.Float})
 		defer vao.Delete()
-		buffer := context.NewFloatVertexBuffer(1)
+		buffer := context.NewFloatVertexBuffer(1, gl.StaticDraw)
 		defer buffer.Delete()
 		pointer := gl.VertexBufferPointer{
 			Buffer: buffer,
@@ -455,7 +475,7 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 		program := workingProgram(t, context)
 		output := context.NewAcceleratedImage(1, 1)
 		command := program.AcceleratedCommand(&command{runGL: func(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
-			buffer := context.NewFloatVertexBuffer(1)
+			buffer := context.NewFloatVertexBuffer(1, gl.StaticDraw)
 			values := []float32{1}
 			buffer.Upload(0, values)
 			buffer.Download(0, values)
@@ -473,7 +493,7 @@ func TestAcceleratedCommand_Run(t *testing.T) {
 		command := program.AcceleratedCommand(&command{runGL: func(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
 			array := context.NewVertexArray(gl.VertexLayout{gl.Float})
 			defer array.Delete()
-			buffer := context.NewFloatVertexBuffer(1)
+			buffer := context.NewFloatVertexBuffer(1, gl.StaticDraw)
 			defer buffer.Delete()
 			array.Set(0, gl.VertexBufferPointer{
 				Buffer: buffer,
@@ -791,7 +811,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 				program, err := context.LinkProgram(vertexShader, fragmentShader)
 				require.NoError(t, err)
 				array := context.NewVertexArray(gl.VertexLayout{test.typ})
-				buffer := context.NewFloatVertexBuffer(len(test.data))
+				buffer := context.NewFloatVertexBuffer(len(test.data), gl.StaticDraw)
 				buffer.Upload(0, test.data)
 				vertexPosition := gl.VertexBufferPointer{Buffer: buffer, Stride: len(test.data)}
 				array.Set(0, vertexPosition)
@@ -816,30 +836,30 @@ func TestRenderer_DrawArrays(t *testing.T) {
 		img := context.NewAcceleratedImage(1, 1)
 		img.Upload(make([]image.Color, 1))
 		vertexShader, err := context.CompileVertexShader(`
-								#version 330 core
-								layout(location = 0) in float vertexPositionX;
-								layout(location = 1) in vec3 vertexColor;
-								out vec4 interpolatedColor;
-								void main() {
-									gl_Position = vec4(vertexPositionX, 0, 0, 1);
-									interpolatedColor = vec4(vertexColor, 1.);
-								}
-								`)
+			#version 330 core
+			layout(location = 0) in float vertexPositionX;
+			layout(location = 1) in vec3 vertexColor;
+			out vec4 interpolatedColor;
+			void main() {
+				gl_Position = vec4(vertexPositionX, 0, 0, 1);
+				interpolatedColor = vec4(vertexColor, 1.);
+			}
+			`)
 		require.NoError(t, err)
 		fragmentShader, err := context.CompileFragmentShader(`
-								#version 330 core
-								in vec4 interpolatedColor;
-								out vec4 color;
-								void main() {
-									color = interpolatedColor;
-								}
-								`)
+			#version 330 core
+			in vec4 interpolatedColor;
+			out vec4 color;
+			void main() {
+				color = interpolatedColor;
+			}
+			`)
 		require.NoError(t, err)
 		program, err := context.LinkProgram(vertexShader, fragmentShader)
 		require.NoError(t, err)
 		array := context.NewVertexArray(gl.VertexLayout{gl.Float, gl.Vec3})
 		require.NoError(t, err)
-		buffer := context.NewFloatVertexBuffer(4)
+		buffer := context.NewFloatVertexBuffer(4, gl.StaticDraw)
 		buffer.Upload(0, []float32{0, 0.2, 0.4, 0.6})
 		vertexPositionX := gl.VertexBufferPointer{Buffer: buffer, Offset: 0, Stride: 4}
 		array.Set(0, vertexPositionX)
@@ -934,7 +954,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 								`,
 				)
 				array := context.NewVertexArray(gl.VertexLayout{gl.Vec2})
-				buffer := context.NewFloatVertexBuffer(8)
+				buffer := context.NewFloatVertexBuffer(8, gl.StaticDraw)
 				buffer.Upload(0, []float32{
 					-1, 1, // top-left
 					1, 1, // top-right
@@ -982,7 +1002,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 		program, err := context.LinkProgram(vertexShader, fragmentShader)
 		require.NoError(t, err)
 		array := context.NewVertexArray(gl.VertexLayout{gl.Vec2})
-		buffer := context.NewFloatVertexBuffer(4)
+		buffer := context.NewFloatVertexBuffer(4, gl.StaticDraw)
 		buffer.Upload(0, []float32{-0.5, 0, 0.5, 0})
 		vertexPositionX := gl.VertexBufferPointer{Buffer: buffer, Offset: 0, Stride: 2}
 		array.Set(0, vertexPositionX)
@@ -1074,7 +1094,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 				program, err := context.LinkProgram(vertexShader, fragmentShader)
 				require.NoError(t, err)
 				array := context.NewVertexArray(test.layout)
-				buffer := context.NewFloatVertexBuffer(10)
+				buffer := context.NewFloatVertexBuffer(10, gl.StaticDraw)
 				buffer.Upload(0, []float32{0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
 				vertexPosition := gl.VertexBufferPointer{Buffer: buffer, Offset: 0, Stride: 10}
 				for i := range test.layout {
@@ -1124,7 +1144,7 @@ func TestRenderer_DrawArrays(t *testing.T) {
 		program, err := context.LinkProgram(vertexShader, fragmentShader)
 		require.NoError(t, err)
 		array := context.NewVertexArray(gl.VertexLayout{gl.Float})
-		buffer := context.NewFloatVertexBuffer(1)
+		buffer := context.NewFloatVertexBuffer(1, gl.StaticDraw)
 		buffer.Upload(0, []float32{0.392})
 		array.Set(0, gl.VertexBufferPointer{Buffer: buffer, Stride: 1})
 		glCommand := &command{runGL: func(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
@@ -1248,7 +1268,7 @@ func TestRenderer_BindTexture(t *testing.T) {
 				}
 				`)
 		array := context.NewVertexArray(gl.VertexLayout{gl.Vec2})
-		buffer := context.NewFloatVertexBuffer(2)
+		buffer := context.NewFloatVertexBuffer(2, gl.StaticDraw)
 		buffer.Upload(0, []float32{0.0, 0.0})
 		vertexPosition := gl.VertexBufferPointer{Buffer: buffer, Stride: 2}
 		array.Set(0, vertexPosition)
@@ -1294,7 +1314,7 @@ func TestRenderer_BindTexture(t *testing.T) {
 				}
 				`)
 		array := context.NewVertexArray(gl.VertexLayout{gl.Vec2})
-		buffer := context.NewFloatVertexBuffer(2)
+		buffer := context.NewFloatVertexBuffer(2, gl.StaticDraw)
 		buffer.Upload(0, []float32{0.0, 0.0})
 		vertexPosition := gl.VertexBufferPointer{Buffer: buffer, Stride: 2}
 		array.Set(0, vertexPosition)
@@ -1311,6 +1331,80 @@ func TestRenderer_BindTexture(t *testing.T) {
 		}, []image.AcceleratedImageSelection{})
 		// then
 		assertColors(t, []image.Color{image.RGBA(5+9, 6+10, 7+11, 8+12)}, img)
+	})
+	t.Run("should draw RGBA(0,0,0,0) when sampling outside the texture", func(t *testing.T) {
+		tests := map[string]struct {
+			x, y float32
+		}{
+			"y=-1": {
+				y: -1,
+			},
+			"x=-1": {
+				x: -1,
+			},
+			"x=-1,y=-1": {
+				x: -1,
+				y: -1,
+			},
+			"y=1": {
+				y: 1,
+			},
+			"x=1": {
+				x: 1,
+			},
+			"x=1,y=1": {
+				x: 1,
+				y: 1,
+			},
+		}
+		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+		defer openGL.Destroy()
+		context := openGL.Context()
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				img := context.NewAcceleratedImage(1, 1)
+				img.Upload(make([]image.Color, 1))
+				tex := context.NewAcceleratedImage(1, 1)
+				tex.Upload([]image.Color{image.RGBA(1, 2, 3, 4)})
+				program := compileProgram(t,
+					context,
+					`
+				#version 330 core
+				layout(location = 0) in vec2 xy;	
+				void main() {
+					gl_Position = vec4(xy, 0.0, 1.0);
+				}
+				`,
+					`
+				#version 330 core
+				uniform sampler2D tex;
+				uniform float x, y;
+				out vec4 color;
+				void main() {
+					color = texture(tex, vec2(x, y));
+				}
+				`)
+				array := context.NewVertexArray(gl.VertexLayout{gl.Vec2})
+				buffer := context.NewFloatVertexBuffer(2, gl.StaticDraw)
+				buffer.Upload(0, []float32{0.0, 0.0})
+				vertexPosition := gl.VertexBufferPointer{Buffer: buffer, Stride: 2}
+				array.Set(0, vertexPosition)
+				glCommand := &command{runGL: func(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
+					renderer.BindTexture(0, "tex", tex)
+					renderer.SetFloat("x", test.x)
+					renderer.SetFloat("y", test.y)
+					// when
+					renderer.DrawArrays(array, gl.Points, 0, 1)
+				}}
+				command := program.AcceleratedCommand(glCommand)
+				command.Run(image.AcceleratedImageSelection{
+					Location: image.AcceleratedImageLocation{Width: 1, Height: 1},
+					Image:    img,
+				}, []image.AcceleratedImageSelection{})
+				// then
+				assertColors(t, []image.Color{image.RGBA(0, 0, 0, 0)}, img)
+			})
+		}
 	})
 }
 
@@ -1522,7 +1616,7 @@ func TestRenderer_SetXXX(t *testing.T) {
 					test.fragmentShader,
 				)
 				array := context.NewVertexArray(gl.VertexLayout{gl.Vec2})
-				buffer := context.NewFloatVertexBuffer(2)
+				buffer := context.NewFloatVertexBuffer(2, gl.StaticDraw)
 				buffer.Upload(0, []float32{0.0, 0.0})
 				vertexPosition := gl.VertexBufferPointer{Buffer: buffer, Stride: 2}
 				array.Set(0, vertexPosition)
@@ -1542,7 +1636,151 @@ func TestRenderer_SetXXX(t *testing.T) {
 
 		})
 	}
+}
 
+func TestRenderer_SetBlend(t *testing.T) {
+	openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+	defer openGL.Destroy()
+	context := openGL.Context()
+	srcColor := image.RGBA(50, 60, 70, 80)
+	dstColor := image.RGBA(10, 20, 30, 40)
+	tests := map[string]struct {
+		blend         gl.BlendFactors
+		expectedColor image.Color
+	}{
+		"Zero, Zero": {
+			blend: gl.BlendFactors{
+				SrcFactor: gl.Zero,
+				DstFactor: gl.Zero,
+			},
+			expectedColor: image.Transparent,
+		},
+		"One, Zero": {
+			blend: gl.BlendFactors{
+				SrcFactor: gl.One,
+				DstFactor: gl.Zero,
+			},
+			expectedColor: srcColor,
+		},
+		"Zero, One": {
+			blend: gl.BlendFactors{
+				SrcFactor: gl.Zero,
+				DstFactor: gl.One,
+			},
+			expectedColor: dstColor,
+		},
+		"One, One": {
+			blend: gl.BlendFactors{
+				SrcFactor: gl.One,
+				DstFactor: gl.One,
+			},
+			expectedColor: image.RGBA(60, 80, 100, 120),
+		},
+		"OneMinusSrcAlpha, Zero": {
+			blend: gl.BlendFactors{
+				SrcFactor: gl.OneMinusSrcAlpha,
+				DstFactor: gl.Zero,
+			},
+			expectedColor: image.RGBA(34, 41, 48, 55),
+		},
+		"OneMinusDstAlpha, Zero": {
+			blend: gl.BlendFactors{
+				SrcFactor: gl.OneMinusDstAlpha,
+				DstFactor: gl.Zero,
+			},
+			expectedColor: image.RGBA(42, 51, 59, 67),
+		},
+		"SrcAlpha, Zero": {
+			blend: gl.BlendFactors{
+				SrcFactor: gl.SrcAlpha,
+				DstFactor: gl.Zero,
+			},
+			expectedColor: image.RGBA(16, 19, 22, 25),
+		},
+		"DstAlpha, Zero": {
+			blend: gl.BlendFactors{
+				SrcFactor: gl.DstAlpha,
+				DstFactor: gl.Zero,
+			},
+			expectedColor: image.RGBA(8, 9, 11, 13),
+		},
+		"Zero, OneMinusSrcAlpha": {
+			blend: gl.BlendFactors{
+				SrcFactor: gl.Zero,
+				DstFactor: gl.OneMinusSrcAlpha,
+			},
+			expectedColor: image.RGBA(7, 14, 21, 27),
+		},
+		"Zero, OneMinusDstAlpha": {
+			blend: gl.BlendFactors{
+				SrcFactor: gl.Zero,
+				DstFactor: gl.OneMinusDstAlpha,
+			},
+			expectedColor: image.RGBA(8, 17, 25, 34),
+		},
+		"Zero, SrcAlpha": {
+			blend: gl.BlendFactors{
+				SrcFactor: gl.Zero,
+				DstFactor: gl.SrcAlpha,
+			},
+			expectedColor: image.RGBA(3, 6, 9, 13),
+		},
+		"Zero, DstAlpha": {
+			blend: gl.BlendFactors{
+				SrcFactor: gl.Zero,
+				DstFactor: gl.DstAlpha,
+			},
+			expectedColor: image.RGBA(2, 3, 5, 6),
+		},
+		"SourceBlendFactors": {
+			blend:         gl.SourceBlendFactors,
+			expectedColor: srcColor,
+		},
+	}
+	program := compileProgram(t,
+		context,
+		`
+					#version 330 core
+					layout(location = 0) in vec2 xy;	
+					void main() {
+						gl_Position = vec4(xy, 0.0, 1.0);
+					}
+					`,
+		`
+					#version 330 core
+					uniform float attr;
+					out vec4 color;
+					void main() {
+						color = vec4(50/255.0, 60/255.0, 70/255.0, 80/255.0); // src color
+					}
+					`,
+	)
+	array := context.NewVertexArray(gl.VertexLayout{gl.Vec2})
+	buffer := context.NewFloatVertexBuffer(2, gl.StaticDraw)
+	buffer.Upload(0, []float32{0.0, 0.0})
+	vertexPosition := gl.VertexBufferPointer{Buffer: buffer, Stride: 2}
+	array.Set(0, vertexPosition)
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			img := context.NewAcceleratedImage(1, 1)
+			destColors := []image.Color{
+				dstColor,
+			}
+			img.Upload(destColors)
+			glCommand := &command{runGL: func(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
+				// when
+				renderer.SetBlendFactors(test.blend)
+				renderer.DrawArrays(array, gl.Points, 0, 1)
+			}}
+			command := program.AcceleratedCommand(glCommand)
+			command.Run(image.AcceleratedImageSelection{
+				Location: image.AcceleratedImageLocation{Width: 1, Height: 1},
+				Image:    img,
+			}, []image.AcceleratedImageSelection{})
+			// then
+			assertColors(t, []image.Color{test.expectedColor}, img)
+		})
+	}
 }
 
 func workingProgram(t *testing.T, gl *gl.Context) *gl.Program {

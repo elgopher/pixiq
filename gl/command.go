@@ -13,11 +13,20 @@ type Command interface {
 	RunGL(renderer *Renderer, selections []image.AcceleratedImageSelection)
 }
 
-// Renderer is an API for drawing primitives
+// Renderer is an API for drawing primitives.
+//
+// It is using blending with formula:
+//   R = S*sf + D*df
+// where S is source color component, sf is a source factor, D is destination color
+// component, df is a destination factor.
+// By default sf is 1 and df is 0 (gl.SourceBlendFactors), which means that formula is
+//   R = S
+// BlendFactors can be changed by calling SetBlendFactors method.
 type Renderer struct {
-	program   *Program
-	api       API
-	allImages allImages
+	program      *Program
+	api          API
+	allImages    allImages
+	blendFactors BlendFactors
 }
 
 // BindTexture assigns image.AcceleratedImage to a given textureUnit and uniform attribute.
@@ -146,12 +155,48 @@ var (
 	Triangles = Mode{glMode: triangles}
 )
 
+// BlendFactor is source or destination factor
+type BlendFactor uint32
+
+const (
+	// Zero is GL_ZERO. Multiplies all components by 0.
+	Zero = BlendFactor(0)
+	// One is GL_ONE. Multiplies all components by 1.
+	One = BlendFactor(1)
+	// OneMinusSrcAlpha is GL_ONE_MINUS_SRC_ALPHA. Multiplies all components by 1 minus
+	// the source alpha value.
+	OneMinusSrcAlpha = BlendFactor(0x0303)
+	// SrcAlpha is GL_SRC_ALPHA. Multiplies all components by the source alpha value.
+	SrcAlpha = BlendFactor(0x0302)
+	// DstAlpha is GL_DST_ALPHA. Multiplies all components by the destination alpha value.
+	DstAlpha = BlendFactor(0x0304)
+	// OneMinusDstAlpha is GL_ONE_MINUS_DST_ALPHA. Multiplies all components by 1 minus
+	// the destination alpha value.
+	OneMinusDstAlpha = BlendFactor(0x0305)
+)
+
+// BlendFactors contains source and destination factors used by blending formula
+// R = S*sf + D*df
+type BlendFactors struct {
+	SrcFactor, DstFactor BlendFactor
+}
+
+// SourceBlendFactors is default BlendFactors used by AcceleratedCommand.
+var SourceBlendFactors = BlendFactors{SrcFactor: One, DstFactor: Zero}
+
+// SetBlendFactors sets source and dest factors for blending formula:
+// R = S*sf + D*df
+func (r *Renderer) SetBlendFactors(factors BlendFactors) {
+	r.blendFactors = factors
+}
+
 // DrawArrays draws primitives (such as triangles) using vertices defined in VertexArray.
 //
 // Before primitive is drawn this method validates if
 func (r *Renderer) DrawArrays(array *VertexArray, mode Mode, first, count int) {
 	r.validateAttributeTypes(array)
 	r.api.BindVertexArray(array.id)
+	r.api.BlendFunc(uint32(r.blendFactors.SrcFactor), uint32(r.blendFactors.DstFactor))
 	r.api.DrawArrays(mode.glMode, int32(first), int32(count))
 }
 
@@ -216,16 +261,8 @@ func (c *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selecti
 	y := int32(loc.Y)
 	w := int32(loc.Width)
 	h := int32(loc.Height)
-	if x < 0 {
-		w += x
-		x = 0
-	}
 	if x+w > int32(img.width) {
 		w = int32(img.width) - x
-	}
-	if y < 0 {
-		h += y
-		y = 0
 	}
 	if y+h > int32(img.height) {
 		h = int32(img.height) - y
@@ -234,14 +271,17 @@ func (c *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selecti
 
 	c.program.use()
 	c.api.Enable(scissorTest)
+	c.api.Enable(blend)
 	c.api.BindFramebuffer(framebuffer, img.frameBufferID)
 	c.api.Scissor(x, y, w, h)
 	c.api.Viewport(x, y, w, h)
 
 	renderer := &Renderer{
-		program:   c.program,
-		api:       c.api,
-		allImages: c.allImages,
+		program:      c.program,
+		api:          c.api,
+		allImages:    c.allImages,
+		blendFactors: SourceBlendFactors,
 	}
+
 	c.command.RunGL(renderer, selections)
 }

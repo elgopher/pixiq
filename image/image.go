@@ -22,14 +22,21 @@ type AcceleratedImage interface {
 	//
 	// Implementations must not retain output.
 	Download(output []Color)
+	// Width returns the number of pixels in a row.
+	Width() int
+	// Height returns the number of pixels in a column.
+	Height() int
 }
 
-// New creates an Image with specified size given in pixels.
-// Will panic if AcceleratedImage is nil or width and height are negative
-func New(width, height int, acceleratedImage AcceleratedImage) *Image {
+// New creates an Image with same size as provided AcceleratedImage.
+// Will panic if AcceleratedImage is nil or width and height of
+// AcceleratedImage are negative
+func New(acceleratedImage AcceleratedImage) *Image {
 	if acceleratedImage == nil {
 		panic("nil acceleratedImage")
 	}
+	width := acceleratedImage.Width()
+	height := acceleratedImage.Height()
 	if width < 0 {
 		panic("negative width")
 	}
@@ -260,6 +267,7 @@ func (s Selection) Modify(command AcceleratedCommand, selections ...Selection) {
 		selection.image.Upload()
 		convertedSelections = append(convertedSelections, selection.toAcceleratedImageSelection())
 	}
+	s.image.Upload()
 	command.Run(s.toAcceleratedImageSelection(), convertedSelections)
 	s.image.acceleratedImageModified = true
 }

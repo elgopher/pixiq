@@ -9,7 +9,7 @@ import (
 func BenchmarkSelection_SetColor(b *testing.B) {
 	var (
 		color     = image.RGBA(10, 20, 30, 40)
-		img       = image.New(1920, 1080, acceleratedImageStub{})
+		img       = image.New(acceleratedImageStub{width: 1920, height: 1080})
 		selection = img.WholeImageSelection()
 		height    = selection.Height()
 		width     = selection.Width()
@@ -27,7 +27,7 @@ func BenchmarkSelection_SetColor(b *testing.B) {
 
 func BenchmarkSelection_Color(b *testing.B) {
 	var (
-		img       = image.New(1920, 1080, acceleratedImageStub{})
+		img       = image.New(acceleratedImageStub{width: 1920, height: 1080})
 		selection = img.WholeImageSelection()
 		height    = selection.Height()
 		width     = selection.Width()
@@ -46,7 +46,7 @@ func BenchmarkSelection_Color(b *testing.B) {
 func BenchmarkLines_LineForWrite(b *testing.B) {
 	var (
 		color     = image.RGBA(10, 20, 30, 40)
-		img       = image.New(1920, 1080, acceleratedImageStub{})
+		img       = image.New(acceleratedImageStub{width: 1920, height: 1080})
 		selection = img.WholeImageSelection()
 	)
 	b.ReportAllocs()
@@ -64,7 +64,7 @@ func BenchmarkLines_LineForWrite(b *testing.B) {
 
 func BenchmarkLines_LineForRead(b *testing.B) {
 	var (
-		img       = image.New(1920, 1080, acceleratedImageStub{})
+		img       = image.New(acceleratedImageStub{width: 1920, height: 1080})
 		selection = img.WholeImageSelection()
 	)
 	b.ReportAllocs()
@@ -83,7 +83,7 @@ func BenchmarkLines_LineForRead(b *testing.B) {
 // Must be 0 allocs/op
 func BenchmarkImage_Selection(b *testing.B) {
 	var (
-		img = image.New(1, 1, acceleratedImageStub{})
+		img = image.New(acceleratedImageStub{width: 1, height: 1})
 	)
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -95,7 +95,7 @@ func BenchmarkImage_Selection(b *testing.B) {
 // Must be 0 allocs/op
 func BenchmarkSelection_Selection(b *testing.B) {
 	var (
-		img       = image.New(1, 1, acceleratedImageStub{})
+		img       = image.New(acceleratedImageStub{width: 1, height: 1})
 		selection = img.WholeImageSelection()
 	)
 	b.ReportAllocs()
@@ -108,7 +108,7 @@ func BenchmarkSelection_Selection(b *testing.B) {
 // Must be 0 allocs/op
 func BenchmarkSelection_Modify(b *testing.B) {
 	var (
-		img             = image.New(1, 1, acceleratedImageStub{})
+		img             = image.New(acceleratedImageStub{width: 1, height: 1})
 		selection       = img.WholeImageSelection()
 		command         = &acceleratedCommandStub{}
 		sourceSelection = img.WholeImageSelection()

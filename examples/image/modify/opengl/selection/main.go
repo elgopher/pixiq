@@ -46,7 +46,7 @@ func makeVertexArray(context *gl.Context, buffer *gl.FloatVertexBuffer) *gl.Vert
 	return array
 }
 
-func makeVertexBuffer(gl *gl.Context) *gl.FloatVertexBuffer {
+func makeVertexBuffer(ctx *gl.Context) *gl.FloatVertexBuffer {
 	// xy -> st
 	vertices := []float32{
 		-1, 1, 0, 1, // top-left
@@ -54,7 +54,7 @@ func makeVertexBuffer(gl *gl.Context) *gl.FloatVertexBuffer {
 		1, -1, 1, 0, // bottom-right
 		-1, -1, 0, 0, // bottom-left
 	}
-	buffer := gl.NewFloatVertexBuffer(len(vertices))
+	buffer := ctx.NewFloatVertexBuffer(len(vertices), gl.StaticDraw)
 	buffer.Upload(0, vertices)
 	return buffer
 }

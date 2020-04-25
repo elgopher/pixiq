@@ -54,7 +54,7 @@ func TestClear(t *testing.T) {
 			for name, test := range tests {
 				testName := fmt.Sprintf("%s %v", name, color)
 				t.Run(testName, func(t *testing.T) {
-					img := image.New(2, 2, fake.NewAcceleratedImage(2, 2))
+					img := image.New(fake.NewAcceleratedImage(2, 2))
 					selection := img.Selection(0, 0).WithSize(test.width, test.height)
 					tool := clear.New()
 					tool.SetColor(color)
