@@ -21,7 +21,7 @@ func NewSource(context *gl.Context) (*Source, error) {
 // taking into account alpha channel of both. Source-over means that source will be
 // painted on top of the target.
 func NewSourceOver(context *gl.Context) (*SourceOver, error) {
-	command, err := newBlendCommand(context, gl.Blend{
+	command, err := newBlendCommand(context, gl.BlendFactors{
 		SrcFactor: gl.One,
 		DstFactor: gl.OneMinusSrcAlpha,
 	})
@@ -57,7 +57,7 @@ void main() {
 }
 `
 
-func newBlendCommand(context *gl.Context, blend gl.Blend) (*gl.AcceleratedCommand, error) {
+func newBlendCommand(context *gl.Context, factors gl.BlendFactors) (*gl.AcceleratedCommand, error) {
 	if context == nil {
 		panic("nil context")
 	}
@@ -79,7 +79,7 @@ func newBlendCommand(context *gl.Context, blend gl.Blend) (*gl.AcceleratedComman
 		&blendCommand{
 			vertexBuffer: vertexBuffer,
 			vertexArray:  vertexArray,
-			blend:        blend,
+			factors:      factors,
 		})
 	return command, nil
 }
@@ -96,7 +96,7 @@ func makeVertexArray(context *gl.Context, buffer *gl.FloatVertexBuffer) *gl.Vert
 type blendCommand struct {
 	vertexBuffer *gl.FloatVertexBuffer
 	vertexArray  *gl.VertexArray
-	blend        gl.Blend
+	factors      gl.BlendFactors
 }
 
 func (c *blendCommand) RunGL(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
@@ -118,7 +118,7 @@ func (c *blendCommand) RunGL(renderer *gl.Renderer, selections []image.Accelerat
 		-1, -1, left, bottom,
 	}
 	c.vertexBuffer.Upload(0, vertices)
-	renderer.SetBlend(c.blend)
+	renderer.SetBlendFactors(c.factors)
 	renderer.DrawArrays(c.vertexArray, gl.TriangleFan, 0, 4)
 }
 

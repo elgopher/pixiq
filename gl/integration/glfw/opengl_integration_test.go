@@ -1636,7 +1636,151 @@ func TestRenderer_SetXXX(t *testing.T) {
 
 		})
 	}
+}
 
+func TestRenderer_SetBlend(t *testing.T) {
+	openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+	defer openGL.Destroy()
+	context := openGL.Context()
+	srcColor := image.RGBA(50, 60, 70, 80)
+	dstColor := image.RGBA(10, 20, 30, 40)
+	tests := map[string]struct {
+		blend         gl.BlendFactors
+		expectedColor image.Color
+	}{
+		"Zero, Zero": {
+			blend: gl.BlendFactors{
+				SrcFactor: gl.Zero,
+				DstFactor: gl.Zero,
+			},
+			expectedColor: image.Transparent,
+		},
+		"One, Zero": {
+			blend: gl.BlendFactors{
+				SrcFactor: gl.One,
+				DstFactor: gl.Zero,
+			},
+			expectedColor: srcColor,
+		},
+		"Zero, One": {
+			blend: gl.BlendFactors{
+				SrcFactor: gl.Zero,
+				DstFactor: gl.One,
+			},
+			expectedColor: dstColor,
+		},
+		"One, One": {
+			blend: gl.BlendFactors{
+				SrcFactor: gl.One,
+				DstFactor: gl.One,
+			},
+			expectedColor: image.RGBA(60, 80, 100, 120),
+		},
+		"OneMinusSrcAlpha, Zero": {
+			blend: gl.BlendFactors{
+				SrcFactor: gl.OneMinusSrcAlpha,
+				DstFactor: gl.Zero,
+			},
+			expectedColor: image.RGBA(34, 41, 48, 55),
+		},
+		"OneMinusDstAlpha, Zero": {
+			blend: gl.BlendFactors{
+				SrcFactor: gl.OneMinusDstAlpha,
+				DstFactor: gl.Zero,
+			},
+			expectedColor: image.RGBA(42, 51, 59, 67),
+		},
+		"SrcAlpha, Zero": {
+			blend: gl.BlendFactors{
+				SrcFactor: gl.SrcAlpha,
+				DstFactor: gl.Zero,
+			},
+			expectedColor: image.RGBA(16, 19, 22, 25),
+		},
+		"DstAlpha, Zero": {
+			blend: gl.BlendFactors{
+				SrcFactor: gl.DstAlpha,
+				DstFactor: gl.Zero,
+			},
+			expectedColor: image.RGBA(8, 9, 11, 13),
+		},
+		"Zero, OneMinusSrcAlpha": {
+			blend: gl.BlendFactors{
+				SrcFactor: gl.Zero,
+				DstFactor: gl.OneMinusSrcAlpha,
+			},
+			expectedColor: image.RGBA(7, 14, 21, 27),
+		},
+		"Zero, OneMinusDstAlpha": {
+			blend: gl.BlendFactors{
+				SrcFactor: gl.Zero,
+				DstFactor: gl.OneMinusDstAlpha,
+			},
+			expectedColor: image.RGBA(8, 17, 25, 34),
+		},
+		"Zero, SrcAlpha": {
+			blend: gl.BlendFactors{
+				SrcFactor: gl.Zero,
+				DstFactor: gl.SrcAlpha,
+			},
+			expectedColor: image.RGBA(3, 6, 9, 13),
+		},
+		"Zero, DstAlpha": {
+			blend: gl.BlendFactors{
+				SrcFactor: gl.Zero,
+				DstFactor: gl.DstAlpha,
+			},
+			expectedColor: image.RGBA(2, 3, 5, 6),
+		},
+		"SourceBlend": {
+			blend:         gl.SourceBlend,
+			expectedColor: srcColor,
+		},
+	}
+	program := compileProgram(t,
+		context,
+		`
+					#version 330 core
+					layout(location = 0) in vec2 xy;	
+					void main() {
+						gl_Position = vec4(xy, 0.0, 1.0);
+					}
+					`,
+		`
+					#version 330 core
+					uniform float attr;
+					out vec4 color;
+					void main() {
+						color = vec4(50/255.0, 60/255.0, 70/255.0, 80/255.0); // src color
+					}
+					`,
+	)
+	array := context.NewVertexArray(gl.VertexLayout{gl.Vec2})
+	buffer := context.NewFloatVertexBuffer(2, gl.StaticDraw)
+	buffer.Upload(0, []float32{0.0, 0.0})
+	vertexPosition := gl.VertexBufferPointer{Buffer: buffer, Stride: 2}
+	array.Set(0, vertexPosition)
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			img := context.NewAcceleratedImage(1, 1)
+			destColors := []image.Color{
+				dstColor,
+			}
+			img.Upload(destColors)
+			glCommand := &command{runGL: func(renderer *gl.Renderer, selections []image.AcceleratedImageSelection) {
+				// when
+				renderer.SetBlendFactors(test.blend)
+				renderer.DrawArrays(array, gl.Points, 0, 1)
+			}}
+			command := program.AcceleratedCommand(glCommand)
+			command.Run(image.AcceleratedImageSelection{
+				Location: image.AcceleratedImageLocation{Width: 1, Height: 1},
+				Image:    img,
+			}, []image.AcceleratedImageSelection{})
+			// then
+			assertColors(t, []image.Color{test.expectedColor}, img)
+		})
+	}
 }
 
 func workingProgram(t *testing.T, gl *gl.Context) *gl.Program {

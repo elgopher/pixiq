@@ -15,10 +15,10 @@ type Command interface {
 
 // Renderer is an API for drawing primitives
 type Renderer struct {
-	program   *Program
-	api       API
-	allImages allImages
-	blend     Blend
+	program      *Program
+	api          API
+	allImages    allImages
+	blendFactors BlendFactors
 }
 
 // BindTexture assigns image.AcceleratedImage to a given textureUnit and uniform attribute.
@@ -155,19 +155,19 @@ const (
 	OneMinusSrcAlpha = BlendFactor(0x0303)
 	SrcAlpha         = BlendFactor(0x0302)
 	DstAlpha         = BlendFactor(0x0304)
+	OneMinusDstAlpha = BlendFactor(0x0305)
 )
 
-type Blend struct {
+type BlendFactors struct {
 	SrcFactor, DstFactor BlendFactor
 }
 
-var SourceBlend = Blend{SrcFactor: One, DstFactor: Zero}
+var SourceBlend = BlendFactors{SrcFactor: One, DstFactor: Zero}
 
-// SetBlend sets blend factors (source and dest factor) for blending formula:
+// SetBlendFactors sets source and dest factors for blending formula:
 // R = S*sf + D*df
-func (r *Renderer) SetBlend(blend Blend) {
-	// TODO Test
-	r.blend = blend
+func (r *Renderer) SetBlendFactors(factors BlendFactors) {
+	r.blendFactors = factors
 }
 
 // DrawArrays draws primitives (such as triangles) using vertices defined in VertexArray.
@@ -176,7 +176,7 @@ func (r *Renderer) SetBlend(blend Blend) {
 func (r *Renderer) DrawArrays(array *VertexArray, mode Mode, first, count int) {
 	r.validateAttributeTypes(array)
 	r.api.BindVertexArray(array.id)
-	r.api.BlendFunc(uint32(r.blend.SrcFactor), uint32(r.blend.DstFactor))
+	r.api.BlendFunc(uint32(r.blendFactors.SrcFactor), uint32(r.blendFactors.DstFactor))
 	r.api.DrawArrays(mode.glMode, int32(first), int32(count))
 }
 
@@ -256,10 +256,10 @@ func (c *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selecti
 	c.api.Viewport(x, y, w, h)
 
 	renderer := &Renderer{
-		program:   c.program,
-		api:       c.api,
-		allImages: c.allImages,
-		blend:     SourceBlend,
+		program:      c.program,
+		api:          c.api,
+		allImages:    c.allImages,
+		blendFactors: SourceBlend,
 	}
 
 	c.api.Enable(blend)
