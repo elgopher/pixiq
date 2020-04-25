@@ -113,16 +113,11 @@ func (s *SourceOver) BlendSourceToTarget(source, target image.Selection) {
 			target := targetLine[x-targetXOffset]
 			srcR, srcG, srcB, srcA := source.RGBAi()
 			dstR, dstG, dstB, dstA := target.RGBAi()
-			srcT := 255 - srcA
-			tt := mul(dstA, srcT)
-			outA := srcA + tt
-			if outA == 0 {
-				targetLine[x-targetXOffset] = image.Transparent
-				continue
-			}
-			outR := (srcR*srcA + dstR*tt) / outA
-			outG := (srcG*srcA + dstG*tt) / outA
-			outB := (srcB*srcA + dstB*tt) / outA
+			dstFactor := 255 - srcA
+			outR := srcR + mul(dstR, dstFactor)
+			outG := srcG + mul(dstG, dstFactor)
+			outB := srcB + mul(dstB, dstFactor)
+			outA := srcA + mul(dstA, dstFactor)
 			targetLine[x-targetXOffset] = image.RGBAi(outR, outG, outB, outA)
 		}
 	}

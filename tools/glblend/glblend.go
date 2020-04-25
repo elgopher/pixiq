@@ -27,6 +27,7 @@ in vec2 interpolatedST;
 out vec4 color;
 
 void main() {
+	// color is blended with buffer using formula: S * sf + D * df 
 	color = texture(tex, interpolatedST);
 }
 `

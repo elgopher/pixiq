@@ -6,9 +6,7 @@ import "fmt"
 var Transparent = RGBA(0, 0, 0, 0)
 
 // Color represents pixel color using 4 components: Red, Green, Black and Alpha.
-// Red, Green and Blue components are not premultiplied by alpha
-// (aka straight alpha), that is RGB and alpha are independent. You can change
-// one without affecting the other.
+// Red, Green and Blue components are premultiplied by alpha.
 //
 // Color is immutable struct. Changing the color means creating a new instance.
 type Color struct {
@@ -65,6 +63,24 @@ func RGBA(r, g, b, a byte) Color {
 		b: b,
 		a: a,
 	}
+}
+
+// NRGBA creates Color using RGB components not premultiplied by alpha (aka straight
+// alpha). Straight colors are being used by programs such as Aseprite.
+func NRGBA(r, g, b, a byte) Color {
+	return Color{
+		r: mul(r, a),
+		g: mul(g, a),
+		b: mul(b, a),
+		a: a,
+	}
+}
+
+// mul is an optimized version of round(a * b / 255)
+func mul(a, b byte) byte {
+	t := int(a)*int(b) + 0x80
+	i := ((t >> 8) + t) >> 8
+	return byte(i)
 }
 
 // RGB creates Color using three components: red, green and blue.

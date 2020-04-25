@@ -71,9 +71,9 @@ func TestBlendSourceToTarget(t *testing.T) {
 				b, _ := glblend.NewSourceOver(context)
 				return b
 			},
-			color1x2: image.RGBA(3, 4, 5, 12),
-			color1x3: image.RGBA(7, 8, 9, 16),
-			color3x4: image.RGBA(7, 8, 9, 21),
+			color1x2: image.RGBA(6, 8, 10, 12),
+			color1x3: image.RGBA(10, 12, 14, 16),
+			color3x4: image.RGBA(15, 17, 19, 21),
 			colorTx2: color2,
 		},
 	}
