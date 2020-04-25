@@ -79,8 +79,7 @@ func NRGBA(r, g, b, a byte) Color {
 // mul is an optimized version of round(a * b / 255)
 func mul(a, b byte) byte {
 	t := int(a)*int(b) + 0x80
-	i := ((t >> 8) + t) >> 8
-	return byte(i)
+	return byte(((t >> 8) + t) >> 8)
 }
 
 // RGB creates Color using three components: red, green and blue.

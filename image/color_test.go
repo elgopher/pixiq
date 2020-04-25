@@ -222,3 +222,47 @@ func TestColor_String(t *testing.T) {
 		})
 	}
 }
+
+func TestNRGBA(t *testing.T) {
+	t.Run("should create Color using straight RGB components", func(t *testing.T) {
+		tests := map[string]struct {
+			color         image.Color
+			expectedRed   byte
+			expectedGreen byte
+			expectedBlue  byte
+			expectedAlpha byte
+		}{
+			"transparent": {
+				color:         image.NRGBA(0, 0, 0, 0),
+				expectedRed:   0,
+				expectedGreen: 0,
+				expectedBlue:  0,
+				expectedAlpha: 0,
+			},
+			"opaque": {
+				color:         image.NRGBA(10, 20, 30, 255),
+				expectedRed:   10,
+				expectedGreen: 20,
+				expectedBlue:  30,
+				expectedAlpha: 255,
+			},
+			"semi-transparent": {
+				color:         image.NRGBA(40, 50, 60, 100),
+				expectedRed:   16,
+				expectedGreen: 20,
+				expectedBlue:  24,
+				expectedAlpha: 100,
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				color := test.color
+				const delta = 1
+				assert.InDelta(t, test.expectedRed, color.R(), delta)
+				assert.InDelta(t, test.expectedGreen, color.G(), delta)
+				assert.InDelta(t, test.expectedBlue, color.B(), delta)
+				assert.Equal(t, test.expectedAlpha, color.A())
+			})
+		}
+	})
+}
