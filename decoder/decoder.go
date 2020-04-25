@@ -45,16 +45,28 @@ type DecodedImage struct {
 	imageFactory ImageFactory
 }
 
+func (i *DecodedImage) Width() int {
+	return i.img.Bounds().Max.X
+}
+
+func (i *DecodedImage) Height() int {
+	return i.img.Bounds().Max.Y
+}
+
 func (i *DecodedImage) NewImage() *image.Image {
 	size := i.img.Bounds().Max
 	newImage := i.imageFactory.NewImage(size.X, size.Y)
-	selection := newImage.WholeImageSelection()
+	i.CopyTo(newImage.WholeImageSelection())
+	return newImage
+}
+
+func (i *DecodedImage) CopyTo(target image.Selection) {
+	size := i.img.Bounds().Max
 	for y := 0; y < size.Y; y++ {
 		for x := 0; x < size.X; x++ {
 			color := i.img.At(x, y)
 			r, g, b, a := color.RGBA()
-			selection.SetColor(x, y, image.NRGBA(byte(r), byte(g), byte(b), byte(a)))
+			target.SetColor(x, y, image.NRGBA(byte(r), byte(g), byte(b), byte(a)))
 		}
 	}
-	return newImage
 }
