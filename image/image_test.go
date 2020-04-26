@@ -1081,6 +1081,8 @@ func TestSelection_LineForXXX(t *testing.T) {
 			t.Run("should return line", func(t *testing.T) {
 				color1 := image.RGBA(10, 20, 30, 40)
 				color2 := image.RGBA(50, 50, 60, 70)
+				color3 := image.RGBA(60, 70, 80, 90)
+				color4 := image.RGBA(15, 25, 35, 45)
 
 				image1x1 := newImage(1, 1)
 				image1x1.Selection(0, 0).SetColor(0, 0, color1)
@@ -1094,6 +1096,13 @@ func TestSelection_LineForXXX(t *testing.T) {
 				image2x1Selection := image2x1.WholeImageSelection()
 				image2x1Selection.SetColor(0, 0, color1)
 				image2x1Selection.SetColor(1, 0, color2)
+
+				image2x2 := newImage(2, 2)
+				image2x2Selection := image2x2.WholeImageSelection()
+				image2x2Selection.SetColor(0, 0, color1)
+				image2x2Selection.SetColor(1, 0, color2)
+				image2x2Selection.SetColor(0, 1, color3)
+				image2x2Selection.SetColor(1, 1, color4)
 
 				tests := map[string]struct {
 					image     *image.Image
@@ -1166,6 +1175,18 @@ func TestSelection_LineForXXX(t *testing.T) {
 						selection: image2x1.Selection(1, 0).WithSize(2, 1),
 						line:      0,
 						expected:  []image.Color{color2},
+					},
+					"selection overflows line": {
+						image:     image2x2,
+						selection: image2x2.Selection(1, 1).WithSize(2, 1),
+						line:      0,
+						expected:  []image.Color{color4},
+					},
+					"selection overflows line and x negative": {
+						image:     image2x2,
+						selection: image2x2.Selection(-1, 1).WithSize(4, 1),
+						line:      0,
+						expected:  []image.Color{color3, color4},
 					},
 				}
 				for name, test := range tests {
