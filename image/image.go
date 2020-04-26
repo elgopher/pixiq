@@ -310,10 +310,8 @@ func (s Selection) Lines() Lines {
 		if width > s.image.width {
 			width = s.image.width
 		}
-	} else {
-		if s.x+width > s.image.width {
-			width = s.image.width - s.x
-		}
+	} else if s.x+width > s.image.width {
+		width = s.image.width - s.x
 	}
 	return Lines{
 		startY:  s.y,
