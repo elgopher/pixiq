@@ -34,6 +34,7 @@ type Source struct{}
 // Only position of the target Selection is used and the source is not clamped by
 // the target size.
 func (s *Source) BlendSourceToTarget(source, target image.Selection) {
+	source = clampSourceToTargetImage(source, target)
 	target = target.WithSize(source.Width(), source.Height())
 	var (
 		sourceLines   = source.Lines()
@@ -70,6 +71,18 @@ func (s *Source) BlendSourceToTarget(source, target image.Selection) {
 	}
 }
 
+func clampSourceToTargetImage(source image.Selection, target image.Selection) image.Selection {
+	width := source.Width()
+	if width+target.ImageX() > target.Image().Width() {
+		width = target.Image().Width() - target.ImageX()
+	}
+	height := source.Height()
+	if height+target.ImageY() > target.Image().Height() {
+		height = target.Image().Height() - target.ImageY()
+	}
+	return source.WithSize(width, height)
+}
+
 // NewSourceOver creates a new blending tool which blends together source and target
 // taking into account alpha channel of both. Source-over means that source will be
 // painted on top of the target.
@@ -87,6 +100,7 @@ type SourceOver struct{}
 // Only position of the target Selection is used and the source is not clamped by
 // the target size.
 func (s *SourceOver) BlendSourceToTarget(source, target image.Selection) {
+	source = clampSourceToTargetImage(source, target)
 	target = target.WithSize(source.Width(), source.Height())
 	var (
 		sourceLines   = source.Lines()

@@ -331,6 +331,23 @@ func TestBlendSourceToTarget(t *testing.T) {
 							},
 						},
 					},
+					"target out of boundaries x=1": {
+						source: newImage([][]image.Color{
+							{
+								color1,
+							},
+						}).WholeImageSelection(),
+						target: newImage([][]image.Color{
+							{
+								color4,
+							},
+						}).Selection(1, 0),
+						expectedPixels: [][]image.Color{
+							{
+								color4,
+							},
+						},
+					},
 					"target out of boundaries y=-1": {
 						source: newImage([][]image.Color{
 							{
@@ -348,6 +365,43 @@ func TestBlendSourceToTarget(t *testing.T) {
 						expectedPixels: [][]image.Color{
 							{
 								blender.color3x4,
+							},
+						},
+					},
+					"target out of boundaries y=1": {
+						source: newImage([][]image.Color{
+							{
+								color1,
+							},
+							{
+								color3,
+							},
+						}).WholeImageSelection(),
+						target: newImage([][]image.Color{
+							{
+								color4,
+							},
+						}).Selection(0, 1),
+						expectedPixels: [][]image.Color{
+							{
+								color4,
+							},
+						},
+					},
+					"source wider than target": {
+						source: newImage([][]image.Color{
+							{
+								color1, color2,
+							},
+						}).WholeImageSelection(),
+						target: newImage([][]image.Color{
+							{
+								color3,
+							},
+						}).Selection(0, 0),
+						expectedPixels: [][]image.Color{
+							{
+								blender.color1x3,
 							},
 						},
 					},

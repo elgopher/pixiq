@@ -132,9 +132,22 @@ type Source struct {
 // Only position of the target Selection is used and the source is not clamped by
 // the target size.
 func (s *Source) BlendSourceToTarget(source image.Selection, target image.Selection) {
+	source = clampSourceToTargetImage(source, target)
 	target = target.WithSize(source.Width(), source.Height())
 	// FIXME is it fast enough? or is it better to use the whole texture as a target and update xy in the vertextbuffer accordingly?
 	target.Modify(s.command, source)
+}
+
+func clampSourceToTargetImage(source image.Selection, target image.Selection) image.Selection {
+	width := source.Width()
+	if width+target.ImageX() > target.Image().Width() {
+		width = target.Image().Width() - target.ImageX()
+	}
+	height := source.Height()
+	if height+target.ImageY() > target.Image().Height() {
+		height = target.Image().Height() - target.ImageY()
+	}
+	return source.WithSize(width, height)
 }
 
 // SourceOver (aka Normal) is a blending tool which blends together source and target

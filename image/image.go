@@ -303,12 +303,15 @@ func (s Selection) Lines() Lines {
 		yOffset = -s.y
 	}
 	xOffset := 0
+	width := s.width
 	if s.x < 0 {
 		xOffset = -s.x
-	}
-	width := s.width - xOffset
-	if width > s.image.width {
-		width = s.image.width - xOffset
+		width = s.width + s.x
+		if width > s.image.width {
+			width = s.image.width
+		}
+	} else if s.x+width > s.image.width {
+		width = s.image.width - s.x
 	}
 	return Lines{
 		startY:  s.y,
@@ -400,7 +403,10 @@ func (l Lines) line(line int) []Color {
 	if start < 0 {
 		start = 0
 	}
-	if stop > len(l.image.pixels) || stop < 0 {
+	if stop > len(l.image.pixels) {
+		stop = len(l.image.pixels)
+	}
+	if stop < 0 {
 		return []Color{}
 	}
 	if l.image.acceleratedImageModified {
