@@ -431,6 +431,9 @@ func TestBlendSourceToTarget(t *testing.T) {
 							{
 								color2,
 							},
+							{
+								color3,
+							},
 						}).WholeImageSelection(),
 						target: newImage(openGL, [][]image.Color{
 							{

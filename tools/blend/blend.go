@@ -34,6 +34,7 @@ type Source struct{}
 // Only position of the target Selection is used and the source is not clamped by
 // the target size.
 func (s *Source) BlendSourceToTarget(source, target image.Selection) {
+	source = clampSourceToTargetImage(source, target)
 	target = target.WithSize(source.Width(), source.Height())
 	var (
 		sourceLines   = source.Lines()
@@ -61,17 +62,25 @@ func (s *Source) BlendSourceToTarget(source, target image.Selection) {
 		for x := 0; x < sourceXOffset-targetXOffset; x++ {
 			targetLine[x] = image.Transparent
 		}
-		width := len(sourceLine)
-		if len(targetLine) < width-targetXOffset {
-			width = len(targetLine)
-		}
-		for x := targetXOffset + sourceXOffset; x < width; x++ {
+		for x := targetXOffset + sourceXOffset; x < len(sourceLine); x++ {
 			targetLine[x-targetXOffset] = sourceLine[x-sourceXOffset]
 		}
 		for x := len(sourceLine); x < source.Width(); x++ {
 			targetLine[x] = image.Transparent
 		}
 	}
+}
+
+func clampSourceToTargetImage(source image.Selection, target image.Selection) image.Selection {
+	width := source.Width()
+	if width+target.ImageX() > target.Image().Width() {
+		width = target.Image().Width() - target.ImageX()
+	}
+	height := source.Height()
+	if height+target.ImageY() > target.Image().Height() {
+		height = target.Image().Height() - target.ImageY()
+	}
+	return source.WithSize(width, height)
 }
 
 // NewSourceOver creates a new blending tool which blends together source and target
@@ -91,6 +100,7 @@ type SourceOver struct{}
 // Only position of the target Selection is used and the source is not clamped by
 // the target size.
 func (s *SourceOver) BlendSourceToTarget(source, target image.Selection) {
+	source = clampSourceToTargetImage(source, target)
 	target = target.WithSize(source.Width(), source.Height())
 	var (
 		sourceLines   = source.Lines()
@@ -111,11 +121,7 @@ func (s *SourceOver) BlendSourceToTarget(source, target image.Selection) {
 	for y := startY; y < height; y++ {
 		sourceLine := sourceLines.LineForRead(y - sourceYOffset)
 		targetLine := targetLines.LineForWrite(y - targetYOffset)
-		width := len(sourceLine)
-		if len(targetLine) < width-targetXOffset {
-			width = len(targetLine)
-		}
-		for x := targetXOffset + sourceXOffset; x < width; x++ {
+		for x := targetXOffset + sourceXOffset; x < len(sourceLine); x++ {
 			// blend source with target color (following block of code is inlined to improve performance)
 			source := sourceLine[x-sourceXOffset]
 			target := targetLine[x-targetXOffset]
