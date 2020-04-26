@@ -303,12 +303,17 @@ func (s Selection) Lines() Lines {
 		yOffset = -s.y
 	}
 	xOffset := 0
+	width := s.width
 	if s.x < 0 {
 		xOffset = -s.x
-	}
-	width := s.width - xOffset
-	if width > s.image.width {
-		width = s.image.width - xOffset
+		width = s.width + s.x
+		if width > s.image.width {
+			width = s.image.width
+		}
+	} else {
+		if s.x+width > s.image.width {
+			width = s.image.width - s.x
+		}
 	}
 	return Lines{
 		startY:  s.y,

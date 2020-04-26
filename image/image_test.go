@@ -1140,7 +1140,7 @@ func TestSelection_LineForXXX(t *testing.T) {
 						line:      0,
 						expected:  []image.Color{},
 					},
-					"6": {
+					"x negative": {
 						image:     image1x1,
 						selection: image1x1.Selection(-1, 0).WithSize(1, 1),
 						line:      0,
