@@ -1,10 +1,14 @@
 package decoder_test
 
 import (
+	"bytes"
+	stdimage "image"
+	"image/png"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/jacekolszak/pixiq/colornames"
 	"github.com/jacekolszak/pixiq/decoder"
 	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/image/fake"
@@ -41,6 +45,55 @@ func TestDecoder_Decode(t *testing.T) {
 		assert.Nil(t, img)
 		assert.Error(t, err)
 	})
+	t.Run("should decode image", func(t *testing.T) {
+		tests := map[string]testCase{
+			"png 1x2": png1x2(),
+			"png 2x1": png2x1(),
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				imageDecoder := decoder.New(fakeImageFactory{})
+				// when
+				img, err := imageDecoder.Decode(bytes.NewReader(test.data))
+				// then
+				assert.NotNil(t, img)
+				assert.NoError(t, err)
+				// and
+				assert.Equal(t, img.Width(), len(test.expectedColors[0]))
+				assert.Equal(t, img.Height(), len(test.expectedColors))
+				// and
+				selection := img.WholeImageSelection()
+				for y := 0; y < len(test.expectedColors); y++ {
+					for x := 0; x < len(test.expectedColors[y]); x++ {
+						assert.Equal(t, test.expectedColors[y][x], selection.Color(x, y))
+					}
+				}
+			})
+		}
+
+	})
+}
+
+type testCase struct {
+	data           []byte
+	expectedColors [][]image.Color
+}
+
+func png1x2() testCase {
+	pngImage := stdimage.NewNRGBA(stdimage.Rect(0, 0, 1, 2))
+	pngImage.Set(0, 0, stdimage.Black)
+	pngImage.Set(0, 1, stdimage.White)
+	buffer := bytes.Buffer{}
+	_ = png.Encode(&buffer, pngImage)
+	return testCase{buffer.Bytes(), [][]image.Color{{colornames.Black}, {colornames.White}}}
+}
+func png2x1() testCase {
+	pngImage := stdimage.NewNRGBA(stdimage.Rect(0, 0, 2, 1))
+	pngImage.Set(0, 0, stdimage.Black)
+	pngImage.Set(1, 0, stdimage.White)
+	buffer := bytes.Buffer{}
+	_ = png.Encode(&buffer, pngImage)
+	return testCase{buffer.Bytes(), [][]image.Color{{colornames.Black, colornames.White}}}
 }
 
 type fakeImageFactory struct {
