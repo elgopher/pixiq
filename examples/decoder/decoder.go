@@ -17,11 +17,10 @@ func main() {
 		sourceOverBlender := blend.NewSourceOver()
 
 		imageDecoder := decoder.New(gl)
-		decodedImage, err := imageDecoder.DecodeFile("docs/pixiq-primitives.gif")
+		img, err := imageDecoder.DecodeFile("docs/pixiq-primitives.gif")
 		if err != nil {
 			panic(err)
 		}
-		img := decodedImage.NewImage()
 
 		loop.Run(window, func(frame *loop.Frame) {
 			screen := frame.Screen()
