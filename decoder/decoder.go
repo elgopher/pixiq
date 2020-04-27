@@ -1,3 +1,4 @@
+// Package decoder provides functionality of static image decoding.
 package decoder
 
 import (
@@ -14,6 +15,9 @@ type ImageFactory interface {
 }
 
 func New(imageFactory ImageFactory) *Decoder {
+	if imageFactory == nil {
+		panic("nil imageFactory")
+	}
 	return &Decoder{imageFactory: imageFactory}
 }
 
@@ -27,6 +31,9 @@ type Reader interface {
 }
 
 func (d *Decoder) Decode(reader Reader) (*image.Image, error) {
+	if reader == nil {
+		panic("nil reader")
+	}
 	img, _, err := stdimage.Decode(reader)
 	if err != nil {
 		return nil, err
