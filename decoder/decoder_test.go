@@ -59,12 +59,14 @@ func TestDecoder_Decode(t *testing.T) {
 				assert.NotNil(t, img)
 				assert.NoError(t, err)
 				// and
-				assert.Equal(t, img.Width(), len(test.expectedColors[0]))
-				assert.Equal(t, img.Height(), len(test.expectedColors))
+				width := len(test.expectedColors[0])
+				assert.Equal(t, img.Width(), width)
+				height := len(test.expectedColors)
+				assert.Equal(t, img.Height(), height)
 				// and
 				selection := img.WholeImageSelection()
-				for y := 0; y < len(test.expectedColors); y++ {
-					for x := 0; x < len(test.expectedColors[y]); x++ {
+				for y := 0; y < height; y++ {
+					for x := 0; x < width; x++ {
 						assert.Equal(t, test.expectedColors[y][x], selection.Color(x, y))
 					}
 				}
