@@ -53,5 +53,6 @@ func (d *Decoder) Decode(reader Reader) (*image.Image, error) {
 
 func (d *Decoder) DecodeFile(fileName string) (*image.Image, error) {
 	file, _ := os.Open(fileName)
+	defer file.Close()
 	return d.Decode(file)
 }
