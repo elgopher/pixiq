@@ -84,13 +84,13 @@ func TestDecoder_Decode(t *testing.T) {
 }
 
 func assertColor(t *testing.T, expectedColor image.Color, actualColor image.Color) {
-	r, g, b, a := expectedColor.RGBAf()
-	ra, ga, ba, aa := actualColor.RGBAf()
-	delta := 1 / 255.0
-	assert.InDelta(t, r, ra, delta) // TODO Add better logging
-	assert.InDelta(t, g, ga, delta)
-	assert.InDelta(t, b, ba, delta)
-	assert.InDelta(t, a, aa, delta)
+	r, g, b, a := expectedColor.RGBA()
+	ra, ga, ba, aa := actualColor.RGBA()
+	delta := 1.0
+	assert.InDelta(t, r, ra, delta, "red components differ, expected: %v, actual %v", expectedColor, actualColor)
+	assert.InDelta(t, g, ga, delta, "green components differ, expected: %v, actual %v", expectedColor, actualColor)
+	assert.InDelta(t, b, ba, delta, "blue components differ, expected: %v, actual %v", expectedColor, actualColor)
+	assert.InDelta(t, a, aa, delta, "alpha components differ, expected: %v, actual %v", expectedColor, actualColor)
 }
 
 type testCase struct {
@@ -104,7 +104,12 @@ func png1x2() testCase {
 	pngImage.Set(0, 1, stdimage.White)
 	buffer := bytes.Buffer{}
 	_ = png.Encode(&buffer, pngImage)
-	return testCase{buffer.Bytes(), [][]image.Color{{colornames.Black}, {colornames.White}}}
+	return testCase{
+		data: buffer.Bytes(),
+		expectedColors: [][]image.Color{
+			{colornames.Black},
+			{colornames.White},
+		}}
 }
 func png2x1() testCase {
 	pngImage := stdimage.NewNRGBA(stdimage.Rect(0, 0, 2, 1))
@@ -112,7 +117,12 @@ func png2x1() testCase {
 	pngImage.Set(1, 0, stdimage.White)
 	buffer := bytes.Buffer{}
 	_ = png.Encode(&buffer, pngImage)
-	return testCase{buffer.Bytes(), [][]image.Color{{colornames.Black, colornames.White}}}
+	return testCase{
+		data: buffer.Bytes(),
+		expectedColors: [][]image.Color{
+			{colornames.Black, colornames.White},
+		},
+	}
 }
 
 func gif1x2() testCase {
@@ -123,7 +133,13 @@ func gif1x2() testCase {
 	_ = gif.Encode(&buffer, gifImage, &gif.Options{
 		NumColors: 256,
 	})
-	return testCase{buffer.Bytes(), [][]image.Color{{colornames.Black}, {colornames.White}}}
+	return testCase{
+		data: buffer.Bytes(),
+		expectedColors: [][]image.Color{
+			{colornames.Black},
+			{colornames.White},
+		},
+	}
 }
 
 func pngSemiTransparent() testCase {
@@ -131,7 +147,11 @@ func pngSemiTransparent() testCase {
 	pngImage.Set(0, 0, color.RGBA{R: 50, G: 100, B: 150, A: 200})
 	buffer := bytes.Buffer{}
 	_ = png.Encode(&buffer, pngImage)
-	return testCase{buffer.Bytes(), [][]image.Color{{image.RGBA(50, 100, 150, 200)}}}
+	return testCase{
+		data: buffer.Bytes(),
+		expectedColors: [][]image.Color{
+			{image.RGBA(50, 100, 150, 200)},
+		}}
 }
 
 func png64bit() testCase {
@@ -139,7 +159,12 @@ func png64bit() testCase {
 	pngImage.Set(0, 0, color.RGBA64{R: 5000, G: 10000, B: 15000, A: 20000})
 	buffer := bytes.Buffer{}
 	_ = png.Encode(&buffer, pngImage)
-	return testCase{buffer.Bytes(), [][]image.Color{{image.RGBA(20, 39, 59, 78)}}}
+	return testCase{
+		data: buffer.Bytes(),
+		expectedColors: [][]image.Color{
+			{image.RGBA(20, 39, 59, 78)},
+		},
+	}
 }
 
 type fakeImageFactory struct {
