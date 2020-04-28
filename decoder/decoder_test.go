@@ -6,9 +6,11 @@ import (
 	"image/color"
 	"image/gif"
 	"image/png"
+	"io/ioutil"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/jacekolszak/pixiq/colornames"
 	"github.com/jacekolszak/pixiq/decoder"
@@ -81,6 +83,40 @@ func TestDecoder_Decode(t *testing.T) {
 		}
 
 	})
+}
+
+func TestDecoder_DecodeFile(t *testing.T) {
+	t.Run("should return error", func(t *testing.T) {
+		filenames := []string{"", "not-existing-file"}
+		for _, filename := range filenames {
+			t.Run(filename, func(t *testing.T) {
+				imageDecoder := decoder.New(fakeImageFactory{})
+				// when
+				img, err := imageDecoder.DecodeFile(filename)
+				assert.Error(t, err)
+				assert.Nil(t, img)
+			})
+		}
+	})
+	t.Run("should decode file", func(t *testing.T) {
+		imageDecoder := decoder.New(fakeImageFactory{})
+		// when
+		img, err := imageDecoder.DecodeFile(pngFilename(t))
+		require.NoError(t, err)
+		assert.NotNil(t, img)
+	})
+}
+
+func pngFilename(t *testing.T) string {
+	file, err := ioutil.TempFile("", "TestDecoder_DecodeFile")
+	require.NoError(t, err)
+	defer file.Close()
+	pngImage := stdimage.NewNRGBA(stdimage.Rect(0, 0, 1, 1))
+	buffer := bytes.Buffer{}
+	_ = png.Encode(&buffer, pngImage)
+	_, err = file.Write(buffer.Bytes())
+	require.NoError(t, err)
+	return file.Name()
 }
 
 func assertColor(t *testing.T, expectedColor image.Color, actualColor image.Color) {
