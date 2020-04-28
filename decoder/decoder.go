@@ -1,10 +1,11 @@
-// Package decoder provides functionality of image decoding.
+// Package decoder provides functionality of decoding compressed images such as
+// PNG and GIF.
 package decoder
 
 import (
 	stdimage "image"
-	_ "image/gif"
-	_ "image/png"
+	_ "image/gif" // Register GIF decoder
+	_ "image/png" // Register PNG decoder
 	"os"
 
 	"github.com/jacekolszak/pixiq/image"
@@ -58,7 +59,7 @@ func (d *Decoder) Decode(reader Reader) (*image.Image, error) {
 	return newImage, nil
 }
 
-// Decode decodes compressed file such as PNG or GIF and creates a new *image.Image
+// DecodeFile decodes compressed file such as PNG or GIF and creates a new *image.Image
 // object filled with colors from decompressed file.
 func (d *Decoder) DecodeFile(fileName string) (*image.Image, error) {
 	file, err := os.Open(fileName)
