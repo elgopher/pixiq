@@ -10,10 +10,14 @@ import (
 	"github.com/jacekolszak/pixiq/image"
 )
 
+// ImageFactory creates a new image with given dimensions.
+//
+// glfw.OpenGL instance can be used as an ImageFactory implementation.
 type ImageFactory interface {
 	NewImage(width, height int) *image.Image
 }
 
+// New creates a Decoder instance which can be used many times for image decoding.
 func New(imageFactory ImageFactory) *Decoder {
 	if imageFactory == nil {
 		panic("nil imageFactory")
@@ -21,6 +25,7 @@ func New(imageFactory ImageFactory) *Decoder {
 	return &Decoder{imageFactory: imageFactory}
 }
 
+// Decoder decodes compressed images, such as PNGs and GIFs
 type Decoder struct {
 	imageFactory ImageFactory
 }
@@ -30,6 +35,8 @@ type Reader interface {
 	Read(p []byte) (n int, err error)
 }
 
+// Decode decodes compressed image such as PNG or GIF and creates a new *image.Image
+// object filled with colors from decompressed image.
 func (d *Decoder) Decode(reader Reader) (*image.Image, error) {
 	if reader == nil {
 		panic("nil reader")
@@ -51,6 +58,8 @@ func (d *Decoder) Decode(reader Reader) (*image.Image, error) {
 	return newImage, nil
 }
 
+// Decode decodes compressed file such as PNG or GIF and creates a new *image.Image
+// object filled with colors from decompressed file.
 func (d *Decoder) DecodeFile(fileName string) (*image.Image, error) {
 	file, err := os.Open(fileName)
 	if err != nil {
