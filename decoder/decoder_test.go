@@ -3,6 +3,8 @@ package decoder_test
 import (
 	"bytes"
 	stdimage "image"
+	"image/color"
+	"image/gif"
 	"image/png"
 	"testing"
 
@@ -47,8 +49,11 @@ func TestDecoder_Decode(t *testing.T) {
 	})
 	t.Run("should decode image", func(t *testing.T) {
 		tests := map[string]testCase{
-			"png 1x2": png1x2(),
-			"png 2x1": png2x1(),
+			"png 1x2":              png1x2(),
+			"png 2x1":              png2x1(),
+			"gif 1x2":              gif1x2(),
+			"png semi-transparent": pngSemiTransparent(),
+			"png 64-bit":           png64bit(),
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
@@ -67,13 +72,25 @@ func TestDecoder_Decode(t *testing.T) {
 				selection := img.WholeImageSelection()
 				for y := 0; y < height; y++ {
 					for x := 0; x < width; x++ {
-						assert.Equal(t, test.expectedColors[y][x], selection.Color(x, y))
+						expectedColor := test.expectedColors[y][x]
+						actualColor := selection.Color(x, y)
+						assertColor(t, expectedColor, actualColor)
 					}
 				}
 			})
 		}
 
 	})
+}
+
+func assertColor(t *testing.T, expectedColor image.Color, actualColor image.Color) {
+	r, g, b, a := expectedColor.RGBAf()
+	ra, ga, ba, aa := actualColor.RGBAf()
+	delta := 1 / 255.0
+	assert.InDelta(t, r, ra, delta) // TODO Add better logging
+	assert.InDelta(t, g, ga, delta)
+	assert.InDelta(t, b, ba, delta)
+	assert.InDelta(t, a, aa, delta)
 }
 
 type testCase struct {
@@ -96,6 +113,33 @@ func png2x1() testCase {
 	buffer := bytes.Buffer{}
 	_ = png.Encode(&buffer, pngImage)
 	return testCase{buffer.Bytes(), [][]image.Color{{colornames.Black, colornames.White}}}
+}
+
+func gif1x2() testCase {
+	gifImage := stdimage.NewNRGBA(stdimage.Rect(0, 0, 1, 2))
+	gifImage.Set(0, 0, stdimage.Black)
+	gifImage.Set(0, 1, stdimage.White)
+	buffer := bytes.Buffer{}
+	_ = gif.Encode(&buffer, gifImage, &gif.Options{
+		NumColors: 256,
+	})
+	return testCase{buffer.Bytes(), [][]image.Color{{colornames.Black}, {colornames.White}}}
+}
+
+func pngSemiTransparent() testCase {
+	pngImage := stdimage.NewRGBA(stdimage.Rect(0, 0, 1, 1))
+	pngImage.Set(0, 0, color.RGBA{R: 50, G: 100, B: 150, A: 200})
+	buffer := bytes.Buffer{}
+	_ = png.Encode(&buffer, pngImage)
+	return testCase{buffer.Bytes(), [][]image.Color{{image.RGBA(50, 100, 150, 200)}}}
+}
+
+func png64bit() testCase {
+	pngImage := stdimage.NewRGBA64(stdimage.Rect(0, 0, 1, 1))
+	pngImage.Set(0, 0, color.RGBA64{R: 5000, G: 10000, B: 15000, A: 20000})
+	buffer := bytes.Buffer{}
+	_ = png.Encode(&buffer, pngImage)
+	return testCase{buffer.Bytes(), [][]image.Color{{image.RGBA(20, 39, 59, 78)}}}
 }
 
 type fakeImageFactory struct {

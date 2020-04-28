@@ -1,4 +1,4 @@
-// Package decoder provides functionality of static image decoding.
+// Package decoder provides functionality of image decoding.
 package decoder
 
 import (
@@ -43,9 +43,9 @@ func (d *Decoder) Decode(reader Reader) (*image.Image, error) {
 	target := newImage.WholeImageSelection()
 	for y := 0; y < size.Y; y++ {
 		for x := 0; x < size.X; x++ {
-			color := img.At(x, y)
-			r, g, b, a := color.RGBA()
-			target.SetColor(x, y, image.NRGBA(byte(r), byte(g), byte(b), byte(a)))
+			r, g, b, a := img.At(x, y).RGBA()
+			color := image.RGBA(byte(r>>8), byte(g>>8), byte(b>>8), byte(a>>8))
+			target.SetColor(x, y, color)
 		}
 	}
 	return newImage, nil
