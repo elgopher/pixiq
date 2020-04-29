@@ -1,24 +1,45 @@
-package clear_test
+package glclear_test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
+	"github.com/jacekolszak/pixiq/glclear"
+	"github.com/jacekolszak/pixiq/glfw"
 	"github.com/jacekolszak/pixiq/image"
-	"github.com/jacekolszak/pixiq/image/fake"
-	"github.com/jacekolszak/pixiq/tools/clear"
 )
 
-func TestNew(t *testing.T) {
+var mainThreadLoop *glfw.MainThreadLoop
+
+func TestMain(m *testing.M) {
+	var exit int
+	glfw.StartMainThreadLoop(func(main *glfw.MainThreadLoop) {
+		mainThreadLoop = main
+		exit = m.Run()
+	})
+	os.Exit(exit)
+}
+func TestNew_Integration(t *testing.T) {
 	t.Run("should create tool", func(t *testing.T) {
-		tool := clear.New()
+		openGL, err := glfw.NewOpenGL(mainThreadLoop)
+		require.NoError(t, err)
+		defer openGL.Destroy()
+		command := openGL.Context().NewClearCommand()
+		// when
+		tool := glclear.New(command)
 		assert.NotNil(t, tool)
 	})
 }
 
-func TestClear(t *testing.T) {
+func TestTool_Clear(t *testing.T) {
+	openGL, err := glfw.NewOpenGL(mainThreadLoop)
+	require.NoError(t, err)
+	defer openGL.Destroy()
+	command := openGL.Context().NewClearCommand()
 	t.Run("should clear selection", func(t *testing.T) {
 		colors := []image.Color{
 			image.RGBA(10, 20, 30, 40),
@@ -54,9 +75,9 @@ func TestClear(t *testing.T) {
 			for name, test := range tests {
 				testName := fmt.Sprintf("%s %v", name, color)
 				t.Run(testName, func(t *testing.T) {
-					img := image.New(fake.NewAcceleratedImage(2, 2))
+					img := openGL.NewImage(2, 2)
 					selection := img.Selection(0, 0).WithSize(test.width, test.height)
-					tool := clear.New()
+					tool := glclear.New(command)
 					tool.SetColor(color)
 					// when
 					tool.Clear(selection)
@@ -70,8 +91,8 @@ func TestClear(t *testing.T) {
 
 func assertColors(t *testing.T, img *image.Image, expectedColorLines [2][2]image.Color) {
 	selection := img.WholeImageSelection()
-	assert.Equal(t, expectedColorLines[0][0], selection.Color(0, 0), "position(0,0)")
-	assert.Equal(t, expectedColorLines[0][1], selection.Color(1, 0), "position(1,0)")
-	assert.Equal(t, expectedColorLines[1][0], selection.Color(0, 1), "position(0,1)")
-	assert.Equal(t, expectedColorLines[1][1], selection.Color(1, 1), "position(1,1)")
+	assert.Equal(t, expectedColorLines[0][0], selection.Color(0, 0))
+	assert.Equal(t, expectedColorLines[0][1], selection.Color(1, 0))
+	assert.Equal(t, expectedColorLines[1][0], selection.Color(0, 1))
+	assert.Equal(t, expectedColorLines[1][1], selection.Color(1, 1))
 }

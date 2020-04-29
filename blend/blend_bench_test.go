@@ -3,9 +3,9 @@ package blend_test
 import (
 	"testing"
 
+	"github.com/jacekolszak/pixiq/blend"
 	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/image/fake"
-	"github.com/jacekolszak/pixiq/tools/blend"
 )
 
 var resolutions = map[string]struct {

@@ -1,10 +1,10 @@
 package main
 
 import (
+	"github.com/jacekolszak/pixiq/blend"
 	"github.com/jacekolszak/pixiq/decoder"
 	"github.com/jacekolszak/pixiq/glfw"
 	"github.com/jacekolszak/pixiq/loop"
-	"github.com/jacekolszak/pixiq/tools/blend"
 )
 
 func main() {
