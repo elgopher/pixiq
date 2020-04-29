@@ -39,6 +39,27 @@ func (m *Mouse) Pressed(a Key) bool {
 	return false
 }
 
+func (m *Mouse) Position() Position {
+	return Position{}
+}
+
+type Position struct {
+}
+
+// X returns the pixel position
+func (p Position) X() int {
+	return 0
+}
+
+func (p Position) Y() int {
+	return 0
+}
+
+// Xf is useful when zoom was used.
+func (p Position) Xf() float32 {
+	return 0
+}
+
 type Key struct {
 	name string
 }

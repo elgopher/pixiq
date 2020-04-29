@@ -17,18 +17,17 @@ func main() {
 		}
 		// Create mouse instance for window.
 		mouseState := mouse.New(window)
-		x := 40
-		y := 20
 		loop.Run(window, func(frame *loop.Frame) {
 			screen := frame.Screen()
 			// Poll mouse events
 			mouseState.Update()
+			pos := mouseState.Position()
 			// Pressed returns true if given key is currently pressed.
 			if mouseState.Pressed(mouse.Left) {
-				screen.SetColor(x, y, colornames.White)
+				screen.SetColor(pos.X(), pos.Y(), colornames.White)
 			}
 			if mouseState.Pressed(mouse.Right) {
-				screen.SetColor(x, y, colornames.Black)
+				screen.SetColor(pos.X(), pos.Y(), colornames.Black)
 			}
 			if window.ShouldClose() {
 				frame.StopLoopEventually()
