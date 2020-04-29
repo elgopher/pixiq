@@ -1,13 +1,13 @@
 package main
 
 import (
+	"github.com/jacekolszak/pixiq/clear"
 	"github.com/jacekolszak/pixiq/colornames"
+	"github.com/jacekolszak/pixiq/glclear"
 	"github.com/jacekolszak/pixiq/glfw"
 	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/keyboard"
 	"github.com/jacekolszak/pixiq/loop"
-	"github.com/jacekolszak/pixiq/tools/clear"
-	"github.com/jacekolszak/pixiq/tools/glclear"
 )
 
 type clearTool interface {

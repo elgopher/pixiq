@@ -5,9 +5,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/jacekolszak/pixiq/blend"
 	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/image/fake"
-	"github.com/jacekolszak/pixiq/tools/blend"
 )
 
 func TestNew(t *testing.T) {

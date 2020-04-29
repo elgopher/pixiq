@@ -6,9 +6,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/jacekolszak/pixiq/glblend"
 	"github.com/jacekolszak/pixiq/glfw"
 	"github.com/jacekolszak/pixiq/image"
-	"github.com/jacekolszak/pixiq/tools/glblend"
 )
 
 var mainThreadLoop *glfw.MainThreadLoop

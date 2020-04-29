@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/jacekolszak/pixiq/tools/glclear"
+	"github.com/jacekolszak/pixiq/glclear"
 )
 
 func TestNew(t *testing.T) {
