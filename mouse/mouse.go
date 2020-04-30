@@ -5,8 +5,9 @@ type EventSource interface {
 
 // Event describes what happened with the mouse button. Whether it was pressed or released.
 type Event struct {
-	typ eventType
-	key Key
+	typ      eventType
+	key      Key      // set when typ =pressed or released
+	position Position // set when typ = moved
 }
 
 // eventType is used because using polymorphism means heap allocation and we don't
@@ -16,6 +17,7 @@ type eventType byte
 const (
 	pressed  eventType = 1
 	released eventType = 2
+	moved    eventType = 3
 )
 
 func New(source EventSource) *Mouse {

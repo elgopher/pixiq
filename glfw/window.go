@@ -15,6 +15,7 @@ type Window struct {
 	mainThreadLoop   *MainThreadLoop
 	screenPolygon    *screenPolygon
 	keyboardEvents   *internal.KeyboardEvents
+	mouseEvents      *internal.MouseEvents
 	requestedWidth   int
 	requestedHeight  int
 	zoom             int

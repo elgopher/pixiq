@@ -212,6 +212,10 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 			return
 		}
 		win.glfwWindow.SetKeyCallback(win.keyboardEvents.OnKeyCallback)
+		win.glfwWindow.SetMouseButtonCallback(win.mouseEvents.OnMouseButtonCallback)
+		win.glfwWindow.SetCursorPosCallback(win.mouseEvents.OnCursorPosCallback)
+		win.glfwWindow.SetCursorEnterCallback(win.mouseEvents.OnCursorEnterCallback)
+		win.glfwWindow.SetScrollCallback(win.mouseEvents.OnScrollCallback)
 		for _, option := range options {
 			if option == nil {
 				log.Println("nil option given when opening the window")
