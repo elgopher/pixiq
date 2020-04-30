@@ -1,6 +1,8 @@
 package glfw
 
 import (
+	"fmt"
+
 	"github.com/go-gl/glfw/v3.3/glfw"
 
 	"github.com/jacekolszak/pixiq/gl"
@@ -40,6 +42,8 @@ func (w *Window) DrawIntoBackBuffer() {
 	var width, height int
 	w.mainThreadLoop.Execute(func() {
 		width, height = w.glfwWindow.GetFramebufferSize()
+		x, y := w.glfwWindow.GetCursorPos()
+		fmt.Println("pos", x, y)
 	})
 	w.api.Viewport(0, 0, int32(width), int32(height))
 	w.screenPolygon.draw()
