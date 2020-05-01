@@ -21,7 +21,7 @@ Create Pixel Art games in Golang with fun and ease.
 
 ## Installation
 
-+ [Go 1.13+](https://golang.org/dl/)
++ [Go 1.14+](https://golang.org/dl/)
 + Ubuntu/Debian: `sudo apt-get install libgl1-mesa-dev xorg-dev`
 + CentOS/Fedora: `sudo yum install libX11-devel libXcursor-devel libXrandr-devel libXinerama-devel mesa-libGL-devel libXi-devel`
 + MacOS: `xcode-select --install`

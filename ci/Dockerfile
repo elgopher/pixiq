@@ -37,9 +37,9 @@ RUN apt-get install -y git
 RUN apt-get install -y libxcursor-dev libxrandr-dev libxinerama-dev libxi-dev
 
 # Install go
-RUN wget https://dl.google.com/go/go1.13.5.linux-amd64.tar.gz && \
-    tar -C /usr/local -xzf go1.13.5.linux-amd64.tar.gz && \
-    rm go1.13.5.linux-amd64.tar.gz
+RUN wget https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz && \
+    tar -C /usr/local -xzf go1.14.2.linux-amd64.tar.gz && \
+    rm go1.14.2.linux-amd64.tar.gz
 ENV GOPATH=/opt/go/ PATH=$PATH:/usr/local/go/bin:/opt/go/bin
 
 # Install make
