@@ -37,9 +37,9 @@ RUN apt-get install -y git
 RUN apt-get install -y libxcursor-dev libxrandr-dev libxinerama-dev libxi-dev
 
 # Install go
-RUN wget https://dl.google.com/go/go1.13.5.linux-amd64.tar.gz && \
-    tar -C /usr/local -xzf go1.13.5.linux-amd64.tar.gz && \
-    rm go1.13.5.linux-amd64.tar.gz
+RUN wget https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz && \
+    tar -C /usr/local -xzf go1.14.2.linux-amd64.tar.gz && \
+    rm go1.14.2.linux-amd64.tar.gz
 ENV GOPATH=/opt/go/ PATH=$PATH:/usr/local/go/bin:/opt/go/bin
 
 # Install make
@@ -49,4 +49,4 @@ RUN apt-get install -y make
 RUN go get -u golang.org/x/lint/golint
 
 # Install golangci-lint
-RUN wget -O - https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.23.1
+RUN wget -O - https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.26.0
