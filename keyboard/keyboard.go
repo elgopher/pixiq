@@ -19,12 +19,12 @@ import (
 )
 
 // EventSource is a source of keyboard Events. On each Update() Keyboard polls
-// the EventSource by executing Poll method multiple times - until Poll()
+// the EventSource by executing PollKeyboardEvent method multiple times - until PollKeyboardEvent()
 // returns false. In other words Keyboard#Update drains the EventSource.
 type EventSource interface {
-	// Poll retrieves and removes next keyboard Event. If there are no more
+	// PollKeyboardEvent retrieves and removes next keyboard Event. If there are no more
 	// events false is returned.
-	Poll() (Event, bool)
+	PollKeyboardEvent() (Event, bool)
 }
 
 func newKey(token token) Key {
@@ -162,7 +162,7 @@ func (k *Keyboard) Update() {
 	k.clearJustPressed()
 	k.clearJustReleased()
 	for {
-		event, ok := k.source.Poll()
+		event, ok := k.source.PollKeyboardEvent()
 		if !ok {
 			return
 		}

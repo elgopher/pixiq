@@ -198,7 +198,7 @@ func framebufferPixels(context gl2.API, x, y, width, height int32) []image.Color
 	return frameBuffer
 }
 
-func TestWindow_Poll(t *testing.T) {
+func TestWindow_PollKeyboardEvent(t *testing.T) {
 	t.Run("should return EmptyEvent and false when there is no keyboard events", func(t *testing.T) {
 		openGL, err := glfw.NewOpenGL(mainThreadLoop)
 		require.NoError(t, err)
@@ -207,7 +207,7 @@ func TestWindow_Poll(t *testing.T) {
 		require.NoError(t, err)
 		defer win.Close()
 		// when
-		event, ok := win.Poll()
+		event, ok := win.PollKeyboardEvent()
 		// then
 		assert.Equal(t, keyboard.EmptyEvent, event)
 		assert.False(t, ok)

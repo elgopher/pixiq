@@ -129,9 +129,9 @@ func (w *Window) Zoom() int {
 	return w.zoom
 }
 
-// Poll retrieves and removes next keyboard Event. If there are no more
+// PollKeyboardEvent retrieves and removes next keyboard Event. If there are no more
 // events false is returned. It implements keyboard.EventSource method.
-func (w *Window) Poll() (keyboard.Event, bool) {
+func (w *Window) PollKeyboardEvent() (keyboard.Event, bool) {
 	var (
 		event keyboard.Event
 		ok    bool

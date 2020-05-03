@@ -38,7 +38,7 @@ type cyclicEventsSource struct {
 	event    keyboard.Event
 }
 
-func (f *cyclicEventsSource) Poll() (keyboard.Event, bool) {
+func (f *cyclicEventsSource) PollKeyboardEvent() (keyboard.Event, bool) {
 	f.hasEvent = !f.hasEvent
 	if f.hasEvent {
 		return f.event, true

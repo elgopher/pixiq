@@ -593,7 +593,7 @@ type fakeEventSource struct {
 	events []keyboard.Event
 }
 
-func (f *fakeEventSource) Poll() (keyboard.Event, bool) {
+func (f *fakeEventSource) PollKeyboardEvent() (keyboard.Event, bool) {
 	if len(f.events) > 0 {
 		event := f.events[0]
 		f.events = f.events[1:]
