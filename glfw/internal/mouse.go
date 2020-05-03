@@ -21,6 +21,11 @@ var mouseButtonMapping = map[glfw.MouseButton]mouse.Button{
 	glfw.MouseButtonLeft:   mouse.Left,
 	glfw.MouseButtonRight:  mouse.Right,
 	glfw.MouseButtonMiddle: mouse.Middle,
+	glfw.MouseButton4:      mouse.Button4,
+	glfw.MouseButton5:      mouse.Button5,
+	glfw.MouseButton6:      mouse.Button6,
+	glfw.MouseButton7:      mouse.Button7,
+	glfw.MouseButton8:      mouse.Button8,
 }
 
 func (e *MouseEvents) OnMouseButtonCallback(w *glfw.Window, button glfw.MouseButton, action glfw.Action, mods glfw.ModifierKey) {

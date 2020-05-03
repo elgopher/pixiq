@@ -34,12 +34,14 @@ func New(source EventSource) *Mouse {
 		panic("nil EventSource")
 	}
 	return &Mouse{
-		source: source,
+		source:  source,
+		pressed: map[Button]struct{}{},
 	}
 }
 
 type Mouse struct {
-	source EventSource
+	source  EventSource
+	pressed map[Button]struct{}
 }
 
 func (m *Mouse) Update() {
@@ -50,9 +52,9 @@ func (m *Mouse) Update() {
 		}
 		switch event.typ {
 		case pressed:
-			fmt.Println("pressed", event.button)
+			m.pressed[event.button] = struct{}{}
 		case released:
-			fmt.Println("released", event.button)
+			delete(m.pressed, event.button)
 		case moved:
 			fmt.Println("moved", event.position.pixelPosX, event.position.pixelPosY, event.position.subpixelPosX, event.position.subpixelPosY, event.position.insideWindow)
 		case scrolled:
@@ -62,8 +64,9 @@ func (m *Mouse) Update() {
 
 }
 
-func (m *Mouse) Pressed(a Button) bool {
-	return false
+func (m *Mouse) Pressed(button Button) bool {
+	_, found := m.pressed[button]
+	return found
 }
 func (k *Mouse) PressedButtons() []Button {
 	return nil
@@ -109,9 +112,14 @@ func (p Position) Xf() float32 {
 type Button int
 
 const (
-	Left Button = iota
-	Right
-	Middle
+	Left    Button = 1
+	Right   Button = 2
+	Middle  Button = 3
+	Button4 Button = 4
+	Button5 Button = 5
+	Button6 Button = 6
+	Button7 Button = 7
+	Button8 Button = 8
 )
 
 func NewReleasedEvent(button Button) Event {
