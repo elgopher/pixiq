@@ -146,7 +146,7 @@ func TestKeyboard_Pressed(t *testing.T) {
 	})
 }
 
-func TestPressedKeys(t *testing.T) {
+func TestKeyboard_PressedKeys(t *testing.T) {
 	var (
 		aPressed         = keyboard.NewPressedEvent(keyboard.A)
 		aReleased        = keyboard.NewReleasedEvent(keyboard.A)

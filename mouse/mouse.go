@@ -68,9 +68,15 @@ func (m *Mouse) Pressed(button Button) bool {
 	_, found := m.pressed[button]
 	return found
 }
-func (k *Mouse) PressedButtons() []Button {
-	return nil
+
+func (m *Mouse) PressedButtons() []Button {
+	var pressedButtons []Button
+	for key := range m.pressed {
+		pressedButtons = append(pressedButtons, key)
+	}
+	return pressedButtons
 }
+
 func (m *Mouse) JustPressed(a Button) bool {
 	return false
 }
