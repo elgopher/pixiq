@@ -65,6 +65,15 @@ func (m *Mouse) Update() {
 func (m *Mouse) Pressed(a Button) bool {
 	return false
 }
+func (k *Mouse) PressedButtons() []Button {
+	return nil
+}
+func (m *Mouse) JustPressed(a Button) bool {
+	return false
+}
+func (m *Mouse) JustReleased(a Button) bool {
+	return false
+}
 
 func (m *Mouse) Position() Position {
 	return Position{}
