@@ -37,6 +37,9 @@ func New(source EventSource) *Mouse {
 		pressed:      map[Button]struct{}{},
 		justPressed:  make(map[Button]bool),
 		justReleased: make(map[Button]bool),
+		position: Position{
+			insideWindow: true,
+		},
 	}
 }
 
@@ -45,6 +48,7 @@ type Mouse struct {
 	pressed      map[Button]struct{}
 	justPressed  map[Button]bool
 	justReleased map[Button]bool
+	position     Position
 }
 
 func (m *Mouse) Update() {
@@ -63,7 +67,7 @@ func (m *Mouse) Update() {
 			delete(m.pressed, event.button)
 			m.justReleased[event.button] = true
 		case moved:
-			fmt.Println("moved", event.position.pixelPosX, event.position.pixelPosY, event.position.subpixelPosX, event.position.subpixelPosY, event.position.insideWindow)
+			m.position = event.position
 		case scrolled:
 			fmt.Println("scrolled", event.scrollX, event.scrollY)
 		}
@@ -104,7 +108,7 @@ func (m *Mouse) JustReleased(button Button) bool {
 }
 
 func (m *Mouse) Position() Position {
-	return Position{}
+	return m.position
 }
 
 func (m *Mouse) PositionDelta() PositionDelta {
@@ -115,23 +119,30 @@ type PositionDelta struct {
 }
 
 type Position struct {
-	pixelPosX, pixelPosY       int
-	subpixelPosX, subpixelPosY float64
-	insideWindow               bool
+	x, y         int
+	realX, realY float64
+	insideWindow bool
 }
 
 // X returns the pixel position
 func (p Position) X() int {
-	return 0
+	return p.x
 }
 
 func (p Position) Y() int {
-	return 0
+	return p.y
 }
 
-// Xf is useful when zoom was used.
-func (p Position) Xf() float32 {
-	return 0
+func (p Position) RealX() float64 {
+	return p.realX
+}
+
+func (p Position) RealY() float64 {
+	return p.realY
+}
+
+func (p Position) InsideWindow() bool {
+	return p.insideWindow
 }
 
 type Button int
@@ -169,14 +180,14 @@ func NewScrolledEvent(x, y float64) Event {
 	}
 }
 
-func NewMovedEvent(pixelPosX, pixelPosY int, subpixelPosX, subpixelPosY float64, insideWindow bool) Event {
+func NewMovedEvent(posX, posY int, realPosX, realPosY float64, insideWindow bool) Event {
 	return Event{
 		typ: moved,
 		position: Position{
-			pixelPosX:    pixelPosX,
-			pixelPosY:    pixelPosY,
-			subpixelPosX: subpixelPosX,
-			subpixelPosY: subpixelPosY,
+			x:            posX,
+			y:            posY,
+			realX:        realPosX,
+			realY:        realPosY,
 			insideWindow: insideWindow,
 		},
 	}

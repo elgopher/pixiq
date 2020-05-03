@@ -362,6 +362,110 @@ func TestMouse_Update(t *testing.T) {
 	}
 }
 
+type expectedPosition struct {
+	x, y         int
+	realX, realY float64
+	insideWindow bool
+}
+
+func TestMouse_Position(t *testing.T) {
+	t.Run("before Update was called, Position returns 0, 0", func(t *testing.T) {
+		source := newFakeEventSource()
+		mouseState := mouse.New(source)
+		// when
+		position := mouseState.Position()
+		// then
+		assert.Equal(t, 0, position.X())
+		assert.Equal(t, 0, position.Y())
+		assert.Equal(t, 0.0, position.RealX())
+		assert.Equal(t, 0.0, position.RealY())
+		assert.True(t, position.InsideWindow())
+	})
+	t.Run("after Update was called", func(t *testing.T) {
+		// when
+		tests := map[string]struct {
+			source           mouse.EventSource
+			expectedPosition expectedPosition
+		}{
+			"no events": {
+				source: newFakeEventSource(),
+				expectedPosition: expectedPosition{
+					insideWindow: true,
+				},
+			},
+			"one event": {
+				source: newFakeEventSource(
+					mouse.NewMovedEvent(0, 0, 0.0, 0.0, true)),
+				expectedPosition: expectedPosition{
+					insideWindow: true,
+				},
+			},
+			"one event with non default values": {
+				source: newFakeEventSource(
+					mouse.NewMovedEvent(1, 2, 1.0, 2.0, false)),
+				expectedPosition: expectedPosition{
+					x:            1,
+					y:            2,
+					realX:        1.0,
+					realY:        2.0,
+					insideWindow: false,
+				},
+			},
+			"one event with zoom": {
+				source: newFakeEventSource(
+					mouse.NewMovedEvent(1, 2, 4, 8, true)),
+				expectedPosition: expectedPosition{
+					x:            1,
+					y:            2,
+					realX:        4.0,
+					realY:        8.0,
+					insideWindow: true,
+				},
+			},
+			"one event with subpixels": {
+				source: newFakeEventSource(
+					mouse.NewMovedEvent(1, 2, 1.5, 2.3, true)),
+				expectedPosition: expectedPosition{
+					x:            1,
+					y:            2,
+					realX:        1.5,
+					realY:        2.3,
+					insideWindow: true,
+				},
+			},
+			"two events": {
+				source: newFakeEventSource(
+					mouse.NewMovedEvent(2, 3, 2.0, 3.0, true),
+					mouse.NewMovedEvent(1, 2, 1.0, 2.0, false),
+				),
+				expectedPosition: expectedPosition{
+					x:            1,
+					y:            2,
+					realX:        1.0,
+					realY:        2.0,
+					insideWindow: false,
+				},
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				mouseState := mouse.New(test.source)
+				mouseState.Update()
+				// when
+				position := mouseState.Position()
+				// then
+				assert.Equal(t, test.expectedPosition.x, position.X())
+				assert.Equal(t, test.expectedPosition.y, position.Y())
+				// and
+				assert.Equal(t, test.expectedPosition.realX, position.RealX())
+				assert.Equal(t, test.expectedPosition.realY, position.RealY())
+				// and
+				assert.Equal(t, test.expectedPosition.insideWindow, position.InsideWindow())
+			})
+		}
+	})
+}
+
 func newFakeEventSource(events ...mouse.Event) *fakeEventSource {
 	source := &fakeEventSource{}
 	source.events = []mouse.Event{}
