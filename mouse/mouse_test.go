@@ -331,6 +331,35 @@ func TestJustReleased(t *testing.T) {
 		assert.False(t, released)
 	})
 }
+func TestMouse_Update(t *testing.T) {
+	tests := map[string]int{
+		"1 event":     1,
+		"2 events":    2,
+		"1000 events": 1000,
+	}
+	for name, numberOfEvents := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Run("should drain EventSource", func(t *testing.T) {
+				source := newFakeEventSourceWith(numberOfEvents)
+				mouseState := mouse.New(source)
+				// when
+				mouseState.Update()
+				// then
+				assert.Empty(t, source.events)
+			})
+
+			t.Run("should drain EventSource after second Update()", func(t *testing.T) {
+				source := newFakeEventSourceWith(numberOfEvents)
+				mouseState := mouse.New(source)
+				mouseState.Update()
+				// when
+				mouseState.Update()
+				// then
+				assert.Empty(t, source.events)
+			})
+		})
+	}
+}
 
 func newFakeEventSource(events ...mouse.Event) *fakeEventSource {
 	source := &fakeEventSource{}
