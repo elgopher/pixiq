@@ -331,6 +331,7 @@ func TestJustReleased(t *testing.T) {
 		assert.False(t, released)
 	})
 }
+
 func TestMouse_Update(t *testing.T) {
 	tests := map[string]int{
 		"1 event":     1,

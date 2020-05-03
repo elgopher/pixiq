@@ -9,7 +9,6 @@ type EventSource interface {
 // EmptyEvent should be returned by EventSource when it does not have more events.
 var EmptyEvent = Event{}
 
-// Event describes what happened with the mouse button. Whether it was pressed or released.
 type Event struct {
 	typ eventType
 	// Pressed/Released
