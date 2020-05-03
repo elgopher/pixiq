@@ -166,6 +166,89 @@ func TestMouse_PressedButtons(t *testing.T) {
 	})
 }
 
+func TestJustPressed(t *testing.T) {
+	var (
+		leftPressed  = mouse.NewPressedEvent(mouse.Left)
+		leftReleased = mouse.NewReleasedEvent(mouse.Left)
+		rightPressed = mouse.NewPressedEvent(mouse.Right)
+	)
+
+	t.Run("before update should return false", func(t *testing.T) {
+		tests := map[string]struct {
+			source mouse.EventSource
+		}{
+			"for no events": {
+				source: newFakeEventSource(),
+			},
+			"when Left was pressed": {
+				source: newFakeEventSource(leftPressed),
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				mouseState := mouse.New(test.source)
+				// when
+				justPressed := mouseState.JustPressed(mouse.Left)
+				// then
+				assert.False(t, justPressed)
+			})
+		}
+	})
+
+	t.Run("after first update", func(t *testing.T) {
+		tests := map[string]struct {
+			source              mouse.EventSource
+			expectedJustPressed bool
+		}{
+			"for no events": {
+				source:              newFakeEventSource(),
+				expectedJustPressed: false,
+			},
+			"when Left has been pressed": {
+				source:              newFakeEventSource(leftPressed),
+				expectedJustPressed: true,
+			},
+			"when Right has been pressed": {
+				source:              newFakeEventSource(rightPressed),
+				expectedJustPressed: false,
+			},
+			"when Left has been released": {
+				source:              newFakeEventSource(leftReleased),
+				expectedJustPressed: false,
+			},
+			"when Left has been pressed and released": {
+				source:              newFakeEventSource(leftPressed, leftReleased),
+				expectedJustPressed: true,
+			},
+			"when Left has been released and pressed": {
+				source:              newFakeEventSource(leftReleased, leftPressed),
+				expectedJustPressed: true,
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				mouseState := mouse.New(test.source)
+				mouseState.Update()
+				// when
+				justPressed := mouseState.JustPressed(mouse.Left)
+				// then
+				assert.Equal(t, test.expectedJustPressed, justPressed)
+			})
+		}
+	})
+
+	t.Run("should return false after second update", func(t *testing.T) {
+		source := newFakeEventSource(leftPressed)
+		mouseState := mouse.New(source)
+		mouseState.Update()
+		mouseState.Update()
+		// when
+		pressed := mouseState.JustPressed(mouse.Left)
+		// then
+		assert.False(t, pressed)
+	})
+}
+
 func newFakeEventSource(events ...mouse.Event) *fakeEventSource {
 	source := &fakeEventSource{}
 	source.events = []mouse.Event{}
