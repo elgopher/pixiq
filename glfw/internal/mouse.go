@@ -1,27 +1,46 @@
 package internal
 
 import (
-	"fmt"
-
 	"github.com/go-gl/glfw/v3.3/glfw"
+
+	"github.com/jacekolszak/pixiq/mouse"
 )
 
 type MouseEvents struct {
+	buffer *mouse.EventBuffer
+}
+
+func NewMouseEvents(buffer *mouse.EventBuffer) *MouseEvents {
+	if buffer == nil {
+		panic("nil buffer")
+	}
+	return &MouseEvents{buffer: buffer}
+}
+
+var mouseButtonMapping = map[glfw.MouseButton]mouse.Button{
+	glfw.MouseButtonLeft:   mouse.Left,
+	glfw.MouseButtonRight:  mouse.Right,
+	glfw.MouseButtonMiddle: mouse.Middle,
 }
 
 func (e *MouseEvents) OnMouseButtonCallback(w *glfw.Window, button glfw.MouseButton, action glfw.Action, mods glfw.ModifierKey) {
-
-}
-
-// This is not fired when cursor is outside the window (Linux)
-func (e *MouseEvents) OnCursorPosCallback(w *glfw.Window, xpos float64, ypos float64) {
-	//fmt.Println(xpos, ypos)
-}
-
-func (e *MouseEvents) OnCursorEnterCallback(w *glfw.Window, entered bool) {
-	//fmt.Println(entered)
+	btn, ok := mouseButtonMapping[button]
+	if !ok {
+		return
+	}
+	switch action {
+	case glfw.Press:
+		e.buffer.Add(mouse.NewPressedEvent(btn))
+	case glfw.Release:
+		e.buffer.Add(mouse.NewReleasedEvent(btn))
+	}
 }
 
 func (e *MouseEvents) OnScrollCallback(w *glfw.Window, xoff float64, yoff float64) {
-	fmt.Println(xoff, yoff)
+	e.buffer.Add(mouse.NewScrolledEvent(xoff, yoff))
+}
+
+// Poll return next mapped event
+func (e *MouseEvents) Poll() (mouse.Event, bool) {
+	return e.buffer.Poll()
 }

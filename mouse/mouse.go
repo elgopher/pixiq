@@ -13,7 +13,7 @@ var EmptyEvent = Event{}
 type Event struct {
 	typ eventType
 	// Pressed/Released
-	key Key
+	button Button
 	// Moved
 	position Position
 	// Scroll
@@ -50,19 +50,19 @@ func (m *Mouse) Update() {
 		}
 		switch event.typ {
 		case pressed:
-			fmt.Println("pressed")
+			fmt.Println("pressed", event.button)
 		case released:
-			fmt.Println("released")
+			fmt.Println("released", event.button)
 		case moved:
-			fmt.Println("moved", event.position.pixelPosX, event.position.pixelPosY, event.position.insideWindow)
+			fmt.Println("moved", event.position.pixelPosX, event.position.pixelPosY, event.position.subpixelPosX, event.position.subpixelPosY, event.position.insideWindow)
 		case scrolled:
-			fmt.Println("scrolled")
+			fmt.Println("scrolled", event.scrollX, event.scrollY)
 		}
 	}
 
 }
 
-func (m *Mouse) Pressed(a Key) bool {
+func (m *Mouse) Pressed(a Button) bool {
 	return false
 }
 
@@ -97,25 +97,25 @@ func (p Position) Xf() float32 {
 	return 0
 }
 
-type Key int
+type Button int
 
 const (
-	Left Key = iota
+	Left Button = iota
 	Right
 	Middle
 )
 
-func NewReleasedEvent(key Key) Event {
+func NewReleasedEvent(button Button) Event {
 	return Event{
-		typ: released,
-		key: key,
+		typ:    released,
+		button: button,
 	}
 }
 
-func NewPressedEvent(key Key) Event {
+func NewPressedEvent(button Button) Event {
 	return Event{
-		typ: pressed,
-		key: key,
+		typ:    pressed,
+		button: button,
 	}
 }
 
@@ -135,7 +135,7 @@ func NewMovedEvent(pixelPosX, pixelPosY int, subpixelPosX, subpixelPosY float64,
 			pixelPosY:    pixelPosY,
 			subpixelPosX: subpixelPosX,
 			subpixelPosY: subpixelPosY,
-			insideWindow: true,
+			insideWindow: insideWindow,
 		},
 	}
 }

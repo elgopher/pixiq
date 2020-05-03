@@ -16,6 +16,7 @@ import (
 	"github.com/jacekolszak/pixiq/glfw/internal"
 	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/keyboard"
+	"github.com/jacekolszak/pixiq/mouse"
 )
 
 // NewOpenGL creates OpenGL instance.
@@ -194,11 +195,13 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 	}
 	// FIXME: EventBuffer size should be configurable
 	keyboardEvents := internal.NewKeyboardEvents(keyboard.NewEventBuffer(32))
+	mouseEvents := internal.NewMouseEvents(mouse.NewEventBuffer(32))
 	screenAcceleratedImage := g.context.NewAcceleratedImage(width, height)
 	screenImage := image.New(screenAcceleratedImage)
 	win := &Window{
 		mainThreadLoop:   g.mainThreadLoop,
 		keyboardEvents:   keyboardEvents,
+		mouseEvents:      mouseEvents,
 		requestedWidth:   width,
 		requestedHeight:  height,
 		screenImage:      screenImage,
@@ -213,8 +216,6 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 		}
 		win.glfwWindow.SetKeyCallback(win.keyboardEvents.OnKeyCallback)
 		win.glfwWindow.SetMouseButtonCallback(win.mouseEvents.OnMouseButtonCallback)
-		win.glfwWindow.SetCursorPosCallback(win.mouseEvents.OnCursorPosCallback)
-		win.glfwWindow.SetCursorEnterCallback(win.mouseEvents.OnCursorEnterCallback)
 		win.glfwWindow.SetScrollCallback(win.mouseEvents.OnScrollCallback)
 		for _, option := range options {
 			if option == nil {

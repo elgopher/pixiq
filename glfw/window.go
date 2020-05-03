@@ -12,40 +12,51 @@ import (
 
 // Window is an implementation of loop.Screen and keyboard.EventSource
 type Window struct {
-	glfwWindow       *glfw.Window
-	mainThreadLoop   *MainThreadLoop
-	screenPolygon    *screenPolygon
-	keyboardEvents   *internal.KeyboardEvents
-	mouseEvents      *internal.MouseEvents
-	requestedWidth   int
-	requestedHeight  int
-	zoom             int
-	screenImage      *image.Image
-	screenContextAPI gl.API
-	api              gl.API
-	context          *gl.Context
-	program          *gl.Program
-	lastPosition     lastPosition
+	glfwWindow         *glfw.Window
+	mainThreadLoop     *MainThreadLoop
+	screenPolygon      *screenPolygon
+	keyboardEvents     *internal.KeyboardEvents
+	mouseEvents        *internal.MouseEvents
+	requestedWidth     int
+	requestedHeight    int
+	zoom               int
+	screenImage        *image.Image
+	screenContextAPI   gl.API
+	api                gl.API
+	context            *gl.Context
+	program            *gl.Program
+	lastCursorPosition lastCursorPosition
 }
 
-type lastPosition struct {
+type lastCursorPosition struct {
 	x, y float64
 }
 
 func (w *Window) PollMouseEvent() (mouse.Event, bool) {
+	// first generate move event, because GLFW does not provide move events for Linux
+	// and Windows when cursor is outside window.
+	event, ok := w.pollMoveEvent()
+	if ok {
+		return event, ok
+	}
+	return w.mouseEvents.Poll()
+}
+
+func (w *Window) pollMoveEvent() (mouse.Event, bool) {
 	event := mouse.EmptyEvent
 	ok := false
 	w.mainThreadLoop.Execute(func() {
 		x, y := w.glfwWindow.GetCursorPos()
-		if w.lastPosition.x != x || w.lastPosition.y != y {
+		positionChanged := w.lastCursorPosition.x != x || w.lastCursorPosition.y != y
+		if positionChanged {
 			pixelPosX := int(x / float64(w.zoom))
 			pixelPosY := int(y / float64(w.zoom))
 			width, height := w.glfwWindow.GetSize()
 			insideWindow := x > 0 && y > 0 && x < float64(width) && y < float64(height)
 			event = mouse.NewMovedEvent(pixelPosX, pixelPosY, x, y, insideWindow)
 			ok = true
-			w.lastPosition.x = x
-			w.lastPosition.y = y
+			w.lastCursorPosition.x = x
+			w.lastCursorPosition.y = y
 		}
 	})
 	return event, ok
@@ -65,10 +76,6 @@ func (w *Window) DrawIntoBackBuffer() {
 	var width, height int
 	w.mainThreadLoop.Execute(func() {
 		width, height = w.glfwWindow.GetFramebufferSize()
-		//windowX, windowY := w.glfwWindow.GetPos()
-		//x, y := w.glfwWindow.GetCursorPos()
-		//fmt.Println("pos", x, y)
-		//fmt.Println("dev", windowX+int(x), windowY+int(y))
 	})
 	w.api.Viewport(0, 0, int32(width), int32(height))
 	w.screenPolygon.draw()
