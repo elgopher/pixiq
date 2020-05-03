@@ -34,20 +34,23 @@ func New(source EventSource) *Mouse {
 		panic("nil EventSource")
 	}
 	return &Mouse{
-		source:      source,
-		pressed:     map[Button]struct{}{},
-		justPressed: make(map[Button]bool),
+		source:       source,
+		pressed:      map[Button]struct{}{},
+		justPressed:  make(map[Button]bool),
+		justReleased: make(map[Button]bool),
 	}
 }
 
 type Mouse struct {
-	source      EventSource
-	pressed     map[Button]struct{}
-	justPressed map[Button]bool
+	source       EventSource
+	pressed      map[Button]struct{}
+	justPressed  map[Button]bool
+	justReleased map[Button]bool
 }
 
 func (m *Mouse) Update() {
 	m.clearJustPressed()
+	m.clearJustReleased()
 	for {
 		event, ok := m.source.PollMouseEvent()
 		if !ok {
@@ -59,6 +62,7 @@ func (m *Mouse) Update() {
 			m.justPressed[event.button] = true
 		case released:
 			delete(m.pressed, event.button)
+			m.justReleased[event.button] = true
 		case moved:
 			fmt.Println("moved", event.position.pixelPosX, event.position.pixelPosY, event.position.subpixelPosX, event.position.subpixelPosY, event.position.insideWindow)
 		case scrolled:
@@ -70,6 +74,12 @@ func (m *Mouse) Update() {
 func (m *Mouse) clearJustPressed() {
 	for key := range m.justPressed {
 		delete(m.justPressed, key)
+	}
+}
+
+func (m *Mouse) clearJustReleased() {
+	for key := range m.justReleased {
+		delete(m.justReleased, key)
 	}
 }
 
@@ -90,8 +100,8 @@ func (m *Mouse) JustPressed(button Button) bool {
 	return m.justPressed[button]
 }
 
-func (m *Mouse) JustReleased(a Button) bool {
-	return false
+func (m *Mouse) JustReleased(button Button) bool {
+	return m.justReleased[button]
 }
 
 func (m *Mouse) Position() Position {
