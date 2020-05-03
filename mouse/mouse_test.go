@@ -368,6 +368,13 @@ type expectedPosition struct {
 	insideWindow bool
 }
 
+type expectedPositionChange struct {
+	x, y                        int
+	realX, realY                float64
+	enteredWindow, exitedWindow bool
+	hasChanged                  bool
+}
+
 func TestMouse_Position(t *testing.T) {
 	t.Run("before Update was called, Position returns 0, 0", func(t *testing.T) {
 		source := newFakeEventSource()
@@ -461,6 +468,121 @@ func TestMouse_Position(t *testing.T) {
 				assert.Equal(t, test.expectedPosition.realY, position.RealY())
 				// and
 				assert.Equal(t, test.expectedPosition.insideWindow, position.InsideWindow())
+			})
+		}
+	})
+	t.Run("should return position change", func(t *testing.T) {
+		// when
+		tests := map[string]struct {
+			source         mouse.EventSource
+			expectedChange expectedPositionChange
+		}{
+			"no events": {
+				source: newFakeEventSource(),
+			},
+			"one event": {
+				source: newFakeEventSource(
+					mouse.NewMovedEvent(1, 2, 1.0, 2.0, false),
+				),
+				expectedChange: expectedPositionChange{
+					x:            1,
+					y:            2,
+					realX:        1.0,
+					realY:        2.0,
+					exitedWindow: true,
+					hasChanged:   true,
+				},
+			},
+			"two events": {
+				source: newFakeEventSource(
+					mouse.NewMovedEvent(1, 2, 1.0, 2.0, false),
+					mouse.NewMovedEvent(2, 3, 2.0, 3.0, false),
+				),
+				expectedChange: expectedPositionChange{
+					x:            2,
+					y:            3,
+					realX:        2.0,
+					realY:        3.0,
+					exitedWindow: true,
+					hasChanged:   true,
+				},
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				mouseState := mouse.New(test.source)
+				mouseState.Update()
+				// when
+				change := mouseState.PositionChange()
+				// then
+				assert.Equal(t, test.expectedChange.hasChanged, mouseState.PositionChanged())
+				// and
+				assert.Equal(t, test.expectedChange.x, change.X())
+				assert.Equal(t, test.expectedChange.y, change.Y())
+				// and
+				assert.Equal(t, test.expectedChange.realX, change.RealX())
+				assert.Equal(t, test.expectedChange.realY, change.RealY())
+				// and
+				assert.Equal(t, test.expectedChange.enteredWindow, change.EnteredWindow())
+				assert.Equal(t, test.expectedChange.exitedWindow, change.ExitedWindow())
+			})
+		}
+	})
+	t.Run("should return position change after second update", func(t *testing.T) {
+		// when
+		tests := map[string]struct {
+			newEvents      []mouse.Event
+			expectedChange expectedPositionChange
+		}{
+			"no new events": {},
+			"one new event": {
+				newEvents: []mouse.Event{
+					mouse.NewMovedEvent(2, 4, 2.5, 4.3, false),
+				},
+				expectedChange: expectedPositionChange{
+					x:          1,
+					y:          2,
+					realX:      1.5,
+					realY:      2.3,
+					hasChanged: true,
+				},
+			},
+			"one new event inside window": {
+				newEvents: []mouse.Event{
+					mouse.NewMovedEvent(1, 0, 1.0, 0, true),
+				},
+				expectedChange: expectedPositionChange{
+					x:             0,
+					y:             -2,
+					realX:         0.0,
+					realY:         -2.0,
+					enteredWindow: true,
+					hasChanged:    true,
+				},
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				source := newFakeEventSource(
+					mouse.NewMovedEvent(1, 2, 1.0, 2.0, false),
+				)
+				mouseState := mouse.New(source)
+				mouseState.Update()
+				source.events = test.newEvents
+				mouseState.Update()
+				// when
+				change := mouseState.PositionChange()
+				// then
+				assert.Equal(t, test.expectedChange.hasChanged, mouseState.PositionChanged())
+				// and
+				assert.Equal(t, test.expectedChange.x, change.X())
+				assert.Equal(t, test.expectedChange.y, change.Y())
+				// and
+				assert.Equal(t, test.expectedChange.realX, change.RealX())
+				assert.Equal(t, test.expectedChange.realY, change.RealY())
+				// and
+				assert.Equal(t, test.expectedChange.enteredWindow, change.EnteredWindow())
+				assert.Equal(t, test.expectedChange.exitedWindow, change.ExitedWindow())
 			})
 		}
 	})

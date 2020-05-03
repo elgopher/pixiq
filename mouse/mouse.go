@@ -44,16 +44,40 @@ func New(source EventSource) *Mouse {
 }
 
 type Mouse struct {
-	source       EventSource
-	pressed      map[Button]struct{}
-	justPressed  map[Button]bool
-	justReleased map[Button]bool
-	position     Position
+	source         EventSource
+	pressed        map[Button]struct{}
+	justPressed    map[Button]bool
+	justReleased   map[Button]bool
+	position       Position
+	positionChange PositionChange
 }
 
 func (m *Mouse) Update() {
 	m.clearJustPressed()
 	m.clearJustReleased()
+	lastPosition := m.position
+	defer func() {
+		if lastPosition != m.position {
+			exitedWindow := false
+			if !m.position.insideWindow && lastPosition.insideWindow {
+				exitedWindow = true
+			}
+			enteredWindow := false
+			if m.position.insideWindow && !lastPosition.insideWindow {
+				enteredWindow = true
+			}
+			m.positionChange = PositionChange{
+				x:             m.position.x - lastPosition.x,
+				y:             m.position.y - lastPosition.y,
+				realX:         m.position.realX - lastPosition.realX,
+				realY:         m.position.realY - lastPosition.realY,
+				exitedWindow:  exitedWindow,
+				enteredWindow: enteredWindow,
+			}
+		} else {
+			m.positionChange = PositionChange{}
+		}
+	}()
 	for {
 		event, ok := m.source.PollMouseEvent()
 		if !ok {
@@ -111,11 +135,12 @@ func (m *Mouse) Position() Position {
 	return m.position
 }
 
-func (m *Mouse) PositionDelta() PositionDelta {
-	return PositionDelta{}
+func (m *Mouse) PositionChange() PositionChange {
+	return m.positionChange
 }
 
-type PositionDelta struct {
+func (m *Mouse) PositionChanged() bool {
+	return m.positionChange != PositionChange{}
 }
 
 type Position struct {
@@ -143,6 +168,38 @@ func (p Position) RealY() float64 {
 
 func (p Position) InsideWindow() bool {
 	return p.insideWindow
+}
+
+type PositionChange struct {
+	x, y          int
+	realX, realY  float64
+	enteredWindow bool
+	exitedWindow  bool
+}
+
+// X returns the pixel position
+func (p PositionChange) X() int {
+	return p.x
+}
+
+func (p PositionChange) Y() int {
+	return p.y
+}
+
+func (p PositionChange) RealX() float64 {
+	return p.realX
+}
+
+func (p PositionChange) RealY() float64 {
+	return p.realY
+}
+
+func (p PositionChange) EnteredWindow() bool {
+	return p.enteredWindow
+}
+
+func (p PositionChange) ExitedWindow() bool {
+	return p.exitedWindow
 }
 
 type Button int
