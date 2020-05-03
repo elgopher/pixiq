@@ -369,10 +369,10 @@ type expectedPosition struct {
 }
 
 type expectedPositionChange struct {
-	x, y                        int
-	realX, realY                float64
-	enteredWindow, exitedWindow bool
-	hasChanged                  bool
+	x, y                      int
+	realX, realY              float64
+	windowEntered, windowLeft bool
+	hasChanged                bool
 }
 
 func TestMouse_Position(t *testing.T) {
@@ -485,12 +485,12 @@ func TestMouse_Position(t *testing.T) {
 					mouse.NewMovedEvent(1, 2, 1.0, 2.0, false),
 				),
 				expectedChange: expectedPositionChange{
-					x:            1,
-					y:            2,
-					realX:        1.0,
-					realY:        2.0,
-					exitedWindow: true,
-					hasChanged:   true,
+					x:          1,
+					y:          2,
+					realX:      1.0,
+					realY:      2.0,
+					windowLeft: true,
+					hasChanged: true,
 				},
 			},
 			"two events": {
@@ -499,12 +499,12 @@ func TestMouse_Position(t *testing.T) {
 					mouse.NewMovedEvent(2, 3, 2.0, 3.0, false),
 				),
 				expectedChange: expectedPositionChange{
-					x:            2,
-					y:            3,
-					realX:        2.0,
-					realY:        3.0,
-					exitedWindow: true,
-					hasChanged:   true,
+					x:          2,
+					y:          3,
+					realX:      2.0,
+					realY:      3.0,
+					windowLeft: true,
+					hasChanged: true,
 				},
 			},
 		}
@@ -523,8 +523,8 @@ func TestMouse_Position(t *testing.T) {
 				assert.Equal(t, test.expectedChange.realX, change.RealX())
 				assert.Equal(t, test.expectedChange.realY, change.RealY())
 				// and
-				assert.Equal(t, test.expectedChange.enteredWindow, change.EnteredWindow())
-				assert.Equal(t, test.expectedChange.exitedWindow, change.ExitedWindow())
+				assert.Equal(t, test.expectedChange.windowEntered, change.WindowEntered())
+				assert.Equal(t, test.expectedChange.windowLeft, change.WindowLeft())
 			})
 		}
 	})
@@ -556,7 +556,7 @@ func TestMouse_Position(t *testing.T) {
 					y:             -2,
 					realX:         0.0,
 					realY:         -2.0,
-					enteredWindow: true,
+					windowEntered: true,
 					hasChanged:    true,
 				},
 			},
@@ -581,8 +581,8 @@ func TestMouse_Position(t *testing.T) {
 				assert.Equal(t, test.expectedChange.realX, change.RealX())
 				assert.Equal(t, test.expectedChange.realY, change.RealY())
 				// and
-				assert.Equal(t, test.expectedChange.enteredWindow, change.EnteredWindow())
-				assert.Equal(t, test.expectedChange.exitedWindow, change.ExitedWindow())
+				assert.Equal(t, test.expectedChange.windowEntered, change.WindowEntered())
+				assert.Equal(t, test.expectedChange.windowLeft, change.WindowLeft())
 			})
 		}
 	})

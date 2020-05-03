@@ -58,21 +58,21 @@ func (m *Mouse) Update() {
 	lastPosition := m.position
 	defer func() {
 		if lastPosition != m.position {
-			exitedWindow := false
+			windowLeft := false
 			if !m.position.insideWindow && lastPosition.insideWindow {
-				exitedWindow = true
+				windowLeft = true
 			}
-			enteredWindow := false
+			windowEntered := false
 			if m.position.insideWindow && !lastPosition.insideWindow {
-				enteredWindow = true
+				windowEntered = true
 			}
 			m.positionChange = PositionChange{
 				x:             m.position.x - lastPosition.x,
 				y:             m.position.y - lastPosition.y,
 				realX:         m.position.realX - lastPosition.realX,
 				realY:         m.position.realY - lastPosition.realY,
-				exitedWindow:  exitedWindow,
-				enteredWindow: enteredWindow,
+				windowLeft:    windowLeft,
+				windowEntered: windowEntered,
 			}
 		} else {
 			m.positionChange = PositionChange{}
@@ -173,8 +173,8 @@ func (p Position) InsideWindow() bool {
 type PositionChange struct {
 	x, y          int
 	realX, realY  float64
-	enteredWindow bool
-	exitedWindow  bool
+	windowEntered bool
+	windowLeft    bool
 }
 
 // X returns the pixel position
@@ -194,12 +194,12 @@ func (p PositionChange) RealY() float64 {
 	return p.realY
 }
 
-func (p PositionChange) EnteredWindow() bool {
-	return p.enteredWindow
+func (p PositionChange) WindowEntered() bool {
+	return p.windowEntered
 }
 
-func (p PositionChange) ExitedWindow() bool {
-	return p.exitedWindow
+func (p PositionChange) WindowLeft() bool {
+	return p.windowLeft
 }
 
 type Button int
