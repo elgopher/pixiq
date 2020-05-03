@@ -1,14 +1,13 @@
 package glfw
 
 import (
-	"fmt"
-
 	"github.com/go-gl/glfw/v3.3/glfw"
 
 	"github.com/jacekolszak/pixiq/gl"
 	"github.com/jacekolszak/pixiq/glfw/internal"
 	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/keyboard"
+	"github.com/jacekolszak/pixiq/mouse"
 )
 
 // Window is an implementation of loop.Screen and keyboard.EventSource
@@ -26,6 +25,30 @@ type Window struct {
 	api              gl.API
 	context          *gl.Context
 	program          *gl.Program
+	lastPosition     lastPosition
+}
+
+type lastPosition struct {
+	x, y float64
+}
+
+func (w *Window) PollMouseEvent() (mouse.Event, bool) {
+	event := mouse.EmptyEvent
+	ok := false
+	w.mainThreadLoop.Execute(func() {
+		x, y := w.glfwWindow.GetCursorPos()
+		if w.lastPosition.x != x || w.lastPosition.y != y {
+			pixelPosX := int(x / float64(w.zoom))
+			pixelPosY := int(y / float64(w.zoom))
+			width, height := w.glfwWindow.GetSize()
+			insideWindow := x > 0 && y > 0 && x < float64(width) && y < float64(height)
+			event = mouse.NewMovedEvent(pixelPosX, pixelPosY, x, y, insideWindow)
+			ok = true
+			w.lastPosition.x = x
+			w.lastPosition.y = y
+		}
+	})
+	return event, ok
 }
 
 // Draw draws a screen image in the window
@@ -42,8 +65,10 @@ func (w *Window) DrawIntoBackBuffer() {
 	var width, height int
 	w.mainThreadLoop.Execute(func() {
 		width, height = w.glfwWindow.GetFramebufferSize()
-		x, y := w.glfwWindow.GetCursorPos()
-		fmt.Println("pos", x, y)
+		//windowX, windowY := w.glfwWindow.GetPos()
+		//x, y := w.glfwWindow.GetCursorPos()
+		//fmt.Println("pos", x, y)
+		//fmt.Println("dev", windowX+int(x), windowY+int(y))
 	})
 	w.api.Viewport(0, 0, int32(width), int32(height))
 	w.screenPolygon.draw()
