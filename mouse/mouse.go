@@ -102,14 +102,14 @@ func (m *Mouse) Update() {
 }
 
 func (m *Mouse) clearJustPressed() {
-	for key := range m.justPressed {
-		delete(m.justPressed, key)
+	for button := range m.justPressed {
+		delete(m.justPressed, button)
 	}
 }
 
 func (m *Mouse) clearJustReleased() {
-	for key := range m.justReleased {
-		delete(m.justReleased, key)
+	for button := range m.justReleased {
+		delete(m.justReleased, button)
 	}
 }
 
@@ -120,8 +120,8 @@ func (m *Mouse) Pressed(button Button) bool {
 
 func (m *Mouse) PressedButtons() []Button {
 	var pressedButtons []Button
-	for key := range m.pressed {
-		pressedButtons = append(pressedButtons, key)
+	for button := range m.pressed {
+		pressedButtons = append(pressedButtons, button)
 	}
 	return pressedButtons
 }

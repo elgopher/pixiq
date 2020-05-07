@@ -3,7 +3,7 @@ package mouse
 // EventBuffer is a capped collection of accumulated events which can
 // be used by libraries or in unit tests as a fake implementation of EventSource.
 // The order of added events is preserved.
-// EventBuffer is an EventSource and can be directly consumed by Keyboard.
+// EventBuffer is an EventSource and can be directly consumed by Mouse.
 type EventBuffer struct {
 	circularBuffer []Event
 	writeIndex     int
