@@ -239,6 +239,13 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 		if err != nil {
 			return
 		}
+		win.mouseEvents = internal.NewMouseEvents(
+			mouse.NewEventBuffer(32),
+			&mouseEventsWindow{
+				glfwWindow:     win.glfwWindow,
+				mainThreadLoop: g.mainThreadLoop,
+				zoom:           win.zoom,
+			})
 		win.glfwWindow.SetKeyCallback(win.keyboardEvents.OnKeyCallback)
 		win.glfwWindow.SetMouseButtonCallback(win.mouseEvents.OnMouseButtonCallback)
 		win.glfwWindow.SetScrollCallback(win.mouseEvents.OnScrollCallback)
@@ -250,13 +257,6 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 			option(win)
 		}
 		win.glfwWindow.SetSize(win.requestedWidth*win.zoom, win.requestedHeight*win.zoom)
-		win.mouseEvents = internal.NewMouseEvents(
-			mouse.NewEventBuffer(32),
-			&mouseEventsWindow{
-				glfwWindow:     win.glfwWindow,
-				mainThreadLoop: g.mainThreadLoop,
-				zoom:           win.zoom,
-			})
 		win.glfwWindow.Show()
 	})
 	if err != nil {

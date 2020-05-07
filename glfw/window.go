@@ -36,26 +36,6 @@ func (w *Window) PollMouseEvent() (mouse.Event, bool) {
 	return w.mouseEvents.Poll()
 }
 
-func (w *Window) pollMoveEvent() (mouse.Event, bool) {
-	event := mouse.EmptyEvent
-	ok := false
-	w.mainThreadLoop.Execute(func() {
-		x, y := w.glfwWindow.GetCursorPos()
-		positionChanged := w.lastCursorPosition.x != x || w.lastCursorPosition.y != y
-		if positionChanged {
-			pixelPosX := int(x / float64(w.zoom))
-			pixelPosY := int(y / float64(w.zoom))
-			width, height := w.glfwWindow.GetSize()
-			insideWindow := x > 0 && y > 0 && x < float64(width) && y < float64(height)
-			event = mouse.NewMovedEvent(pixelPosX, pixelPosY, x, y, insideWindow)
-			ok = true
-			w.lastCursorPosition.x = x
-			w.lastCursorPosition.y = y
-		}
-	})
-	return event, ok
-}
-
 // Draw draws a screen image in the window
 func (w *Window) Draw() {
 	w.DrawIntoBackBuffer()
