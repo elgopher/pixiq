@@ -28,7 +28,7 @@ var mouseButtonMapping = map[glfw.MouseButton]mouse.Button{
 	glfw.MouseButton8:      mouse.Button8,
 }
 
-func (e *MouseEvents) OnMouseButtonCallback(w *glfw.Window, button glfw.MouseButton, action glfw.Action, mods glfw.ModifierKey) {
+func (e *MouseEvents) OnMouseButtonCallback(_ *glfw.Window, button glfw.MouseButton, action glfw.Action, _ glfw.ModifierKey) {
 	btn, ok := mouseButtonMapping[button]
 	if !ok {
 		return
@@ -41,7 +41,7 @@ func (e *MouseEvents) OnMouseButtonCallback(w *glfw.Window, button glfw.MouseBut
 	}
 }
 
-func (e *MouseEvents) OnScrollCallback(w *glfw.Window, xoff float64, yoff float64) {
+func (e *MouseEvents) OnScrollCallback(_ *glfw.Window, xoff float64, yoff float64) {
 	e.buffer.Add(mouse.NewScrolledEvent(xoff, yoff))
 }
 
