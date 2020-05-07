@@ -1,7 +1,5 @@
 package mouse
 
-import "fmt"
-
 type EventSource interface {
 	PollMouseEvent() (Event, bool)
 }
@@ -50,12 +48,14 @@ type Mouse struct {
 	justReleased   map[Button]bool
 	position       Position
 	positionChange PositionChange
+	scroll         Scroll
 }
 
 func (m *Mouse) Update() {
 	m.clearJustPressed()
 	m.clearJustReleased()
 	lastPosition := m.position
+	m.scroll = Scroll{}
 	defer func() {
 		if lastPosition != m.position {
 			windowLeft := false
@@ -93,7 +93,10 @@ func (m *Mouse) Update() {
 		case moved:
 			m.position = event.position
 		case scrolled:
-			fmt.Println("scrolled", event.scrollX, event.scrollY)
+			m.scroll = Scroll{
+				x: event.scrollX + m.scroll.x,
+				y: event.scrollY + m.scroll.y,
+			}
 		}
 	}
 }
@@ -141,6 +144,10 @@ func (m *Mouse) PositionChange() PositionChange {
 
 func (m *Mouse) PositionChanged() bool {
 	return m.positionChange != PositionChange{}
+}
+
+func (m *Mouse) Scroll() Scroll {
+	return m.scroll
 }
 
 type Position struct {
@@ -200,6 +207,18 @@ func (p PositionChange) WindowEntered() bool {
 
 func (p PositionChange) WindowLeft() bool {
 	return p.windowLeft
+}
+
+type Scroll struct {
+	x, y float64
+}
+
+func (s Scroll) X() float64 {
+	return s.x
+}
+
+func (s Scroll) Y() float64 {
+	return s.y
 }
 
 type Button int

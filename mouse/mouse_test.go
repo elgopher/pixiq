@@ -588,6 +588,79 @@ func TestMouse_Position(t *testing.T) {
 	})
 }
 
+func TestMouse_Scroll(t *testing.T) {
+	t.Run("before Update was called, Scroll returns 0, 0", func(t *testing.T) {
+		source := newFakeEventSource()
+		mouseState := mouse.New(source)
+		// when
+		scroll := mouseState.Scroll()
+		// then
+		assert.Equal(t, 0.0, scroll.X())
+		assert.Equal(t, 0.0, scroll.Y())
+	})
+	t.Run("after Update was called", func(t *testing.T) {
+		tests := map[string]struct {
+			source               mouse.EventSource
+			expectedX, expectedY float64
+		}{
+			"no events": {
+				source: newFakeEventSource(),
+			},
+			"one event": {
+				source:    newFakeEventSource(mouse.NewScrolledEvent(1.1, 2.2)),
+				expectedX: 1.1,
+				expectedY: 2.2,
+			},
+			"two events": {
+				source:    newFakeEventSource(mouse.NewScrolledEvent(1.1, 2.2), mouse.NewScrolledEvent(0.3, 0.5)),
+				expectedX: 1.4,
+				expectedY: 2.7,
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				mouseState := mouse.New(test.source)
+				mouseState.Update()
+				// when
+				scroll := mouseState.Scroll()
+				// then
+				assert.InDelta(t, test.expectedX, scroll.X(), 0.000000001) // TODO From where this delta is taken?
+				assert.InDelta(t, test.expectedY, scroll.Y(), 0.000000001)
+			})
+		}
+	})
+	t.Run("after second Update was called", func(t *testing.T) {
+		tests := map[string]struct {
+			newEvents            []mouse.Event
+			expectedX, expectedY float64
+		}{
+			"no new events": {
+				expectedX: 0.0,
+				expectedY: 0.0,
+			},
+			"one event": {
+				newEvents: []mouse.Event{mouse.NewScrolledEvent(0.1, 0.2)},
+				expectedX: 0.1,
+				expectedY: 0.2,
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				source := newFakeEventSource(mouse.NewScrolledEvent(1.1, 2.2))
+				mouseState := mouse.New(source)
+				mouseState.Update()
+				source.events = test.newEvents
+				mouseState.Update()
+				// when
+				scroll := mouseState.Scroll()
+				// then
+				assert.InDelta(t, test.expectedX, scroll.X(), 0.000000001) // TODO From where this delta is taken?
+				assert.InDelta(t, test.expectedY, scroll.Y(), 0.000000001)
+			})
+		}
+	})
+}
+
 func newFakeEventSource(events ...mouse.Event) *fakeEventSource {
 	source := &fakeEventSource{}
 	source.events = []mouse.Event{}
