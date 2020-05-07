@@ -21,3 +21,18 @@ func BenchmarkWindow_Draw(b *testing.B) {
 		win.Draw()
 	}
 }
+
+func BenchmarkWindow_PollMouseEvent(b *testing.B) {
+	openGL, err := glfw.NewOpenGL(mainThreadLoop)
+	require.NoError(b, err)
+	defer openGL.Destroy()
+	win, err := openGL.OpenWindow(640, 360)
+	if err != nil {
+		panic(err)
+	}
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		win.PollMouseEvent()
+	}
+}

@@ -15,11 +15,17 @@ func TestNewMouseEvents(t *testing.T) {
 	t.Run("should create MouseEvents when buffer is given", func(t *testing.T) {
 		buffer := mouse.NewEventBuffer(1)
 		// expect
-		assert.NotNil(t, internal.NewMouseEvents(buffer))
+		assert.NotNil(t, internal.NewMouseEvents(buffer, &fakeWindow{}))
 	})
 	t.Run("should panic for nil buffer", func(t *testing.T) {
 		assert.Panics(t, func() {
-			assert.NotNil(t, internal.NewMouseEvents(nil))
+			assert.NotNil(t, internal.NewMouseEvents(nil, &fakeWindow{}))
+		})
+	})
+	t.Run("should panic for nil window", func(t *testing.T) {
+		buffer := mouse.NewEventBuffer(1)
+		assert.Panics(t, func() {
+			assert.NotNil(t, internal.NewMouseEvents(buffer, nil))
 		})
 	})
 }
@@ -27,7 +33,7 @@ func TestNewMouseEvents(t *testing.T) {
 func TestMouseEvents_Poll(t *testing.T) {
 	t.Run("should return EmptyEvent when there are no events", func(t *testing.T) {
 		buffer := mouse.NewEventBuffer(1)
-		events := internal.NewMouseEvents(buffer)
+		events := internal.NewMouseEvents(buffer, &fakeWindow{})
 		// when
 		event, ok := events.Poll()
 		// then
@@ -65,7 +71,7 @@ func TestMouseEvents_Poll(t *testing.T) {
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
 				buffer := mouse.NewEventBuffer(1)
-				events := internal.NewMouseEvents(buffer)
+				events := internal.NewMouseEvents(buffer, &fakeWindow{})
 				// when
 				events.OnMouseButtonCallback(nil, test.button, test.action, 0)
 				event, ok := events.Poll()
@@ -92,7 +98,7 @@ func TestMouseEvents_Poll(t *testing.T) {
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
 				buffer := mouse.NewEventBuffer(1)
-				events := internal.NewMouseEvents(buffer)
+				events := internal.NewMouseEvents(buffer, &fakeWindow{})
 				// when
 				events.OnScrollCallback(nil, test.x, test.y)
 				event, ok := events.Poll()
@@ -105,7 +111,7 @@ func TestMouseEvents_Poll(t *testing.T) {
 
 	t.Run("should return two button events", func(t *testing.T) {
 		buffer := mouse.NewEventBuffer(2)
-		events := internal.NewMouseEvents(buffer)
+		events := internal.NewMouseEvents(buffer, &fakeWindow{})
 		events.OnMouseButtonCallback(nil, glfw.MouseButtonLeft, glfw.Press, 0)
 		events.OnMouseButtonCallback(nil, glfw.MouseButtonRight, glfw.Release, 0)
 		// when
@@ -121,10 +127,145 @@ func TestMouseEvents_Poll(t *testing.T) {
 		assertNoMoreMouseEvents(t, events)
 	})
 
+	t.Run("should generate MoveEvent", func(t *testing.T) {
+		tests := map[string]struct {
+			window        internal.Window
+			expectedEvent mouse.Event
+		}{
+			"1,2": {
+				window: &fakeWindow{
+					posX:   1,
+					posY:   2,
+					width:  2,
+					height: 3,
+					zoom:   1,
+				},
+				expectedEvent: mouse.NewMovedEvent(1, 2, 1, 2, true),
+			},
+			"zoom 2": {
+				window: &fakeWindow{
+					posX:   2.0,
+					posY:   4.0,
+					width:  3,
+					height: 5,
+					zoom:   2,
+				},
+				expectedEvent: mouse.NewMovedEvent(1, 2, 2.0, 4.0, true),
+			},
+			"outside window, x == width": {
+				window: &fakeWindow{
+					posX:   1,
+					posY:   0,
+					width:  1,
+					height: 1,
+					zoom:   1,
+				},
+				expectedEvent: mouse.NewMovedEvent(1, 0, 1, 0, false),
+			},
+			"outside window, x >= width": {
+				window: &fakeWindow{
+					posX:   2,
+					posY:   0,
+					width:  1,
+					height: 1,
+					zoom:   1,
+				},
+				expectedEvent: mouse.NewMovedEvent(2, 0, 2, 0, false),
+			},
+			"outside window, x < width": {
+				window: &fakeWindow{
+					posX:   -1,
+					posY:   0,
+					width:  1,
+					height: 1,
+					zoom:   1,
+				},
+				expectedEvent: mouse.NewMovedEvent(-1, 0, -1, 0, false),
+			},
+			"outside window, y == height": {
+				window: &fakeWindow{
+					posX:   0,
+					posY:   1,
+					width:  1,
+					height: 1,
+					zoom:   1,
+				},
+				expectedEvent: mouse.NewMovedEvent(0, 1, 0, 1, false),
+			},
+			"outside window, y >= height": {
+				window: &fakeWindow{
+					posX:   0,
+					posY:   2,
+					width:  1,
+					height: 1,
+					zoom:   1,
+				},
+				expectedEvent: mouse.NewMovedEvent(0, 2, 0, 2, false),
+			},
+			"outside window, y < 0": {
+				window: &fakeWindow{
+					posX:   0,
+					posY:   -1,
+					width:  1,
+					height: 1,
+					zoom:   1,
+				},
+				expectedEvent: mouse.NewMovedEvent(0, -1, 0, -1, false),
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				buffer := mouse.NewEventBuffer(1)
+				events := internal.NewMouseEvents(buffer, test.window)
+				// when
+				event, ok := events.Poll()
+				// then
+				assert.True(t, ok)
+				assert.Equal(t, test.expectedEvent, event)
+			})
+		}
+
+	})
+
+	t.Run("same position should not generate MoveEvent", func(t *testing.T) {
+		buffer := mouse.NewEventBuffer(1)
+		window := &fakeWindow{
+			posX:   1,
+			posY:   1,
+			width:  1,
+			height: 1,
+			zoom:   1,
+		}
+		events := internal.NewMouseEvents(buffer, window)
+		_, _ = events.Poll()
+		event, ok := events.Poll()
+		// then
+		assert.False(t, ok)
+		assert.Equal(t, mouse.EmptyEvent, event)
+	})
+
 }
 
 func assertNoMoreMouseEvents(t *testing.T, events *internal.MouseEvents) {
 	event, ok := events.Poll()
 	require.False(t, ok)
 	assert.Equal(t, mouse.EmptyEvent, event)
+}
+
+type fakeWindow struct {
+	posX, posY    float64
+	width, height int
+	zoom          int
+}
+
+func (f *fakeWindow) CursorPosition() (float64, float64) {
+	return f.posX, f.posY
+}
+
+func (f *fakeWindow) Size() (int, int) {
+	return f.width, f.height
+}
+
+func (f *fakeWindow) Zoom() int {
+	return f.zoom
 }

@@ -33,12 +33,6 @@ type lastCursorPosition struct {
 }
 
 func (w *Window) PollMouseEvent() (mouse.Event, bool) {
-	// first generate move event, because GLFW does not provide move events for Linux
-	// and Windows when cursor is outside window.
-	event, ok := w.pollMoveEvent()
-	if ok {
-		return event, ok
-	}
 	return w.mouseEvents.Poll()
 }
 

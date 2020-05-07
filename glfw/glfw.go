@@ -185,6 +185,33 @@ func (g *OpenGL) NewImage(width, height int) *image.Image {
 	return image.New(acceleratedImage)
 }
 
+type mouseEventsWindow struct {
+	glfwWindow     *glfw.Window
+	mainThreadLoop *MainThreadLoop
+	zoom           int
+}
+
+func (m *mouseEventsWindow) CursorPosition() (float64, float64) {
+	var x, y float64
+	m.mainThreadLoop.Execute(func() {
+		x, y = m.glfwWindow.GetCursorPos()
+	})
+	return x, y
+}
+
+func (m *mouseEventsWindow) Size() (int, int) {
+	// TODO Cache
+	var w, h int
+	m.mainThreadLoop.Execute(func() {
+		w, h = m.glfwWindow.GetSize()
+	})
+	return w, h
+}
+
+func (m *mouseEventsWindow) Zoom() int {
+	return m.zoom
+}
+
 // OpenWindow creates and shows Window.
 func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window, error) {
 	if width < 1 {
@@ -195,13 +222,11 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 	}
 	// FIXME: EventBuffer size should be configurable
 	keyboardEvents := internal.NewKeyboardEvents(keyboard.NewEventBuffer(32))
-	mouseEvents := internal.NewMouseEvents(mouse.NewEventBuffer(32))
 	screenAcceleratedImage := g.context.NewAcceleratedImage(width, height)
 	screenImage := image.New(screenAcceleratedImage)
 	win := &Window{
 		mainThreadLoop:   g.mainThreadLoop,
 		keyboardEvents:   keyboardEvents,
-		mouseEvents:      mouseEvents,
 		requestedWidth:   width,
 		requestedHeight:  height,
 		screenImage:      screenImage,
@@ -225,6 +250,13 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 			option(win)
 		}
 		win.glfwWindow.SetSize(win.requestedWidth*win.zoom, win.requestedHeight*win.zoom)
+		win.mouseEvents = internal.NewMouseEvents(
+			mouse.NewEventBuffer(32),
+			&mouseEventsWindow{
+				glfwWindow:     win.glfwWindow,
+				mainThreadLoop: g.mainThreadLoop,
+				zoom:           win.zoom,
+			})
 		win.glfwWindow.Show()
 	})
 	if err != nil {
