@@ -9,8 +9,8 @@ Create Pixel Art games in Golang with fun and ease.
 ## What you can do with Pixiq?
 
 + draw images on a screen in real time using your favourite [Go programming language](https://golang.org/)
-+ manipulate every single pixel directly or with the use of tools
-+ handle user input (_only keyboard supported at the moment_)
++ manipulate every single pixel directly or with the use of tools (_blend and clear supported at the moment_)
++ handle user input (_keyboard and mouse supported at the moment_)
 
 ## What is Pixel Art?
 
@@ -22,8 +22,8 @@ Create Pixel Art games in Golang with fun and ease.
 ## Installation
 
 + [Go 1.14+](https://golang.org/dl/)
-+ Ubuntu/Debian: `sudo apt-get install libgl1-mesa-dev xorg-dev`
-+ CentOS/Fedora: `sudo yum install libX11-devel libXcursor-devel libXrandr-devel libXinerama-devel mesa-libGL-devel libXi-devel`
++ Ubuntu/Debian: `sudo apt-get install libgl1-mesa-dev xorg-dev gcc`
++ CentOS/Fedora: `sudo yum install libX11-devel libXcursor-devel libXrandr-devel libXinerama-devel mesa-libGL-devel libXi-devel gcc`
 + MacOS: `xcode-select --install`
 
 ## Hello world!

@@ -146,7 +146,7 @@ func TestKeyboard_Pressed(t *testing.T) {
 	})
 }
 
-func TestPressedKeys(t *testing.T) {
+func TestKeyboard_PressedKeys(t *testing.T) {
 	var (
 		aPressed         = keyboard.NewPressedEvent(keyboard.A)
 		aReleased        = keyboard.NewReleasedEvent(keyboard.A)
@@ -593,7 +593,7 @@ type fakeEventSource struct {
 	events []keyboard.Event
 }
 
-func (f *fakeEventSource) Poll() (keyboard.Event, bool) {
+func (f *fakeEventSource) PollKeyboardEvent() (keyboard.Event, bool) {
 	if len(f.events) > 0 {
 		event := f.events[0]
 		f.events = f.events[1:]

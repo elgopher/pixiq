@@ -19,12 +19,12 @@ import (
 )
 
 // EventSource is a source of keyboard Events. On each Update() Keyboard polls
-// the EventSource by executing Poll method multiple times - until Poll()
+// the EventSource by executing PollKeyboardEvent method multiple times - until PollKeyboardEvent()
 // returns false. In other words Keyboard#Update drains the EventSource.
 type EventSource interface {
-	// Poll retrieves and removes next keyboard Event. If there are no more
+	// PollKeyboardEvent retrieves and removes next keyboard Event. If there are no more
 	// events false is returned.
-	Poll() (Event, bool)
+	PollKeyboardEvent() (Event, bool)
 }
 
 func newKey(token token) Key {
@@ -118,6 +118,8 @@ func NewReleasedEvent(key Key) Event {
 }
 
 // Event describes what happened with the key. Whether it was pressed or released.
+//
+// Event can be constructed using NewXXXEvent function
 type Event struct {
 	typ eventType
 	key Key
@@ -132,7 +134,9 @@ const (
 	released eventType = 2
 )
 
-// New creates Keyboard instance.
+// New creates Keyboard instance. It will consume all events from EventSource each
+// time Update method is called. For this reason you can't have two Keyboard instances
+// for the same EventSource.
 func New(source EventSource) *Keyboard {
 	if source == nil {
 		panic("nil EventSource")
@@ -148,7 +152,7 @@ func New(source EventSource) *Keyboard {
 // Keyboard provides a read-only information about the current state of the
 // keyboard, such as what keys are currently pressed. Please note that
 // updating the Keyboard state retrieves and removes events from EventSource.
-// Therefore only Keyboard instance can be created for one EventSource.
+// Therefore only one Keyboard instance can be created for specific EventSource.
 type Keyboard struct {
 	source       EventSource
 	pressed      map[Key]struct{}
@@ -162,7 +166,7 @@ func (k *Keyboard) Update() {
 	k.clearJustPressed()
 	k.clearJustReleased()
 	for {
-		event, ok := k.source.Poll()
+		event, ok := k.source.PollKeyboardEvent()
 		if !ok {
 			return
 		}

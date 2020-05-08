@@ -7,6 +7,7 @@ import (
 	"github.com/jacekolszak/pixiq/glfw/internal"
 	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/keyboard"
+	"github.com/jacekolszak/pixiq/mouse"
 )
 
 // Window is an implementation of loop.Screen and keyboard.EventSource
@@ -15,6 +16,7 @@ type Window struct {
 	mainThreadLoop   *MainThreadLoop
 	screenPolygon    *screenPolygon
 	keyboardEvents   *internal.KeyboardEvents
+	mouseEvents      *internal.MouseEvents
 	requestedWidth   int
 	requestedHeight  int
 	zoom             int
@@ -23,6 +25,13 @@ type Window struct {
 	api              gl.API
 	context          *gl.Context
 	program          *gl.Program
+	mouseWindow      *mouseWindow
+}
+
+// PollMouseEvent retrieves and removes next mouse Event. If there are no more
+// events false is returned. It implements mouse.EventSource method.
+func (w *Window) PollMouseEvent() (mouse.Event, bool) {
+	return w.mouseEvents.Poll()
 }
 
 // Draw draws a screen image in the window
@@ -68,10 +77,7 @@ func (w *Window) ShouldClose() bool {
 // than requested width used when window was open due to platform limitation.
 // If zooming is used the width is multiplied by zoom.
 func (w *Window) Width() int {
-	var width int
-	w.mainThreadLoop.Execute(func() {
-		width, _ = w.glfwWindow.GetSize()
-	})
+	width, _ := w.mouseWindow.Size()
 	return width
 }
 
@@ -79,10 +85,7 @@ func (w *Window) Width() int {
 // than requested height used when window was open due to platform limitation.
 // If zooming is used the height is multiplied by zoom.
 func (w *Window) Height() int {
-	var height int
-	w.mainThreadLoop.Execute(func() {
-		_, height = w.glfwWindow.GetSize()
-	})
+	_, height := w.mouseWindow.Size()
 	return height
 }
 
@@ -92,9 +95,9 @@ func (w *Window) Zoom() int {
 	return w.zoom
 }
 
-// Poll retrieves and removes next keyboard Event. If there are no more
+// PollKeyboardEvent retrieves and removes next keyboard Event. If there are no more
 // events false is returned. It implements keyboard.EventSource method.
-func (w *Window) Poll() (keyboard.Event, bool) {
+func (w *Window) PollKeyboardEvent() (keyboard.Event, bool) {
 	var (
 		event keyboard.Event
 		ok    bool

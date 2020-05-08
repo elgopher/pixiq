@@ -7,6 +7,7 @@ package glfw
 
 import (
 	"log"
+	"sync"
 	"time"
 
 	gl33 "github.com/go-gl/gl/v3.3-core/gl"
@@ -16,6 +17,7 @@ import (
 	"github.com/jacekolszak/pixiq/glfw/internal"
 	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/keyboard"
+	"github.com/jacekolszak/pixiq/mouse"
 )
 
 // NewOpenGL creates OpenGL instance.
@@ -184,6 +186,39 @@ func (g *OpenGL) NewImage(width, height int) *image.Image {
 	return image.New(acceleratedImage)
 }
 
+// mouseWindow implements mouse.Window
+type mouseWindow struct {
+	mutex          sync.Mutex
+	glfwWindow     *glfw.Window
+	mainThreadLoop *MainThreadLoop
+	zoom           int
+	width, height  int
+}
+
+func (m *mouseWindow) CursorPosition() (float64, float64) {
+	var x, y float64
+	m.mainThreadLoop.Execute(func() {
+		x, y = m.glfwWindow.GetCursorPos()
+	})
+	return x, y
+}
+
+// Size() is thread-safe
+func (m *mouseWindow) Size() (int, int) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+	if m.width == 0 {
+		m.mainThreadLoop.Execute(func() {
+			m.width, m.height = m.glfwWindow.GetSize()
+		})
+	}
+	return m.width, m.height
+}
+
+func (m *mouseWindow) Zoom() int {
+	return m.zoom
+}
+
 // OpenWindow creates and shows Window.
 func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window, error) {
 	if width < 1 {
@@ -211,7 +246,6 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 		if err != nil {
 			return
 		}
-		win.glfwWindow.SetKeyCallback(win.keyboardEvents.OnKeyCallback)
 		for _, option := range options {
 			if option == nil {
 				log.Println("nil option given when opening the window")
@@ -219,6 +253,18 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 			}
 			option(win)
 		}
+		win.mouseWindow = &mouseWindow{
+			glfwWindow:     win.glfwWindow,
+			mainThreadLoop: g.mainThreadLoop,
+			zoom:           win.zoom,
+		}
+		win.mouseEvents = internal.NewMouseEvents(
+			// FIXME: EventBuffer size should be configurable
+			mouse.NewEventBuffer(32),
+			win.mouseWindow)
+		win.glfwWindow.SetKeyCallback(win.keyboardEvents.OnKeyCallback)
+		win.glfwWindow.SetMouseButtonCallback(win.mouseEvents.OnMouseButtonCallback)
+		win.glfwWindow.SetScrollCallback(win.mouseEvents.OnScrollCallback)
 		win.glfwWindow.SetSize(win.requestedWidth*win.zoom, win.requestedHeight*win.zoom)
 		win.glfwWindow.Show()
 	})
