@@ -9,6 +9,9 @@ type EventSource interface {
 	PollMouseEvent() (Event, bool)
 }
 
+// New creates Mouse instance. It will consume all events from EventSource each
+// time Update method is called. For this reason you can't have two Mouse instances
+// for the same EventSource.
 func New(source EventSource) *Mouse {
 	if source == nil {
 		panic("nil EventSource")

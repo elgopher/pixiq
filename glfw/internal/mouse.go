@@ -37,6 +37,7 @@ var mouseButtonMapping = map[glfw.MouseButton]mouse.Button{
 	glfw.MouseButton8:      mouse.Button8,
 }
 
+// OnMouseButtonCallback passes GLFW mouse event
 func (e *MouseEvents) OnMouseButtonCallback(_ *glfw.Window, button glfw.MouseButton, action glfw.Action, _ glfw.ModifierKey) {
 	btn, ok := mouseButtonMapping[button]
 	if !ok {
@@ -50,10 +51,13 @@ func (e *MouseEvents) OnMouseButtonCallback(_ *glfw.Window, button glfw.MouseBut
 	}
 }
 
+// OnScrollCallback passes GLFW mouse event
 func (e *MouseEvents) OnScrollCallback(_ *glfw.Window, xoff float64, yoff float64) {
 	e.buffer.Add(mouse.NewScrolledEvent(xoff, yoff))
 }
 
+// Window is an abstraction for getting information about cursor position, size and zoom.
+// It is needed for generating mouse move events
 type Window interface {
 	CursorPosition() (float64, float64)
 	Size() (int, int)

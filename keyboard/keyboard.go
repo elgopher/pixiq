@@ -132,7 +132,9 @@ const (
 	released eventType = 2
 )
 
-// New creates Keyboard instance.
+// New creates Keyboard instance. It will consume all events from EventSource each
+// time Update method is called. For this reason you can't have two Keyboard instances
+// for the same EventSource.
 func New(source EventSource) *Keyboard {
 	if source == nil {
 		panic("nil EventSource")
