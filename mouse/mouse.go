@@ -1,3 +1,15 @@
+// Package mouse adds support for mouse input.
+//
+// You can start using mouse by creating Mouse instance:
+//
+//     mouseState := mouse.New(window)
+//     loop.Run(window, func(frame *loop.Frame) {
+//         mouseState.Update() // This is needed each frame
+//         if mouseState.Pressed(mouse.Left) {
+//             ...
+//         }
+//     })
+//
 package mouse
 
 // EventSource is a source of mouse Events. On each Update() Mouse polls
