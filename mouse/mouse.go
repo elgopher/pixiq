@@ -140,6 +140,7 @@ func (m *Mouse) JustReleased(button Button) bool {
 	return m.justReleased[button]
 }
 
+// Position returns current mouse position
 func (m *Mouse) Position() Position {
 	return m.position
 }
@@ -156,29 +157,38 @@ func (m *Mouse) Scroll() Scroll {
 	return m.scroll
 }
 
+// Position contains information about current mouse position
 type Position struct {
 	x, y         int
 	realX, realY float64
 	insideWindow bool
 }
 
-// X returns the pixel position
+// X returns the pixel x-coordinate where mouse is pointing to.
 func (p Position) X() int {
 	return p.x
 }
 
+// Y returns the pixel y-coordinate where mouse is pointing to.
 func (p Position) Y() int {
 	return p.y
 }
 
+// RealX returns the pixel x-coordinate where mouse is pointing to in a display
+// resolution. If OS supports sub-pixel precision for mouse position then fractional
+// number is returned.
 func (p Position) RealX() float64 {
 	return p.realX
 }
 
+// RealY returns the pixel y-coordinate where mouse is pointing to in a display
+// resolution. If OS supports sub-pixel precision for mouse position then fractional
+// number is returned.
 func (p Position) RealY() float64 {
 	return p.realY
 }
 
+// InsideWindow returns true if mouse is pointing to a pixel inside window.
 func (p Position) InsideWindow() bool {
 	return p.insideWindow
 }
@@ -261,11 +271,16 @@ const (
 	// Right is a right mouse button
 	Right Button = 2
 	// Middle is a middle mouse button
-	Middle  Button = 3
+	Middle Button = 3
+	// Button4 is 4th mouse button
 	Button4 Button = 4
+	// Button5 is 5th mouse button
 	Button5 Button = 5
+	// Button6 is 6th mouse button
 	Button6 Button = 6
+	// Button7 is 7th mouse button
 	Button7 Button = 7
+	// Button8 is 8th mouse button
 	Button8 Button = 8
 )
 
