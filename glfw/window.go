@@ -12,21 +12,20 @@ import (
 
 // Window is an implementation of loop.Screen and keyboard.EventSource
 type Window struct {
-	glfwWindow         *glfw.Window
-	mainThreadLoop     *MainThreadLoop
-	screenPolygon      *screenPolygon
-	keyboardEvents     *internal.KeyboardEvents
-	mouseEvents        *internal.MouseEvents
-	requestedWidth     int
-	requestedHeight    int
-	zoom               int
-	screenImage        *image.Image
-	screenContextAPI   gl.API
-	api                gl.API
-	context            *gl.Context
-	program            *gl.Program
-	lastCursorPosition lastCursorPosition
-	mouseWindow        *mouseWindow
+	glfwWindow       *glfw.Window
+	mainThreadLoop   *MainThreadLoop
+	screenPolygon    *screenPolygon
+	keyboardEvents   *internal.KeyboardEvents
+	mouseEvents      *internal.MouseEvents
+	requestedWidth   int
+	requestedHeight  int
+	zoom             int
+	screenImage      *image.Image
+	screenContextAPI gl.API
+	api              gl.API
+	context          *gl.Context
+	program          *gl.Program
+	mouseWindow      *mouseWindow
 }
 
 type lastCursorPosition struct {
