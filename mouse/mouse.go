@@ -151,12 +151,14 @@ func (m *Mouse) PositionChange() PositionChange {
 	return m.positionChange
 }
 
-// PositionChange returns true whether mouse position has changed between
+// PositionChanged returns true whether mouse position has changed between
 // the last two Mouse.Update calls
 func (m *Mouse) PositionChanged() bool {
 	return m.positionChange != PositionChange{}
 }
 
+// Scroll returns information about cumulative scroll between two
+// last Mouse.Update calls.
 func (m *Mouse) Scroll() Scroll {
 	return m.scroll
 }
