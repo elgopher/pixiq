@@ -25,16 +25,8 @@ func main() {
 			// Poll mouse events
 			mouseState.Update()
 			scroll := mouseState.Scroll()
-			if scroll.X() < 0 {
-				x++
-			} else if scroll.X() > 0 {
-				x--
-			}
-			if scroll.Y() < 0 {
-				y++
-			} else if scroll.Y() > 0 {
-				y--
-			}
+			x += int(scroll.X())
+			y += int(scroll.Y())
 			screen.SetColor(x, y, colornames.Azure)
 			if window.ShouldClose() {
 				frame.StopLoopEventually()

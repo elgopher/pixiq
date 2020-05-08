@@ -53,7 +53,7 @@ func (e *MouseEvents) OnMouseButtonCallback(_ *glfw.Window, button glfw.MouseBut
 
 // OnScrollCallback passes GLFW mouse event
 func (e *MouseEvents) OnScrollCallback(_ *glfw.Window, xoff float64, yoff float64) {
-	e.buffer.Add(mouse.NewScrolledEvent(xoff, yoff))
+	e.buffer.Add(mouse.NewScrolledEvent(-xoff, -yoff))
 }
 
 // Window is an abstraction for getting information about cursor position, size and zoom.

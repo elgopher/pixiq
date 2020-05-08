@@ -145,10 +145,14 @@ func (m *Mouse) Position() Position {
 	return m.position
 }
 
+// PositionChange returns information about how the mouse position has changed between
+// the last two Mouse.Update calls
 func (m *Mouse) PositionChange() PositionChange {
 	return m.positionChange
 }
 
+// PositionChange returns true whether mouse position has changed between
+// the last two Mouse.Update calls
 func (m *Mouse) PositionChanged() bool {
 	return m.positionChange != PositionChange{}
 }
@@ -238,14 +242,18 @@ func (p PositionChange) WindowLeft() bool {
 	return p.windowLeft
 }
 
+// Scroll provides information about cumulative scroll between two
+// last Mouse.Update calls.
 type Scroll struct {
 	x, y float64
 }
 
+// X can be negative (scrolled left) or positive (scrolled right).
 func (s Scroll) X() float64 {
 	return s.x
 }
 
+// Y can be negative (scrolled down) or positive (scrolled up).
 func (s Scroll) Y() float64 {
 	return s.y
 }
@@ -313,7 +321,7 @@ func NewPressedEvent(button Button) Event {
 	}
 }
 
-// NewScrolledEvent returns new instance of Event when mouse wheel was scrolled.
+// NewScrolledEvent returns new instance of Event when mouse was scrolled.
 func NewScrolledEvent(x, y float64) Event {
 	return Event{
 		typ:     scrolled,

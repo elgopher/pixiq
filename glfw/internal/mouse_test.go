@@ -92,7 +92,7 @@ func TestMouseEvents_Poll(t *testing.T) {
 			"1,2": {
 				x:             1,
 				y:             2,
-				expectedEvent: mouse.NewScrolledEvent(1, 2),
+				expectedEvent: mouse.NewScrolledEvent(-1, -2),
 			},
 		}
 		for name, test := range tests {
