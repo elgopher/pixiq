@@ -4,28 +4,6 @@ type EventSource interface {
 	PollMouseEvent() (Event, bool)
 }
 
-// EmptyEvent should be returned by EventSource when it does not have more events.
-var EmptyEvent = Event{}
-
-type Event struct {
-	typ eventType
-	// Pressed/Released
-	button Button
-	// Moved
-	position Position
-	// Scroll
-	scrollX, scrollY float64
-}
-
-type eventType byte
-
-const (
-	pressed eventType = iota
-	released
-	moved
-	scrolled
-)
-
 func New(source EventSource) *Mouse {
 	if source == nil {
 		panic("nil EventSource")
@@ -220,6 +198,28 @@ func (s Scroll) X() float64 {
 func (s Scroll) Y() float64 {
 	return s.y
 }
+
+// EmptyEvent should be returned by EventSource when it does not have more events.
+var EmptyEvent = Event{}
+
+type Event struct {
+	typ eventType
+	// Pressed/Released
+	button Button
+	// Moved
+	position Position
+	// Scroll
+	scrollX, scrollY float64
+}
+
+type eventType byte
+
+const (
+	pressed eventType = iota
+	released
+	moved
+	scrolled
+)
 
 type Button int
 
