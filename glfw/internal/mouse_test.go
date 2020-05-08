@@ -244,6 +244,43 @@ func TestMouseEvents_Poll(t *testing.T) {
 		assert.Equal(t, mouse.EmptyEvent, event)
 	})
 
+	t.Run("when position changes should generate MoveEvent", func(t *testing.T) {
+		tests := map[string]struct {
+			newPosX, newPosY float64
+			expectedEvent    mouse.Event
+		}{
+			"inside window": {
+				newPosX:       2,
+				newPosY:       3,
+				expectedEvent: mouse.NewMovedEvent(2, 3, 2, 3, true),
+			},
+			"outside window": {
+				newPosX:       10,
+				newPosY:       20,
+				expectedEvent: mouse.NewMovedEvent(10, 20, 10, 20, false),
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				buffer := mouse.NewEventBuffer(1)
+				window := &fakeWindow{
+					posX:   1,
+					posY:   1,
+					width:  6,
+					height: 6,
+					zoom:   1,
+				}
+				events := internal.NewMouseEvents(buffer, window)
+				_, _ = events.Poll()
+				window.posX = test.newPosX
+				window.posY = test.newPosY
+				event, ok := events.Poll()
+				// then
+				assert.True(t, ok)
+				assert.Equal(t, test.expectedEvent, event)
+			})
+		}
+	})
 }
 
 func assertNoMoreMouseEvents(t *testing.T, events *internal.MouseEvents) {
