@@ -253,6 +253,7 @@ const (
 	Button8 Button = 8
 )
 
+// NewReleasedEvent returns new instance of Event when button was released.
 func NewReleasedEvent(button Button) Event {
 	return Event{
 		typ:    released,
@@ -260,6 +261,7 @@ func NewReleasedEvent(button Button) Event {
 	}
 }
 
+// NewPressedEvent returns new instance of Event when button was pressed.
 func NewPressedEvent(button Button) Event {
 	return Event{
 		typ:    pressed,
@@ -267,6 +269,7 @@ func NewPressedEvent(button Button) Event {
 	}
 }
 
+// NewScrolledEvent returns new instance of Event when mouse wheel was scrolled.
 func NewScrolledEvent(x, y float64) Event {
 	return Event{
 		typ:     scrolled,
@@ -275,6 +278,12 @@ func NewScrolledEvent(x, y float64) Event {
 	}
 }
 
+// NewMovedEvent returns new instance of Event when mouse was moved.
+//
+// realPosX and realPosY are the cursor position in real pixel coordinates. For
+// systems supporting subpixel coordinates these might be fractional numbers.
+// posX and posY should be virtual pixel coorindates taking into account current zoom.
+// For zoom=2 and realPosX=2, posX should be 1.
 func NewMovedEvent(posX, posY int, realPosX, realPosY float64, insideWindow bool) Event {
 	return Event{
 		typ: moved,
