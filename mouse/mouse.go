@@ -27,6 +27,10 @@ func New(source EventSource) *Mouse {
 	}
 }
 
+// Mouse provides a read-only information about the current state of the
+// mouse, such as what buttons are currently pressed. Please note that
+// updating the Mouse state retrieves and removes events from EventSource.
+// Therefore only one Mouse instance can be created for specific EventSource.
 type Mouse struct {
 	source         EventSource
 	pressed        map[Button]struct{}
@@ -37,6 +41,8 @@ type Mouse struct {
 	scroll         Scroll
 }
 
+// Update updates the state of the mouse by polling events queued since last
+// time the function was executed.
 func (m *Mouse) Update() {
 	m.clearJustPressed()
 	m.clearJustReleased()
@@ -224,6 +230,9 @@ func (s Scroll) Y() float64 {
 // EmptyEvent should be returned by EventSource when it does not have more events.
 var EmptyEvent = Event{}
 
+// Event describes what happened with the mouse.
+//
+// Event can be constructed using NewXXXEvent function.
 type Event struct {
 	typ eventType
 	// Pressed/Released
@@ -243,11 +252,15 @@ const (
 	scrolled
 )
 
+// Button is a mouse button which was pressed or released.
 type Button int
 
 const (
-	Left    Button = 1
-	Right   Button = 2
+	// Left is a left mouse button
+	Left Button = 1
+	// Right is a right mouse button
+	Right Button = 2
+	// Middle is a middle mouse button
 	Middle  Button = 3
 	Button4 Button = 4
 	Button5 Button = 5

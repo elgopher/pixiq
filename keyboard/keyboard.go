@@ -118,6 +118,8 @@ func NewReleasedEvent(key Key) Event {
 }
 
 // Event describes what happened with the key. Whether it was pressed or released.
+//
+// Event can be constructed using NewXXXEvent function
 type Event struct {
 	typ eventType
 	key Key
@@ -150,7 +152,7 @@ func New(source EventSource) *Keyboard {
 // Keyboard provides a read-only information about the current state of the
 // keyboard, such as what keys are currently pressed. Please note that
 // updating the Keyboard state retrieves and removes events from EventSource.
-// Therefore only Keyboard instance can be created for one EventSource.
+// Therefore only one Keyboard instance can be created for specific EventSource.
 type Keyboard struct {
 	source       EventSource
 	pressed      map[Key]struct{}
