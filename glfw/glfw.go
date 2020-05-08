@@ -246,6 +246,13 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 		if err != nil {
 			return
 		}
+		for _, option := range options {
+			if option == nil {
+				log.Println("nil option given when opening the window")
+				continue
+			}
+			option(win)
+		}
 		win.mouseWindow = &mouseWindow{
 			glfwWindow:     win.glfwWindow,
 			mainThreadLoop: g.mainThreadLoop,
@@ -257,13 +264,6 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 		win.glfwWindow.SetKeyCallback(win.keyboardEvents.OnKeyCallback)
 		win.glfwWindow.SetMouseButtonCallback(win.mouseEvents.OnMouseButtonCallback)
 		win.glfwWindow.SetScrollCallback(win.mouseEvents.OnScrollCallback)
-		for _, option := range options {
-			if option == nil {
-				log.Println("nil option given when opening the window")
-				continue
-			}
-			option(win)
-		}
 		win.glfwWindow.SetSize(win.requestedWidth*win.zoom, win.requestedHeight*win.zoom)
 		win.glfwWindow.Show()
 	})
