@@ -13,13 +13,13 @@ import (
 
 func main() {
 	glfw.RunOrDie(func(openGL *glfw.OpenGL) {
-		window, err := openGL.OpenWindow(100, 20, glfw.Title("Move mouse left and right"), glfw.Zoom(7))
+		window, err := openGL.OpenWindow(80, 20, glfw.Title("Move mouse left and right"), glfw.Zoom(7))
 		if err != nil {
 			log.Panicf("OpenWindow failed: %v", err)
 		}
 		// Create mouse instance for window.
 		mouseState := mouse.New(window)
-		x := 15
+		x := 40
 		clearTool := clear.New()
 		loop.Run(window, func(frame *loop.Frame) {
 			screen := frame.Screen()

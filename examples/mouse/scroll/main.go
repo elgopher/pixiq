@@ -11,12 +11,12 @@ import (
 
 func main() {
 	glfw.RunOrDie(func(openGL *glfw.OpenGL) {
-		window, err := openGL.OpenWindow(100, 40, glfw.Title("Move mouse wheel in all possible directions"), glfw.Zoom(20))
+		window, err := openGL.OpenWindow(80, 40, glfw.Title("Move mouse wheel in all possible directions"), glfw.Zoom(20))
 		if err != nil {
 			log.Panicf("OpenWindow failed: %v", err)
 		}
 		// TODO Hide cursor
-		x := 50
+		x := 40
 		y := 20
 		// Create mouse instance for window.
 		mouseState := mouse.New(window)

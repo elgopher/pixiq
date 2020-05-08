@@ -12,7 +12,7 @@ import (
 
 func main() {
 	glfw.RunOrDie(func(openGL *glfw.OpenGL) {
-		window, err := openGL.OpenWindow(100, 40, glfw.Title("Use left and right mouse buttons to draw"), glfw.Zoom(20))
+		window, err := openGL.OpenWindow(80, 40, glfw.Title("Use left and right mouse buttons to draw"), glfw.Zoom(20))
 		if err != nil {
 			log.Panicf("OpenWindow failed: %v", err)
 		}
