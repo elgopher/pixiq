@@ -1,6 +1,11 @@
 package mouse
 
+// EventSource is a source of mouse Events. On each Update() Mouse polls
+// the EventSource by executing PollMouseEvent method multiple times - until PollMouseEvent()
+// returns false. In other words Mouse#Update drains the EventSource.
 type EventSource interface {
+	// PollMouseEvent retrieves and removes next mouse Event. If there are no more
+	// events false is returned.
 	PollMouseEvent() (Event, bool)
 }
 
@@ -91,11 +96,19 @@ func (m *Mouse) clearJustReleased() {
 	}
 }
 
+// Pressed returns true if given mouse button is currently pressed.
+// If between two last mouse.Update calls the key was pressed and released
+// then the this method returns false.
 func (m *Mouse) Pressed(button Button) bool {
 	_, found := m.pressed[button]
 	return found
 }
 
+// PressedButtons returns a slice of all currently pressed buttons. It may be empty
+// aka nil. This function can be used to get a button mapping for a given action
+// in the game.
+// If between two last mouse.Update calls the button was pressed and released
+// then the button is not returned.
 func (m *Mouse) PressedButtons() []Button {
 	var pressedButtons []Button
 	for button := range m.pressed {
@@ -104,10 +117,16 @@ func (m *Mouse) PressedButtons() []Button {
 	return pressedButtons
 }
 
+// JustPressed returns true if the button was pressed between two last mouse.Update
+// calls. If it was pressed and released at the same time between these calls
+// this method return true.
 func (m *Mouse) JustPressed(button Button) bool {
 	return m.justPressed[button]
 }
 
+// JustReleased returns true if the button was released between two last mouse.Update
+// calls. If it was released and pressed at the same time between these calls
+// this method return true.
 func (m *Mouse) JustReleased(button Button) bool {
 	return m.justReleased[button]
 }

@@ -28,6 +28,8 @@ type Window struct {
 	mouseWindow      *mouseWindow
 }
 
+// PollMouseEvent retrieves and removes next mouse Event. If there are no more
+// events false is returned. It implements mouse.EventSource method.
 func (w *Window) PollMouseEvent() (mouse.Event, bool) {
 	return w.mouseEvents.Poll()
 }

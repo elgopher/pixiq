@@ -6,12 +6,16 @@ import (
 	"github.com/jacekolszak/pixiq/mouse"
 )
 
+// MouseEvents maps GLFW events to mouse.Event. Mapped events can be
+// polled using mouse.EventSource interface.
 type MouseEvents struct {
 	buffer             *mouse.EventBuffer
 	window             Window
 	lastPosX, lastPosY float64
 }
 
+// NewMouseEvents creates *MouseEvents using given buffer and window. Based on the
+// information returned by Window mouse move events are generated.
 func NewMouseEvents(buffer *mouse.EventBuffer, window Window) *MouseEvents {
 	if buffer == nil {
 		panic("nil buffer")
