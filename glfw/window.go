@@ -28,10 +28,6 @@ type Window struct {
 	mouseWindow      *mouseWindow
 }
 
-type lastCursorPosition struct {
-	x, y float64
-}
-
 func (w *Window) PollMouseEvent() (mouse.Event, bool) {
 	return w.mouseEvents.Poll()
 }
