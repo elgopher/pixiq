@@ -185,13 +185,14 @@ func (g *OpenGL) NewImage(width, height int) *image.Image {
 	return image.New(acceleratedImage)
 }
 
-type mouseEventsWindow struct {
+// mouseWindow implements mouse.Window
+type mouseWindow struct {
 	glfwWindow     *glfw.Window
 	mainThreadLoop *MainThreadLoop
 	zoom           int
 }
 
-func (m *mouseEventsWindow) CursorPosition() (float64, float64) {
+func (m *mouseWindow) CursorPosition() (float64, float64) {
 	var x, y float64
 	m.mainThreadLoop.Execute(func() {
 		x, y = m.glfwWindow.GetCursorPos()
@@ -199,7 +200,7 @@ func (m *mouseEventsWindow) CursorPosition() (float64, float64) {
 	return x, y
 }
 
-func (m *mouseEventsWindow) Size() (int, int) {
+func (m *mouseWindow) Size() (int, int) {
 	var w, h int
 	m.mainThreadLoop.Execute(func() {
 		w, h = m.glfwWindow.GetSize()
@@ -207,7 +208,7 @@ func (m *mouseEventsWindow) Size() (int, int) {
 	return w, h
 }
 
-func (m *mouseEventsWindow) Zoom() int {
+func (m *mouseWindow) Zoom() int {
 	return m.zoom
 }
 
@@ -238,13 +239,14 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 		if err != nil {
 			return
 		}
+		win.mouseWindow = &mouseWindow{
+			glfwWindow:     win.glfwWindow,
+			mainThreadLoop: g.mainThreadLoop,
+			zoom:           win.zoom,
+		}
 		win.mouseEvents = internal.NewMouseEvents(
 			mouse.NewEventBuffer(32),
-			&mouseEventsWindow{
-				glfwWindow:     win.glfwWindow,
-				mainThreadLoop: g.mainThreadLoop,
-				zoom:           win.zoom,
-			})
+			win.mouseWindow)
 		win.glfwWindow.SetKeyCallback(win.keyboardEvents.OnKeyCallback)
 		win.glfwWindow.SetMouseButtonCallback(win.mouseEvents.OnMouseButtonCallback)
 		win.glfwWindow.SetScrollCallback(win.mouseEvents.OnScrollCallback)

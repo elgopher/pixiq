@@ -26,6 +26,7 @@ type Window struct {
 	context            *gl.Context
 	program            *gl.Program
 	lastCursorPosition lastCursorPosition
+	mouseWindow        *mouseWindow
 }
 
 type lastCursorPosition struct {
@@ -79,10 +80,7 @@ func (w *Window) ShouldClose() bool {
 // than requested width used when window was open due to platform limitation.
 // If zooming is used the width is multiplied by zoom.
 func (w *Window) Width() int {
-	var width int
-	w.mainThreadLoop.Execute(func() {
-		width, _ = w.glfwWindow.GetSize()
-	})
+	width, _ := w.mouseWindow.Size()
 	return width
 }
 
@@ -90,10 +88,7 @@ func (w *Window) Width() int {
 // than requested height used when window was open due to platform limitation.
 // If zooming is used the height is multiplied by zoom.
 func (w *Window) Height() int {
-	var height int
-	w.mainThreadLoop.Execute(func() {
-		_, height = w.glfwWindow.GetSize()
-	})
+	_, height := w.mouseWindow.Size()
 	return height
 }
 
