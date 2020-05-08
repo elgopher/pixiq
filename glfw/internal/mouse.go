@@ -58,7 +58,11 @@ type Window interface {
 
 // Poll return next mapped event
 func (e *MouseEvents) Poll() (mouse.Event, bool) {
-	// first generate move event, because GLFW does not provide move events for Linux
+	event, ok := e.buffer.Poll()
+	if ok {
+		return event, ok
+	}
+	// generate move event, because GLFW does not provide move events for Linux
 	// and Windows when cursor is outside window.
 	realX, realY := e.window.CursorPosition()
 	if e.lastPosX != realX || e.lastPosY != realY {
@@ -72,5 +76,5 @@ func (e *MouseEvents) Poll() (mouse.Event, bool) {
 		e.lastPosY = realY
 		return mouse.NewMovedEvent(int(realX/zoom), int(realY/zoom), realX, realY, insideWindow), true
 	}
-	return e.buffer.Poll()
+	return mouse.EmptyEvent, false
 }

@@ -200,7 +200,6 @@ func (m *mouseEventsWindow) CursorPosition() (float64, float64) {
 }
 
 func (m *mouseEventsWindow) Size() (int, int) {
-	// TODO Cache
 	var w, h int
 	m.mainThreadLoop.Execute(func() {
 		w, h = m.glfwWindow.GetSize()
