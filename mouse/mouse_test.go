@@ -624,7 +624,7 @@ func TestMouse_Scroll(t *testing.T) {
 				// when
 				scroll := mouseState.Scroll()
 				// then
-				assert.InDelta(t, test.expectedX, scroll.X(), 0.000000001) // TODO From where this delta is taken?
+				assert.InDelta(t, test.expectedX, scroll.X(), 0.000000001)
 				assert.InDelta(t, test.expectedY, scroll.Y(), 0.000000001)
 			})
 		}
@@ -654,7 +654,7 @@ func TestMouse_Scroll(t *testing.T) {
 				// when
 				scroll := mouseState.Scroll()
 				// then
-				assert.InDelta(t, test.expectedX, scroll.X(), 0.000000001) // TODO From where this delta is taken?
+				assert.InDelta(t, test.expectedX, scroll.X(), 0.000000001)
 				assert.InDelta(t, test.expectedY, scroll.Y(), 0.000000001)
 			})
 		}

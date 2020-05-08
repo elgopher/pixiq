@@ -24,7 +24,6 @@ func main() {
 		loop.Run(window, func(frame *loop.Frame) {
 			screen := frame.Screen()
 			clearTool.Clear(screen)
-			// TODO Implement disabling pointer
 			// Poll mouse events
 			mouseState.Update()
 			x += mouseState.PositionChange().X()

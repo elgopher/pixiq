@@ -34,7 +34,6 @@ func BenchmarkWindow_PollMouseEvent(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < 3; j++ {
-			// TODO Right now it is extremely inefficient
 			win.PollMouseEvent()
 		}
 	}

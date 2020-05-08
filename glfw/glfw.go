@@ -259,6 +259,7 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 			zoom:           win.zoom,
 		}
 		win.mouseEvents = internal.NewMouseEvents(
+			// FIXME: EventBuffer size should be configurable
 			mouse.NewEventBuffer(32),
 			win.mouseWindow)
 		win.glfwWindow.SetKeyCallback(win.keyboardEvents.OnKeyCallback)

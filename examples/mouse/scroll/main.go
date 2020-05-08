@@ -15,7 +15,6 @@ func main() {
 		if err != nil {
 			log.Panicf("OpenWindow failed: %v", err)
 		}
-		// TODO Hide cursor
 		x := 40
 		y := 20
 		// Create mouse instance for window.
