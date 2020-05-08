@@ -193,6 +193,8 @@ func (p Position) InsideWindow() bool {
 	return p.insideWindow
 }
 
+// PositionChange returns information about how the mouse position has changed between
+// the last two Mouse.Update calls
 type PositionChange struct {
 	x, y          int
 	realX, realY  float64
@@ -200,27 +202,38 @@ type PositionChange struct {
 	windowLeft    bool
 }
 
-// X returns the pixel position
+// X returns the pixel x-coordinate difference.
 func (p PositionChange) X() int {
 	return p.x
 }
 
+// Y returns the pixel y-coordinate difference.
 func (p PositionChange) Y() int {
 	return p.y
 }
 
+// RealX returns the pixel x-coordinate difference in a display resolution.
+// If OS supports sub-pixel precision for mouse position then fractional
+// number is returned.
 func (p PositionChange) RealX() float64 {
 	return p.realX
 }
 
+// RealY returns the pixel y-coordinate difference in a display resolution.
+// If OS supports sub-pixel precision for mouse position then fractional
+// number is returned.
 func (p PositionChange) RealY() float64 {
 	return p.realY
 }
 
+// WindowEntered returns true if mouse just entered the window (entered the window
+// between last two Mouse.Update calls).
 func (p PositionChange) WindowEntered() bool {
 	return p.windowEntered
 }
 
+// WindowLeft returns true if mouse just left the window (left the window
+// between last two Mouse.Update calls).
 func (p PositionChange) WindowLeft() bool {
 	return p.windowLeft
 }
