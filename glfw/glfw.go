@@ -6,6 +6,8 @@
 package glfw
 
 import (
+	stdimage "image"
+	"image/color"
 	"log"
 	"sync"
 	"time"
@@ -335,3 +337,60 @@ func Zoom(zoom int) WindowOption {
 		}
 	}
 }
+
+func (g *OpenGL) NewCursor(selection image.Selection, options ...CursorOption) *Cursor {
+	rgba := stdimage.NewRGBA(stdimage.Rect(0, 0, selection.Width(), selection.Height()))
+	for y := 0; y < selection.Height(); y++ {
+		for x := 0; x < selection.Width(); x++ {
+			c := selection.Color(x, y)
+			rgba.Set(x, y, color.RGBA{
+				R: c.R(),
+				G: c.G(),
+				B: c.B(),
+				A: c.A(),
+			})
+		}
+	}
+	var glfwCursor *glfw.Cursor
+	g.mainThreadLoop.Execute(func() {
+		glfwCursor = glfw.CreateCursor(rgba, 0, 0)
+	})
+	return &Cursor{glfwCursor: glfwCursor}
+}
+
+type Cursor struct {
+	glfwCursor *glfw.Cursor
+}
+
+type CursorOption func(cursor *Cursor)
+
+func Hospot(x, y int) CursorOption {
+	return func(cursor *Cursor) {
+
+	}
+}
+
+func CursorZoom(zoom int) CursorOption {
+	return func(cursor *Cursor) {
+
+	}
+}
+
+func (g *OpenGL) NewStandardCursor(shape CursorShape) *Cursor {
+	var glfwCursor *glfw.Cursor
+	g.mainThreadLoop.Execute(func() {
+		glfwCursor = glfw.CreateStandardCursor(glfw.IBeamCursor)
+	})
+	return &Cursor{glfwCursor: glfwCursor}
+}
+
+type CursorShape int
+
+const (
+	Arrow CursorShape = iota
+	IBeam
+	Crosshair
+	Hand
+	HResize
+	VResize
+)

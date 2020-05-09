@@ -118,3 +118,9 @@ func (w *Window) Image() *image.Image {
 func (w *Window) ContextAPI() gl.API {
 	return w.api
 }
+
+func (g *Window) SetCursor(cursor *Cursor) {
+	g.mainThreadLoop.Execute(func() {
+		g.glfwWindow.SetCursor(cursor.glfwCursor)
+	})
+}
