@@ -22,6 +22,15 @@ func FromSelection(source image.Selection, options ...Option) stdimage.Image {
 	return target
 }
 
+type Option func(opts) opts
+
+func Zoom(zoom int) Option {
+	return func(o opts) opts {
+		o.zoom = zoom
+		return o
+	}
+}
+
 type opts struct {
 	zoom          int
 	width, height int
@@ -42,6 +51,7 @@ func buildOpts(source image.Selection, options ...Option) opts {
 	return opts
 }
 
+// FillWithSelection fills existing standard Go draw.Image with pixels from image.Selection
 func FillWithSelection(target draw.Image, source image.Selection, options ...Option) {
 	opts := buildOpts(source, options...)
 	lines := source.Lines()
@@ -56,15 +66,6 @@ func FillWithSelection(target draw.Image, source image.Selection, options ...Opt
 				}
 			}
 		}
-	}
-}
-
-type Option func(opts) opts
-
-func Zoom(zoom int) Option {
-	return func(o opts) opts {
-		o.zoom = zoom
-		return o
 	}
 }
 
