@@ -38,14 +38,14 @@ type opts struct {
 	width, height int
 }
 
-func buildOpts(source image.Selection, options ...Option) opts {
+func buildOpts(selection image.Selection, options ...Option) opts {
 	opts := opts{
 		zoom: 1,
 	}
 	for _, option := range options {
 		opts = option(opts)
 	}
-	lines := source.Lines()
+	lines := selection.Lines()
 	opts.height = lines.Length()
 	if opts.height != 0 {
 		opts.width = len(lines.LineForRead(0))
@@ -73,5 +73,30 @@ func FillWithSelection(target draw.Image, source image.Selection, options ...Opt
 
 // CopyToSelection copies standard Go Image to Pixiq image.Selection
 func CopyToSelection(source stdimage.Image, target image.Selection, options ...Option) {
-
+	opts := buildOpts(target, options...)
+	lines := target.Lines()
+	if lines.Length() == 0 {
+		return
+	}
+	width := len(target.Lines().LineForWrite(0))
+	for y := 0; y < lines.Length(); y++ {
+		for x := 0; x < width; x++ {
+			pixel := source.At(x+lines.XOffset(), y+lines.YOffset())
+			r, g, b, a := pixel.RGBA()
+			c := image.RGBA(byte(r>>8), byte(g>>8), byte(b>>8), byte(a>>8))
+			for zy := 0; zy < opts.zoom; zy++ {
+				lineNumber := y*opts.zoom + zy
+				if lineNumber >= lines.Length() {
+					break
+				}
+				line := lines.LineForWrite(lineNumber)
+				for zx := 0; zx < opts.zoom; zx++ {
+					col := x*opts.zoom + zx
+					if col < len(line) {
+						line[col] = c
+					}
+				}
+			}
+		}
+	}
 }
