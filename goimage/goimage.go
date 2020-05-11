@@ -81,10 +81,10 @@ func CopyToSelection(source stdimage.Image, target image.Selection, options ...O
 	}
 	width := len(target.Lines().LineForWrite(0))
 	for y := 0; y < lines.Length(); y++ {
+		line := lines.LineForWrite(y)
 		for x := 0; x < width; x++ {
 			pixel := source.At(x/opts.zoom+lines.XOffset(), y/opts.zoom+lines.YOffset())
 			r, g, b, a := pixel.RGBA()
-			line := lines.LineForWrite(y)
 			line[x] = image.RGBA(byte(r>>8), byte(g>>8), byte(b>>8), byte(a>>8))
 		}
 	}
