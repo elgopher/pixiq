@@ -83,18 +83,19 @@ func CopyToSelection(source stdimage.Image, target image.Selection, options ...O
 		for x := 0; x < width; x++ {
 			pixel := source.At(x+lines.XOffset(), y+lines.YOffset())
 			r, g, b, a := pixel.RGBA()
-			c := image.RGBA(byte(r>>8), byte(g>>8), byte(b>>8), byte(a>>8))
-			for zy := 0; zy < opts.zoom; zy++ {
-				lineNumber := y*opts.zoom + zy
-				if lineNumber >= lines.Length() {
-					break
+			pixiqColor := image.RGBA(byte(r>>8), byte(g>>8), byte(b>>8), byte(a>>8))
+			lastRow := (y + 1) * opts.zoom
+			if lastRow > lines.Length() {
+				lastRow = lines.Length()
+			}
+			for row := y * opts.zoom; row < lastRow; row++ {
+				line := lines.LineForWrite(row)
+				lastCol := (x + 1) * opts.zoom
+				if lastCol > len(line) {
+					lastCol = len(line)
 				}
-				line := lines.LineForWrite(lineNumber)
-				for zx := 0; zx < opts.zoom; zx++ {
-					col := x*opts.zoom + zx
-					if col < len(line) {
-						line[col] = c
-					}
+				for col := x * opts.zoom; col < lastCol; col++ {
+					line[col] = pixiqColor
 				}
 			}
 		}
