@@ -71,7 +71,8 @@ func FillWithSelection(target draw.Image, source image.Selection, options ...Opt
 	}
 }
 
-// CopyToSelection copies standard Go Image to Pixiq image.Selection
+// CopyToSelection copies standard Go Image to Pixiq image.Selection.
+// The size of target Selection limits how much of the source Image is copied.
 func CopyToSelection(source stdimage.Image, target image.Selection, options ...Option) {
 	opts := buildOpts(target, options...)
 	lines := target.Lines()
@@ -81,23 +82,10 @@ func CopyToSelection(source stdimage.Image, target image.Selection, options ...O
 	width := len(target.Lines().LineForWrite(0))
 	for y := 0; y < lines.Length(); y++ {
 		for x := 0; x < width; x++ {
-			pixel := source.At(x+lines.XOffset(), y+lines.YOffset())
+			pixel := source.At(x/opts.zoom+lines.XOffset(), y/opts.zoom+lines.YOffset())
 			r, g, b, a := pixel.RGBA()
-			pixiqColor := image.RGBA(byte(r>>8), byte(g>>8), byte(b>>8), byte(a>>8))
-			lastRow := (y + 1) * opts.zoom
-			if lastRow > lines.Length() {
-				lastRow = lines.Length()
-			}
-			for row := y * opts.zoom; row < lastRow; row++ {
-				line := lines.LineForWrite(row)
-				lastCol := (x + 1) * opts.zoom
-				if lastCol > len(line) {
-					lastCol = len(line)
-				}
-				for col := x * opts.zoom; col < lastCol; col++ {
-					line[col] = pixiqColor
-				}
-			}
+			line := lines.LineForWrite(y)
+			line[x] = image.RGBA(byte(r>>8), byte(g>>8), byte(b>>8), byte(a>>8))
 		}
 	}
 }
