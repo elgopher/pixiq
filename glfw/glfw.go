@@ -338,7 +338,13 @@ func Zoom(zoom int) WindowOption {
 }
 
 func (g *OpenGL) NewCursor(selection image.Selection, options ...CursorOption) *Cursor {
-	rgbaImage := goimage.FromSelection(selection)
+	opts := cursorOpts{
+		zoom: 1,
+	}
+	for _, option := range options {
+		opts = option(opts)
+	}
+	rgbaImage := goimage.FromSelection(selection, goimage.Zoom(opts.zoom))
 	var glfwCursor *glfw.Cursor
 	g.mainThreadLoop.Execute(func() {
 		glfwCursor = glfw.CreateCursor(rgbaImage, 0, 0)
@@ -346,21 +352,26 @@ func (g *OpenGL) NewCursor(selection image.Selection, options ...CursorOption) *
 	return &Cursor{glfwCursor: glfwCursor}
 }
 
+type cursorOpts struct {
+	zoom int
+}
+
 type Cursor struct {
 	glfwCursor *glfw.Cursor
 }
 
-type CursorOption func(cursor *Cursor)
+type CursorOption func(opts cursorOpts) cursorOpts
 
 func Hospot(x, y int) CursorOption {
-	return func(cursor *Cursor) {
-
+	return func(opts cursorOpts) cursorOpts {
+		return opts
 	}
 }
 
 func CursorZoom(zoom int) CursorOption {
-	return func(cursor *Cursor) {
-
+	return func(opts cursorOpts) cursorOpts {
+		opts.zoom = zoom
+		return opts
 	}
 }
 

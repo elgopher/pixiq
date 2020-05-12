@@ -42,10 +42,10 @@ func main() {
 func crosshair(openGL *glfw.OpenGL) image.Selection {
 	cursorImage := openGL.NewImage(3, 3)
 	selection := cursorImage.WholeImageSelection()
-	selection.SetColor(1, 0, colornames.White)
-	selection.SetColor(0, 1, colornames.White)
-	selection.SetColor(1, 1, colornames.White)
-	selection.SetColor(2, 1, colornames.White)
-	selection.SetColor(1, 2, colornames.White)
+	selection.SetColor(1, 0, colornames.Lime)
+	selection.SetColor(0, 1, colornames.Lime)
+	selection.SetColor(1, 1, colornames.Lime)
+	selection.SetColor(2, 1, colornames.Lime)
+	selection.SetColor(1, 2, colornames.Lime)
 	return selection
 }
