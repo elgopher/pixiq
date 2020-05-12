@@ -19,7 +19,7 @@ func main() {
 		// create image and draw simplified crosshair
 		crosshair := crosshair(openGL)
 		// create cursor from crosshair selection
-		crosshairCursor := openGL.NewCursor(crosshair, glfw.CursorZoom(3))
+		crosshairCursor := openGL.NewCursor(crosshair, glfw.CursorZoom(3), glfw.Hospot(1, 1))
 		// create standard cursor
 		ibeamCursor := openGL.NewStandardCursor(glfw.IBeam)
 

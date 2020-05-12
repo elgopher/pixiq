@@ -347,13 +347,15 @@ func (g *OpenGL) NewCursor(selection image.Selection, options ...CursorOption) *
 	rgbaImage := goimage.FromSelection(selection, goimage.Zoom(opts.zoom))
 	var glfwCursor *glfw.Cursor
 	g.mainThreadLoop.Execute(func() {
-		glfwCursor = glfw.CreateCursor(rgbaImage, 0, 0)
+		// TODO To big zoom generates X Error
+		glfwCursor = glfw.CreateCursor(rgbaImage, opts.hotspotX*opts.zoom, opts.hotspotY*opts.zoom)
 	})
 	return &Cursor{glfwCursor: glfwCursor}
 }
 
 type cursorOpts struct {
-	zoom int
+	zoom               int
+	hotspotX, hotspotY int
 }
 
 type Cursor struct {
@@ -364,6 +366,8 @@ type CursorOption func(opts cursorOpts) cursorOpts
 
 func Hospot(x, y int) CursorOption {
 	return func(opts cursorOpts) cursorOpts {
+		opts.hotspotX = x
+		opts.hotspotY = y
 		return opts
 	}
 }
