@@ -421,16 +421,16 @@ func (g *OpenGL) NewStandardCursor(shape CursorShape) *Cursor {
 type CursorShape int
 
 const (
-	// Arrow
+	// Arrow is an arrow cursor shape which can be used in NewStandardCursor
 	Arrow CursorShape = iota
-	// IBeam
+	// IBeam is an ibeam cursor shape which can be used in NewStandardCursor
 	IBeam
-	// Crosshair
+	// Crosshair is a crosshair cursor shape which can be used in NewStandardCursor
 	Crosshair
-	// Hand
+	// Hand is a hand cursor shape which can be used in NewStandardCursor
 	Hand
-	// HResize
+	// HResize is a hresize cursor shape which can be used in NewStandardCursor
 	HResize
-	// VResize
+	// VResize is a vresize cursor shape which can be used in NewStandardCursor
 	VResize
 )
