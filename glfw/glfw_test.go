@@ -441,6 +441,13 @@ func TestOpenGL_NewCursor(t *testing.T) {
 			cursor.Destroy()
 		}
 	})
+	t.Run("should create cursor with Zoom and Hotspot options", func(t *testing.T) {
+		// when
+		cursor := openGL.NewCursor(selection, glfw.CursorZoom(2), glfw.Hotspot(1, 2))
+		// then
+		require.NotNil(t, cursor)
+		cursor.Destroy()
+	})
 }
 
 func TestOpenGL_NewStandardCursor(t *testing.T) {

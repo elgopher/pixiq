@@ -358,16 +358,15 @@ func (g *OpenGL) NewCursor(selection image.Selection, options ...CursorOption) *
 	if opts.hotspotY < 0 {
 		opts.hotspotY = 0
 	}
-	if opts.hotspotX > selection.Width() { // FIXME take zoom into account
+	if opts.hotspotX > selection.Width() {
 		opts.hotspotX = selection.Width()
 	}
-	if opts.hotspotY > selection.Height() { // FIXME take zoom into account
+	if opts.hotspotY > selection.Height() {
 		opts.hotspotY = selection.Height()
 	}
 	rgbaImage := goimage.FromSelection(selection, goimage.Zoom(opts.zoom))
 	var glfwCursor *glfw.Cursor
 	g.mainThreadLoop.Execute(func() {
-		// TODO To big zoom or zoom=0 (0x0 size image) generates X Error
 		glfwCursor = glfw.CreateCursor(rgbaImage, opts.hotspotX*opts.zoom, opts.hotspotY*opts.zoom)
 	})
 	return &Cursor{glfwCursor: glfwCursor}
@@ -393,7 +392,8 @@ func (c *Cursor) Destroy() {
 type CursorOption func(opts cursorOpts) cursorOpts
 
 // Hotspot sets coordinates, in pixels, of cursor hotspot. Coordinates are constrained
-// to cursor size. Coordinates are set to 0 if negative.
+// to cursor size. Coordinates are set to 0 if negative. If zoom was used hotspot
+// coordinates are multipled by zoom.
 func Hotspot(x, y int) CursorOption {
 	return func(opts cursorOpts) cursorOpts {
 		opts.hotspotX = x
