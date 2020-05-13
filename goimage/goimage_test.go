@@ -38,25 +38,30 @@ func TestFromSelection(t *testing.T) {
 				expectedWidth:  2,
 				expectedHeight: 1,
 			},
-			"3,2": {
+			"img width +1, 2": {
 				source:         img.Selection(0, 0).WithSize(3, 2),
-				expectedWidth:  2,
+				expectedWidth:  img.Width() + 1,
 				expectedHeight: 2,
 			},
-			"2,3": {
+			"2, img height + 1": {
 				source:         img.Selection(0, 0).WithSize(2, 3),
 				expectedWidth:  2,
-				expectedHeight: 2,
+				expectedHeight: img.Height() + 1,
 			},
 			"-1,1": {
 				source:         img.Selection(0, 0).WithSize(-1, 1),
 				expectedWidth:  0,
 				expectedHeight: 1,
 			},
+			"1,-1": {
+				source:         img.Selection(0, 0).WithSize(1, -1),
+				expectedWidth:  1,
+				expectedHeight: 0,
+			},
 			"selection xy negative": {
 				source:         img.Selection(-1, -1).WithSize(2, 2),
-				expectedWidth:  1,
-				expectedHeight: 1,
+				expectedWidth:  2,
+				expectedHeight: 2,
 			},
 			"zoom 2": {
 				source:         img.Selection(0, 0).WithSize(1, 2),
@@ -64,6 +69,7 @@ func TestFromSelection(t *testing.T) {
 				expectedWidth:  2,
 				expectedHeight: 4,
 			},
+			// TODO zoom -1
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
@@ -84,6 +90,7 @@ func TestFromSelection(t *testing.T) {
 	t.Run("should create standard Go image with copied pixels", func(t *testing.T) {
 		img := image.New(fake.NewAcceleratedImage(2, 2))
 		selection := img.WholeImageSelection()
+		transparent := color.RGBA{R: 0, G: 0, B: 0, A: 0}
 		pix00 := color.RGBA{R: 0, G: 10, B: 20, A: 30}
 		selection.SetColor(0, 0, image.RGBA(0, 10, 20, 30))
 		pix10 := color.RGBA{R: 100, G: 110, B: 120, A: 130}
@@ -155,6 +162,54 @@ func TestFromSelection(t *testing.T) {
 					},
 				},
 			},
+			"negative x": {
+				source: img.Selection(-1, 0).WithSize(1, 1),
+				expectedPixels: [][]color.RGBA{
+					{transparent},
+				},
+			},
+			"negative y": {
+				source: img.Selection(0, -1).WithSize(1, 1),
+				expectedPixels: [][]color.RGBA{
+					{transparent},
+				},
+			},
+			"negative x, width 2": {
+				source: img.Selection(-1, 0).WithSize(2, 1),
+				expectedPixels: [][]color.RGBA{
+					{transparent, pix00},
+				},
+			},
+			"negative y, height 2": {
+				source: img.Selection(0, -1).WithSize(1, 2),
+				expectedPixels: [][]color.RGBA{
+					{transparent},
+					{pix00},
+				},
+			},
+			"negative x,y": {
+				source: img.Selection(-1, -2).WithSize(3, 4),
+				expectedPixels: [][]color.RGBA{
+					{transparent, transparent, transparent},
+					{transparent, transparent, transparent},
+					{transparent, pix00, pix10},
+					{transparent, pix01, pix11},
+				},
+			},
+			"width greater than image size": {
+				source: img.Selection(0, 0).WithSize(3, 1),
+				expectedPixels: [][]color.RGBA{
+					{pix00, pix10, transparent},
+				},
+			},
+			"height greater than image size": {
+				source: img.Selection(0, 0).WithSize(1, 3),
+				expectedPixels: [][]color.RGBA{
+					{pix00},
+					{pix01},
+					{transparent},
+				},
+			},
 		}
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
@@ -171,6 +226,7 @@ func TestFillWithSelection(t *testing.T) {
 	t.Run("should fill standard Go image with pixels from Selection", func(t *testing.T) {
 		img := image.New(fake.NewAcceleratedImage(2, 2))
 		selection := img.WholeImageSelection()
+		transparent := color.RGBA{R: 0, G: 0, B: 0, A: 0}
 		pix00 := color.RGBA{R: 0, G: 10, B: 20, A: 30}
 		selection.SetColor(0, 0, image.RGBA(0, 10, 20, 30))
 		pix10 := color.RGBA{R: 100, G: 110, B: 120, A: 130}
@@ -256,6 +312,61 @@ func TestFillWithSelection(t *testing.T) {
 					{
 						pix00,
 					},
+				},
+			},
+			"negative x": {
+				target: redImage(1, 1),
+				source: img.Selection(-1, 0).WithSize(1, 1),
+				expectedPixels: [][]color.RGBA{
+					{transparent},
+				},
+			},
+			"negative y": {
+				target: redImage(1, 1),
+				source: img.Selection(0, -1).WithSize(1, 1),
+				expectedPixels: [][]color.RGBA{
+					{transparent},
+				},
+			},
+			"negative x, width 2": {
+				target: redImage(2, 1),
+				source: img.Selection(-1, 0).WithSize(2, 1),
+				expectedPixels: [][]color.RGBA{
+					{transparent, pix00},
+				},
+			},
+			"negative y, height 2": {
+				target: redImage(1, 2),
+				source: img.Selection(0, -1).WithSize(1, 2),
+				expectedPixels: [][]color.RGBA{
+					{transparent},
+					{pix00},
+				},
+			},
+			"negative x,y": {
+				target: redImage(3, 4),
+				source: img.Selection(-1, -2).WithSize(3, 4),
+				expectedPixels: [][]color.RGBA{
+					{transparent, transparent, transparent},
+					{transparent, transparent, transparent},
+					{transparent, pix00, pix10},
+					{transparent, pix01, pix11},
+				},
+			},
+			"width greater than image size": {
+				target: redImage(2, 1),
+				source: img.Selection(0, 0).WithSize(3, 1),
+				expectedPixels: [][]color.RGBA{
+					{pix00, pix10, transparent},
+				},
+			},
+			"height greater than image size": {
+				target: redImage(1, 2),
+				source: img.Selection(0, 0).WithSize(1, 3),
+				expectedPixels: [][]color.RGBA{
+					{pix00},
+					{pix01},
+					{transparent},
 				},
 			},
 		}
@@ -446,4 +557,14 @@ func assertColors(t *testing.T, img *image.Image, pixels [][]image.Color) {
 			assert.Equal(t, expectedPixel, pixel)
 		}
 	}
+}
+
+func redImage(width, height int) *stdimage.RGBA {
+	img := stdimage.NewRGBA(stdimage.Rect(0, 0, width, height))
+	for y := 0; y < height; y++ {
+		for x := 0; x < width; x++ {
+			img.Set(x, y, color.RGBA{R: 255, G: 0, B: 0, A: 0})
+		}
+	}
+	return img
 }
