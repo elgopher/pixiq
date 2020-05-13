@@ -328,7 +328,7 @@ func Title(title string) WindowOption {
 	}
 }
 
-// Zoom makes window/pixels bigger zoom times.
+// Zoom makes window/pixels bigger zoom times. For zoom <= 0, the zoom defaults to 1.
 func Zoom(zoom int) WindowOption {
 	return func(window *Window) {
 		if zoom > 0 {
@@ -337,8 +337,9 @@ func Zoom(zoom int) WindowOption {
 	}
 }
 
-// CreateCursor creates a new custom cursor look that can be set for a Window with SetCursor.
-// The look is taken from a Selection. The size of the cursor is based on the Selection size.
+// NewCursor creates a new custom cursor look that can be set for a Window with SetCursor.
+// The look is taken from a Selection. The size of the cursor is based on the Selection size
+// and zoom.
 //
 // By default cursor has hotspot=(0,0) and zoom=1 . These values can be modified
 // by providing slice of CursorOption: glfw.Hotspot(x,y) and glfw.CursorZoom(x,y)
@@ -375,14 +376,18 @@ type cursorOpts struct {
 	hotspotX, hotspotY int
 }
 
+// Cursor is a mouse cursor which can be use use in the window by calling Window.SetCursor
 type Cursor struct {
 	glfwCursor *glfw.Cursor
 }
 
+// Destroy frees the resources allocated by Cursor. This method must be called when
+// cursor is not used anymore to avoid memory leakage.
 func (c *Cursor) Destroy() {
 	c.glfwCursor.Destroy()
 }
 
+// CursorOption is an option used when calling NewCursor
 type CursorOption func(opts cursorOpts) cursorOpts
 
 // Hotspot sets coordinates, in pixels, of cursor hotspot. Coordinates are constrained
@@ -395,6 +400,7 @@ func Hotspot(x, y int) CursorOption {
 	}
 }
 
+// CursorZoom makes cursor bigger zoom times. For zoom <= 1, the zoom defaults to 1.
 func CursorZoom(zoom int) CursorOption {
 	return func(opts cursorOpts) cursorOpts {
 		opts.zoom = zoom
@@ -402,6 +408,7 @@ func CursorZoom(zoom int) CursorOption {
 	}
 }
 
+// NewStandardCursor creates a standard cursor with specified shape
 func (g *OpenGL) NewStandardCursor(shape CursorShape) *Cursor {
 	var glfwCursor *glfw.Cursor
 	g.mainThreadLoop.Execute(func() {
@@ -410,13 +417,20 @@ func (g *OpenGL) NewStandardCursor(shape CursorShape) *Cursor {
 	return &Cursor{glfwCursor: glfwCursor}
 }
 
+// CursorShape is a shape used by NewStandardCursor
 type CursorShape int
 
 const (
+	// Arrow
 	Arrow CursorShape = iota
+	// IBeam
 	IBeam
+	// Crosshair
 	Crosshair
+	// Hand
 	Hand
+	// HResize
 	HResize
+	// VResize
 	VResize
 )
