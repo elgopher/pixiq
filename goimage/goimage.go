@@ -22,10 +22,14 @@ func FromSelection(source image.Selection, options ...Option) stdimage.Image {
 // Option is a conversion option
 type Option func(opts) opts
 
-// Zoom increases the image during conversion
+// Zoom increases the image during conversion. Zoom <= 0 creates empty image.
 func Zoom(zoom int) Option {
 	return func(o opts) opts {
-		o.zoom = zoom
+		if zoom > 0 {
+			o.zoom = zoom
+		} else {
+			o.zoom = 0
+		}
 		return o
 	}
 }
