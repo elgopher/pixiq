@@ -393,7 +393,7 @@ type CursorOption func(opts cursorOpts) cursorOpts
 
 // Hotspot sets coordinates, in pixels, of cursor hotspot. Coordinates are constrained
 // to cursor size. Coordinates are set to 0 if negative. If zoom was used hotspot
-// coordinates are multipled by zoom.
+// coordinates are multiplied by zoom.
 func Hotspot(x, y int) CursorOption {
 	return func(opts cursorOpts) cursorOpts {
 		opts.hotspotX = x
