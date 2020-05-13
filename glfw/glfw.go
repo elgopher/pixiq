@@ -15,6 +15,7 @@ import (
 
 	"github.com/jacekolszak/pixiq/gl"
 	"github.com/jacekolszak/pixiq/glfw/internal"
+	"github.com/jacekolszak/pixiq/goimage"
 	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/keyboard"
 	"github.com/jacekolszak/pixiq/mouse"
@@ -46,7 +47,7 @@ func NewOpenGL(mainThreadLoop *MainThreadLoop) (*OpenGL, error) {
 		if err != nil {
 			return
 		}
-		mainWindow, err = createWindow(mainThreadLoop, nil)
+		mainWindow, err = createWindow(mainThreadLoop, "OpenGL Pixiq Dummy Window", nil)
 	})
 	if err != nil {
 		return nil, err
@@ -101,7 +102,7 @@ func RunOrDie(main func(gl *OpenGL)) {
 	})
 }
 
-func createWindow(mainThreadLoop *MainThreadLoop, share *glfw.Window) (*glfw.Window, error) {
+func createWindow(mainThreadLoop *MainThreadLoop, title string, share *glfw.Window) (*glfw.Window, error) {
 	glfw.WindowHint(glfw.ContextVersionMajor, 3)
 	glfw.WindowHint(glfw.ContextVersionMinor, 3)
 	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
@@ -113,7 +114,7 @@ func createWindow(mainThreadLoop *MainThreadLoop, share *glfw.Window) (*glfw.Win
 	// resizing the window to higher values than initial ones. That's why the window
 	// created here has size equal to the biggest window used in integration tests
 	// See: TestWindow_Draw() in glfw_test.go
-	win, err := glfw.CreateWindow(3, 3, "OpenGL Pixiq Window", nil, share)
+	win, err := glfw.CreateWindow(3, 3, title, nil, share)
 	if err != nil {
 		return nil, err
 	}
@@ -239,10 +240,11 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 		screenImage:      screenImage,
 		screenContextAPI: g.context.API(),
 		zoom:             1,
+		title:            "OpenGL Pixiq Window",
 	}
 	var err error
 	g.mainThreadLoop.Execute(func() {
-		win.glfwWindow, err = createWindow(g.mainThreadLoop, g.mainWindow)
+		win.glfwWindow, err = createWindow(g.mainThreadLoop, win.title, g.mainWindow)
 		if err != nil {
 			return
 		}
@@ -323,11 +325,12 @@ func NoDecorationHint() WindowOption {
 // Title sets the window title.
 func Title(title string) WindowOption {
 	return func(window *Window) {
+		window.title = title
 		window.glfwWindow.SetTitle(title)
 	}
 }
 
-// Zoom makes window/pixels bigger zoom times.
+// Zoom makes window/pixels bigger zoom times. For zoom <= 0, the zoom defaults to 1.
 func Zoom(zoom int) WindowOption {
 	return func(window *Window) {
 		if zoom > 0 {
@@ -335,3 +338,114 @@ func Zoom(zoom int) WindowOption {
 		}
 	}
 }
+
+// NewCursor creates a new custom cursor look that can be set for a Window with SetCursor.
+// The look is taken from a Selection. The size of the cursor is based on the Selection size
+// and zoom.
+//
+// By default cursor has hotspot=(0,0) and zoom=1 . These values can be modified
+// by providing slice of CursorOption: glfw.Hotspot(x,y) and glfw.CursorZoom(x,y)
+func (g *OpenGL) NewCursor(selection image.Selection, options ...CursorOption) *Cursor {
+	opts := cursorOpts{
+		zoom: 1,
+	}
+	for _, option := range options {
+		opts = option(opts)
+	}
+	if opts.hotspotX < 0 {
+		opts.hotspotX = 0
+	}
+	if opts.hotspotY < 0 {
+		opts.hotspotY = 0
+	}
+	if opts.hotspotX > selection.Width() {
+		opts.hotspotX = selection.Width()
+	}
+	if opts.hotspotY > selection.Height() {
+		opts.hotspotY = selection.Height()
+	}
+	rgbaImage := goimage.FromSelection(selection, goimage.Zoom(opts.zoom))
+	var glfwCursor *glfw.Cursor
+	g.mainThreadLoop.Execute(func() {
+		glfwCursor = glfw.CreateCursor(rgbaImage, opts.hotspotX*opts.zoom, opts.hotspotY*opts.zoom)
+	})
+	return &Cursor{glfwCursor: glfwCursor}
+}
+
+type cursorOpts struct {
+	zoom               int
+	hotspotX, hotspotY int
+}
+
+// Cursor is a mouse cursor which can be use use in the window by calling Window.SetCursor
+type Cursor struct {
+	glfwCursor *glfw.Cursor
+}
+
+// Destroy frees the resources allocated by Cursor. This method must be called when
+// cursor is not used anymore to avoid memory leakage.
+func (c *Cursor) Destroy() {
+	c.glfwCursor.Destroy()
+}
+
+// CursorOption is an option used when calling NewCursor
+type CursorOption func(opts cursorOpts) cursorOpts
+
+// Hotspot sets coordinates, in pixels, of cursor hotspot. Coordinates are constrained
+// to cursor size. Coordinates are set to 0 if negative. If zoom was used hotspot
+// coordinates are multiplied by zoom.
+func Hotspot(x, y int) CursorOption {
+	return func(opts cursorOpts) cursorOpts {
+		opts.hotspotX = x
+		opts.hotspotY = y
+		return opts
+	}
+}
+
+// CursorZoom makes cursor bigger zoom times. For zoom <= 1, the zoom defaults to 1.
+func CursorZoom(zoom int) CursorOption {
+	return func(opts cursorOpts) cursorOpts {
+		opts.zoom = zoom
+		return opts
+	}
+}
+
+var cursorMapping = map[CursorShape]glfw.StandardCursor{
+	Arrow:     glfw.ArrowCursor,
+	IBeam:     glfw.IBeamCursor,
+	Crosshair: glfw.CrosshairCursor,
+	Hand:      glfw.HandCursor,
+	HResize:   glfw.HResizeCursor,
+	VResize:   glfw.VResizeCursor,
+}
+
+// NewStandardCursor creates a standard cursor with specified shape
+func (g *OpenGL) NewStandardCursor(shape CursorShape) *Cursor {
+	var glfwCursor *glfw.Cursor
+	g.mainThreadLoop.Execute(func() {
+		cursor, ok := cursorMapping[shape]
+		if !ok {
+			cursor = glfw.ArrowCursor
+		}
+		glfwCursor = glfw.CreateStandardCursor(cursor)
+	})
+	return &Cursor{glfwCursor: glfwCursor}
+}
+
+// CursorShape is a shape used by NewStandardCursor
+type CursorShape int
+
+const (
+	// Arrow is an arrow cursor shape which can be used in NewStandardCursor
+	Arrow CursorShape = iota
+	// IBeam is an ibeam cursor shape which can be used in NewStandardCursor
+	IBeam
+	// Crosshair is a crosshair cursor shape which can be used in NewStandardCursor
+	Crosshair
+	// Hand is a hand cursor shape which can be used in NewStandardCursor
+	Hand
+	// HResize is a hresize cursor shape which can be used in NewStandardCursor
+	HResize
+	// VResize is a vresize cursor shape which can be used in NewStandardCursor
+	VResize
+)

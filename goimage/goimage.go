@@ -12,11 +12,8 @@ import (
 
 // FromSelection creates a standard Go Image from Pixiq image.Selection
 func FromSelection(source image.Selection, options ...Option) stdimage.Image {
-	opts := buildOpts(source, options...)
-	if opts.height == 0 {
-		return stdimage.NewRGBA(stdimage.Rectangle{})
-	}
-	bounds := stdimage.Rect(0, 0, opts.width*opts.zoom, opts.height*opts.zoom)
+	opts := buildOpts(options...)
+	bounds := stdimage.Rect(0, 0, source.Width()*opts.zoom, source.Height()*opts.zoom)
 	target := stdimage.NewRGBA(bounds)
 	FillWithSelection(target, source, options...)
 	return target
@@ -25,48 +22,40 @@ func FromSelection(source image.Selection, options ...Option) stdimage.Image {
 // Option is a conversion option
 type Option func(opts) opts
 
-// Zoom increases the image during conversion
+// Zoom increases the image during conversion. Zoom <= 0 is treated as zoom 1.
 func Zoom(zoom int) Option {
 	return func(o opts) opts {
-		o.zoom = zoom
+		if zoom > 0 {
+			o.zoom = zoom
+		} else {
+			o.zoom = 1
+		}
 		return o
 	}
 }
 
 type opts struct {
-	zoom          int
-	width, height int
+	zoom int
 }
 
-func buildOpts(selection image.Selection, options ...Option) opts {
+func buildOpts(options ...Option) opts {
 	opts := opts{
 		zoom: 1,
 	}
 	for _, option := range options {
 		opts = option(opts)
 	}
-	lines := selection.Lines()
-	opts.height = lines.Length()
-	if opts.height != 0 {
-		opts.width = len(lines.LineForRead(0))
-	}
 	return opts
 }
 
 // FillWithSelection fills existing standard Go draw.Image with pixels from image.Selection
 func FillWithSelection(target draw.Image, source image.Selection, options ...Option) {
-	opts := buildOpts(source, options...)
-	lines := source.Lines()
-	for y := 0; y < opts.height; y++ {
-		for x := 0; x < opts.width; x++ {
-			line := lines.LineForRead(y)
-			c := line[x]
+	opts := buildOpts(options...)
+	for y := 0; y < source.Height()*opts.zoom; y++ {
+		for x := 0; x < source.Width()*opts.zoom; x++ {
+			c := source.Color(x/opts.zoom, y/opts.zoom)
 			rgba := color.RGBA{R: c.R(), G: c.G(), B: c.B(), A: c.A()}
-			for zy := 0; zy < opts.zoom; zy++ {
-				for zx := 0; zx < opts.zoom; zx++ {
-					target.Set(x*opts.zoom+zx, y*opts.zoom+zy, rgba)
-				}
-			}
+			target.Set(x, y, rgba)
 		}
 	}
 }
@@ -74,7 +63,7 @@ func FillWithSelection(target draw.Image, source image.Selection, options ...Opt
 // CopyToSelection copies standard Go Image to Pixiq image.Selection.
 // The size of target Selection limits how much of the source Image is copied.
 func CopyToSelection(source stdimage.Image, target image.Selection, options ...Option) {
-	opts := buildOpts(target, options...)
+	opts := buildOpts(options...)
 	lines := target.Lines()
 	if lines.Length() == 0 {
 		return

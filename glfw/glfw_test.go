@@ -293,6 +293,37 @@ func TestOpenGL_OpenWindow(t *testing.T) {
 			})
 		}
 	})
+
+	t.Run("should return default window title", func(t *testing.T) {
+		openGL, err := glfw.NewOpenGL(mainThreadLoop)
+		require.NoError(t, err)
+		defer openGL.Destroy()
+		// when
+		win, err := openGL.OpenWindow(640, 360)
+		require.NoError(t, err)
+		defer win.Close()
+		require.NotNil(t, win)
+		// then
+		assert.Equal(t, "OpenGL Pixiq Window", win.Title())
+	})
+
+	t.Run("should set window title", func(t *testing.T) {
+		titles := []string{"", "title"}
+		openGL, err := glfw.NewOpenGL(mainThreadLoop)
+		require.NoError(t, err)
+		defer openGL.Destroy()
+		for _, title := range titles {
+			t.Run(title, func(t *testing.T) {
+				// when
+				win, err := openGL.OpenWindow(640, 360, glfw.Title(title))
+				require.NoError(t, err)
+				defer win.Close()
+				require.NotNil(t, win)
+				// then
+				assert.Equal(t, title, win.Title())
+			})
+		}
+	})
 }
 
 func TestWindow_Width(t *testing.T) {
@@ -338,5 +369,105 @@ func TestWindow_Height(t *testing.T) {
 			}()
 		}
 		wg.Wait()
+	})
+}
+
+func TestOpenGL_NewCursor(t *testing.T) {
+	openGL, err := glfw.NewOpenGL(mainThreadLoop)
+	require.NoError(t, err)
+	defer openGL.Destroy()
+	img := openGL.NewImage(16, 16)
+	selection := img.WholeImageSelection()
+	t.Run("should create cursor with no options", func(t *testing.T) {
+		// when
+		cursor := openGL.NewCursor(selection)
+		// then
+		require.NotNil(t, cursor)
+		cursor.Destroy()
+	})
+	t.Run("should create cursor with Hotspot option", func(t *testing.T) {
+		tests := map[string]struct {
+			x, y int
+		}{
+			"0,0": {},
+			"1,2": {
+				x: 1,
+				y: 2,
+			},
+			"2,1": {
+				x: 2,
+				y: 1,
+			},
+			"1, selection height": {
+				x: 1,
+				y: selection.Height(),
+			},
+			"1, selection height + 1": {
+				x: 1,
+				y: selection.Height() + 1,
+			},
+			"selection width, 1": {
+				x: selection.Width(),
+				y: 1,
+			},
+			"selection width + 1, 1": {
+				x: selection.Width() + 1,
+				y: 1,
+			},
+			"-1,0": {
+				x: -1,
+			},
+			"0,-1": {
+				y: -1,
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				// when
+				cursor := openGL.NewCursor(selection, glfw.Hotspot(test.x, test.y))
+				// then
+				require.NotNil(t, cursor)
+				cursor.Destroy()
+			})
+		}
+	})
+	t.Run("should create cursor with CursorZoom option", func(t *testing.T) {
+		zooms := []int{0, 1, 2, 100}
+		for _, zoom := range zooms {
+			// when
+			cursor := openGL.NewCursor(selection, glfw.CursorZoom(zoom))
+			// then
+			require.NotNil(t, cursor)
+			cursor.Destroy()
+		}
+	})
+	t.Run("should create cursor with Zoom and Hotspot options", func(t *testing.T) {
+		// when
+		cursor := openGL.NewCursor(selection, glfw.CursorZoom(2), glfw.Hotspot(1, 2))
+		// then
+		require.NotNil(t, cursor)
+		cursor.Destroy()
+	})
+}
+
+func TestOpenGL_NewStandardCursor(t *testing.T) {
+	openGL, err := glfw.NewOpenGL(mainThreadLoop)
+	require.NoError(t, err)
+	defer openGL.Destroy()
+
+	t.Run("should use arrow cursor for unrecognized shape", func(t *testing.T) {
+		// when
+		cursor := openGL.NewStandardCursor(-1)
+		// then
+		require.NotNil(t, cursor)
+		cursor.Destroy()
+	})
+
+	t.Run("should create standard cursor", func(t *testing.T) {
+		// when
+		cursor := openGL.NewStandardCursor(glfw.Crosshair)
+		// then
+		require.NotNil(t, cursor)
+		cursor.Destroy()
 	})
 }

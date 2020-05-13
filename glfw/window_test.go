@@ -361,3 +361,33 @@ func TestWindow_ContextAPI(t *testing.T) {
 		assert.NotNil(t, api)
 	})
 }
+
+func TestWindow_SetCursor(t *testing.T) {
+	openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+	defer openGL.Destroy()
+
+	t.Run("should panic for nil cursor", func(t *testing.T) {
+		win, _ := openGL.OpenWindow(1, 1)
+		defer win.Close()
+		assert.Panics(t, func() {
+			win.SetCursor(nil)
+		})
+	})
+
+	t.Run("should set custom cursor for window", func(t *testing.T) {
+		win, _ := openGL.OpenWindow(1, 1)
+		defer win.Close()
+		cursorSelection := openGL.NewImage(1, 1).WholeImageSelection()
+		cursor := openGL.NewCursor(cursorSelection)
+		// when
+		win.SetCursor(cursor)
+	})
+
+	t.Run("should set standard cursor for window", func(t *testing.T) {
+		win, _ := openGL.OpenWindow(1, 1)
+		defer win.Close()
+		cursor := openGL.NewStandardCursor(glfw.Arrow)
+		// when
+		win.SetCursor(cursor)
+	})
+}
