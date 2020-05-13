@@ -337,6 +337,11 @@ func Zoom(zoom int) WindowOption {
 	}
 }
 
+// CreateCursor creates a new custom cursor look that can be set for a Window with SetCursor.
+// The look is taken from a Selection. The size of the cursor is based on the Selection size.
+//
+// By default cursor has hotspot=(0,0) and zoom=1 . These values can be modified
+// by providing slice of CursorOption: glfw.Hotspot(x,y) and glfw.CursorZoom(x,y)
 func (g *OpenGL) NewCursor(selection image.Selection, options ...CursorOption) *Cursor {
 	opts := cursorOpts{
 		zoom: 1,
@@ -344,10 +349,22 @@ func (g *OpenGL) NewCursor(selection image.Selection, options ...CursorOption) *
 	for _, option := range options {
 		opts = option(opts)
 	}
+	if opts.hotspotX < 0 {
+		opts.hotspotX = 0
+	}
+	if opts.hotspotY < 0 {
+		opts.hotspotY = 0
+	}
+	if opts.hotspotX > selection.Width() { // FIXME take zoom into account
+		opts.hotspotX = selection.Width()
+	}
+	if opts.hotspotY > selection.Height() { // FIXME take zoom into account
+		opts.hotspotY = selection.Height()
+	}
 	rgbaImage := goimage.FromSelection(selection, goimage.Zoom(opts.zoom))
 	var glfwCursor *glfw.Cursor
 	g.mainThreadLoop.Execute(func() {
-		// TODO To big zoom generates X Error
+		// TODO To big zoom or zoom=0 (0x0 size image) generates X Error
 		glfwCursor = glfw.CreateCursor(rgbaImage, opts.hotspotX*opts.zoom, opts.hotspotY*opts.zoom)
 	})
 	return &Cursor{glfwCursor: glfwCursor}
@@ -362,9 +379,15 @@ type Cursor struct {
 	glfwCursor *glfw.Cursor
 }
 
+func (c *Cursor) Destroy() {
+	c.glfwCursor.Destroy()
+}
+
 type CursorOption func(opts cursorOpts) cursorOpts
 
-func Hospot(x, y int) CursorOption {
+// Hotspot sets coordinates, in pixels, of cursor hotspot. Coordinates are constrained
+// to cursor size. Coordinates are set to 0 if negative.
+func Hotspot(x, y int) CursorOption {
 	return func(opts cursorOpts) cursorOpts {
 		opts.hotspotX = x
 		opts.hotspotY = y
@@ -382,7 +405,7 @@ func CursorZoom(zoom int) CursorOption {
 func (g *OpenGL) NewStandardCursor(shape CursorShape) *Cursor {
 	var glfwCursor *glfw.Cursor
 	g.mainThreadLoop.Execute(func() {
-		glfwCursor = glfw.CreateStandardCursor(glfw.IBeamCursor)
+		glfwCursor = glfw.CreateStandardCursor(glfw.HandCursor)
 	})
 	return &Cursor{glfwCursor: glfwCursor}
 }
