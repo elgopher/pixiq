@@ -442,3 +442,26 @@ func TestOpenGL_NewCursor(t *testing.T) {
 		}
 	})
 }
+
+func TestOpenGL_NewStandardCursor(t *testing.T) {
+	openGL, err := glfw.NewOpenGL(mainThreadLoop)
+	require.NoError(t, err)
+	defer openGL.Destroy()
+
+	t.Run("should use array cursor for unrecognized shape", func(t *testing.T) {
+		// when
+		cursor := openGL.NewStandardCursor(-1)
+		// then
+		require.NotNil(t, cursor)
+		cursor.Destroy()
+
+	})
+
+	t.Run("should create standard cursor", func(t *testing.T) {
+		// when
+		cursor := openGL.NewStandardCursor(glfw.Crosshair)
+		// then
+		require.NotNil(t, cursor)
+		cursor.Destroy()
+	})
+}

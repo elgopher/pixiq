@@ -410,11 +410,24 @@ func CursorZoom(zoom int) CursorOption {
 	}
 }
 
+var cursorMapping = map[CursorShape]glfw.StandardCursor{
+	Arrow:     glfw.ArrowCursor,
+	IBeam:     glfw.IBeamCursor,
+	Crosshair: glfw.CrosshairCursor,
+	Hand:      glfw.HandCursor,
+	HResize:   glfw.HResizeCursor,
+	VResize:   glfw.VResizeCursor,
+}
+
 // NewStandardCursor creates a standard cursor with specified shape
 func (g *OpenGL) NewStandardCursor(shape CursorShape) *Cursor {
 	var glfwCursor *glfw.Cursor
 	g.mainThreadLoop.Execute(func() {
-		glfwCursor = glfw.CreateStandardCursor(glfw.HandCursor)
+		cursor, ok := cursorMapping[shape]
+		if !ok {
+			cursor = glfw.ArrowCursor
+		}
+		glfwCursor = glfw.CreateStandardCursor(cursor)
 	})
 	return &Cursor{glfwCursor: glfwCursor}
 }
