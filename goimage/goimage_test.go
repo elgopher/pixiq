@@ -72,14 +72,14 @@ func TestFromSelection(t *testing.T) {
 			"zoom 0": {
 				source:         img.WholeImageSelection(),
 				opts:           []goimage.Option{goimage.Zoom(0)},
-				expectedWidth:  0,
-				expectedHeight: 0,
+				expectedWidth:  img.Width(),
+				expectedHeight: img.Height(),
 			},
 			"zoom -1": {
 				source:         img.WholeImageSelection(),
 				opts:           []goimage.Option{goimage.Zoom(-1)},
-				expectedWidth:  0,
-				expectedHeight: 0,
+				expectedWidth:  img.Width(),
+				expectedHeight: img.Height(),
 			},
 		}
 		for name, test := range tests {
@@ -386,15 +386,15 @@ func TestFillWithSelection(t *testing.T) {
 				source: img.WholeImageSelection(),
 				opts:   []goimage.Option{goimage.Zoom(0)},
 				expectedPixels: [][]color.RGBA{
-					{red},
+					{pix00},
 				},
 			},
 			"zoom -1": {
 				target: imageWithColor(red, 1, 1),
 				source: img.WholeImageSelection(),
-				opts:   []goimage.Option{goimage.Zoom(0)},
+				opts:   []goimage.Option{goimage.Zoom(-1)},
 				expectedPixels: [][]color.RGBA{
-					{red},
+					{pix00},
 				},
 			},
 		}
