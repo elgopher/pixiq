@@ -12,14 +12,14 @@ import (
 
 func main() {
 	glfw.RunOrDie(func(openGL *glfw.OpenGL) {
-		window, err := openGL.OpenWindow(600, 360, glfw.Title("Press left or right mouse button to change cursor look"))
+		window, err := openGL.OpenWindow(600, 360, glfw.Title("Press left or right mouse button to change cursor look"), glfw.Zoom(0))
 		if err != nil {
 			log.Panicf("OpenWindow failed: %v", err)
 		}
 		// create image and draw simplified crosshair
 		crosshair := crosshair(openGL)
 		// create cursor from crosshair selection
-		crosshairCursor := openGL.NewCursor(crosshair, glfw.CursorZoom(3), glfw.Hotspot(1, 1))
+		crosshairCursor := openGL.NewCursor(crosshair, glfw.CursorZoom(150), glfw.Hotspot(1, 1))
 		// create standard cursor
 		ibeamCursor := openGL.NewStandardCursor(glfw.Hand)
 

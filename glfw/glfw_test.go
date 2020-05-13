@@ -401,7 +401,7 @@ func TestOpenGL_NewCursor(t *testing.T) {
 		}
 	})
 	t.Run("should create cursor with CursorZoom option", func(t *testing.T) {
-		zooms := []int{0}
+		zooms := []int{0, 1, 2, 100}
 		for _, zoom := range zooms {
 			// when
 			cursor := openGL.NewCursor(selection, glfw.CursorZoom(zoom))
