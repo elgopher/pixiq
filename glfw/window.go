@@ -20,6 +20,7 @@ type Window struct {
 	requestedWidth   int
 	requestedHeight  int
 	zoom             int
+	title            string
 	screenImage      *image.Image
 	screenContextAPI gl.API
 	api              gl.API
@@ -124,4 +125,9 @@ func (w *Window) SetCursor(cursor *Cursor) {
 	w.mainThreadLoop.Execute(func() {
 		w.glfwWindow.SetCursor(cursor.glfwCursor)
 	})
+}
+
+// Title returns title of window
+func (w *Window) Title() string {
+	return w.title
 }

@@ -293,6 +293,37 @@ func TestOpenGL_OpenWindow(t *testing.T) {
 			})
 		}
 	})
+
+	t.Run("should return default window title", func(t *testing.T) {
+		openGL, err := glfw.NewOpenGL(mainThreadLoop)
+		require.NoError(t, err)
+		defer openGL.Destroy()
+		// when
+		win, err := openGL.OpenWindow(640, 360)
+		require.NoError(t, err)
+		defer win.Close()
+		require.NotNil(t, win)
+		// then
+		assert.Equal(t, "OpenGL Pixiq Window", win.Title())
+	})
+
+	t.Run("should set window title", func(t *testing.T) {
+		titles := []string{"", "title"}
+		openGL, err := glfw.NewOpenGL(mainThreadLoop)
+		require.NoError(t, err)
+		defer openGL.Destroy()
+		for _, title := range titles {
+			t.Run(title, func(t *testing.T) {
+				// when
+				win, err := openGL.OpenWindow(640, 360, glfw.Title(title))
+				require.NoError(t, err)
+				defer win.Close()
+				require.NotNil(t, win)
+				// then
+				assert.Equal(t, title, win.Title())
+			})
+		}
+	})
 }
 
 func TestWindow_Width(t *testing.T) {

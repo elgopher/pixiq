@@ -47,7 +47,7 @@ func NewOpenGL(mainThreadLoop *MainThreadLoop) (*OpenGL, error) {
 		if err != nil {
 			return
 		}
-		mainWindow, err = createWindow(mainThreadLoop, nil)
+		mainWindow, err = createWindow(mainThreadLoop, "OpenGL Pixiq Dummy Window", nil)
 	})
 	if err != nil {
 		return nil, err
@@ -102,7 +102,7 @@ func RunOrDie(main func(gl *OpenGL)) {
 	})
 }
 
-func createWindow(mainThreadLoop *MainThreadLoop, share *glfw.Window) (*glfw.Window, error) {
+func createWindow(mainThreadLoop *MainThreadLoop, title string, share *glfw.Window) (*glfw.Window, error) {
 	glfw.WindowHint(glfw.ContextVersionMajor, 3)
 	glfw.WindowHint(glfw.ContextVersionMinor, 3)
 	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
@@ -114,7 +114,7 @@ func createWindow(mainThreadLoop *MainThreadLoop, share *glfw.Window) (*glfw.Win
 	// resizing the window to higher values than initial ones. That's why the window
 	// created here has size equal to the biggest window used in integration tests
 	// See: TestWindow_Draw() in glfw_test.go
-	win, err := glfw.CreateWindow(3, 3, "OpenGL Pixiq Window", nil, share)
+	win, err := glfw.CreateWindow(3, 3, title, nil, share)
 	if err != nil {
 		return nil, err
 	}
@@ -240,10 +240,11 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 		screenImage:      screenImage,
 		screenContextAPI: g.context.API(),
 		zoom:             1,
+		title:            "OpenGL Pixiq Window",
 	}
 	var err error
 	g.mainThreadLoop.Execute(func() {
-		win.glfwWindow, err = createWindow(g.mainThreadLoop, g.mainWindow)
+		win.glfwWindow, err = createWindow(g.mainThreadLoop, win.title, g.mainWindow)
 		if err != nil {
 			return
 		}
@@ -324,6 +325,7 @@ func NoDecorationHint() WindowOption {
 // Title sets the window title.
 func Title(title string) WindowOption {
 	return func(window *Window) {
+		window.title = title
 		window.glfwWindow.SetTitle(title)
 	}
 }
