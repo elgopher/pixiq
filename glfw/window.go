@@ -122,6 +122,9 @@ func (w *Window) ContextAPI() gl.API {
 
 // SetCursor sets the window cursor
 func (w *Window) SetCursor(cursor *Cursor) {
+	if cursor == nil {
+		panic("nil cursor")
+	}
 	w.mainThreadLoop.Execute(func() {
 		w.glfwWindow.SetCursor(cursor.glfwCursor)
 	})
