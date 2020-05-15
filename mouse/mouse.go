@@ -347,8 +347,8 @@ func NewScrolledEvent(x, y float64) Event {
 // NewMovedEvent returns new instance of Event when mouse was moved.
 //
 // realPosX and realPosY are the cursor position in real pixel coordinates. For
-// systems supporting subpixel coordinates these might be fractional numbers.
-// posX and posY should be virtual pixel coorindates taking into account current zoom.
+// systems supporting subpixel coordinates these may be fractional numbers.
+// posX and posY should be virtual pixel coordinates taking into account current zoom.
 // For zoom=2 and realPosX=2, posX should be 1.
 func NewMovedEvent(posX, posY int, realPosX, realPosY float64, insideWindow bool) Event {
 	return Event{

@@ -1,7 +1,7 @@
 package image
 
 // AcceleratedImage is an image processed by external device (outside the CPU).
-// The mentioned device might be a video card.
+// The mentioned device can be a video card.
 type AcceleratedImage interface {
 	// Upload transfers pixels from RAM to external memory (such as VRAM).
 	//
@@ -246,7 +246,7 @@ type AcceleratedCommand interface {
 	// so that next time AcceleratedImage.Download is called modified pixels are
 	// downloaded.
 	//
-	// Run might return error when output or selections cannot be used. Usually
+	// Run may return error when output or selections cannot be used. Usually
 	// the reason for that is they were not created in a given context (such
 	// as OpenGL context).
 	//
@@ -358,11 +358,11 @@ func (l Lines) YOffset() int {
 //
 // Please note that returned slice behaves differently than Selection. Line contains only
 // real pixels and trying to access out-of-bounds pixels generates panic. Therefore
-// the len of returned slice might be lower than Selection width. The starting offset
+// the len of returned slice can be lower than Selection width. The starting offset
 // can be read by executing Lines.XOffset().
 //
-// It is not safe to retain returned slice for future use. The image might be modified by
-// AcceleratedCommand and changes will not be reflected in a slice.
+// It is not safe to retain returned slice for future use. The image can be modified by
+// AcceleratedCommand and changes will not be immediately reflected in a slice.
 func (l Lines) LineForWrite(line int) []Color {
 	pixels := l.line(line)
 	l.image.ramModified = true
@@ -379,11 +379,11 @@ func (l Lines) LineForWrite(line int) []Color {
 //
 // Please note that returned slice behaves differently than Selection. Line contains only
 // real pixels and trying to access out-of-bounds pixels generates panic. Therefore
-// the len of returned slice might be lower than Selection width. The starting offset
+// the len of returned slice may be lower than Selection width. The starting offset
 // can be read by executing Lines.XOffset().
 //
-// It is not safe to retain returned slice for future use. The image might be modified by
-// AcceleratedCommand and changes will not be reflected in a slice.
+// It is not safe to retain returned slice for future use. The image can be modified by
+// AcceleratedCommand and changes will not be immediately reflected in a slice.
 func (l Lines) LineForRead(line int) []Color {
 	return l.line(line)
 }

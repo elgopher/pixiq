@@ -406,7 +406,7 @@ func (g *context) ReadPixels(x int32, y int32, width int32, height int32, format
 
 // BlendFunc specifies pixel arithmetic
 func (g *context) BlendFunc(sfactor uint32, dfactor uint32) {
-	g.run(func() {
+	g.runAsync(func() {
 		gl.BlendFunc(sfactor, dfactor)
 	})
 }
