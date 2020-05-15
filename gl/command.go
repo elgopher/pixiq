@@ -257,11 +257,11 @@ func (c *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selecti
 	if loc.Height == 0 {
 		return
 	}
-	// this not only skip unneeded processing but also fixes bug with Intel Iris GPU on MAC - see #115
+	// this not only skips unneeded processing but also fixes bug with Intel Iris GPU on MAC - see #115
 	if loc.X+loc.Width <= 0 {
 		return
 	}
-	// this not only skip unneeded processing but also fixes bug with Intel Iris GPU on MAC - see #115
+	// this not only skips unneeded processing but also fixes bug with Intel Iris GPU on MAC - see #115
 	if loc.Y+loc.Height <= 0 {
 		return
 	}
