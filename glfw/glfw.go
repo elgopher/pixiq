@@ -254,6 +254,32 @@ func Zoom(zoom int) WindowOption {
 	}
 }
 
+// FullScreen opens window in full screen mode using given display video mode
+func FullScreen(mode VideoMode) WindowOption {
+	return func(window *Window) {
+		window.fullScreenMode = &mode
+	}
+}
+
+// Resizable makes window resizable by the user.
+//
+// To get the information about current window size please use Window.Width() and Window.Height()
+func Resizable(resizable bool) WindowOption {
+	return func(window *Window) {
+		window.setBoolAttrib(glfw.Resizable, resizable)
+	}
+}
+
+// Position sets the position, in pixels, of the upper-left corner
+// of the client area of the window.
+//
+// To get the information about current window position please use Window.X() and Window.Y()
+func Position(x, y int) WindowOption {
+	return func(window *Window) {
+		window.glfwWindow.SetPos(x, y)
+	}
+}
+
 // NewCursor creates a new custom cursor look that can be set for a Window with SetCursor.
 // The look is taken from a Selection. The size of the cursor is based on the Selection size
 // and zoom.

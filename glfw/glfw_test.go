@@ -4,6 +4,7 @@ import (
 	"os"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -341,6 +342,52 @@ func TestOpenGL_OpenWindow(t *testing.T) {
 			})
 		}
 	})
+
+	t.Run("should open window on a given position", func(t *testing.T) {
+		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+		defer openGL.Destroy()
+		x := 10
+		y := 20
+		// when
+		window, err := openGL.OpenWindow(640, 360, glfw.Position(x, y))
+		require.NoError(t, err)
+		defer window.Close()
+		// then
+		assert.Eventually(t, func() bool {
+			return x == window.X() &&
+				y == window.Y()
+		}, 1*time.Second, 10*time.Millisecond)
+	})
+
+	t.Run("should set NoDecorationHint", func(t *testing.T) {
+		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+		defer openGL.Destroy()
+		// when
+		window, err := openGL.OpenWindow(640, 360, glfw.NoDecorationHint())
+		require.NoError(t, err)
+		defer window.Close()
+		// then
+		assert.False(t, window.Decorated())
+	})
+
+	t.Run("should open in a full screen", func(t *testing.T) {
+		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+		defer openGL.Destroy()
+		displays, _ := glfw.Displays(mainThreadLoop)
+		display, _ := displays.Primary()
+		videoMode := display.VideoMode()
+		// when
+		window, err := openGL.OpenWindow(640, 360, glfw.FullScreen(videoMode))
+		require.NoError(t, err)
+		defer window.Close()
+		// then
+		assert.Equal(t, videoMode.Width(), window.Width())
+		assert.Equal(t, videoMode.Height(), window.Height())
+		// and
+		assert.Equal(t, 640, window.Screen().Width())
+		assert.Equal(t, 360, window.Screen().Height())
+	})
+
 }
 
 func TestWindow_Width(t *testing.T) {
