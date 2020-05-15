@@ -9,7 +9,7 @@ import (
 
 func main() {
 	glfw.RunOrDie(func(openGL *glfw.OpenGL) {
-		window, err := openGL.OpenWindow(2, 2, glfw.Zoom(100))
+		window, err := openGL.OpenWindow(4, 4, glfw.Zoom(100))
 		if err != nil {
 			panic(err)
 		}
@@ -18,7 +18,8 @@ func main() {
 		tool.SetColor(colornames.Yellow)
 		loop.Run(window, func(frame *loop.Frame) {
 			screen := frame.Screen()
-			tool.Clear(screen.Selection(-1, -1).WithSize(1, 1))
+			// this clears one pixel in the top left corner on Mac IRIS
+			tool.Clear(screen.Selection(-20, -20).WithSize(1, 1))
 
 			if window.ShouldClose() {
 				frame.StopLoopEventually()

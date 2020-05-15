@@ -275,6 +275,7 @@ func (c *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selecti
 	c.api.BindFramebuffer(framebuffer, img.frameBufferID)
 	c.api.Scissor(x, y, w, h)
 	// FIXME Negative xy coordinates does not work for glClear on Intel GPU Mac
+	// Always one pixel in the top left corner is cleared
 	c.api.Viewport(x, y, w, h)
 
 	renderer := &Renderer{
