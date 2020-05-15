@@ -9,7 +9,7 @@ import (
 
 func main() {
 	glfw.RunOrDie(func(openGL *glfw.OpenGL) {
-		window, err := openGL.OpenWindow(10, 10, glfw.Zoom(30))
+		window, err := openGL.OpenWindow(2, 2, glfw.Zoom(100))
 		if err != nil {
 			panic(err)
 		}
@@ -18,8 +18,7 @@ func main() {
 		tool.SetColor(colornames.Yellow)
 		loop.Run(window, func(frame *loop.Frame) {
 			screen := frame.Screen()
-			tool.Clear(screen.Selection(-2, -2).WithSize(4, 4))
-			tool.Clear(screen.Selection(8, 8).WithSize(4, 4))
+			tool.Clear(screen.Selection(-1, -1).WithSize(1, 1))
 
 			if window.ShouldClose() {
 				frame.StopLoopEventually()
