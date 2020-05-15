@@ -1,3 +1,5 @@
+// Package fake provides a fake image.AcceleratedImage implementation
+// which can be used in unit testing.
 package fake
 
 import (
