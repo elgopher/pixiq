@@ -238,7 +238,7 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 		requestedWidth:   width,
 		requestedHeight:  height,
 		screenImage:      screenImage,
-		screenContextAPI: g.context.API(),
+		sharedContextAPI: g.context.API(),
 		zoom:             1,
 		title:            "OpenGL Pixiq Window",
 	}
