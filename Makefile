@@ -1,6 +1,6 @@
 lint:
 	golint -set_exit_status ./...
-	golangci-lint run -E goimports,unconvert,misspell,maligned,gocyclo,gocritic,gochecknoinits
+	golangci-lint run -E goimports,unconvert,misspell,maligned,gocyclo,gocritic,gochecknoinits --timeout=2m
 
 test:
 	go test -race -v -gcflags=all=-d=checkptr=0 ./...
