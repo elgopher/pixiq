@@ -1,3 +1,5 @@
+// Package glclear provides GPU tools for clearing selections
+// using specific color
 package glclear
 
 import (

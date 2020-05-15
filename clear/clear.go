@@ -1,3 +1,5 @@
+// Package clear provides CPU tools for clearing selections
+// using specific color
 package clear
 
 import (

@@ -1,3 +1,7 @@
+// Package blend provides blend tools using CPU
+//
+//     blender := blend.NewSourceOver()
+//     blender.BlendSourceToTarget(faceSelection, screen.Selection(10, 24))
 package blend
 
 import (
