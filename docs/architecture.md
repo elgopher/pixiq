@@ -60,7 +60,7 @@ the window transparency. Why?
 for you then propably it is time to submit an  [Issue](https://github.com/jacekolszak/pixiq/issues) 
 or maybe even make a change by submitting a [Pull Request](https://github.com/jacekolszak/pixiq/pulls).
 The `glfw.OpenGL` struct does not need to implement any abstractions
-for opening windows, therefore it might be extended freely.
+for opening windows, therefore it may be extended freely.
 
 
 Why you are still using OpenGL in 2020?

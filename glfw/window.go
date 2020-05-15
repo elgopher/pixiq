@@ -46,6 +46,7 @@ func (w *Window) Draw() {
 // to the user SwapBuffers must be executed.
 func (w *Window) DrawIntoBackBuffer() {
 	w.screenImage.Upload()
+	// FIXME It looks like Finish actively polls GPU which may consume a lot of CPU power.
 	w.sharedContextAPI.Finish()
 	var width, height int
 	w.mainThreadLoop.Execute(func() {

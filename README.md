@@ -68,7 +68,7 @@ More examples you can find in [examples](examples) directory.
 ## Project status
 
 The project is under heavy development at the moment, and some of its features are experimental/missing
-and might change in the near future.
+and may change in the near future.
 
 The project is using [semantic versioning](https://semver.org/). Current version 
 is `0.X.Y` which basically means that future versions may introduce incompatible 
