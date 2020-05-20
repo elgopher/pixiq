@@ -49,7 +49,7 @@ func (w *Window) Draw() {
 func (w *Window) DrawIntoBackBuffer() {
 	w.screenImage.Upload()
 	// Finish actively polls GPU which may consume a lot of CPU power.
-	// That's why Finish is called only if necessary
+	// That's why Finish is called only if context synchronization is required
 	if w.sharedContextAPI != w.api {
 		w.sharedContextAPI.Finish()
 	}
