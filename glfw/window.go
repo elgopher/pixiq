@@ -1,6 +1,7 @@
 package glfw
 
 import (
+	gl33 "github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
 
 	"github.com/jacekolszak/pixiq/gl"
@@ -12,16 +13,17 @@ import (
 
 // Window is an implementation of loop.Screen and keyboard.EventSource
 type Window struct {
-	glfwWindow      *glfw.Window
-	mainThreadLoop  *MainThreadLoop
-	screenPolygon   *screenPolygon
-	keyboardEvents  *internal.KeyboardEvents
-	mouseEvents     *internal.MouseEvents
-	requestedWidth  int
-	requestedHeight int
-	zoom            int
-	title           string
-	screenImage     *image.Image
+	glfwWindow             *glfw.Window
+	mainThreadLoop         *MainThreadLoop
+	screenPolygon          *screenPolygon
+	keyboardEvents         *internal.KeyboardEvents
+	mouseEvents            *internal.MouseEvents
+	requestedWidth         int
+	requestedHeight        int
+	zoom                   int
+	title                  string
+	screenImage            *image.Image
+	screenAcceleratedImage *gl.AcceleratedImage
 	// API for main context shared between all windows
 	sharedContextAPI gl.API
 	api              gl.API
@@ -46,13 +48,20 @@ func (w *Window) Draw() {
 // to the user SwapBuffers must be executed.
 func (w *Window) DrawIntoBackBuffer() {
 	w.screenImage.Upload()
-	// FIXME It looks like Finish actively polls GPU which may consume a lot of CPU power.
-	w.sharedContextAPI.Finish()
+	// Finish actively polls GPU which may consume a lot of CPU power.
+	// That's why Finish is called only if necessary
+	if w.sharedContextAPI != w.api {
+		w.sharedContextAPI.Finish()
+	}
 	var width, height int
 	w.mainThreadLoop.Execute(func() {
 		width, height = w.glfwWindow.GetFramebufferSize()
 	})
+	w.api.BindFramebuffer(gl33.FRAMEBUFFER, 0)
 	w.api.Viewport(0, 0, int32(width), int32(height))
+	w.api.Scissor(0, 0, int32(width), int32(height))
+	w.api.BindTexture(gl33.TEXTURE_2D, w.screenAcceleratedImage.TextureID())
+	w.api.UseProgram(w.program.ID())
 	w.screenPolygon.draw()
 }
 
@@ -63,6 +72,7 @@ func (w *Window) SwapBuffers() {
 
 // Close closes the window and cleans resources.
 func (w *Window) Close() {
+	// TODO decrease number of windows
 	w.mainThreadLoop.Execute(w.glfwWindow.Destroy)
 }
 

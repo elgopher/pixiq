@@ -11,7 +11,7 @@ import (
 
 func main() {
 	glfw.RunOrDie(func(gl *glfw.OpenGL) {
-		window, err := gl.OpenWindow(37, 40, glfw.Zoom(10))
+		window, err := gl.OpenWindow(37, 40, glfw.Zoom(10), glfw.Title("Blend window"))
 		if err != nil {
 			panic(err)
 		}

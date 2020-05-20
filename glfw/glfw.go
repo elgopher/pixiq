@@ -134,6 +134,7 @@ type OpenGL struct {
 	mainWindow        *glfw.Window
 	api               gl.API
 	context           *gl.Context
+	windowsOpen       int
 }
 
 // Destroy cleans all the OpenGL resources associated with this instance.
@@ -233,20 +234,25 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 	screenAcceleratedImage := g.context.NewAcceleratedImage(width, height)
 	screenImage := image.New(screenAcceleratedImage)
 	win := &Window{
-		mainThreadLoop:   g.mainThreadLoop,
-		keyboardEvents:   keyboardEvents,
-		requestedWidth:   width,
-		requestedHeight:  height,
-		screenImage:      screenImage,
-		sharedContextAPI: g.context.API(),
-		zoom:             1,
-		title:            "OpenGL Pixiq Window",
+		mainThreadLoop:         g.mainThreadLoop,
+		keyboardEvents:         keyboardEvents,
+		requestedWidth:         width,
+		requestedHeight:        height,
+		screenImage:            screenImage,
+		screenAcceleratedImage: screenAcceleratedImage,
+		sharedContextAPI:       g.context.API(),
+		zoom:                   1,
+		title:                  "OpenGL Pixiq Window",
 	}
 	var err error
 	g.mainThreadLoop.Execute(func() {
-		win.glfwWindow, err = createWindow(g.mainThreadLoop, win.title, g.mainWindow)
-		if err != nil {
-			return
+		if g.windowsOpen == 0 {
+			win.glfwWindow = g.mainWindow
+		} else {
+			win.glfwWindow, err = createWindow(g.mainThreadLoop, win.title, g.mainWindow)
+			if err != nil {
+				return
+			}
 		}
 		for _, option := range options {
 			if option == nil {
@@ -273,29 +279,32 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 	if err != nil {
 		return nil, err
 	}
-	win.api = &context{
-		run: func(f func()) {
-			g.mainThreadLoop.executeCommand(command{
-				window:  win.glfwWindow,
-				execute: f,
-			})
-		},
-		runAsync: func(f func()) {
-			g.mainThreadLoop.executeAsyncCommand(command{
-				window:  win.glfwWindow,
-				execute: f,
-			})
-		},
+	if g.windowsOpen == 0 {
+		win.api = g.api
+		win.context = g.context
+	} else {
+		win.api = &context{
+			run: func(f func()) {
+				g.mainThreadLoop.executeCommand(command{
+					window:  win.glfwWindow,
+					execute: f,
+				})
+			},
+			runAsync: func(f func()) {
+				g.mainThreadLoop.executeAsyncCommand(command{
+					window:  win.glfwWindow,
+					execute: f,
+				})
+			},
+		}
+		win.context = gl.NewContext(win.api)
 	}
-	win.context = gl.NewContext(win.api)
 	win.screenPolygon = newScreenPolygon(win.context, win.api)
 	win.program, err = compileProgram(win.context, vertexShaderSrc, fragmentShaderSrc)
 	if err != nil {
 		return nil, err
 	}
-	// in this window context there is only one program used with one texture
-	win.api.UseProgram(win.program.ID())
-	win.api.BindTexture(gl33.TEXTURE_2D, screenAcceleratedImage.TextureID())
+	g.windowsOpen++
 	return win, nil
 }
 
