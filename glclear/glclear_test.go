@@ -1,11 +1,11 @@
 package glclear_test
 
 import (
-	"github.com/jacekolszak/pixiq/gl"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/jacekolszak/pixiq/gl"
 	"github.com/jacekolszak/pixiq/glclear"
 )
 
