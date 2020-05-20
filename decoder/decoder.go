@@ -13,7 +13,7 @@ import (
 
 // ImageFactory creates a new image with given dimensions.
 //
-// glfw.OpenGL instance can be used as an ImageFactory implementation.
+// *glfw.OpenGL instance can be used as an ImageFactory implementation.
 type ImageFactory interface {
 	NewImage(width, height int) *image.Image
 }
