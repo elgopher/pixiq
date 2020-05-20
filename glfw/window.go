@@ -57,6 +57,8 @@ func (w *Window) DrawIntoBackBuffer() {
 	w.mainThreadLoop.Execute(func() {
 		width, height = w.glfwWindow.GetFramebufferSize()
 	})
+	// FIXME Better run Command here.
+	w.api.BlendFunc(1, 0)
 	w.api.BindFramebuffer(gl33.FRAMEBUFFER, 0)
 	w.api.Viewport(0, 0, int32(width), int32(height))
 	w.api.Scissor(0, 0, int32(width), int32(height))
