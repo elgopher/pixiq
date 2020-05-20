@@ -56,11 +56,11 @@ func (w *Window) DrawIntoBackBuffer() {
 	w.mainThreadLoop.Execute(func() {
 		width, height = w.glfwWindow.GetFramebufferSize()
 	})
-	// FIXME Better run Command here.
-	w.api.BlendFunc(1, 0)
+	w.api.Enable(gl33.BLEND) // this should be disabled
+	w.api.BlendFunc(1, 0)    // and then this is not required
 	w.api.BindFramebuffer(gl33.FRAMEBUFFER, 0)
 	w.api.Viewport(0, 0, int32(width), int32(height))
-	w.api.Scissor(0, 0, int32(width), int32(height))
+	w.api.Scissor(0, 0, int32(width), int32(height)) // scissor should be disabled
 	w.api.BindTexture(gl33.TEXTURE_2D, w.screenAcceleratedImage.TextureID())
 	w.api.UseProgram(w.program.ID())
 	w.screenPolygon.draw()
