@@ -39,7 +39,6 @@ package main
 import (
 	"github.com/jacekolszak/pixiq/colornames"
 	"github.com/jacekolszak/pixiq/glfw"
-	"github.com/jacekolszak/pixiq/loop"
 )
 
 func main() {
@@ -48,13 +47,14 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		loop.Run(window, func(frame *loop.Frame) {
-			screen := frame.Screen()
+		for {
+			screen := window.Screen()
 			screen.SetColor(40, 8, colornames.White)
+			window.Draw()
 			if window.ShouldClose() {
-				frame.StopLoopEventually()
+				break
 			}
-		})
+		}
 	})
 }
 ```
