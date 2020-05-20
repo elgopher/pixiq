@@ -32,8 +32,6 @@ func main() {
 			if mouseState.JustPressed(mouse.Right) {
 				window.SetCursor(ibeamCursor)
 			}
-
-			window.Draw()
 			if window.ShouldClose() {
 				break
 			}
