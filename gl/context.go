@@ -6,7 +6,8 @@ import (
 	"github.com/jacekolszak/pixiq/image"
 )
 
-// Context is an OpenGL context
+// Context is an abstraction for OpenGL context which greatly simplifies
+// interaction with an OpenGL driver.
 type Context struct {
 	api             API
 	vertexBufferIDs vertexBufferIDs
