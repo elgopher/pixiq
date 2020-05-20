@@ -21,10 +21,9 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		context := openGL.Context()
 		tools := []clearTool{
-			glclear.New(context.NewClearCommand()), // GPU one
-			clear.New(),                            // CPU one
+			glclear.New(openGL.Context()), // GPU one
+			clear.New(),                   // CPU one
 		}
 		tools[0].SetColor(colornames.Cornflowerblue)
 		tools[1].SetColor(colornames.Hotpink)

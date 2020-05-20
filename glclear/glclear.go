@@ -7,10 +7,20 @@ import (
 	"github.com/jacekolszak/pixiq/image"
 )
 
-// New returns new instance of *glclear.Tool
-func New(command *gl.ClearCommand) *Tool {
+// glContext is an OpenGL context. Possible implementation is *gl.Context which can be
+// obtained by calling OpenGL.Context()
+type glContext interface {
+	NewClearCommand() *gl.ClearCommand
+}
+
+// New returns a new instance of *glclear.Tool.
+func New(context glContext) *Tool {
+	if context == nil {
+		panic("nil context")
+	}
+	command := context.NewClearCommand()
 	if command == nil {
-		panic("nil command")
+		panic("nil *gl.ClearCommand returned by context")
 	}
 	return &Tool{
 		command: command,

@@ -1,5 +1,7 @@
 // Package gl provides Go abstractions for interacting with OpenGL in a safer
-// and easier way.
+// and easier way. OpenGL is low-level C API which is hard to use especially
+// in a different language than C. The aim of this package is to create
+// higher level abstractions without sacrificing the performance.
 //
 // It may be used with following versions and subsets of OpenGL:
 // 	* OpenGL 3.3 and never

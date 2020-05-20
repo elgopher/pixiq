@@ -2,7 +2,7 @@ package gl
 
 import "unsafe"
 
-// API is a gateway for directly accessing OpenGL driver.
+// API is a low-level gateway for directly accessing OpenGL driver.
 type API interface {
 	// GenBuffers generates buffer object names
 	GenBuffers(n int32, buffers *uint32)
