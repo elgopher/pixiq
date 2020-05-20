@@ -29,7 +29,7 @@ func TestWindow_DrawIntoBackBuffer(t *testing.T) {
 			window, err := openGL.OpenWindow(1, 1, glfw.NoDecorationHint())
 			require.NoError(t, err)
 			defer window.Close()
-			window.Image().WholeImageSelection().SetColor(0, 0, color1)
+			window.Screen().SetColor(0, 0, color1)
 			// when
 			window.DrawIntoBackBuffer()
 			// then
@@ -43,9 +43,8 @@ func TestWindow_DrawIntoBackBuffer(t *testing.T) {
 			window, err := openGL.OpenWindow(1, 2, glfw.NoDecorationHint())
 			require.NoError(t, err)
 			defer window.Close()
-			img := window.Image()
-			img.WholeImageSelection().SetColor(0, 0, color1)
-			img.WholeImageSelection().SetColor(0, 1, color2)
+			window.Screen().SetColor(0, 0, color1)
+			window.Screen().SetColor(0, 1, color2)
 			// when
 			window.DrawIntoBackBuffer()
 			// then
@@ -59,9 +58,8 @@ func TestWindow_DrawIntoBackBuffer(t *testing.T) {
 			window, err := openGL.OpenWindow(2, 1, glfw.NoDecorationHint())
 			require.NoError(t, err)
 			defer window.Close()
-			img := window.Image()
-			img.WholeImageSelection().SetColor(0, 0, color1)
-			img.WholeImageSelection().SetColor(1, 0, color2)
+			window.Screen().SetColor(0, 0, color1)
+			window.Screen().SetColor(1, 0, color2)
 			// when
 			window.DrawIntoBackBuffer()
 			// then
@@ -75,12 +73,11 @@ func TestWindow_DrawIntoBackBuffer(t *testing.T) {
 			window, err := openGL.OpenWindow(2, 2, glfw.NoDecorationHint())
 			require.NoError(t, err)
 			defer window.Close()
-			img := window.Image()
-			selection := img.WholeImageSelection()
-			selection.SetColor(0, 0, color1)
-			selection.SetColor(1, 0, color2)
-			selection.SetColor(0, 1, color3)
-			selection.SetColor(1, 1, color4)
+			screen := window.Screen()
+			screen.SetColor(0, 0, color1)
+			screen.SetColor(1, 0, color2)
+			screen.SetColor(0, 1, color3)
+			screen.SetColor(1, 1, color4)
 			// when
 			window.DrawIntoBackBuffer()
 			// then
@@ -98,8 +95,7 @@ func TestWindow_DrawIntoBackBuffer(t *testing.T) {
 					window, err := openGL.OpenWindow(1, 1, glfw.NoDecorationHint(), glfw.Zoom(zoom))
 					require.NoError(t, err)
 					defer window.Close()
-					img := window.Image()
-					img.WholeImageSelection().SetColor(0, 0, color1)
+					window.Screen().SetColor(0, 0, color1)
 					// when
 					window.DrawIntoBackBuffer()
 					// then
@@ -119,8 +115,7 @@ func TestWindow_DrawIntoBackBuffer(t *testing.T) {
 					window, err := openGL.OpenWindow(1, 1, glfw.NoDecorationHint(), glfw.Zoom(zoom))
 					require.NoError(t, err)
 					defer window.Close()
-					img := window.Image()
-					img.WholeImageSelection().SetColor(0, 0, color1)
+					window.Screen().SetColor(0, 0, color1)
 					// when
 					window.DrawIntoBackBuffer()
 					// then
@@ -187,8 +182,7 @@ func windowOfColor(openGL *glfw.OpenGL, color image.Color) (*glfw.Window, error)
 	if err != nil {
 		return nil, err
 	}
-	selection := window.Image().WholeImageSelection()
-	selection.SetColor(0, 0, color)
+	window.Screen().SetColor(0, 0, color)
 	return window, err
 }
 
@@ -272,8 +266,8 @@ func TestWindow_Zoom(t *testing.T) {
 	})
 }
 
-func TestWindow_Image(t *testing.T) {
-	t.Run("should provide screen image", func(t *testing.T) {
+func TestWindow_Screen(t *testing.T) {
+	t.Run("should provide screen selection", func(t *testing.T) {
 		tests := map[string]struct {
 			width, height int
 		}{
@@ -295,11 +289,16 @@ func TestWindow_Image(t *testing.T) {
 				require.NoError(t, err)
 				defer win.Close()
 				// when
-				img := win.Image()
+				screen := win.Screen()
 				// then
-				require.NotNil(t, img)
-				assert.Equal(t, test.width, img.Width())
-				assert.Equal(t, test.height, img.Height())
+				assert.Equal(t, 0, screen.ImageX())
+				assert.Equal(t, 0, screen.ImageY())
+				assert.Equal(t, test.width, screen.Width())
+				assert.Equal(t, test.height, screen.Height())
+				// and
+				require.NotNil(t, screen.Image())
+				assert.Equal(t, test.width, screen.Image().Width())
+				assert.Equal(t, test.height, screen.Image().Height())
 			})
 		}
 	})
@@ -328,10 +327,13 @@ func TestWindow_Image(t *testing.T) {
 				win, err := openGL.OpenWindow(640, 360, glfw.Zoom(test.zoom))
 				require.NoError(t, err)
 				// when
-				screen := win.Image()
+				screen := win.Screen()
 				// then
 				assert.Equal(t, 640, screen.Width())
 				assert.Equal(t, 360, screen.Height())
+				// and
+				assert.Equal(t, 640, screen.Image().Width())
+				assert.Equal(t, 360, screen.Image().Height())
 			})
 		}
 	})
@@ -343,10 +345,9 @@ func TestWindow_Image(t *testing.T) {
 		require.NoError(t, err)
 		transparent := image.RGBA(0, 0, 0, 0)
 		// when
-		img := win.Image()
+		screen := win.Screen()
 		// then
-		selection := img.WholeImageSelection()
-		assert.Equal(t, transparent, selection.Color(0, 0))
+		assert.Equal(t, transparent, screen.Color(0, 0))
 	})
 }
 

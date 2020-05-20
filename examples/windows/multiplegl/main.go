@@ -6,7 +6,6 @@ import (
 	"github.com/jacekolszak/pixiq/colornames"
 	"github.com/jacekolszak/pixiq/glfw"
 	"github.com/jacekolszak/pixiq/image"
-	"github.com/jacekolszak/pixiq/loop"
 )
 
 // This example shows how too use two separate OpenGL instances. Each contains its
@@ -32,12 +31,13 @@ func startOpenGL(mainThreadLoop *glfw.MainThreadLoop, title string, color image.
 		log.Panicf("%s OpenWindow failed: %v", title, err)
 	}
 	defer win.Close()
-	loop.Run(win, func(frame *loop.Frame) {
-		screen := frame.Screen()
+	for {
+		screen := win.Screen()
 		screen.SetColor(0, 0, color)
 		screen.SetColor(1, 0, color)
+		win.Draw()
 		if win.ShouldClose() {
-			frame.StopLoopEventually()
+			break
 		}
-	})
+	}
 }

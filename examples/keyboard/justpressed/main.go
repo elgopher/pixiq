@@ -6,7 +6,6 @@ import (
 	"github.com/jacekolszak/pixiq/colornames"
 	"github.com/jacekolszak/pixiq/glfw"
 	"github.com/jacekolszak/pixiq/keyboard"
-	"github.com/jacekolszak/pixiq/loop"
 )
 
 func main() {
@@ -19,7 +18,7 @@ func main() {
 		keys := keyboard.New(window)
 		x := 40
 		y := 20
-		loop.Run(window, func(frame *loop.Frame) {
+		for {
 			// Poll keyboard events
 			keys.Update()
 			// 	JustPressed is true if A was pressed between two last keys.Update() calls
@@ -36,10 +35,10 @@ func main() {
 				y += 2
 			}
 			if keys.JustPressed(keyboard.Esc) || window.ShouldClose() {
-				frame.StopLoopEventually()
+				break
 			}
-			screen := frame.Screen()
-			screen.SetColor(x, y, colornames.White)
-		})
+			window.Screen().SetColor(x, y, colornames.White)
+			window.Draw()
+		}
 	})
 }

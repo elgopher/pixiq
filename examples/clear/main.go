@@ -7,7 +7,6 @@ import (
 	"github.com/jacekolszak/pixiq/glfw"
 	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/keyboard"
-	"github.com/jacekolszak/pixiq/loop"
 )
 
 type clearTool interface {
@@ -29,8 +28,8 @@ func main() {
 		tools[1].SetColor(colornames.Hotpink)
 		currentTool := 0
 		keys := keyboard.New(window)
-		loop.Run(window, func(frame *loop.Frame) {
-			screen := frame.Screen()
+		screen := window.Screen()
+		for {
 			var (
 				leftEye  = screen.Selection(2, 2).WithSize(2, 2)
 				rightEye = screen.Selection(6, 2).WithSize(2, 2)
@@ -48,10 +47,10 @@ func main() {
 				currentTool = currentTool % len(tools)
 			}
 
+			window.Draw()
 			if window.ShouldClose() {
-				frame.StopLoopEventually()
+				break
 			}
-		})
-
+		}
 	})
 }

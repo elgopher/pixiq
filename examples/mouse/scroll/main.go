@@ -5,7 +5,6 @@ import (
 
 	"github.com/jacekolszak/pixiq/colornames"
 	"github.com/jacekolszak/pixiq/glfw"
-	"github.com/jacekolszak/pixiq/loop"
 	"github.com/jacekolszak/pixiq/mouse"
 )
 
@@ -19,17 +18,18 @@ func main() {
 		y := 20
 		// Create mouse instance for window.
 		mouseState := mouse.New(window)
-		loop.Run(window, func(frame *loop.Frame) {
-			screen := frame.Screen()
+		for {
+			screen := window.Screen()
 			// Poll mouse events
 			mouseState.Update()
 			scroll := mouseState.Scroll()
 			x += int(scroll.X())
 			y += int(scroll.Y())
 			screen.SetColor(x, y, colornames.Azure)
+			window.Draw()
 			if window.ShouldClose() {
-				frame.StopLoopEventually()
+				break
 			}
-		})
+		}
 	})
 }
