@@ -24,12 +24,11 @@ type Window struct {
 	title                  string
 	screenImage            *image.Image
 	screenAcceleratedImage *gl.AcceleratedImage
-	// API for main context shared between all windows
-	sharedContextAPI gl.API
-	api              gl.API
-	context          *gl.Context
-	program          *gl.Program
-	mouseWindow      *mouseWindow
+	sharedContextAPI       gl.API // API for main context shared between all windows
+	api                    gl.API
+	context                *gl.Context
+	program                *gl.Program
+	mouseWindow            *mouseWindow
 }
 
 // PollMouseEvent retrieves and removes next mouse Event. If there are no more
@@ -74,8 +73,11 @@ func (w *Window) SwapBuffers() {
 
 // Close closes the window and cleans resources.
 func (w *Window) Close() {
+	w.mainThreadLoop.Execute(w.glfwWindow.Hide)
 	// TODO decrease number of windows
-	w.mainThreadLoop.Execute(w.glfwWindow.Destroy)
+	// TODO Delete screen image, program, VAO etc.
+	// TODO Destroy window only if it is not main
+	//w.mainThreadLoop.Execute(w.glfwWindow.Destroy)
 }
 
 // ShouldClose reports the value of the close flag of the window.
