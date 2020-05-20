@@ -7,13 +7,14 @@ import (
 	"github.com/jacekolszak/pixiq/image"
 )
 
-// GLContext is an OpenGL context
-type GLContext interface {
+// glContext is an OpenGL context. Possible implementation is *gl.Context which can be
+// obtained by calling OpenGL.Context()
+type glContext interface {
 	NewClearCommand() *gl.ClearCommand
 }
 
 // New returns a new instance of *glclear.Tool.
-func New(context GLContext) *Tool {
+func New(context glContext) *Tool {
 	if context == nil {
 		panic("nil context")
 	}
