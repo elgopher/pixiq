@@ -28,9 +28,8 @@ func TestNew_Integration(t *testing.T) {
 		openGL, err := glfw.NewOpenGL(mainThreadLoop)
 		require.NoError(t, err)
 		defer openGL.Destroy()
-		command := openGL.Context().NewClearCommand()
 		// when
-		tool := glclear.New(command)
+		tool := glclear.New(openGL.Context())
 		assert.NotNil(t, tool)
 	})
 }
@@ -39,7 +38,6 @@ func TestTool_Clear(t *testing.T) {
 	openGL, err := glfw.NewOpenGL(mainThreadLoop)
 	require.NoError(t, err)
 	defer openGL.Destroy()
-	command := openGL.Context().NewClearCommand()
 	t.Run("should clear selection", func(t *testing.T) {
 		colors := []image.Color{
 			image.RGBA(10, 20, 30, 40),
@@ -77,7 +75,7 @@ func TestTool_Clear(t *testing.T) {
 				t.Run(testName, func(t *testing.T) {
 					img := openGL.NewImage(2, 2)
 					selection := img.Selection(0, 0).WithSize(test.width, test.height)
-					tool := glclear.New(command)
+					tool := glclear.New(openGL.Context())
 					tool.SetColor(color)
 					// when
 					tool.Clear(selection)
