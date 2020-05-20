@@ -37,9 +37,6 @@ func main() {
 			log.Panicf("DecodeFile failed: %v", err)
 		}
 
-		redScreen := redWindow.Image().WholeImageSelection()
-		blueScreen := blueWindow.Image().WholeImageSelection()
-
 		blender, err := glblend.NewSourceOver(openGL.Context())
 		if err != nil {
 			log.Panicf("glblend.NewSourceOver failed: %v", err)
@@ -50,9 +47,9 @@ func main() {
 			// current glfw.OpenGL implementation because on the end all OpenGL calls are executed
 			// in a main thread. glfw.OpenGL is also not goroutines-safe and you can't
 			// run commands (such as those used by glblend package) atomically.
-			blender.BlendSourceToTarget(redImg.WholeImageSelection(), redScreen)
+			blender.BlendSourceToTarget(redImg.WholeImageSelection(), redWindow.Screen())
 			redWindow.Draw()
-			blender.BlendSourceToTarget(blueImg.WholeImageSelection(), blueScreen)
+			blender.BlendSourceToTarget(blueImg.WholeImageSelection(), blueWindow.Screen())
 			blueWindow.Draw()
 			if redWindow.ShouldClose() || blueWindow.ShouldClose() {
 				return

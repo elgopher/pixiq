@@ -6,7 +6,6 @@ import (
 
 	"github.com/jacekolszak/pixiq/glfw"
 	"github.com/jacekolszak/pixiq/keyboard"
-	"github.com/jacekolszak/pixiq/loop"
 )
 
 func main() {
@@ -17,7 +16,7 @@ func main() {
 		}
 		// Create keyboard instance for window.
 		keys := keyboard.New(win)
-		loop.Run(win, func(frame *loop.Frame) {
+		for {
 			// Poll keyboard events
 			keys.Update()
 			// PressedKeys will return all currently pressed keys
@@ -27,8 +26,8 @@ func main() {
 			}
 
 			if win.ShouldClose() {
-				frame.StopLoopEventually()
+				break
 			}
-		})
+		}
 	})
 }

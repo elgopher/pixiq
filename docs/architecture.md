@@ -22,7 +22,7 @@ Pixiq creators can fulfill those goals by:
 + making small, **independent** packages - see:
   + [image](../image)
   + [keyboard](../keyboard)
-  + [loop](../loop)
+  + [mouse](../mouse)
 + in most cases new features should be added to new packages (unless something
   was missing from the beginning)
 + Pixiq should be more like a **library** not a framework. It basically means, 

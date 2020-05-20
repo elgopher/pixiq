@@ -7,7 +7,6 @@ import (
 	"github.com/jacekolszak/pixiq/gl"
 	"github.com/jacekolszak/pixiq/glfw"
 	"github.com/jacekolszak/pixiq/image"
-	"github.com/jacekolszak/pixiq/loop"
 )
 
 func main() {
@@ -20,14 +19,15 @@ func main() {
 			cmd     = program.AcceleratedCommand(&drawColorfulRectangle{vertexArray: array})
 			window  = openWindow(openGL)
 		)
-		loop.Run(window, func(frame *loop.Frame) {
-			screen := frame.Screen()
+		for {
+			screen := window.Screen()
 			screen.Modify(cmd)
 
+			window.Draw()
 			if window.ShouldClose() {
-				frame.StopLoopEventually()
+				break
 			}
-		})
+		}
 	})
 }
 

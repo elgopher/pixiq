@@ -111,9 +111,9 @@ func (w *Window) PollKeyboardEvent() (keyboard.Event, bool) {
 	return event, ok
 }
 
-// Image returns the screen's image
-func (w *Window) Image() *image.Image {
-	return w.screenImage
+// Screen returns the image.Selection for the whole Window image
+func (w *Window) Screen() image.Selection {
+	return w.screenImage.WholeImageSelection()
 }
 
 // ContextAPI returns window-specific OpenGL's context. Useful for accessing

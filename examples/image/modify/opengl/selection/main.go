@@ -6,7 +6,6 @@ import (
 	"github.com/jacekolszak/pixiq/gl"
 	"github.com/jacekolszak/pixiq/glfw"
 	"github.com/jacekolszak/pixiq/image"
-	"github.com/jacekolszak/pixiq/loop"
 )
 
 func main() {
@@ -26,14 +25,13 @@ func main() {
 		selection.SetColor(0, 1, image.RGB(255, 255, 255))
 		selection.SetColor(1, 1, image.RGB(0, 0, 255))
 
-		loop.Run(window, func(frame *loop.Frame) {
-			screen := frame.Screen()
-			screen.Modify(cmd, selection)
-
+		for {
+			window.Screen().Modify(cmd, selection)
+			window.Draw()
 			if window.ShouldClose() {
-				frame.StopLoopEventually()
+				break
 			}
-		})
+		}
 	})
 }
 

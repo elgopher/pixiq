@@ -4,7 +4,6 @@ import (
 	"github.com/jacekolszak/pixiq/blend"
 	"github.com/jacekolszak/pixiq/decoder"
 	"github.com/jacekolszak/pixiq/glfw"
-	"github.com/jacekolszak/pixiq/loop"
 )
 
 func main() {
@@ -22,14 +21,14 @@ func main() {
 			panic(err)
 		}
 
-		loop.Run(window, func(frame *loop.Frame) {
-			screen := frame.Screen()
-			sourceOverBlender.BlendSourceToTarget(img.WholeImageSelection(), screen)
+		for {
+			sourceOverBlender.BlendSourceToTarget(img.WholeImageSelection(), window.Screen())
 
+			window.Draw()
 			if window.ShouldClose() {
-				frame.StopLoopEventually()
+				break
 			}
-		})
+		}
 
 	})
 }

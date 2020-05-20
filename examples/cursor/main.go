@@ -6,7 +6,6 @@ import (
 	"github.com/jacekolszak/pixiq/colornames"
 	"github.com/jacekolszak/pixiq/glfw"
 	"github.com/jacekolszak/pixiq/image"
-	"github.com/jacekolszak/pixiq/loop"
 	"github.com/jacekolszak/pixiq/mouse"
 )
 
@@ -24,7 +23,8 @@ func main() {
 		ibeamCursor := openGL.NewStandardCursor(glfw.Hand)
 
 		mouseState := mouse.New(window)
-		loop.Run(window, func(frame *loop.Frame) {
+
+		for {
 			mouseState.Update()
 			if mouseState.JustPressed(mouse.Left) {
 				window.SetCursor(crosshairCursor)
@@ -33,9 +33,9 @@ func main() {
 				window.SetCursor(ibeamCursor)
 			}
 			if window.ShouldClose() {
-				frame.StopLoopEventually()
+				break
 			}
-		})
+		}
 	})
 }
 

@@ -6,7 +6,6 @@ import (
 	"github.com/jacekolszak/pixiq/colornames"
 	"github.com/jacekolszak/pixiq/glfw"
 	"github.com/jacekolszak/pixiq/image"
-	"github.com/jacekolszak/pixiq/loop"
 	"github.com/jacekolszak/pixiq/mouse"
 )
 
@@ -18,8 +17,8 @@ func main() {
 		}
 		// Create mouse instance for window.
 		mouseState := mouse.New(window)
-		loop.Run(window, func(frame *loop.Frame) {
-			screen := frame.Screen()
+		for {
+			screen := window.Screen()
 			// Poll mouse events
 			mouseState.Update()
 			// Get cursor position
@@ -32,10 +31,11 @@ func main() {
 			if mouseState.Pressed(mouse.Right) {
 				drawSquare(screen, pos.X(), pos.Y(), colornames.Black)
 			}
+			window.Draw()
 			if window.ShouldClose() {
-				frame.StopLoopEventually()
+				break
 			}
-		})
+		}
 	})
 }
 

@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/jacekolszak/pixiq/colornames"
 	"github.com/jacekolszak/pixiq/glfw"
-	"github.com/jacekolszak/pixiq/loop"
 )
 
 func main() {
@@ -14,18 +13,17 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		// Create a loop for a screen. OpenGL's Window is a Screen (some day
-		// in the future Pixiq may support different platforms such as mobile
-		// or browser, therefore we need a Screen abstraction).
-		// Each iteration of the loop is a Frame.
-		loop.Run(window, func(frame *loop.Frame) {
-			screen := frame.Screen()
+		// Draw window contents (screen) in the loop.
+		for {
+			screen := window.Screen()
 			screen.SetColor(40, 8, colornames.White)
+			// Draw will draw the screen and make changes visible to the user
+			window.Draw()
 			// If window was closed by the user ShouldClose will return true
 			if window.ShouldClose() {
 				// Stop the loop at the end of the iteration
-				frame.StopLoopEventually()
+				break
 			}
-		})
+		}
 	})
 }

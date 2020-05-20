@@ -7,7 +7,6 @@ import (
 	"github.com/jacekolszak/pixiq/glblend"
 	"github.com/jacekolszak/pixiq/glfw"
 	"github.com/jacekolszak/pixiq/image"
-	"github.com/jacekolszak/pixiq/loop"
 )
 
 func main() {
@@ -33,8 +32,8 @@ func main() {
 		clearTool := clear.New()
 		clearTool.SetColor(colornames.Aliceblue)
 
-		loop.Run(window, func(frame *loop.Frame) {
-			screen := frame.Screen()
+		for {
+			screen := window.Screen()
 			// first clear the screen with some opaque color
 			clearTool.Clear(screen)
 
@@ -53,10 +52,11 @@ func main() {
 			// similar source-over blending using video card
 			glSourceOverBlender.BlendSourceToTarget(face, screen.Selection(20, 24))
 
+			window.Draw()
 			if window.ShouldClose() {
-				frame.StopLoopEventually()
+				break
 			}
-		})
+		}
 
 	})
 }

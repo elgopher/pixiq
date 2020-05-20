@@ -5,7 +5,6 @@ import (
 
 	"github.com/jacekolszak/pixiq/glfw"
 	"github.com/jacekolszak/pixiq/image"
-	"github.com/jacekolszak/pixiq/loop"
 )
 
 // This example shows how to set all pixels using Lines
@@ -15,8 +14,8 @@ func main() {
 		if err != nil {
 			log.Panicf("OpenWindow failed: %v", err)
 		}
-		loop.Run(window, func(frame *loop.Frame) {
-			screen := frame.Screen()
+		for {
+			screen := window.Screen()
 			lines := screen.Lines()
 			for y := 0; y < lines.Length(); y++ {
 				line := lines.LineForWrite(y)
@@ -26,9 +25,10 @@ func main() {
 				}
 			}
 
+			window.Draw()
 			if window.ShouldClose() {
-				frame.StopLoopEventually()
+				break
 			}
-		})
+		}
 	})
 }
