@@ -510,6 +510,7 @@ func (a apiStub) GetActiveAttrib(program uint32, index uint32, bufSize int32, le
 }
 func (a apiStub) GetAttribLocation(program uint32, name *uint8) int32                          { return 0 }
 func (a apiStub) Enable(cap uint32)                                                            {}
+func (a apiStub) Disable(cap uint32)                                                           {}
 func (a apiStub) BindFramebuffer(target uint32, framebuffer uint32)                            {}
 func (a apiStub) Scissor(x int32, y int32, width int32, height int32)                          {}
 func (a apiStub) Viewport(x int32, y int32, width int32, height int32)                         {}

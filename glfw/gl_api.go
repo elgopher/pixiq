@@ -231,6 +231,13 @@ func (g *context) Enable(cap uint32) {
 	})
 }
 
+// Disable disables server-side GL capabilities
+func (g *context) Disable(cap uint32) {
+	g.runAsync(func() {
+		gl.Disable(cap)
+	})
+}
+
 // BindFramebuffer binds a framebuffer to a framebuffer target
 func (g *context) BindFramebuffer(target uint32, framebuffer uint32) {
 	g.runAsync(func() {

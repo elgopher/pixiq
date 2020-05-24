@@ -58,8 +58,10 @@ type API interface {
 	GetActiveAttrib(program uint32, index uint32, bufSize int32, length *int32, size *int32, xtype *uint32, name *uint8)
 	// GetAttribLocation returns the location of an attribute variable
 	GetAttribLocation(program uint32, name *uint8) int32
-	// Enable enables or disable server-side GL capabilities
+	// Enable enables server-side GL capabilities
 	Enable(cap uint32)
+	// Disable disables server-side GL capabilities
+	Disable(cap uint32)
 	// BindFramebuffer binds a framebuffer to a framebuffer target
 	BindFramebuffer(target uint32, framebuffer uint32)
 	// Scissor defines the scissor box
