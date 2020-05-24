@@ -43,7 +43,7 @@ func NewOpenGL(mainThreadLoop *MainThreadLoop) (*OpenGL, error) {
 		if err != nil {
 			return
 		}
-		mainWindow, err = createWindow(mainThreadLoop, "OpenGL Pixiq Dummy Window", nil)
+		mainWindow, err = createWindow(mainThreadLoop, "OpenGL Pixiq Window", nil)
 	})
 	if err != nil {
 		return nil, err
