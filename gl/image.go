@@ -122,3 +122,11 @@ func (i *AcceleratedImage) Width() int {
 func (i *AcceleratedImage) Height() int {
 	return i.height
 }
+
+// Delete cleans resources, usually pixels stored in external memory (such as VRAM).
+// After AcceleratedImage is deleted it cannot be used anymore. Subsequent calls
+// will generate OpenGL error which can be returned by executing Context.Error()
+func (i *AcceleratedImage) Delete() {
+	i.api.DeleteTextures(1, &i.textureID)
+	i.api.DeleteBuffers(1, &i.frameBufferID)
+}

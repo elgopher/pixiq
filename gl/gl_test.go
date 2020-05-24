@@ -503,6 +503,7 @@ func (a apiStub) GetProgramiv(program uint32, pname uint32, params *int32) {
 func (a apiStub) GetProgramInfoLog(program uint32, bufSize int32, length *int32, infoLog *uint8) {}
 func (a apiStub) UseProgram(program uint32)                                                      {}
 func (a apiStub) CreateProgram() uint32                                                          { return 0 }
+func (a apiStub) DeleteProgram(program uint32)                                                   {}
 func (a apiStub) GetActiveUniform(program uint32, index uint32, bufSize int32, length *int32, size *int32, xtype *uint32, name *uint8) {
 }
 func (a apiStub) GetActiveAttrib(program uint32, index uint32, bufSize int32, length *int32, size *int32, xtype *uint32, name *uint8) {

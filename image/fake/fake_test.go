@@ -223,3 +223,10 @@ func TestAcceleratedImage_PixelsTable(t *testing.T) {
 		}
 	})
 }
+
+func TestAcceleratedImage_Delete(t *testing.T) {
+	img := fake.NewAcceleratedImage(1, 1)
+	// when
+	img.Delete()
+	assert.True(t, img.Deleted())
+}

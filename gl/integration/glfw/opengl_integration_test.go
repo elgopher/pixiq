@@ -467,6 +467,27 @@ func TestAcceleratedImage_Upload(t *testing.T) {
 	})
 }
 
+func TestAcceleratedImage_Delete(t *testing.T) {
+	t.Run("should delete resources", func(t *testing.T) {
+		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+		defer openGL.Destroy()
+		context := openGL.Context()
+		img := context.NewAcceleratedImage(1, 1)
+		color := image.RGBA(10, 20, 30, 40)
+		img.Upload([]image.Color{color})
+		// when
+		img.Delete()
+		// then
+		err := context.Error()
+		require.NoError(t, err)
+		// and
+		output := make([]image.Color, 1)
+		img.Download(output)
+		err = context.Error()
+		require.Error(t, err)
+	})
+}
+
 func TestAcceleratedCommand_Run(t *testing.T) {
 	t.Run("vertex buffer can be used inside command", func(t *testing.T) {
 		openGL, _ := glfw.NewOpenGL(mainThreadLoop)

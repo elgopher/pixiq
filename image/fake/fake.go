@@ -28,9 +28,10 @@ func NewAcceleratedImage(width, height int) *AcceleratedImage {
 // AcceleratedImage stores pixel data in RAM and uses CPU solely.
 type AcceleratedImage struct {
 	// Hide the instance variable
-	pixels []image.Color
-	width  int
-	height int
+	pixels  []image.Color
+	width   int
+	height  int
+	deleted bool
 }
 
 // Upload send pixels to a container in RAM
@@ -74,4 +75,12 @@ func (i *AcceleratedImage) PixelsTable() [][]image.Color {
 		}
 	}
 	return table
+}
+
+func (i *AcceleratedImage) Delete() {
+	i.deleted = true
+}
+
+func (i *AcceleratedImage) Deleted() bool {
+	return i.deleted
 }

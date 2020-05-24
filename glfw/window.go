@@ -142,7 +142,9 @@ func (w *Window) Close() {
 		return
 	}
 	w.mainThreadLoop.Execute(w.glfwWindow.Hide)
-	// TODO Delete screen image, program, VAO etc.
+	w.screenPolygon.delete()
+	w.program.Delete()
+	w.screenImage.Delete()
 	w.onClose(w)
 	w.closed = true
 }

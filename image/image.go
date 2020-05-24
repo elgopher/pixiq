@@ -26,6 +26,9 @@ type AcceleratedImage interface {
 	Width() int
 	// Height returns the number of pixels in a column.
 	Height() int
+	// Delete cleans resources, usually pixels stored in external memory (such as VRAM).
+	// After AcceleratedImage is deleted it cannot be used anymore.
+	Delete()
 }
 
 // New creates an Image with same size as provided AcceleratedImage.
@@ -107,6 +110,12 @@ func (i *Image) Upload() {
 		i.acceleratedImage.Upload(i.pixels)
 		i.ramModified = false
 	}
+}
+
+// Delete cleans resources allocated outside the Go heap. This method must be
+// called if you are going to create a number of short-lived images.
+func (i *Image) Delete() {
+	i.acceleratedImage.Delete()
 }
 
 // Selection points to a specific area of the image. It has a starting position

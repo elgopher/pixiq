@@ -50,6 +50,8 @@ type API interface {
 	UseProgram(program uint32)
 	// CreateProgram creates a program object
 	CreateProgram() uint32
+	// DeleteProgram deletes a program object
+	DeleteProgram(program uint32)
 	// GetActiveUniform returns information about an active uniform variable for the specified program object
 	GetActiveUniform(program uint32, index uint32, bufSize int32, length *int32, size *int32, xtype *uint32, name *uint8)
 	// GetActiveAttrib returns information about an active attribute variable for the specified program object
@@ -98,6 +100,8 @@ type API interface {
 	GetIntegerv(pname uint32, data *int32)
 	// GenTextures generates texture names
 	GenTextures(n int32, textures *uint32)
+	// DeleteTextures deletes named textures
+	DeleteTextures(n int32, textures *uint32)
 	// TexImage2D specifies a two-dimensional texture image
 	TexImage2D(target uint32, level int32, internalformat int32, width int32, height int32, border int32, format uint32, xtype uint32, pixels unsafe.Pointer)
 	// TexParameteri sets texture parameter

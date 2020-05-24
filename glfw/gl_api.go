@@ -194,6 +194,13 @@ func (g *context) CreateProgram() uint32 {
 	return program
 }
 
+// DeleteProgram deletes a program object
+func (g *context) DeleteProgram(program uint32) {
+	g.run(func() {
+		gl.DeleteProgram(program)
+	})
+}
+
 // GetActiveUniform returns information about an active uniform variable for the specified program object
 func (g *context) GetActiveUniform(program uint32, index uint32, bufSize int32, length *int32, size *int32, xtype *uint32, name *uint8) {
 	g.run(func() {
@@ -361,6 +368,12 @@ func (g *context) GetIntegerv(pname uint32, data *int32) {
 func (g *context) GenTextures(n int32, textures *uint32) {
 	g.run(func() {
 		gl.GenTextures(n, textures)
+	})
+}
+
+func (g *context) DeleteTextures(n int32, textures *uint32) {
+	g.run(func() {
+		gl.DeleteTextures(n, textures)
 	})
 }
 
