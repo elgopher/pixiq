@@ -534,7 +534,8 @@ func (a apiStub) GetIntegerv(pname uint32, data *int32) {
 		*data = 1024 * 1024
 	}
 }
-func (a apiStub) GenTextures(n int32, textures *uint32) {}
+func (a apiStub) GenTextures(n int32, textures *uint32)    {}
+func (a apiStub) DeleteTextures(n int32, textures *uint32) {}
 func (a apiStub) TexImage2D(target uint32, level int32, internalformat int32, width int32, height int32, border int32, format uint32, xtype uint32, pixels unsafe.Pointer) {
 }
 func (a apiStub) TexParameteri(target uint32, pname uint32, param int32) {}
