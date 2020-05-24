@@ -1,10 +1,10 @@
 package glfw
 
 import (
-	gl33 "github.com/go-gl/gl/v3.3-core/gl"
-	"github.com/go-gl/glfw/v3.3/glfw"
 	"log"
 
+	gl33 "github.com/go-gl/gl/v3.3-core/gl"
+	"github.com/go-gl/glfw/v3.3/glfw"
 	"github.com/jacekolszak/pixiq/gl"
 	"github.com/jacekolszak/pixiq/glfw/internal"
 	"github.com/jacekolszak/pixiq/image"
