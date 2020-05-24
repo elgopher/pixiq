@@ -1,6 +1,7 @@
 package glfw
 
 import (
+	"github.com/go-gl/glfw/v3.3/glfw"
 	"unsafe"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
@@ -9,6 +10,23 @@ import (
 type context struct {
 	run      func(func())
 	runAsync func(func())
+}
+
+func newContext(mainThreadLoop *MainThreadLoop, window *glfw.Window) *context {
+	return &context{
+		run: func(f func()) {
+			mainThreadLoop.executeCommand(command{
+				window:  window,
+				execute: f,
+			})
+		},
+		runAsync: func(f func()) {
+			mainThreadLoop.executeAsyncCommand(command{
+				window:  window,
+				execute: f,
+			})
+		},
+	}
 }
 
 // GenBuffers generates buffer object names

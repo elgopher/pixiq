@@ -6,7 +6,7 @@ import (
 	"github.com/jacekolszak/pixiq/gl"
 )
 
-func newScreenPolygon(context *gl.Context, api gl.API) *screenPolygon {
+func newScreenPolygon(context *gl.Context) *screenPolygon {
 	const (
 		vertexLocation  = 0
 		textureLocation = 1
@@ -31,7 +31,7 @@ func newScreenPolygon(context *gl.Context, api gl.API) *screenPolygon {
 		Offset: 2,
 		Stride: 4,
 	})
-	return &screenPolygon{vertexArrayID: vao.ID(), api: api}
+	return &screenPolygon{vertexArrayID: vao.ID(), api: context.API()}
 }
 
 type screenPolygon struct {
