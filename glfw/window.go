@@ -29,9 +29,11 @@ type Window struct {
 	context                *gl.Context
 	program                *gl.Program
 	mouseWindow            *mouseWindow
+	onClose                func(*Window)
+	closed                 bool
 }
 
-func newWindow(glfwWindow *glfw.Window, mainThreadLoop *MainThreadLoop, width, height int, context *gl.Context, sharedContext *gl.Context, options ...WindowOption) (*Window, error) {
+func newWindow(glfwWindow *glfw.Window, mainThreadLoop *MainThreadLoop, width, height int, context *gl.Context, sharedContext *gl.Context, onClose func(*Window), options ...WindowOption) (*Window, error) {
 	if width < 1 {
 		width = 1
 	}
@@ -57,6 +59,7 @@ func newWindow(glfwWindow *glfw.Window, mainThreadLoop *MainThreadLoop, width, h
 		sharedContext:          sharedContext,
 		context:                context,
 		program:                program,
+		onClose:                onClose,
 	}
 	mainThreadLoop.Execute(func() {
 		for _, option := range options {
@@ -91,6 +94,9 @@ func (w *Window) PollMouseEvent() (mouse.Event, bool) {
 
 // Draw draws a screen image in the window
 func (w *Window) Draw() {
+	if w.closed {
+		panic("Draw forbidden for a closed window")
+	}
 	w.DrawIntoBackBuffer()
 	w.SwapBuffers()
 }
@@ -98,6 +104,9 @@ func (w *Window) Draw() {
 // DrawIntoBackBuffer draws a screen image into the back buffer. To make it visible
 // to the user SwapBuffers must be executed.
 func (w *Window) DrawIntoBackBuffer() {
+	if w.closed {
+		panic("DrawIntoBackBuffer forbidden for a closed window")
+	}
 	w.screenImage.Upload()
 	// Finish actively polls GPU which may consume a lot of CPU power.
 	// That's why Finish is called only if context synchronization is required
@@ -121,16 +130,21 @@ func (w *Window) DrawIntoBackBuffer() {
 
 // SwapBuffers makes current back buffer visible to the user.
 func (w *Window) SwapBuffers() {
+	if w.closed {
+		panic("SwapBuffers forbidden for a closed window")
+	}
 	w.mainThreadLoop.Execute(w.glfwWindow.SwapBuffers)
 }
 
 // Close closes the window and cleans resources.
 func (w *Window) Close() {
+	if w.closed {
+		return
+	}
 	w.mainThreadLoop.Execute(w.glfwWindow.Hide)
-	// TODO decrease number of windows
 	// TODO Delete screen image, program, VAO etc.
-	// TODO Destroy window only if it is not main
-	//w.mainThreadLoop.Execute(w.glfwWindow.Destroy)
+	w.onClose(w)
+	w.closed = true
 }
 
 // ShouldClose reports the value of the close flag of the window.

@@ -228,6 +228,88 @@ func TestWindow_DrawIntoBackBuffer(t *testing.T) {
 
 		})
 	})
+
+	t.Run("should panic for closed window", func(t *testing.T) {
+		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+		defer openGL.Destroy()
+		win, _ := openGL.OpenWindow(1, 1)
+		win.Close()
+		assert.Panics(t, func() {
+			// when
+			win.DrawIntoBackBuffer()
+		})
+	})
+
+}
+
+func TestWindow_Draw(t *testing.T) {
+	t.Run("should panic for closed window", func(t *testing.T) {
+		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+		defer openGL.Destroy()
+		win, _ := openGL.OpenWindow(1, 1)
+		win.Close()
+		assert.Panics(t, func() {
+			// when
+			win.Draw()
+		})
+	})
+}
+
+func TestWindow_SwapBuffers(t *testing.T) {
+	t.Run("should panic for closed window", func(t *testing.T) {
+		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+		defer openGL.Destroy()
+		win, _ := openGL.OpenWindow(1, 1)
+		win.Close()
+		assert.Panics(t, func() {
+			// when
+			win.SwapBuffers()
+		})
+	})
+}
+
+func TestWindow_Close(t *testing.T) {
+	t.Run("second Close does nothing", func(t *testing.T) {
+		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+		defer openGL.Destroy()
+		win, _ := openGL.OpenWindow(1, 1)
+		win.Close()
+		// when
+		win.Close()
+	})
+	t.Run("second Close on a second open window does nothing", func(t *testing.T) {
+		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+		defer openGL.Destroy()
+		win1, _ := openGL.OpenWindow(1, 1)
+		defer win1.Close()
+		win2, _ := openGL.OpenWindow(1, 1)
+		win2.Close()
+		// when
+		win2.Close()
+	})
+}
+
+func TestWindow_ShouldClose(t *testing.T) {
+	t.Run("ShouldClose on closed window returns false", func(t *testing.T) {
+		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+		defer openGL.Destroy()
+		win, _ := openGL.OpenWindow(1, 1)
+		win.Close()
+		// when
+		shouldClose := win.ShouldClose()
+		assert.False(t, shouldClose)
+	})
+	t.Run("ShouldClose on a second closed window returns false", func(t *testing.T) {
+		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+		defer openGL.Destroy()
+		win1, _ := openGL.OpenWindow(1, 1)
+		defer win1.Close()
+		win2, _ := openGL.OpenWindow(1, 1)
+		win2.Close()
+		// when
+		shouldClose := win2.ShouldClose()
+		assert.False(t, shouldClose)
+	})
 }
 
 func windowOfColor(openGL *glfw.OpenGL, color image.Color) (*glfw.Window, error) {
