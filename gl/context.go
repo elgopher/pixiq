@@ -144,6 +144,7 @@ type FragmentShader struct {
 	api API
 }
 
+// Delete deletes the shader in the OpenGL driver
 func (s *FragmentShader) Delete() {
 	s.api.DeleteShader(s.id)
 }
@@ -164,6 +165,7 @@ type VertexShader struct {
 	api API
 }
 
+// Delete deletes the shader in the OpenGL driver
 func (s *VertexShader) Delete() {
 	s.api.DeleteShader(s.id)
 }
@@ -318,6 +320,7 @@ func (p *Program) use() {
 	}
 }
 
+// Delete deletes the program in the OpenGL driver
 func (p *Program) Delete() {
 	p.api.DeleteProgram(p.id)
 }

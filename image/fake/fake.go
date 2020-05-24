@@ -77,10 +77,12 @@ func (i *AcceleratedImage) PixelsTable() [][]image.Color {
 	return table
 }
 
+// Delete marks AcceleratedImage as deleted
 func (i *AcceleratedImage) Delete() {
 	i.deleted = true
 }
 
+// Deleted returns true if AcceleratedImage.Delete() method was called
 func (i *AcceleratedImage) Deleted() bool {
 	return i.deleted
 }
