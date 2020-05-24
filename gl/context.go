@@ -319,7 +319,7 @@ func (p *Program) use() {
 }
 
 func (p *Program) Delete() {
-	p.api.DeleteShader(p.id)
+	p.api.DeleteProgram(p.id)
 }
 
 // NewClearCommand returns a command clearing all pixels in image.Selection
