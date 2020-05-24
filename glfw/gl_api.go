@@ -398,6 +398,13 @@ func (g *context) GenFramebuffers(n int32, framebuffers *uint32) {
 	})
 }
 
+// DeleteFramebuffers generates framebuffer object names
+func (g *context) DeleteFramebuffers(n int32, framebuffers *uint32) {
+	g.run(func() {
+		gl.DeleteFramebuffers(n, framebuffers)
+	})
+}
+
 // FramebufferTexture2D attaches a level of a texture object as a logical buffer to the currently bound framebuffer object
 func (g *context) FramebufferTexture2D(target uint32, attachment uint32, textarget uint32, texture uint32, level int32) {
 	g.runAsync(func() {

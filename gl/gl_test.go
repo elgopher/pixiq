@@ -540,6 +540,7 @@ func (a apiStub) TexImage2D(target uint32, level int32, internalformat int32, wi
 }
 func (a apiStub) TexParameteri(target uint32, pname uint32, param int32) {}
 func (a apiStub) GenFramebuffers(n int32, framebuffers *uint32)          {}
+func (a apiStub) DeleteFramebuffers(n int32, framebuffers *uint32)       {}
 func (a apiStub) FramebufferTexture2D(target uint32, attachment uint32, textarget uint32, texture uint32, level int32) {
 }
 func (a apiStub) TexSubImage2D(target uint32, level int32, xoffset int32, yoffset int32, width int32, height int32, format uint32, xtype uint32, pixels unsafe.Pointer) {

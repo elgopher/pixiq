@@ -128,5 +128,6 @@ func (i *AcceleratedImage) Height() int {
 // will generate OpenGL error which can be returned by executing Context.Error()
 func (i *AcceleratedImage) Delete() {
 	i.api.DeleteTextures(1, &i.textureID)
-	i.api.DeleteBuffers(1, &i.frameBufferID)
+	i.api.DeleteFramebuffers(1, &i.frameBufferID)
+	// TODO Remove from allimages
 }

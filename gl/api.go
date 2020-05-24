@@ -108,6 +108,8 @@ type API interface {
 	TexParameteri(target uint32, pname uint32, param int32)
 	// GenFramebuffers generates framebuffer object names
 	GenFramebuffers(n int32, framebuffers *uint32)
+	// DeleteFramebuffers deletes named framebuffer objects
+	DeleteFramebuffers(n int32, framebuffers *uint32)
 	// FramebufferTexture2D attaches a level of a texture object as a logical buffer to the currently bound framebuffer object
 	FramebufferTexture2D(target uint32, attachment uint32, textarget uint32, texture uint32, level int32)
 	// TexSubImage2D specifies a two-dimensional texture subimage
