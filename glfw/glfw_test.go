@@ -1,10 +1,12 @@
 package glfw_test
 
 import (
+	"os"
+	"sync"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
-	"testing"
 
 	"github.com/jacekolszak/pixiq/glfw"
 )
@@ -321,6 +323,52 @@ func TestOpenGL_OpenWindow(t *testing.T) {
 				assert.Equal(t, title, win.Title())
 			})
 		}
+	})
+}
+
+func TestWindow_Width(t *testing.T) {
+	t.Run("concurrent Width() calls should return the same value", func(t *testing.T) {
+		openGL, err := glfw.NewOpenGL(mainThreadLoop)
+		require.NoError(t, err)
+		defer openGL.Destroy()
+		// when
+		win, err := openGL.OpenWindow(640, 360)
+		require.NoError(t, err)
+		defer win.Close()
+		// then
+		var wg sync.WaitGroup
+		goroutines := 100
+		wg.Add(goroutines)
+		for i := 0; i < goroutines; i++ {
+			go func() {
+				assert.Equal(t, win.Width(), 640)
+				wg.Done()
+			}()
+		}
+		wg.Wait()
+	})
+}
+
+func TestWindow_Height(t *testing.T) {
+	t.Run("concurrent Height() calls should return the same value", func(t *testing.T) {
+		openGL, err := glfw.NewOpenGL(mainThreadLoop)
+		require.NoError(t, err)
+		defer openGL.Destroy()
+		// when
+		win, err := openGL.OpenWindow(640, 360)
+		require.NoError(t, err)
+		defer win.Close()
+		// then
+		var wg sync.WaitGroup
+		goroutines := 100
+		wg.Add(goroutines)
+		for i := 0; i < goroutines; i++ {
+			go func() {
+				assert.Equal(t, win.Height(), 360)
+				wg.Done()
+			}()
+		}
+		wg.Wait()
 	})
 }
 
