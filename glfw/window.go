@@ -140,7 +140,12 @@ func (w *Window) Close() {
 	if w.closed {
 		return
 	}
-	w.mainThreadLoop.Execute(w.glfwWindow.Hide)
+	w.mainThreadLoop.Execute(func() {
+		w.glfwWindow.SetKeyCallback(nil)
+		w.glfwWindow.SetMouseButtonCallback(nil)
+		w.glfwWindow.SetScrollCallback(nil)
+		w.glfwWindow.Hide()
+	})
 	w.screenPolygon.delete()
 	w.program.Delete()
 	w.screenImage.Delete()
