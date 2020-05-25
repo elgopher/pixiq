@@ -185,20 +185,17 @@ func (m *mouseWindow) CursorPosition() (float64, float64) {
 	return x, y
 }
 
-// Size() is thread-safe
 func (m *mouseWindow) Size() (int, int) {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-	if m.width == 0 {
-		m.mainThreadLoop.Execute(func() {
-			m.width, m.height = m.glfwWindow.GetSize()
-		})
-	}
 	return m.width, m.height
 }
 
 func (m *mouseWindow) Zoom() int {
 	return m.zoom
+}
+
+func (m *mouseWindow) OnSizeCallback(_ *glfw.Window, width int, height int) {
+	m.width = width
+	m.height = height
 }
 
 // OpenWindow creates and shows Window.

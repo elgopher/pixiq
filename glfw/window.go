@@ -69,10 +69,14 @@ func newWindow(glfwWindow *glfw.Window, mainThreadLoop *MainThreadLoop, width, h
 			}
 			option(win)
 		}
+		w := win.requestedWidth * win.zoom
+		h := win.requestedHeight * win.zoom
 		win.mouseWindow = &mouseWindow{
 			glfwWindow:     win.glfwWindow,
 			mainThreadLoop: mainThreadLoop,
 			zoom:           win.zoom,
+			width:          w,
+			height:         h,
 		}
 		win.mouseEvents = internal.NewMouseEvents(
 			mouse.NewEventBuffer(32), // FIXME: EventBuffer size should be configurable
@@ -80,7 +84,8 @@ func newWindow(glfwWindow *glfw.Window, mainThreadLoop *MainThreadLoop, width, h
 		win.glfwWindow.SetKeyCallback(win.keyboardEvents.OnKeyCallback)
 		win.glfwWindow.SetMouseButtonCallback(win.mouseEvents.OnMouseButtonCallback)
 		win.glfwWindow.SetScrollCallback(win.mouseEvents.OnScrollCallback)
-		win.glfwWindow.SetSize(win.requestedWidth*win.zoom, win.requestedHeight*win.zoom)
+		win.glfwWindow.SetSizeCallback(win.mouseWindow.OnSizeCallback)
+		win.glfwWindow.SetSize(w, h)
 		win.glfwWindow.Show()
 	})
 	return win, nil
@@ -140,7 +145,13 @@ func (w *Window) Close() {
 	if w.closed {
 		return
 	}
-	w.mainThreadLoop.Execute(w.glfwWindow.Hide)
+	w.mainThreadLoop.Execute(func() {
+		w.glfwWindow.SetKeyCallback(nil)
+		w.glfwWindow.SetMouseButtonCallback(nil)
+		w.glfwWindow.SetScrollCallback(nil)
+		w.glfwWindow.SetSizeCallback(nil)
+		w.glfwWindow.Hide()
+	})
 	w.screenPolygon.delete()
 	w.program.Delete()
 	w.screenImage.Delete()
