@@ -468,10 +468,10 @@ func TestAcceleratedImage_Upload(t *testing.T) {
 }
 
 func TestAcceleratedImage_Delete(t *testing.T) {
+	openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+	defer openGL.Destroy()
+	ctx := openGL.Context()
 	t.Run("Delete should not return error", func(t *testing.T) {
-		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
-		defer openGL.Destroy()
-		ctx := openGL.Context()
 		img := ctx.NewAcceleratedImage(1, 1)
 		color := image.RGBA(10, 20, 30, 40)
 		img.Upload([]image.Color{color})
@@ -482,9 +482,6 @@ func TestAcceleratedImage_Delete(t *testing.T) {
 		assert.NoError(t, err)
 	})
 	t.Run("trying to download deleted image generates gl error", func(t *testing.T) {
-		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
-		defer openGL.Destroy()
-		ctx := openGL.Context()
 		img := ctx.NewAcceleratedImage(1, 1)
 		color := image.RGBA(10, 20, 30, 40)
 		img.Upload([]image.Color{color})
@@ -497,9 +494,6 @@ func TestAcceleratedImage_Delete(t *testing.T) {
 		assert.Error(t, err)
 	})
 	t.Run("Command using deleted image panics", func(t *testing.T) {
-		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
-		defer openGL.Destroy()
-		ctx := openGL.Context()
 		img := ctx.NewAcceleratedImage(1, 1)
 		color := image.RGBA(10, 20, 30, 40)
 		img.Upload([]image.Color{color})
