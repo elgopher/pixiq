@@ -1,6 +1,8 @@
 package glfw
 
 import (
+	"log"
+
 	gl33 "github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
 	"github.com/jacekolszak/pixiq/gl"
@@ -8,7 +10,6 @@ import (
 	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/keyboard"
 	"github.com/jacekolszak/pixiq/mouse"
-	"log"
 )
 
 // Window is an implementation of loop.Screen and keyboard.EventSource
