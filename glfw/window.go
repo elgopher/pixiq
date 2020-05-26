@@ -1,9 +1,6 @@
 package glfw
 
 import (
-	"log"
-	"sync"
-
 	gl33 "github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
 	"github.com/jacekolszak/pixiq/gl"
@@ -11,6 +8,7 @@ import (
 	"github.com/jacekolszak/pixiq/image"
 	"github.com/jacekolszak/pixiq/keyboard"
 	"github.com/jacekolszak/pixiq/mouse"
+	"log"
 )
 
 // Window is an implementation of loop.Screen and keyboard.EventSource
@@ -62,8 +60,7 @@ func newWindow(glfwWindow *glfw.Window, mainThreadLoop *MainThreadLoop, width, h
 		program:                program,
 		onClose:                onClose,
 	}
-	var setSize sync.WaitGroup
-	setSize.Add(1)
+	var sizeIsSet <-chan bool
 	mainThreadLoop.Execute(func() {
 		for _, option := range options {
 			if option == nil {
@@ -83,22 +80,28 @@ func newWindow(glfwWindow *glfw.Window, mainThreadLoop *MainThreadLoop, width, h
 		win.glfwWindow.SetKeyCallback(win.keyboardEvents.OnKeyCallback)
 		win.glfwWindow.SetMouseButtonCallback(win.mouseEvents.OnMouseButtonCallback)
 		win.glfwWindow.SetScrollCallback(win.mouseEvents.OnScrollCallback)
-		newWidth := win.requestedWidth * win.zoom
-		newHeight := win.requestedHeight * win.zoom
-		currentWidth, currentHeight := win.glfwWindow.GetSize()
-		if currentWidth != newWidth || currentHeight != newHeight {
-			win.glfwWindow.SetSizeCallback(func(w *glfw.Window, width int, height int) {
-				setSize.Done()
-				win.glfwWindow.SetSizeCallback(nil)
-			})
-			win.glfwWindow.SetSize(newWidth, newHeight)
-		} else {
-			setSize.Done()
-		}
+		sizeIsSet = updateSize(win)
 		win.glfwWindow.Show()
 	})
-	setSize.Wait()
+	<-sizeIsSet
 	return win, nil
+}
+
+func updateSize(win *Window) <-chan bool {
+	done := make(chan bool)
+	newWidth := win.requestedWidth * win.zoom
+	newHeight := win.requestedHeight * win.zoom
+	currentWidth, currentHeight := win.glfwWindow.GetSize()
+	if currentWidth != newWidth || currentHeight != newHeight {
+		win.glfwWindow.SetSizeCallback(func(w *glfw.Window, width int, height int) {
+			win.glfwWindow.SetSizeCallback(nil)
+			close(done)
+		})
+		win.glfwWindow.SetSize(newWidth, newHeight)
+	} else {
+		close(done)
+	}
+	return done
 }
 
 // PollMouseEvent retrieves and removes next mouse Event. If there are no more
