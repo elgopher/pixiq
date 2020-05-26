@@ -71,9 +71,8 @@ func newWindow(glfwWindow *glfw.Window, mainThreadLoop *MainThreadLoop, width, h
 			option(win)
 		}
 		win.mouseWindow = &mouseWindow{
-			glfwWindow:     win.glfwWindow,
-			mainThreadLoop: mainThreadLoop,
-			zoom:           win.zoom,
+			glfwWindow: win.glfwWindow,
+			zoom:       win.zoom,
 		}
 		win.mouseEvents = internal.NewMouseEvents(
 			mouse.NewEventBuffer(32), // FIXME: EventBuffer size should be configurable
@@ -107,8 +106,11 @@ func updateSize(win *Window) <-chan bool {
 
 // PollMouseEvent retrieves and removes next mouse Event. If there are no more
 // events false is returned. It implements mouse.EventSource method.
-func (w *Window) PollMouseEvent() (mouse.Event, bool) {
-	return w.mouseEvents.Poll()
+func (w *Window) PollMouseEvent() (event mouse.Event, ok bool) {
+	w.mainThreadLoop.Execute(func() {
+		event, ok = w.mouseEvents.Poll()
+	})
+	return
 }
 
 // Draw draws a screen image in the window
@@ -206,15 +208,11 @@ func (w *Window) Zoom() int {
 
 // PollKeyboardEvent retrieves and removes next keyboard Event. If there are no more
 // events false is returned. It implements keyboard.EventSource method.
-func (w *Window) PollKeyboardEvent() (keyboard.Event, bool) {
-	var (
-		event keyboard.Event
-		ok    bool
-	)
+func (w *Window) PollKeyboardEvent() (event keyboard.Event, ok bool) {
 	w.mainThreadLoop.Execute(func() {
 		event, ok = w.keyboardEvents.Poll()
 	})
-	return event, ok
+	return
 }
 
 // Screen returns the image.Selection for the whole Window image

@@ -6,7 +6,6 @@
 package glfw
 
 import (
-	"sync"
 	"time"
 
 	gl33 "github.com/go-gl/gl/v3.3-core/gl"
@@ -170,31 +169,17 @@ func (g *OpenGL) NewImage(width, height int) *image.Image {
 
 // mouseWindow implements mouse.Window
 type mouseWindow struct {
-	mutex          sync.Mutex
-	glfwWindow     *glfw.Window
-	mainThreadLoop *MainThreadLoop
-	zoom           int
-	width, height  int
+	glfwWindow *glfw.Window
+	zoom       int
 }
 
 func (m *mouseWindow) CursorPosition() (float64, float64) {
-	var x, y float64
-	m.mainThreadLoop.Execute(func() {
-		x, y = m.glfwWindow.GetCursorPos()
-	})
-	return x, y
+	return m.glfwWindow.GetCursorPos()
 }
 
 // Size() is thread-safe
 func (m *mouseWindow) Size() (int, int) {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-	if m.width == 0 {
-		m.mainThreadLoop.Execute(func() {
-			m.width, m.height = m.glfwWindow.GetSize()
-		})
-	}
-	return m.width, m.height
+	return m.glfwWindow.GetSize()
 }
 
 func (m *mouseWindow) Zoom() int {
