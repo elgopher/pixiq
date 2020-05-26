@@ -3,7 +3,7 @@
 // You can start using mouse by creating Mouse instance:
 //
 //     mouseState := mouse.New(window)
-//     loop.Run(window, func(frame *loop.Frame) {
+//     for {
 //         mouseState.Update() // This is needed each frame
 //         if mouseState.Pressed(mouse.Left) {
 //             ...

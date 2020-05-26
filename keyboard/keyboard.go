@@ -3,7 +3,7 @@
 // You can start using keyboard by creating Keyboard instance:
 //
 //     keys := keyboard.New(window)
-//     loop.Run(window, func(frame *loop.Frame) {
+//     for {
 //         keys.Update() // This is needed each frame to update the state of keys
 //         if keys.Pressed(keyboard.A) {
 //             ...
