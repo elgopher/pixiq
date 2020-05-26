@@ -53,6 +53,9 @@ func (c *Context) NewAcceleratedImage(width, height int) *AcceleratedImage {
 		api:           c.api,
 	}
 	c.allImages[img] = img
+	img.onDelete = func() {
+		delete(c.allImages, img)
+	}
 	clearWithTransparentColor := c.NewClearCommand()
 	clearWithTransparentColor.Run(img.wholeSelection(), []image.AcceleratedImageSelection{})
 	return img
@@ -65,6 +68,7 @@ type AcceleratedImage struct {
 	frameBufferID uint32
 	width, height int
 	api           API
+	onDelete      func()
 }
 
 func (i *AcceleratedImage) wholeSelection() image.AcceleratedImageSelection {
@@ -129,5 +133,5 @@ func (i *AcceleratedImage) Height() int {
 func (i *AcceleratedImage) Delete() {
 	i.api.DeleteTextures(1, &i.textureID)
 	i.api.DeleteFramebuffers(1, &i.frameBufferID)
-	// TODO Remove from allimages
+	i.onDelete()
 }
