@@ -2,6 +2,7 @@ package glfw
 
 import (
 	"log"
+	"sync"
 
 	gl33 "github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
@@ -61,6 +62,8 @@ func newWindow(glfwWindow *glfw.Window, mainThreadLoop *MainThreadLoop, width, h
 		program:                program,
 		onClose:                onClose,
 	}
+	var setSize sync.WaitGroup
+	setSize.Add(1)
 	mainThreadLoop.Execute(func() {
 		for _, option := range options {
 			if option == nil {
@@ -80,9 +83,21 @@ func newWindow(glfwWindow *glfw.Window, mainThreadLoop *MainThreadLoop, width, h
 		win.glfwWindow.SetKeyCallback(win.keyboardEvents.OnKeyCallback)
 		win.glfwWindow.SetMouseButtonCallback(win.mouseEvents.OnMouseButtonCallback)
 		win.glfwWindow.SetScrollCallback(win.mouseEvents.OnScrollCallback)
-		win.glfwWindow.SetSize(win.requestedWidth*win.zoom, win.requestedHeight*win.zoom)
+		newWidth := win.requestedWidth * win.zoom
+		newHeight := win.requestedHeight * win.zoom
+		currentWidth, currentHeight := win.glfwWindow.GetSize()
+		if currentWidth != newWidth || currentHeight != newHeight {
+			win.glfwWindow.SetSizeCallback(func(w *glfw.Window, width int, height int) {
+				setSize.Done()
+				win.glfwWindow.SetSizeCallback(nil)
+			})
+			win.glfwWindow.SetSize(newWidth, newHeight)
+		} else {
+			setSize.Done()
+		}
 		win.glfwWindow.Show()
 	})
+	setSize.Wait()
 	return win, nil
 }
 

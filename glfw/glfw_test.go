@@ -217,9 +217,26 @@ func TestOpenGL_OpenWindow(t *testing.T) {
 		require.NoError(t, err)
 		defer win2.Close()
 		// then
-		require.NotNil(t, win2)
 		assert.Equal(t, 320, win2.Width())
 		assert.Equal(t, 180, win2.Height())
+	})
+	t.Run("should open another Window after first, then second were closed", func(t *testing.T) {
+		openGL, err := glfw.NewOpenGL(mainThreadLoop)
+		require.NoError(t, err)
+		defer openGL.Destroy()
+		win1, err := openGL.OpenWindow(640, 360)
+		require.NoError(t, err)
+		win1.Close()
+		win2, err := openGL.OpenWindow(320, 180)
+		require.NoError(t, err)
+		win2.Close()
+		// when
+		win3, err := openGL.OpenWindow(160, 90)
+		require.NoError(t, err)
+		defer win3.Close()
+		// then
+		assert.Equal(t, 160, win2.Width())
+		assert.Equal(t, 90, win2.Height())
 	})
 	t.Run("should skip nil option", func(t *testing.T) {
 		openGL, err := glfw.NewOpenGL(mainThreadLoop)
