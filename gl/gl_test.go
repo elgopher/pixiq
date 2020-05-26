@@ -503,12 +503,14 @@ func (a apiStub) GetProgramiv(program uint32, pname uint32, params *int32) {
 func (a apiStub) GetProgramInfoLog(program uint32, bufSize int32, length *int32, infoLog *uint8) {}
 func (a apiStub) UseProgram(program uint32)                                                      {}
 func (a apiStub) CreateProgram() uint32                                                          { return 0 }
+func (a apiStub) DeleteProgram(program uint32)                                                   {}
 func (a apiStub) GetActiveUniform(program uint32, index uint32, bufSize int32, length *int32, size *int32, xtype *uint32, name *uint8) {
 }
 func (a apiStub) GetActiveAttrib(program uint32, index uint32, bufSize int32, length *int32, size *int32, xtype *uint32, name *uint8) {
 }
 func (a apiStub) GetAttribLocation(program uint32, name *uint8) int32                          { return 0 }
 func (a apiStub) Enable(cap uint32)                                                            {}
+func (a apiStub) Disable(cap uint32)                                                           {}
 func (a apiStub) BindFramebuffer(target uint32, framebuffer uint32)                            {}
 func (a apiStub) Scissor(x int32, y int32, width int32, height int32)                          {}
 func (a apiStub) Viewport(x int32, y int32, width int32, height int32)                         {}
@@ -533,11 +535,13 @@ func (a apiStub) GetIntegerv(pname uint32, data *int32) {
 		*data = 1024 * 1024
 	}
 }
-func (a apiStub) GenTextures(n int32, textures *uint32) {}
+func (a apiStub) GenTextures(n int32, textures *uint32)    {}
+func (a apiStub) DeleteTextures(n int32, textures *uint32) {}
 func (a apiStub) TexImage2D(target uint32, level int32, internalformat int32, width int32, height int32, border int32, format uint32, xtype uint32, pixels unsafe.Pointer) {
 }
 func (a apiStub) TexParameteri(target uint32, pname uint32, param int32) {}
 func (a apiStub) GenFramebuffers(n int32, framebuffers *uint32)          {}
+func (a apiStub) DeleteFramebuffers(n int32, framebuffers *uint32)       {}
 func (a apiStub) FramebufferTexture2D(target uint32, attachment uint32, textarget uint32, texture uint32, level int32) {
 }
 func (a apiStub) TexSubImage2D(target uint32, level int32, xoffset int32, yoffset int32, width int32, height int32, format uint32, xtype uint32, pixels unsafe.Pointer) {

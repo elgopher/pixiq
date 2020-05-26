@@ -6,7 +6,7 @@ import (
 	"github.com/jacekolszak/pixiq/gl"
 )
 
-func newScreenPolygon(context *gl.Context, api gl.API) *screenPolygon {
+func newScreenPolygon(context *gl.Context) *screenPolygon {
 	const (
 		vertexLocation  = 0
 		textureLocation = 1
@@ -31,15 +31,21 @@ func newScreenPolygon(context *gl.Context, api gl.API) *screenPolygon {
 		Offset: 2,
 		Stride: 4,
 	})
-	return &screenPolygon{vertexArrayID: vao.ID(), api: api}
+	return &screenPolygon{vao: vao, vbo: buffer, api: context.API()}
 }
 
 type screenPolygon struct {
-	vertexArrayID uint32
-	api           gl.API
+	vao *gl.VertexArray
+	vbo *gl.FloatVertexBuffer
+	api gl.API
 }
 
 func (p *screenPolygon) draw() {
-	p.api.BindVertexArray(p.vertexArrayID)
+	p.api.BindVertexArray(p.vao.ID())
 	p.api.DrawArrays(gl33.TRIANGLE_FAN, 0, 4)
+}
+
+func (p *screenPolygon) delete() {
+	p.vao.Delete()
+	p.vbo.Delete()
 }

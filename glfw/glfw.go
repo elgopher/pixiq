@@ -6,7 +6,6 @@
 package glfw
 
 import (
-	"log"
 	"sync"
 	"time"
 
@@ -14,11 +13,8 @@ import (
 	"github.com/go-gl/glfw/v3.3/glfw"
 
 	"github.com/jacekolszak/pixiq/gl"
-	"github.com/jacekolszak/pixiq/glfw/internal"
 	"github.com/jacekolszak/pixiq/goimage"
 	"github.com/jacekolszak/pixiq/image"
-	"github.com/jacekolszak/pixiq/keyboard"
-	"github.com/jacekolszak/pixiq/mouse"
 )
 
 // NewOpenGL creates OpenGL instance.
@@ -47,7 +43,7 @@ func NewOpenGL(mainThreadLoop *MainThreadLoop) (*OpenGL, error) {
 		if err != nil {
 			return
 		}
-		mainWindow, err = createWindow(mainThreadLoop, "OpenGL Pixiq Dummy Window", nil)
+		mainWindow, err = createWindow(mainThreadLoop, "OpenGL Pixiq Window", nil)
 	})
 	if err != nil {
 		return nil, err
@@ -58,27 +54,12 @@ func NewOpenGL(mainThreadLoop *MainThreadLoop) (*OpenGL, error) {
 			job()
 		})
 	}
-	api := &context{
-		run: func(f func()) {
-			mainThreadLoop.executeCommand(command{
-				window:  mainWindow,
-				execute: f,
-			})
-		},
-		runAsync: func(f func()) {
-			mainThreadLoop.executeAsyncCommand(command{
-				window:  mainWindow,
-				execute: f,
-			})
-		},
-	}
 	openGL := &OpenGL{
 		mainThreadLoop:    mainThreadLoop,
 		runInOpenGLThread: runInOpenGLThread,
 		stopPollingEvents: make(chan struct{}),
 		mainWindow:        mainWindow,
-		api:               api,
-		context:           gl.NewContext(api),
+		context:           gl.NewContext(newContext(mainThreadLoop, mainWindow)),
 	}
 	go openGL.startPollingEvents(openGL.stopPollingEvents)
 	return openGL, nil
@@ -132,8 +113,8 @@ type OpenGL struct {
 	runInOpenGLThread func(func())
 	stopPollingEvents chan struct{}
 	mainWindow        *glfw.Window
-	api               gl.API
 	context           *gl.Context
+	windowsOpen       int
 }
 
 // Destroy cleans all the OpenGL resources associated with this instance.
@@ -222,80 +203,29 @@ func (m *mouseWindow) Zoom() int {
 
 // OpenWindow creates and shows Window.
 func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window, error) {
-	if width < 1 {
-		width = 1
-	}
-	if height < 1 {
-		height = 1
-	}
-	// FIXME: EventBuffer size should be configurable
-	keyboardEvents := internal.NewKeyboardEvents(keyboard.NewEventBuffer(32))
-	screenAcceleratedImage := g.context.NewAcceleratedImage(width, height)
-	screenImage := image.New(screenAcceleratedImage)
-	win := &Window{
-		mainThreadLoop:   g.mainThreadLoop,
-		keyboardEvents:   keyboardEvents,
-		requestedWidth:   width,
-		requestedHeight:  height,
-		screenImage:      screenImage,
-		sharedContextAPI: g.context.API(),
-		zoom:             1,
-		title:            "OpenGL Pixiq Window",
-	}
-	var err error
-	g.mainThreadLoop.Execute(func() {
-		win.glfwWindow, err = createWindow(g.mainThreadLoop, win.title, g.mainWindow)
+	glfwWindow := g.mainWindow
+	winContext := g.context
+	if g.windowsOpen > 0 {
+		var err error
+		g.mainThreadLoop.Execute(func() {
+			glfwWindow, err = createWindow(g.mainThreadLoop, "OpenGL Pixiq Window", g.mainWindow)
+		})
 		if err != nil {
-			return
+			return nil, err
 		}
-		for _, option := range options {
-			if option == nil {
-				log.Println("nil option given when opening the window")
-				continue
-			}
-			option(win)
+		api := newContext(g.mainThreadLoop, glfwWindow)
+		winContext = gl.NewContext(api)
+	}
+	win, err := newWindow(glfwWindow, g.mainThreadLoop, width, height, winContext, g.context, func(window *Window) {
+		if glfwWindow != g.mainWindow {
+			g.mainThreadLoop.Execute(glfwWindow.Destroy)
 		}
-		win.mouseWindow = &mouseWindow{
-			glfwWindow:     win.glfwWindow,
-			mainThreadLoop: g.mainThreadLoop,
-			zoom:           win.zoom,
-		}
-		win.mouseEvents = internal.NewMouseEvents(
-			// FIXME: EventBuffer size should be configurable
-			mouse.NewEventBuffer(32),
-			win.mouseWindow)
-		win.glfwWindow.SetKeyCallback(win.keyboardEvents.OnKeyCallback)
-		win.glfwWindow.SetMouseButtonCallback(win.mouseEvents.OnMouseButtonCallback)
-		win.glfwWindow.SetScrollCallback(win.mouseEvents.OnScrollCallback)
-		win.glfwWindow.SetSize(win.requestedWidth*win.zoom, win.requestedHeight*win.zoom)
-		win.glfwWindow.Show()
-	})
+		g.windowsOpen--
+	}, options...)
 	if err != nil {
 		return nil, err
 	}
-	win.api = &context{
-		run: func(f func()) {
-			g.mainThreadLoop.executeCommand(command{
-				window:  win.glfwWindow,
-				execute: f,
-			})
-		},
-		runAsync: func(f func()) {
-			g.mainThreadLoop.executeAsyncCommand(command{
-				window:  win.glfwWindow,
-				execute: f,
-			})
-		},
-	}
-	win.context = gl.NewContext(win.api)
-	win.screenPolygon = newScreenPolygon(win.context, win.api)
-	win.program, err = compileProgram(win.context, vertexShaderSrc, fragmentShaderSrc)
-	if err != nil {
-		return nil, err
-	}
-	// in this window context there is only one program used with one texture
-	win.api.UseProgram(win.program.ID())
-	win.api.BindTexture(gl33.TEXTURE_2D, screenAcceleratedImage.TextureID())
+	g.windowsOpen++
 	return win, nil
 }
 
@@ -308,7 +238,7 @@ func (g *OpenGL) Context() *gl.Context {
 // ContextAPI returns gl.API, which can be used to OpenGL direct access.
 // It's methods can be invoked from any goroutine.
 func (g *OpenGL) ContextAPI() gl.API {
-	return g.api
+	return g.context.API()
 }
 
 // WindowOption is an option used when opening the window.

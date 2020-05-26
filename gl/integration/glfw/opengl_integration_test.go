@@ -467,6 +467,54 @@ func TestAcceleratedImage_Upload(t *testing.T) {
 	})
 }
 
+func TestAcceleratedImage_Delete(t *testing.T) {
+	openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+	defer openGL.Destroy()
+	ctx := openGL.Context()
+	t.Run("Delete should not return error", func(t *testing.T) {
+		img := ctx.NewAcceleratedImage(1, 1)
+		color := image.RGBA(10, 20, 30, 40)
+		img.Upload([]image.Color{color})
+		// when
+		img.Delete()
+		// then
+		err := ctx.Error()
+		assert.NoError(t, err)
+	})
+	t.Run("trying to download deleted image generates gl error", func(t *testing.T) {
+		img := ctx.NewAcceleratedImage(1, 1)
+		color := image.RGBA(10, 20, 30, 40)
+		img.Upload([]image.Color{color})
+		img.Delete()
+		output := make([]image.Color, 1)
+		// when
+		img.Download(output)
+		// then
+		err := ctx.Error()
+		assert.Error(t, err)
+	})
+	t.Run("Command using deleted image panics", func(t *testing.T) {
+		img := ctx.NewAcceleratedImage(1, 1)
+		color := image.RGBA(10, 20, 30, 40)
+		img.Upload([]image.Color{color})
+		img.Delete()
+		program := workingProgram(t, ctx)
+		cmd := program.AcceleratedCommand(&emptyCommand{})
+		assert.Panics(t, func() {
+			// when
+			cmd.Run(image.AcceleratedImageSelection{
+				Location: image.AcceleratedImageLocation{
+					X:      0,
+					Y:      0,
+					Width:  1,
+					Height: 1,
+				},
+				Image: img,
+			}, []image.AcceleratedImageSelection{})
+		})
+	})
+}
+
 func TestAcceleratedCommand_Run(t *testing.T) {
 	t.Run("vertex buffer can be used inside command", func(t *testing.T) {
 		openGL, _ := glfw.NewOpenGL(mainThreadLoop)

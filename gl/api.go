@@ -50,14 +50,18 @@ type API interface {
 	UseProgram(program uint32)
 	// CreateProgram creates a program object
 	CreateProgram() uint32
+	// DeleteProgram deletes a program object
+	DeleteProgram(program uint32)
 	// GetActiveUniform returns information about an active uniform variable for the specified program object
 	GetActiveUniform(program uint32, index uint32, bufSize int32, length *int32, size *int32, xtype *uint32, name *uint8)
 	// GetActiveAttrib returns information about an active attribute variable for the specified program object
 	GetActiveAttrib(program uint32, index uint32, bufSize int32, length *int32, size *int32, xtype *uint32, name *uint8)
 	// GetAttribLocation returns the location of an attribute variable
 	GetAttribLocation(program uint32, name *uint8) int32
-	// Enable enables or disable server-side GL capabilities
+	// Enable enables server-side GL capabilities
 	Enable(cap uint32)
+	// Disable disables server-side GL capabilities
+	Disable(cap uint32)
 	// BindFramebuffer binds a framebuffer to a framebuffer target
 	BindFramebuffer(target uint32, framebuffer uint32)
 	// Scissor defines the scissor box
@@ -98,12 +102,16 @@ type API interface {
 	GetIntegerv(pname uint32, data *int32)
 	// GenTextures generates texture names
 	GenTextures(n int32, textures *uint32)
+	// DeleteTextures deletes named textures
+	DeleteTextures(n int32, textures *uint32)
 	// TexImage2D specifies a two-dimensional texture image
 	TexImage2D(target uint32, level int32, internalformat int32, width int32, height int32, border int32, format uint32, xtype uint32, pixels unsafe.Pointer)
 	// TexParameteri sets texture parameter
 	TexParameteri(target uint32, pname uint32, param int32)
 	// GenFramebuffers generates framebuffer object names
 	GenFramebuffers(n int32, framebuffers *uint32)
+	// DeleteFramebuffers deletes named framebuffer objects
+	DeleteFramebuffers(n int32, framebuffers *uint32)
 	// FramebufferTexture2D attaches a level of a texture object as a logical buffer to the currently bound framebuffer object
 	FramebufferTexture2D(target uint32, attachment uint32, textarget uint32, texture uint32, level int32)
 	// TexSubImage2D specifies a two-dimensional texture subimage

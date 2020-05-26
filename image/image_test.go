@@ -521,6 +521,17 @@ func TestImage_Upload(t *testing.T) {
 	})
 }
 
+func TestImage_Delete(t *testing.T) {
+	t.Run("Delete should delete AcceleratedImage", func(t *testing.T) {
+		acceleratedImage := fake.NewAcceleratedImage(1, 1)
+		img := image.New(acceleratedImage)
+		// when
+		img.Delete()
+		// then
+		assert.True(t, acceleratedImage.Deleted())
+	})
+}
+
 func TestSelection_Modify(t *testing.T) {
 	t.Run("should execute command", func(t *testing.T) {
 		acceleratedImage := fake.NewAcceleratedImage(1, 1)
@@ -1228,6 +1239,7 @@ func (i acceleratedImageStub) Width() int {
 func (i acceleratedImageStub) Height() int {
 	return i.height
 }
+func (i acceleratedImageStub) Delete() {}
 
 type acceleratedCommandMock struct {
 	timesExecuted int

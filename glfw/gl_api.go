@@ -4,11 +4,29 @@ import (
 	"unsafe"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
+	"github.com/go-gl/glfw/v3.3/glfw"
 )
 
 type context struct {
 	run      func(func())
 	runAsync func(func())
+}
+
+func newContext(mainThreadLoop *MainThreadLoop, window *glfw.Window) *context {
+	return &context{
+		run: func(f func()) {
+			mainThreadLoop.executeCommand(command{
+				window:  window,
+				execute: f,
+			})
+		},
+		runAsync: func(f func()) {
+			mainThreadLoop.executeAsyncCommand(command{
+				window:  window,
+				execute: f,
+			})
+		},
+	}
 }
 
 // GenBuffers generates buffer object names
@@ -176,6 +194,13 @@ func (g *context) CreateProgram() uint32 {
 	return program
 }
 
+// DeleteProgram deletes a program object
+func (g *context) DeleteProgram(program uint32) {
+	g.run(func() {
+		gl.DeleteProgram(program)
+	})
+}
+
 // GetActiveUniform returns information about an active uniform variable for the specified program object
 func (g *context) GetActiveUniform(program uint32, index uint32, bufSize int32, length *int32, size *int32, xtype *uint32, name *uint8) {
 	g.run(func() {
@@ -203,6 +228,13 @@ func (g *context) GetAttribLocation(program uint32, name *uint8) int32 {
 func (g *context) Enable(cap uint32) {
 	g.runAsync(func() {
 		gl.Enable(cap)
+	})
+}
+
+// Disable disables server-side GL capabilities
+func (g *context) Disable(cap uint32) {
+	g.runAsync(func() {
+		gl.Disable(cap)
 	})
 }
 
@@ -346,6 +378,12 @@ func (g *context) GenTextures(n int32, textures *uint32) {
 	})
 }
 
+func (g *context) DeleteTextures(n int32, textures *uint32) {
+	g.run(func() {
+		gl.DeleteTextures(n, textures)
+	})
+}
+
 // TexImage2D specifies a two-dimensional texture image
 func (g *context) TexImage2D(target uint32, level int32, internalformat int32, width int32, height int32, border int32, format uint32, xtype uint32, pixels unsafe.Pointer) {
 	g.run(func() {
@@ -364,6 +402,13 @@ func (g *context) TexParameteri(target uint32, pname uint32, param int32) {
 func (g *context) GenFramebuffers(n int32, framebuffers *uint32) {
 	g.run(func() {
 		gl.GenFramebuffers(n, framebuffers)
+	})
+}
+
+// DeleteFramebuffers generates framebuffer object names
+func (g *context) DeleteFramebuffers(n int32, framebuffers *uint32) {
+	g.run(func() {
+		gl.DeleteFramebuffers(n, framebuffers)
 	})
 }
 

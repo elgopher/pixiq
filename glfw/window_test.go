@@ -174,6 +174,141 @@ func TestWindow_DrawIntoBackBuffer(t *testing.T) {
 			expected = []image.Color{color2}
 			assert.Equal(t, expected, framebufferPixels(window2.ContextAPI(), 0, 0, 1, 1))
 		})
+
+		t.Run("should draw screen despite the state of OpenGL context", func(t *testing.T) {
+			tests := map[string]func(ctx *gl2.Context, win *glfw.Window){
+				"BlendFunc": func(ctx *gl2.Context, win *glfw.Window) {
+					ctx.API().Enable(gl.BLEND)
+					ctx.API().BlendFunc(0, 0)
+				},
+				"BindFramebuffer": func(ctx *gl2.Context, win *glfw.Window) {
+					var fb uint32
+					ctx.API().GenFramebuffers(1, &fb)
+					ctx.API().BindFramebuffer(gl.FRAMEBUFFER, fb)
+				},
+				"Viewport": func(ctx *gl2.Context, win *glfw.Window) {
+					ctx.API().Viewport(0, 0, 0, 0)
+				},
+				"Scissor": func(ctx *gl2.Context, win *glfw.Window) {
+					ctx.API().Enable(gl.SCISSOR_TEST)
+					ctx.API().Scissor(0, 0, 0, 0)
+				},
+				"BindTexture": func(ctx *gl2.Context, win *glfw.Window) {
+					img := ctx.NewAcceleratedImage(1, 1)
+					img.Upload([]image.Color{image.RGBA(0, 0, 0, 0)})
+					texture := img.TextureID()
+					ctx.API().BindTexture(gl.TEXTURE_2D, texture)
+				},
+				"BindTexture when screen is uploaded": func(ctx *gl2.Context, win *glfw.Window) {
+					win.Screen().Image().Upload()
+					img := ctx.NewAcceleratedImage(1, 1)
+					img.Upload([]image.Color{image.RGBA(0, 0, 0, 0)})
+					texture := img.TextureID()
+					ctx.API().BindTexture(gl.TEXTURE_2D, texture)
+				},
+				"UseProgram": func(ctx *gl2.Context, win *glfw.Window) {
+					program := ctx.API().CreateProgram()
+					ctx.API().UseProgram(program)
+				},
+			}
+			for name, testFunction := range tests {
+				t.Run(name, func(t *testing.T) {
+					openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+					defer openGL.Destroy()
+					win, _ := windowOfColor(openGL, color1)
+					defer win.Close()
+					// when
+					testFunction(openGL.Context(), win)
+					win.DrawIntoBackBuffer()
+					// then
+					expected := []image.Color{color1}
+					assert.Equal(t, expected, framebufferPixels(win.ContextAPI(), 0, 0, 1, 1))
+				})
+			}
+
+		})
+	})
+
+	t.Run("should panic for closed window", func(t *testing.T) {
+		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+		defer openGL.Destroy()
+		win, _ := openGL.OpenWindow(1, 1)
+		win.Close()
+		assert.Panics(t, func() {
+			// when
+			win.DrawIntoBackBuffer()
+		})
+	})
+
+}
+
+func TestWindow_Draw(t *testing.T) {
+	t.Run("should panic for closed window", func(t *testing.T) {
+		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+		defer openGL.Destroy()
+		win, _ := openGL.OpenWindow(1, 1)
+		win.Close()
+		assert.Panics(t, func() {
+			// when
+			win.Draw()
+		})
+	})
+}
+
+func TestWindow_SwapBuffers(t *testing.T) {
+	t.Run("should panic for closed window", func(t *testing.T) {
+		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+		defer openGL.Destroy()
+		win, _ := openGL.OpenWindow(1, 1)
+		win.Close()
+		assert.Panics(t, func() {
+			// when
+			win.SwapBuffers()
+		})
+	})
+}
+
+func TestWindow_Close(t *testing.T) {
+	t.Run("second Close does nothing", func(t *testing.T) {
+		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+		defer openGL.Destroy()
+		win, _ := openGL.OpenWindow(1, 1)
+		win.Close()
+		// when
+		win.Close()
+	})
+	t.Run("second Close on a second open window does nothing", func(t *testing.T) {
+		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+		defer openGL.Destroy()
+		win1, _ := openGL.OpenWindow(1, 1)
+		defer win1.Close()
+		win2, _ := openGL.OpenWindow(1, 1)
+		win2.Close()
+		// when
+		win2.Close()
+	})
+}
+
+func TestWindow_ShouldClose(t *testing.T) {
+	t.Run("ShouldClose on closed window returns false", func(t *testing.T) {
+		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+		defer openGL.Destroy()
+		win, _ := openGL.OpenWindow(1, 1)
+		win.Close()
+		// when
+		shouldClose := win.ShouldClose()
+		assert.False(t, shouldClose)
+	})
+	t.Run("ShouldClose on a second closed window returns false", func(t *testing.T) {
+		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+		defer openGL.Destroy()
+		win1, _ := openGL.OpenWindow(1, 1)
+		defer win1.Close()
+		win2, _ := openGL.OpenWindow(1, 1)
+		win2.Close()
+		// when
+		shouldClose := win2.ShouldClose()
+		assert.False(t, shouldClose)
 	})
 }
 

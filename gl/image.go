@@ -53,6 +53,9 @@ func (c *Context) NewAcceleratedImage(width, height int) *AcceleratedImage {
 		api:           c.api,
 	}
 	c.allImages[img] = img
+	img.onDelete = func() {
+		delete(c.allImages, img)
+	}
 	clearWithTransparentColor := c.NewClearCommand()
 	clearWithTransparentColor.Run(img.wholeSelection(), []image.AcceleratedImageSelection{})
 	return img
@@ -65,6 +68,7 @@ type AcceleratedImage struct {
 	frameBufferID uint32
 	width, height int
 	api           API
+	onDelete      func()
 }
 
 func (i *AcceleratedImage) wholeSelection() image.AcceleratedImageSelection {
@@ -121,4 +125,13 @@ func (i *AcceleratedImage) Width() int {
 // Height returns the number of pixels in a column.
 func (i *AcceleratedImage) Height() int {
 	return i.height
+}
+
+// Delete cleans resources, usually pixels stored in external memory (such as VRAM).
+// After AcceleratedImage is deleted it cannot be used anymore. Subsequent calls
+// will generate OpenGL error which can be returned by executing Context.Error()
+func (i *AcceleratedImage) Delete() {
+	i.api.DeleteTextures(1, &i.textureID)
+	i.api.DeleteFramebuffers(1, &i.frameBufferID)
+	i.onDelete()
 }

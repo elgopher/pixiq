@@ -9,10 +9,12 @@ func compileProgram(context *gl.Context, vertexShaderSrc, fragmentShaderSrc stri
 	if err != nil {
 		return nil, err
 	}
+	defer vertexShader.Delete()
 	fragmentShader, err := context.CompileFragmentShader(fragmentShaderSrc)
 	if err != nil {
 		return nil, err
 	}
+	defer fragmentShader.Delete()
 	program, err := context.LinkProgram(vertexShader, fragmentShader)
 	if err != nil {
 		return nil, err

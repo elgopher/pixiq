@@ -134,13 +134,19 @@ func (c *Context) CompileFragmentShader(sourceCode string) (*FragmentShader, err
 	if err != nil {
 		return nil, err
 	}
-	return &FragmentShader{id: shaderID}, nil
+	return &FragmentShader{id: shaderID, api: c.api}, nil
 }
 
 // FragmentShader is a part of an OpenGL program which transforms each fragment
 // (pixel) color into another one
 type FragmentShader struct {
-	id uint32
+	id  uint32
+	api API
+}
+
+// Delete deletes the shader in the OpenGL driver
+func (s *FragmentShader) Delete() {
+	s.api.DeleteShader(s.id)
 }
 
 // CompileVertexShader compiles vertex shader source code written in GLSL.
@@ -149,13 +155,19 @@ func (c *Context) CompileVertexShader(sourceCode string) (*VertexShader, error) 
 	if err != nil {
 		return nil, err
 	}
-	return &VertexShader{id: shaderID}, nil
+	return &VertexShader{id: shaderID, api: c.api}, nil
 }
 
 // VertexShader is a part of an OpenGL program which applies transformations
 // to drawn vertices.
 type VertexShader struct {
-	id uint32
+	id  uint32
+	api API
+}
+
+// Delete deletes the shader in the OpenGL driver
+func (s *VertexShader) Delete() {
+	s.api.DeleteShader(s.id)
 }
 
 func (c *Context) compileShader(xtype uint32, src string) (uint32, error) {
@@ -306,6 +318,11 @@ func (p *Program) use() {
 	if p.program != nil {
 		p.api.UseProgram(p.id)
 	}
+}
+
+// Delete deletes the program in the OpenGL driver
+func (p *Program) Delete() {
+	p.api.DeleteProgram(p.id)
 }
 
 // NewClearCommand returns a command clearing all pixels in image.Selection

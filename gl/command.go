@@ -241,7 +241,7 @@ func (c *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selecti
 	}
 	img, ok := c.allImages[output.Image]
 	if !ok {
-		panic("output image created in a different OpenGL context than program")
+		panic("output image created in a different OpenGL context than program or deleted")
 	}
 
 	loc := output.Location
