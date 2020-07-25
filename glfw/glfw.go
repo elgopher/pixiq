@@ -214,6 +214,27 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 	return win, nil
 }
 
+// OpenWindow creates and shows Window in fullscreen mode
+func (g *OpenGL) OpenFullScreenWindow(mode VideoMode, options ...WindowOption) (*Window, error) {
+	window, err := g.OpenWindow(0, 0, options...)
+	if err != nil {
+		return nil, err
+	}
+	g.mainThreadLoop.Execute(func() {
+		window.fullScreenMode = &mode
+		// monitor can be set only after window is shown
+		window.glfwWindow.SetMonitor(mode.monitor, 0, 0, mode.Width(), mode.Height(), mode.RefreshRate())
+		window.sizeBefore = &sizeBeforeEnteringFullScreen{
+			x:      0,
+			y:      0,
+			width:  mode.Width() / window.Zoom(),
+			height: mode.Height() / window.Zoom(),
+			zoom:   window.Zoom(),
+		}
+	})
+	return window, err
+}
+
 // Context returns OpenGL's context. It's methods can be invoked from any goroutine.
 // Each invocation will return the same instance.
 func (g *OpenGL) Context() *gl.Context {
@@ -254,13 +275,6 @@ func Zoom(zoom int) WindowOption {
 	}
 }
 
-// FullScreen opens window in full screen mode using given display video mode
-func FullScreen(mode VideoMode) WindowOption {
-	return func(window *Window) {
-		window.fullScreenMode = &mode
-	}
-}
-
 // Resizable makes window resizable by the user.
 //
 // To get the information about current window size please use Window.Width() and Window.Height()
@@ -276,7 +290,9 @@ func Resizable(resizable bool) WindowOption {
 // To get the information about current window position please use Window.X() and Window.Y()
 func Position(x, y int) WindowOption {
 	return func(window *Window) {
+		window.glfwWindow.Hide()
 		window.glfwWindow.SetPos(x, y)
+		window.glfwWindow.Show()
 	}
 }
 

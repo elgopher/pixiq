@@ -24,17 +24,16 @@ func main() {
 		}
 		// get current video mode which is usually the best one to pick
 		videoMode := primary.VideoMode()
-		// try to find the window size and zoom close enough to requested 640x360
-		width, height, zoom := adjustSize(videoMode, 640, 360)
-		fmt.Printf("Adjusted size is %d x %d, zoom=%d\n", width, height, zoom)
+		// try to find the window zoom which will give screen size close enough to requested 640x360
+		zoom := adjustZoom(videoMode, 640, 360)
+		fmt.Printf("Adjusted  zoom=%d\n", zoom)
 
 		gl, err := glfw.NewOpenGL(mainThreadLoop)
 		if err != nil {
 			panic(err)
 		}
 
-		// use glfw.FullScreen option to open window in full-screen
-		win, err := gl.OpenWindow(width, height, glfw.Zoom(zoom), glfw.FullScreen(videoMode))
+		win, err := gl.OpenFullScreenWindow(videoMode, glfw.Zoom(zoom))
 		if err != nil {
 			panic(err)
 		}
@@ -50,10 +49,8 @@ func main() {
 	})
 }
 
-// Adjusts the size of window based on the VideoMode. It first try to to increase the zoom, then will adjust
-// the width and height if display has different ratio.
-func adjustSize(mode glfw.VideoMode, width, height int) (newWidth, newHeight, zoom int) {
-	// TODO This functionality should be in a new package
+// Adjusts the zoom of window based on the VideoMode and recommended screen size
+func adjustZoom(mode glfw.VideoMode, width, height int) (zoom int) {
 	zoom = 1
 	w := width
 	h := height
@@ -65,9 +62,7 @@ func adjustSize(mode glfw.VideoMode, width, height int) (newWidth, newHeight, zo
 	if w > mode.Width() || h > mode.Height() {
 		zoom--
 	}
-	horizontalMargin := (mode.Width() - (width * zoom)) / zoom
-	verticalMargin := (mode.Height() - (height * zoom)) / zoom
-	return width + horizontalMargin, height + verticalMargin, zoom
+	return zoom
 }
 
 func prepareScreen(win *glfw.Window) {

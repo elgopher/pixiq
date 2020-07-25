@@ -88,15 +88,10 @@ func newWindow(glfwWindow *glfw.Window, mainThreadLoop *MainThreadLoop, width, h
 		win.glfwWindow.SetScrollCallback(win.mouseEvents.OnScrollCallback)
 		sizeIsSet = updateSize(win)
 		win.glfwWindow.Show()
-		// monitor can be set only after window is shown
-		videoMode := win.fullScreenMode
-		if videoMode != nil {
-			win.glfwWindow.SetMonitor(videoMode.monitor, 0, 0, videoMode.Width(), videoMode.Height(), videoMode.RefreshRate())
-		}
 	})
 	<-sizeIsSet
 	mainThreadLoop.Execute(func() {
-		win.glfwWindow.SetSizeCallback(func(w *glfw.Window, width int, height int) {
+		win.glfwWindow.SetFramebufferSizeCallback(func(w *glfw.Window, width int, height int) {
 			win.requestedWidth = width / win.zoom
 			win.requestedHeight = height / win.zoom
 			if width%win.zoom != 0 {
@@ -187,7 +182,7 @@ func (w *Window) Close() {
 		return
 	}
 	w.mainThreadLoop.Execute(func() {
-		w.glfwWindow.SetSizeCallback(nil)
+		w.glfwWindow.SetFramebufferSizeCallback(nil)
 		w.glfwWindow.SetKeyCallback(nil)
 		w.glfwWindow.SetMouseButtonCallback(nil)
 		w.glfwWindow.SetScrollCallback(nil)
@@ -387,20 +382,11 @@ func (w *Window) EnterFullScreen(mode VideoMode, zoom int) {
 
 // ExitFullScreen exits from full screen and resizes the window to previous size
 func (w *Window) ExitFullScreen() {
-	var x, y, width, height, zoom int
-	if w.sizeBefore != nil {
-		x = w.sizeBefore.x
-		y = w.sizeBefore.y
-		width = w.sizeBefore.width
-		height = w.sizeBefore.height
-		zoom = w.sizeBefore.zoom
-	} else {
-		x = 0
-		y = 0
-		zoom = w.zoom
-		width = w.requestedWidth
-		height = w.requestedHeight
-	}
+	x := w.sizeBefore.x
+	y := w.sizeBefore.y
+	width := w.sizeBefore.width
+	height := w.sizeBefore.height
+	zoom := w.sizeBefore.zoom
 	w.ExitFullScreenUsing(x, y, width, height, zoom)
 }
 

@@ -678,8 +678,8 @@ func TestWindow_SetPosition(t *testing.T) {
 		window, _ := openGL.OpenWindow(640, 360)
 		defer window.Close()
 		// when
-		newX := 10
-		newY := 20
+		newX := 100
+		newY := 200
 		window.SetPosition(newX, newY)
 		// then
 		assert.Eventually(t, func() bool {
@@ -749,14 +749,18 @@ func TestWindow_ExitFullScreen(t *testing.T) {
 		displays, _ := glfw.Displays(mainThreadLoop)
 		display, _ := displays.Primary()
 		videoMode := display.VideoMode()
-		window, _ := openGL.OpenWindow(320, 200, glfw.FullScreen(videoMode), glfw.Zoom(2))
+		window, _ := openGL.OpenFullScreenWindow(videoMode, glfw.Zoom(2))
 		defer window.Close()
 		// when
 		window.ExitFullScreen()
 		// then
-		assert.Equal(t, 640, window.Width())
-		assert.Equal(t, 400, window.Height())
-		assert.Equal(t, 2, window.Zoom())
+		assert.Eventually(t, func() bool {
+			return videoMode.Width() == window.Width() &&
+				videoMode.Height() == window.Height() &&
+				2 == window.Zoom() &&
+				videoMode.Width()/2 == window.Screen().Width() &&
+				videoMode.Height()/2 == window.Screen().Height()
+		}, 1*time.Second, 10*time.Millisecond)
 	})
 
 	t.Run("should exit full screen after executing EnterFullScreen", func(t *testing.T) {
@@ -770,10 +774,14 @@ func TestWindow_ExitFullScreen(t *testing.T) {
 		// when
 		window.ExitFullScreen()
 		// then
-		assert.Equal(t, 640, window.Width())
-		assert.Equal(t, 400, window.Height())
-		assert.Equal(t, 2, window.Zoom())
-		assert.Equal(t, x, window.X())
-		assert.Equal(t, y, window.Y())
+		assert.Eventually(t, func() bool {
+			return 640 == window.Width() &&
+				400 == window.Height() &&
+				2 == window.Zoom() &&
+				x == window.X() &&
+				y == window.Y() &&
+				320 == window.Screen().Width() &&
+				200 == window.Screen().Height()
+		}, 1*time.Second, 10*time.Millisecond)
 	})
 }

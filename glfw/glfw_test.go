@@ -346,8 +346,8 @@ func TestOpenGL_OpenWindow(t *testing.T) {
 	t.Run("should open window on a given position", func(t *testing.T) {
 		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
 		defer openGL.Destroy()
-		x := 10
-		y := 20
+		x := 100
+		y := 200
 		// when
 		window, err := openGL.OpenWindow(640, 360, glfw.Position(x, y))
 		require.NoError(t, err)
@@ -370,22 +370,42 @@ func TestOpenGL_OpenWindow(t *testing.T) {
 		assert.False(t, window.Decorated())
 	})
 
-	t.Run("should open in a full screen", func(t *testing.T) {
+	t.Run("should open in a full screen and zoom 1", func(t *testing.T) {
 		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
 		defer openGL.Destroy()
 		displays, _ := glfw.Displays(mainThreadLoop)
 		display, _ := displays.Primary()
 		videoMode := display.VideoMode()
 		// when
-		window, err := openGL.OpenWindow(640, 360, glfw.FullScreen(videoMode))
+		window, err := openGL.OpenFullScreenWindow(videoMode)
 		require.NoError(t, err)
 		defer window.Close()
 		// then
-		assert.Equal(t, videoMode.Width(), window.Width())
-		assert.Equal(t, videoMode.Height(), window.Height())
-		// and
-		assert.Equal(t, 640, window.Screen().Width())
-		assert.Equal(t, 360, window.Screen().Height())
+		assert.Eventually(t, func() bool {
+			return videoMode.Width() == window.Width() &&
+				videoMode.Height() == window.Height() &&
+				videoMode.Width() == window.Screen().Width() &&
+				videoMode.Height() == window.Screen().Height()
+		}, time.Second, 10*time.Millisecond)
+	})
+
+	t.Run("should open in a full screen and zoom 2", func(t *testing.T) {
+		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+		defer openGL.Destroy()
+		displays, _ := glfw.Displays(mainThreadLoop)
+		display, _ := displays.Primary()
+		videoMode := display.VideoMode()
+		// when
+		window, err := openGL.OpenFullScreenWindow(videoMode, glfw.Zoom(2))
+		require.NoError(t, err)
+		defer window.Close()
+		// then
+		assert.Eventually(t, func() bool {
+			return videoMode.Width() == window.Width() &&
+				videoMode.Height() == window.Height() &&
+				videoMode.Width()/2 == window.Screen().Width() &&
+				videoMode.Height()/2 == window.Screen().Height()
+		}, time.Second, 10*time.Millisecond)
 	})
 
 }
