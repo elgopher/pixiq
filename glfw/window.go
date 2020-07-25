@@ -91,7 +91,7 @@ func newWindow(glfwWindow *glfw.Window, mainThreadLoop *MainThreadLoop, width, h
 	})
 	<-sizeIsSet
 	mainThreadLoop.Execute(func() {
-		win.glfwWindow.SetFramebufferSizeCallback(func(w *glfw.Window, width int, height int) {
+		win.glfwWindow.SetSizeCallback(func(w *glfw.Window, width int, height int) {
 			win.requestedWidth = width / win.zoom
 			win.requestedHeight = height / win.zoom
 			if width%win.zoom != 0 {
@@ -182,7 +182,7 @@ func (w *Window) Close() {
 		return
 	}
 	w.mainThreadLoop.Execute(func() {
-		w.glfwWindow.SetFramebufferSizeCallback(nil)
+		w.glfwWindow.SetSizeCallback(nil)
 		w.glfwWindow.SetKeyCallback(nil)
 		w.glfwWindow.SetMouseButtonCallback(nil)
 		w.glfwWindow.SetScrollCallback(nil)

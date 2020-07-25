@@ -375,7 +375,7 @@ func TestOpenGL_OpenWindow(t *testing.T) {
 		defer openGL.Destroy()
 		displays, _ := glfw.Displays(mainThreadLoop)
 		display, _ := displays.Primary()
-		videoMode := display.VideoMode()
+		videoMode := display.VideoModes()[0]
 		// when
 		window, err := openGL.OpenFullScreenWindow(videoMode)
 		require.NoError(t, err)
@@ -394,7 +394,7 @@ func TestOpenGL_OpenWindow(t *testing.T) {
 		defer openGL.Destroy()
 		displays, _ := glfw.Displays(mainThreadLoop)
 		display, _ := displays.Primary()
-		videoMode := display.VideoMode()
+		videoMode := display.VideoModes()[0]
 		// when
 		window, err := openGL.OpenFullScreenWindow(videoMode, glfw.Zoom(2))
 		require.NoError(t, err)

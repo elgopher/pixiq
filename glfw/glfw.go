@@ -214,12 +214,13 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 	return win, nil
 }
 
-// OpenWindow creates and shows Window in fullscreen mode
+// OpenFullScreenWindow creates and shows Window in fullscreen mode
 func (g *OpenGL) OpenFullScreenWindow(mode VideoMode, options ...WindowOption) (*Window, error) {
 	window, err := g.OpenWindow(0, 0, options...)
 	if err != nil {
 		return nil, err
 	}
+	window.Resize(mode.width, mode.height, window.zoom)
 	g.mainThreadLoop.Execute(func() {
 		window.fullScreenMode = &mode
 		// monitor can be set only after window is shown

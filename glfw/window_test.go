@@ -716,10 +716,11 @@ func TestWindow_EnterFullScreen(t *testing.T) {
 	openGL, _ := glfw.NewOpenGL(mainThreadLoop)
 	defer openGL.Destroy()
 
-	t.Run("should enter full screen using current video mode", func(t *testing.T) {
+	t.Run("should enter full screen using first video mode", func(t *testing.T) {
 		displays, _ := glfw.Displays(mainThreadLoop)
 		display, _ := displays.Primary()
-		videoMode := display.VideoMode()
+		// current video mode on MacOS is returning not support full screen video mode
+		videoMode := display.VideoModes()[0]
 		window, _ := openGL.OpenWindow(320, 200)
 		defer window.Close()
 		// when
