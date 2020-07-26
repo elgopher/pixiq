@@ -1,6 +1,7 @@
 package glfw_test
 
 import (
+	"math"
 	"os"
 	"sync"
 	"testing"
@@ -405,6 +406,54 @@ func TestOpenGL_OpenWindow(t *testing.T) {
 				videoMode.Height() == window.Height() &&
 				videoMode.Width()/2 == window.Screen().Width() &&
 				videoMode.Height()/2 == window.Screen().Height()
+		}, time.Second, 10*time.Millisecond)
+	})
+
+	t.Run("should open in a full screen with partially visible right pixels", func(t *testing.T) {
+		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+		defer openGL.Destroy()
+		var (
+			displays, _    = glfw.Displays(mainThreadLoop)
+			display, _     = displays.Primary()
+			videoMode      = display.VideoModes()[0]
+			zoom           = videoMode.Height() / 4
+			expectedWidth  = int(math.Ceil(float64(videoMode.Width()) / float64(zoom)))
+			expectedHeight = 4
+		)
+		// when
+		window, err := openGL.OpenFullScreenWindow(videoMode, glfw.Zoom(zoom))
+		// then
+		require.NoError(t, err)
+		defer window.Close()
+		assert.Eventually(t, func() bool {
+			return videoMode.Width() == window.Width() &&
+				videoMode.Height() == window.Height() &&
+				expectedWidth == window.Screen().Width() &&
+				expectedHeight == window.Screen().Height()
+		}, time.Second, 10*time.Millisecond)
+	})
+
+	t.Run("should open in a full screen with partially visible bottom pixels", func(t *testing.T) {
+		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+		defer openGL.Destroy()
+		var (
+			displays, _    = glfw.Displays(mainThreadLoop)
+			display, _     = displays.Primary()
+			videoMode      = display.VideoModes()[0]
+			zoom           = videoMode.Width() / 4
+			expectedWidth  = 4
+			expectedHeight = int(math.Ceil(float64(videoMode.Height()) / float64(zoom)))
+		)
+		// when
+		window, err := openGL.OpenFullScreenWindow(videoMode, glfw.Zoom(zoom))
+		// then
+		require.NoError(t, err)
+		defer window.Close()
+		assert.Eventually(t, func() bool {
+			return videoMode.Width() == window.Width() &&
+				videoMode.Height() == window.Height() &&
+				expectedWidth == window.Screen().Width() &&
+				expectedHeight == window.Screen().Height()
 		}, time.Second, 10*time.Millisecond)
 	})
 
