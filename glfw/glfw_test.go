@@ -415,7 +415,7 @@ func TestOpenGL_OpenWindow(t *testing.T) {
 		var (
 			displays, _    = glfw.Displays(mainThreadLoop)
 			display, _     = displays.Primary()
-			videoMode      = display.VideoModes()[0]
+			videoMode      = display.VideoModes()[0] // TODO avoid using 1:1, 2:1, 1:2 ratios
 			zoom           = videoMode.Height() / 4
 			expectedWidth  = int(math.Ceil(float64(videoMode.Width()) / float64(zoom)))
 			expectedHeight = 4
@@ -439,7 +439,7 @@ func TestOpenGL_OpenWindow(t *testing.T) {
 		var (
 			displays, _    = glfw.Displays(mainThreadLoop)
 			display, _     = displays.Primary()
-			videoMode      = display.VideoModes()[0]
+			videoMode      = display.VideoModes()[0] // TODO avoid using 1:1, 2:1, 1:2 ratios
 			zoom           = videoMode.Width() / 4
 			expectedWidth  = 4
 			expectedHeight = int(math.Ceil(float64(videoMode.Height()) / float64(zoom)))

@@ -241,6 +241,37 @@ func TestWindow_DrawIntoBackBuffer(t *testing.T) {
 		})
 	})
 
+	t.Run("should draw perfect pixels when window size is not a zoom multiplication", func(t *testing.T) {
+		displays, _ := glfw.Displays(mainThreadLoop)
+		display, _ := displays.Primary()
+		videoMode := display.VideoModes()[0] // TODO avoid using 1:1, 2:1, 1:2 ratios
+		zoom := videoMode.Height() / 2
+		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+		defer openGL.Destroy()
+		window, err := openGL.OpenFullScreenWindow(videoMode, glfw.Zoom(zoom))
+		require.NoError(t, err)
+		defer window.Close()
+		c00 := image.RGBA(10, 20, 30, 40)
+		c10 := image.RGBA(50, 60, 70, 80)
+		c01 := image.RGBA(90, 100, 110, 120)
+		c11 := image.RGBA(130, 140, 150, 160)
+		window.Screen().SetColor(0, 0, c00)
+		window.Screen().SetColor(1, 0, c10)
+		window.Screen().SetColor(0, 1, c01)
+		window.Screen().SetColor(1, 1, c11)
+		// when
+		window.DrawIntoBackBuffer() // TODO This does not work because size was not yet updated
+		// then
+		fb := framebufferPixels(window.ContextAPI(), 0, 0, 1, 1)
+		assert.Equal(t, c00, fb[0])
+		fb = framebufferPixels(window.ContextAPI(), int32(videoMode.Width()/2), 0, 1, 1)
+		assert.Equal(t, c10, fb[0])
+		fb = framebufferPixels(window.ContextAPI(), 0, int32(videoMode.Height()/2), 1, 1)
+		assert.Equal(t, c01, fb[0])
+		fb = framebufferPixels(window.ContextAPI(), int32(videoMode.Width()/2), int32(videoMode.Height()/2), 1, 1)
+		assert.Equal(t, c11, fb[0])
+	})
+
 }
 
 func TestWindow_Draw(t *testing.T) {
@@ -323,7 +354,7 @@ func windowOfColor(openGL *glfw.OpenGL, color image.Color) (*glfw.Window, error)
 }
 
 func framebufferPixels(context gl2.API, x, y, width, height int32) []image.Color {
-	size := (height - y) * (width - x)
+	size := height * width
 	frameBuffer := make([]image.Color, size)
 	context.ReadPixels(x, y, width, height, gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(frameBuffer))
 	return frameBuffer

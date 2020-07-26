@@ -223,7 +223,7 @@ func (g *OpenGL) OpenFullScreenWindow(mode VideoMode, options ...WindowOption) (
 	if err != nil {
 		return nil, err
 	}
-	window.Resize(mode.width, mode.height, window.zoom)
+	window.Resize(mode.width/window.zoom, mode.height/window.zoom, window.zoom)
 	g.mainThreadLoop.Execute(func() {
 		window.fullScreenMode = &mode
 		// monitor can be set only after window is shown
@@ -288,6 +288,7 @@ func Resizable(resizable bool) WindowOption {
 	}
 }
 
+// NoAutoIconifyHint is Window hint which does not iconify full screen windows on focus loss
 func NoAutoIconifyHint() WindowOption {
 	return func(window *Window) {
 		window.setBoolAttrib(glfw.AutoIconify, false)

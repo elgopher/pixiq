@@ -22,7 +22,7 @@ func main() {
 		if !ok {
 			panic("no displays found")
 		}
-		// get current video mode which is usually the best one to pick
+		// get current video mode which is usually the best one to pick (unfortunately not on MacOS)
 		videoMode := primary.VideoMode()
 		// try to find the window zoom which will give screen size close enough to requested 640x360
 		zoom := adjustZoom(videoMode, 640, 360)
