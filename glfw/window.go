@@ -408,3 +408,12 @@ func (w *Window) SetAutoIconifyHint(enabled bool) {
 		w.setBoolAttrib(glfw.AutoIconify, enabled)
 	})
 }
+
+// AutoIconify returns true when fullscreen windows automatically iconify
+// (and restore the previous video mode) on focus loss.
+func (w *Window) AutoIconify() (enabled bool) {
+	w.mainThreadLoop.Execute(func() {
+		enabled = w.boolAttrib(glfw.AutoIconify)
+	})
+	return
+}

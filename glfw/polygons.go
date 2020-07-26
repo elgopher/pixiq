@@ -57,11 +57,6 @@ func (p *screenPolygon) delete() {
 
 type rect []float32
 
-func (r rect) SetTopLeft(x, y float32) {
-	r[0] = x
-	r[1] = y
-}
-
 func (r rect) SetTopRight(x, y float32) {
 	r[4] = x
 	r[5] = y

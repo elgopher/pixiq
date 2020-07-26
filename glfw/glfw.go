@@ -215,6 +215,9 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 }
 
 // OpenFullScreenWindow creates and shows Window in fullscreen mode
+//
+// Please note that on MacOS X the resulting window may have
+// a different size than the resolution from the given video mode.
 func (g *OpenGL) OpenFullScreenWindow(mode VideoMode, options ...WindowOption) (*Window, error) {
 	window, err := g.OpenWindow(0, 0, options...)
 	if err != nil {
@@ -282,6 +285,12 @@ func Zoom(zoom int) WindowOption {
 func Resizable(resizable bool) WindowOption {
 	return func(window *Window) {
 		window.setBoolAttrib(glfw.Resizable, resizable)
+	}
+}
+
+func NoAutoIconifyHint() WindowOption {
+	return func(window *Window) {
+		window.setBoolAttrib(glfw.AutoIconify, false)
 	}
 }
 

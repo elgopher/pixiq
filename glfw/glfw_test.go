@@ -397,15 +397,29 @@ func TestOpenGL_OpenWindow(t *testing.T) {
 		videoMode := display.VideoModes()[0]
 		// when
 		window, err := openGL.OpenFullScreenWindow(videoMode, glfw.Zoom(2))
+		// then
 		require.NoError(t, err)
 		defer window.Close()
-		// then
 		assert.Eventually(t, func() bool {
 			return videoMode.Width() == window.Width() &&
 				videoMode.Height() == window.Height() &&
 				videoMode.Width()/2 == window.Screen().Width() &&
 				videoMode.Height()/2 == window.Screen().Height()
 		}, time.Second, 10*time.Millisecond)
+	})
+
+	t.Run("should open full screen window with no auto iconify", func(t *testing.T) {
+		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+		defer openGL.Destroy()
+		displays, _ := glfw.Displays(mainThreadLoop)
+		display, _ := displays.Primary()
+		videoMode := display.VideoModes()[0]
+		// when
+		window, err := openGL.OpenFullScreenWindow(videoMode, glfw.NoAutoIconifyHint())
+		// then
+		require.NoError(t, err)
+		defer window.Close()
+		assert.False(t, window.AutoIconify())
 	})
 
 }

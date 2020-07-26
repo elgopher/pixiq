@@ -719,7 +719,7 @@ func TestWindow_EnterFullScreen(t *testing.T) {
 	t.Run("should enter full screen using first video mode", func(t *testing.T) {
 		displays, _ := glfw.Displays(mainThreadLoop)
 		display, _ := displays.Primary()
-		// current video mode on MacOS is returning not support full screen video mode
+		// current video mode on MacOS is returning not supported full screen video mode
 		videoMode := display.VideoModes()[0]
 		window, _ := openGL.OpenWindow(320, 200)
 		defer window.Close()
@@ -785,4 +785,31 @@ func TestWindow_ExitFullScreen(t *testing.T) {
 				200 == window.Screen().Height()
 		}, 1*time.Second, 10*time.Millisecond)
 	})
+}
+
+func TestWindow_SetAutoIconifyHint(t *testing.T) {
+	openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+	defer openGL.Destroy()
+	displays, _ := glfw.Displays(mainThreadLoop)
+	display, _ := displays.Primary()
+	videoMode := display.VideoMode()
+
+	t.Run("should no iconify full screen window on focus lost", func(t *testing.T) {
+		window, _ := openGL.OpenFullScreenWindow(videoMode)
+		defer window.Close()
+		// when
+		window.SetAutoIconifyHint(false)
+		// then
+		assert.False(t, window.AutoIconify())
+	})
+
+	t.Run("should iconify full screen window on focus lost", func(t *testing.T) {
+		window, _ := openGL.OpenFullScreenWindow(videoMode)
+		defer window.Close()
+		// when
+		window.SetAutoIconifyHint(true)
+		// then
+		assert.True(t, window.AutoIconify())
+	})
+
 }
