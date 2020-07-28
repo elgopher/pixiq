@@ -5,6 +5,7 @@ import (
 	"github.com/jacekolszak/pixiq/colornames"
 	"github.com/jacekolszak/pixiq/glfw"
 	"github.com/jacekolszak/pixiq/mouse"
+	"log"
 )
 
 func main() {
@@ -34,11 +35,15 @@ func main() {
 			mouseState.Update()
 			if mouseState.Scroll().Y() > 0 {
 				zoom++
-				win.Resize(width, height, zoom)
+				if err := win.Resize(width, height, zoom); err != nil {
+					log.Printf("Resize failed: %v", err)
+				}
 			}
 			if mouseState.Scroll().Y() < 0 && zoom > 5 {
 				zoom--
-				win.Resize(width, height, zoom)
+				if err := win.Resize(width, height, zoom); err != nil {
+					log.Printf("Resize failed: %v", err)
+				}
 			}
 			win.Draw()
 			if win.ShouldClose() {

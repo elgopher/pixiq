@@ -1,7 +1,9 @@
 package glfw
 
 import (
+	"errors"
 	"log"
+	"time"
 
 	gl33 "github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
@@ -91,18 +93,20 @@ func newWindow(glfwWindow *glfw.Window, mainThreadLoop *MainThreadLoop, width, h
 	})
 	<-sizeIsSet
 	mainThreadLoop.Execute(func() {
-		win.glfwWindow.SetSizeCallback(func(w *glfw.Window, width int, height int) {
-			win.requestedWidth = width / win.zoom
-			win.requestedHeight = height / win.zoom
-			if width%win.zoom != 0 {
-				win.requestedWidth++
-			}
-			if height%win.zoom != 0 {
-				win.requestedHeight++
-			}
-		})
+		win.glfwWindow.SetSizeCallback(win.sizeCallback)
 	})
 	return win, nil
+}
+
+func (w *Window) sizeCallback(_ *glfw.Window, width int, height int) {
+	w.requestedWidth = width / w.zoom
+	w.requestedHeight = height / w.zoom
+	if width%w.zoom != 0 {
+		w.requestedWidth++
+	}
+	if height%w.zoom != 0 {
+		w.requestedHeight++
+	}
 }
 
 func updateSize(win *Window) <-chan bool {
@@ -294,7 +298,8 @@ func (w *Window) Title() string {
 //
 // Please note that retained Screen instance became obsolete after Resize.
 // You have to call Window.Screen() again to get new screen
-func (w *Window) Resize(width int, height, zoom int) {
+func (w *Window) Resize(width int, height, zoom int) error {
+	done := make(chan bool)
 	w.mainThreadLoop.Execute(func() {
 		if w.fullScreenMode != nil {
 			return
@@ -302,13 +307,22 @@ func (w *Window) Resize(width int, height, zoom int) {
 		if zoom < 1 {
 			zoom = 1
 		}
-		w.requestedWidth = width
-		w.requestedHeight = height
 		w.zoom = zoom
 		newWidth := width * w.zoom
 		newHeight := height * w.zoom
 		w.glfwWindow.SetSize(newWidth, newHeight)
+		w.glfwWindow.SetSizeCallback(func(ww *glfw.Window, width int, height int) {
+			close(done)
+			w.sizeCallback(ww, width, height)
+			w.glfwWindow.SetSizeCallback(w.sizeCallback)
+		})
 	})
+	select {
+	case <-done:
+		return nil
+	case <-time.After(1 * time.Second):
+		return errors.New("timeout when waiting for window to resize")
+	}
 }
 
 func (w *Window) ensureScreenSize(width int, height int) {
@@ -374,10 +388,12 @@ func (w *Window) EnterFullScreen(mode VideoMode, zoom int) {
 		zoom:   w.zoom,
 	}
 	w.zoom = zoom
+	done := make(chan bool)
 	w.mainThreadLoop.Execute(func() {
 		w.fullScreenMode = &mode
-		w.glfwWindow.SetMonitor(mode.monitor, 0, 0, mode.Width(), mode.Height(), mode.RefreshRate())
+		w.setMonitor(done, mode.monitor, 0, 0, mode.Width(), mode.Height(), mode.RefreshRate())
 	})
+	<-done
 }
 
 // ExitFullScreen exits from full screen and resizes the window to previous size
@@ -392,12 +408,27 @@ func (w *Window) ExitFullScreen() {
 
 // ExitFullScreenUsing exits from full screen and resizes the window
 func (w *Window) ExitFullScreenUsing(x, y, width, height, zoom int) {
+	done := make(chan bool)
 	w.mainThreadLoop.Execute(func() {
 		w.fullScreenMode = nil
 		w.requestedWidth = width
 		w.requestedHeight = height
 		w.zoom = zoom
-		w.glfwWindow.SetMonitor(nil, x, y, width*zoom, height*zoom, 0)
+		w.setMonitor(done, nil, x, y, width*zoom, height*zoom, 0)
+	})
+	<-done
+}
+
+func (w *Window) setMonitor(done chan bool, monitor *glfw.Monitor, xpos, ypos, width, height, refreshRate int) {
+	w.glfwWindow.SetMonitor(monitor, xpos, ypos, width, height, refreshRate)
+	if w.requestedWidth*w.zoom == width && w.requestedHeight*w.zoom == height {
+		close(done)
+		return
+	}
+	w.glfwWindow.SetSizeCallback(func(ww *glfw.Window, width int, height int) {
+		close(done)
+		w.sizeCallback(ww, width, height)
+		w.glfwWindow.SetSizeCallback(w.sizeCallback)
 	})
 }
 

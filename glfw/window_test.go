@@ -263,13 +263,13 @@ func TestWindow_DrawIntoBackBuffer(t *testing.T) {
 		window.DrawIntoBackBuffer() // TODO This does not work because size was not yet updated
 		// then
 		fb := framebufferPixels(window.ContextAPI(), 0, 0, 1, 1)
-		assert.Equal(t, c00, fb[0])
-		fb = framebufferPixels(window.ContextAPI(), int32(videoMode.Width()/2), 0, 1, 1)
-		assert.Equal(t, c10, fb[0])
-		fb = framebufferPixels(window.ContextAPI(), 0, int32(videoMode.Height()/2), 1, 1)
 		assert.Equal(t, c01, fb[0])
-		fb = framebufferPixels(window.ContextAPI(), int32(videoMode.Width()/2), int32(videoMode.Height()/2), 1, 1)
+		fb = framebufferPixels(window.ContextAPI(), int32(videoMode.Width()/2), 0, 1, 1)
 		assert.Equal(t, c11, fb[0])
+		fb = framebufferPixels(window.ContextAPI(), 0, int32(videoMode.Height()/2), 1, 1)
+		assert.Equal(t, c00, fb[0])
+		fb = framebufferPixels(window.ContextAPI(), int32(videoMode.Width()/2), int32(videoMode.Height()/2), 1, 1)
+		assert.Equal(t, c10, fb[0])
 	})
 
 }
