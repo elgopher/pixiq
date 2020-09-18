@@ -214,6 +214,32 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 	return win, nil
 }
 
+// OpenFullScreenWindow creates and shows Window in fullscreen mode
+//
+// Please note that on MacOS X the resulting window may have
+// a different size than the resolution from the given video mode.
+func (g *OpenGL) OpenFullScreenWindow(mode VideoMode, options ...WindowOption) (*Window, error) {
+	window, err := g.OpenWindow(0, 0, options...)
+	if err != nil {
+		return nil, err
+	}
+	done := make(chan bool)
+	g.mainThreadLoop.Execute(func() {
+		window.fullScreenMode = &mode
+		window.sizeBefore = &sizeBeforeEnteringFullScreen{
+			x:      0,
+			y:      0,
+			width:  mode.Width() / window.Zoom(),
+			height: mode.Height() / window.Zoom(),
+			zoom:   window.Zoom(),
+		}
+		// monitor can be set only after window is shown
+		window.setMonitor(done, mode.monitor, 0, 0, mode.Width(), mode.Height(), mode.RefreshRate())
+	})
+	<-done
+	return window, err
+}
+
 // Context returns OpenGL's context. It's methods can be invoked from any goroutine.
 // Each invocation will return the same instance.
 func (g *OpenGL) Context() *gl.Context {
@@ -251,6 +277,34 @@ func Zoom(zoom int) WindowOption {
 		if zoom > 0 {
 			window.zoom = zoom
 		}
+	}
+}
+
+// Resizable makes window resizable by the user.
+//
+// To get the information about current window size please use Window.Width() and Window.Height()
+func Resizable(resizable bool) WindowOption {
+	return func(window *Window) {
+		window.setBoolAttrib(glfw.Resizable, resizable)
+	}
+}
+
+// NoAutoIconifyHint is Window hint which does not iconify full screen windows on focus loss
+func NoAutoIconifyHint() WindowOption {
+	return func(window *Window) {
+		window.setBoolAttrib(glfw.AutoIconify, false)
+	}
+}
+
+// Position sets the position, in pixels, of the upper-left corner
+// of the client area of the window.
+//
+// To get the information about current window position please use Window.X() and Window.Y()
+func Position(x, y int) WindowOption {
+	return func(window *Window) {
+		window.glfwWindow.Hide()
+		window.glfwWindow.SetPos(x, y)
+		window.glfwWindow.Show()
 	}
 }
 

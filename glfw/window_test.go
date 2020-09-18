@@ -3,6 +3,7 @@ package glfw_test
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/stretchr/testify/assert"
@@ -240,6 +241,37 @@ func TestWindow_DrawIntoBackBuffer(t *testing.T) {
 		})
 	})
 
+	t.Run("should draw perfect pixels when window size is not a zoom multiplication", func(t *testing.T) {
+		displays, _ := glfw.Displays(mainThreadLoop)
+		display, _ := displays.Primary()
+		videoMode := display.VideoModes()[0] // TODO avoid using 1:1, 2:1, 1:2 ratios
+		zoom := videoMode.Height() / 2
+		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+		defer openGL.Destroy()
+		window, err := openGL.OpenFullScreenWindow(videoMode, glfw.Zoom(zoom))
+		require.NoError(t, err)
+		defer window.Close()
+		c00 := image.RGBA(10, 20, 30, 40)
+		c10 := image.RGBA(50, 60, 70, 80)
+		c01 := image.RGBA(90, 100, 110, 120)
+		c11 := image.RGBA(130, 140, 150, 160)
+		window.Screen().SetColor(0, 0, c00)
+		window.Screen().SetColor(1, 0, c10)
+		window.Screen().SetColor(0, 1, c01)
+		window.Screen().SetColor(1, 1, c11)
+		// when
+		window.DrawIntoBackBuffer() // TODO This does not work because size was not yet updated
+		// then
+		fb := framebufferPixels(window.ContextAPI(), 0, 0, 1, 1)
+		assert.Equal(t, c01, fb[0])
+		fb = framebufferPixels(window.ContextAPI(), int32(videoMode.Width()/2), 0, 1, 1)
+		assert.Equal(t, c11, fb[0])
+		fb = framebufferPixels(window.ContextAPI(), 0, int32(videoMode.Height()/2), 1, 1)
+		assert.Equal(t, c00, fb[0])
+		fb = framebufferPixels(window.ContextAPI(), int32(videoMode.Width()/2), int32(videoMode.Height()/2), 1, 1)
+		assert.Equal(t, c10, fb[0])
+	})
+
 }
 
 func TestWindow_Draw(t *testing.T) {
@@ -322,7 +354,7 @@ func windowOfColor(openGL *glfw.OpenGL, color image.Color) (*glfw.Window, error)
 }
 
 func framebufferPixels(context gl2.API, x, y, width, height int32) []image.Color {
-	size := (height - y) * (width - x)
+	size := height * width
 	frameBuffer := make([]image.Color, size)
 	context.ReadPixels(x, y, width, height, gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(frameBuffer))
 	return frameBuffer
@@ -526,4 +558,289 @@ func TestWindow_SetCursor(t *testing.T) {
 		// when
 		win.SetCursor(cursor)
 	})
+}
+
+func TestWindow_Resize(t *testing.T) {
+	openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+	defer openGL.Destroy()
+
+	t.Run("should eventually resize window", func(t *testing.T) {
+		tests := map[string]struct {
+			newWidth, newHeight, newZoom                int
+			expectedWidth, expectedHeight, expectedZoom int
+		}{
+			"320x180x1": {
+				newWidth:       320,
+				newHeight:      180,
+				newZoom:        1,
+				expectedWidth:  320,
+				expectedHeight: 180,
+				expectedZoom:   1,
+			},
+			"640x360x2": {
+				newWidth:       640,
+				newHeight:      360,
+				newZoom:        2,
+				expectedWidth:  1280,
+				expectedHeight: 720,
+				expectedZoom:   2,
+			},
+			"320x180x0": {
+				newWidth:       320,
+				newHeight:      180,
+				newZoom:        0,
+				expectedWidth:  320,
+				expectedHeight: 180,
+				expectedZoom:   1,
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				window, _ := openGL.OpenWindow(640, 360)
+				defer window.Close()
+				// when
+				window.Resize(test.newWidth, test.newHeight, test.newZoom)
+				// then
+				assert.Eventually(t, func() bool {
+					return window.Width() == test.expectedWidth &&
+						window.Height() == test.expectedHeight &&
+						window.Zoom() == test.expectedZoom
+				}, 1*time.Second, 10*time.Millisecond)
+			})
+		}
+	})
+
+	t.Run("should resize screen", func(t *testing.T) {
+		originalWidth, originalHeight := 640, 320
+		tests := map[string]struct {
+			newWidth, newHeight, newZoom int
+		}{
+			"nothing has changed": {
+				newWidth:  originalWidth,
+				newHeight: originalHeight,
+				newZoom:   1,
+			},
+			"zoom changed to 2": {
+				newWidth:  originalWidth,
+				newHeight: originalHeight,
+				newZoom:   2,
+			},
+			"zoom changed to 0": {
+				newWidth:  originalWidth,
+				newHeight: originalHeight,
+				newZoom:   0,
+			},
+			"half the size": {
+				newWidth:  originalWidth / 2,
+				newHeight: originalHeight / 2,
+				newZoom:   1,
+			},
+			"double the size": {
+				newWidth:  originalWidth * 2,
+				newHeight: originalHeight * 2,
+				newZoom:   1,
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				window, _ := openGL.OpenWindow(originalWidth, originalHeight)
+				defer window.Close()
+				fillWithColors(window.Screen())
+				originalImage := openGL.NewImage(originalWidth, originalHeight)
+				defer originalImage.Delete()
+				originalSelection := originalImage.WholeImageSelection()
+				copySourceTo(window.Screen(), originalSelection)
+				// when
+				window.Resize(test.newWidth, test.newHeight, test.newZoom)
+				// then
+				resizedScreen := window.Screen()
+				assert.Equal(t, test.newWidth, resizedScreen.Width())
+				assert.Equal(t, test.newHeight, resizedScreen.Height())
+				// and
+				assertSelectionEqual(t, originalSelection, resizedScreen)
+			})
+		}
+
+	})
+}
+
+func assertSelectionEqual(t *testing.T, expected image.Selection, actual image.Selection) {
+	for y := 0; y < actual.Height(); y++ {
+		for x := 0; x < actual.Width(); x++ {
+			assert.Equal(t, expected.Color(x, y), actual.Color(x, y))
+		}
+	}
+}
+
+func copySourceTo(source image.Selection, target image.Selection) {
+	for y := 0; y < source.Height(); y++ {
+		for x := 0; x < source.Width(); x++ {
+			target.SetColor(x, y, source.Color(x, y))
+		}
+	}
+}
+
+func fillWithColors(selection image.Selection) {
+	r, g, b, a := 10, 20, 30, 40
+	for y := 0; y < selection.Height(); y++ {
+		for x := 0; x < selection.Width(); x++ {
+			selection.SetColor(x, y, image.RGBAi(r, g, b, a))
+			if r++; r > 255 {
+				r = 0
+			}
+			if g++; g > 255 {
+				g = 0
+			}
+			if b++; b > 255 {
+				b = 0
+			}
+			if a++; a > 255 {
+				a = 0
+			}
+		}
+	}
+}
+
+func TestWindow_SetPosition(t *testing.T) {
+	openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+	defer openGL.Destroy()
+
+	t.Run("should eventually set position of window", func(t *testing.T) {
+		window, _ := openGL.OpenWindow(640, 360)
+		defer window.Close()
+		// when
+		newX := 100
+		newY := 200
+		window.SetPosition(newX, newY)
+		// then
+		assert.Eventually(t, func() bool {
+			return newX == window.X() &&
+				newY == window.Y()
+		}, 1*time.Second, 10*time.Millisecond)
+	})
+}
+
+func TestWindow_SetDecorationHint(t *testing.T) {
+	openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+	defer openGL.Destroy()
+
+	t.Run("should hide decorations", func(t *testing.T) {
+		window, _ := openGL.OpenWindow(640, 360)
+		defer window.Close()
+		// when
+		window.SetDecorationHint(true)
+		// then
+		assert.True(t, window.Decorated())
+	})
+
+	t.Run("should show decorations", func(t *testing.T) {
+		window, _ := openGL.OpenWindow(640, 360)
+		defer window.Close()
+		// when
+		window.SetDecorationHint(false)
+		// then
+		assert.False(t, window.Decorated())
+	})
+}
+
+func TestWindow_EnterFullScreen(t *testing.T) {
+	openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+	defer openGL.Destroy()
+
+	t.Run("should enter full screen using first video mode", func(t *testing.T) {
+		displays, _ := glfw.Displays(mainThreadLoop)
+		display, _ := displays.Primary()
+		// current video mode on MacOS is returning not supported full screen video mode
+		videoMode := display.VideoModes()[0]
+		window, _ := openGL.OpenWindow(320, 200)
+		defer window.Close()
+		// when
+		window.EnterFullScreen(videoMode, 2)
+		// then
+		var (
+			expectedWindowWidth  = videoMode.Width()
+			expectedWindowHeight = videoMode.Height()
+			expectedScreenWidth  = expectedWindowWidth / 2
+			expectedScreenHeight = expectedWindowHeight / 2
+		)
+		assert.Eventually(t, func() bool {
+			screen := window.Screen()
+			return expectedWindowWidth == window.Width() &&
+				expectedWindowHeight == window.Height() &&
+				expectedScreenWidth == screen.Width() &&
+				expectedScreenHeight == screen.Height()
+		}, 1*time.Second, 10*time.Millisecond)
+	})
+}
+
+func TestWindow_ExitFullScreen(t *testing.T) {
+	openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+	defer openGL.Destroy()
+
+	t.Run("should exit full screen", func(t *testing.T) {
+		displays, _ := glfw.Displays(mainThreadLoop)
+		display, _ := displays.Primary()
+		videoMode := display.VideoMode()
+		window, _ := openGL.OpenFullScreenWindow(videoMode, glfw.Zoom(2))
+		defer window.Close()
+		// when
+		window.ExitFullScreen()
+		// then
+		assert.Eventually(t, func() bool {
+			return videoMode.Width() == window.Width() &&
+				videoMode.Height() == window.Height() &&
+				2 == window.Zoom() &&
+				videoMode.Width()/2 == window.Screen().Width() &&
+				videoMode.Height()/2 == window.Screen().Height()
+		}, 1*time.Second, 10*time.Millisecond)
+	})
+
+	t.Run("should exit full screen after executing EnterFullScreen", func(t *testing.T) {
+		displays, _ := glfw.Displays(mainThreadLoop)
+		display, _ := displays.Primary()
+		videoMode := display.VideoMode()
+		window, _ := openGL.OpenWindow(320, 200, glfw.Zoom(2))
+		defer window.Close()
+		x, y := window.X(), window.Y()
+		window.EnterFullScreen(videoMode, 1)
+		// when
+		window.ExitFullScreen()
+		// then
+		assert.Eventually(t, func() bool {
+			return 640 == window.Width() &&
+				400 == window.Height() &&
+				2 == window.Zoom() &&
+				x == window.X() &&
+				y == window.Y() &&
+				320 == window.Screen().Width() &&
+				200 == window.Screen().Height()
+		}, 1*time.Second, 10*time.Millisecond)
+	})
+}
+
+func TestWindow_SetAutoIconifyHint(t *testing.T) {
+	openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+	defer openGL.Destroy()
+	displays, _ := glfw.Displays(mainThreadLoop)
+	display, _ := displays.Primary()
+	videoMode := display.VideoMode()
+
+	t.Run("should no iconify full screen window on focus lost", func(t *testing.T) {
+		window, _ := openGL.OpenFullScreenWindow(videoMode)
+		defer window.Close()
+		// when
+		window.SetAutoIconifyHint(false)
+		// then
+		assert.False(t, window.AutoIconify())
+	})
+
+	t.Run("should iconify full screen window on focus lost", func(t *testing.T) {
+		window, _ := openGL.OpenFullScreenWindow(videoMode)
+		defer window.Close()
+		// when
+		window.SetAutoIconifyHint(true)
+		// then
+		assert.True(t, window.AutoIconify())
+	})
+
 }

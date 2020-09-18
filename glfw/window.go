@@ -1,7 +1,9 @@
 package glfw
 
 import (
+	"errors"
 	"log"
+	"time"
 
 	gl33 "github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
@@ -31,6 +33,12 @@ type Window struct {
 	mouseWindow            *mouseWindow
 	onClose                func(*Window)
 	closed                 bool
+	fullScreenMode         *VideoMode
+	sizeBefore             *sizeBeforeEnteringFullScreen
+}
+
+type sizeBeforeEnteringFullScreen struct {
+	x, y, width, height, zoom int
 }
 
 func newWindow(glfwWindow *glfw.Window, mainThreadLoop *MainThreadLoop, width, height int, context *gl.Context, sharedContext *gl.Context, onClose func(*Window), options ...WindowOption) (*Window, error) {
@@ -84,7 +92,21 @@ func newWindow(glfwWindow *glfw.Window, mainThreadLoop *MainThreadLoop, width, h
 		win.glfwWindow.Show()
 	})
 	<-sizeIsSet
+	mainThreadLoop.Execute(func() {
+		win.glfwWindow.SetSizeCallback(win.sizeCallback)
+	})
 	return win, nil
+}
+
+func (w *Window) sizeCallback(_ *glfw.Window, width int, height int) {
+	w.requestedWidth = width / w.zoom
+	w.requestedHeight = height / w.zoom
+	if width%w.zoom != 0 {
+		w.requestedWidth++
+	}
+	if height%w.zoom != 0 {
+		w.requestedHeight++
+	}
 }
 
 func updateSize(win *Window) <-chan bool {
@@ -145,7 +167,9 @@ func (w *Window) DrawIntoBackBuffer() {
 	api.Viewport(0, 0, int32(width), int32(height))
 	api.BindTexture(gl33.TEXTURE_2D, w.screenAcceleratedImage.TextureID())
 	api.UseProgram(w.program.ID())
-	w.screenPolygon.draw()
+	xRight := float32(2*w.screenImage.Width()*w.zoom)/float32(width) - 1
+	yBottom := -(float32(2*w.screenImage.Height()*w.zoom) / float32(height)) + 1
+	w.screenPolygon.draw(xRight, yBottom)
 }
 
 // SwapBuffers makes current back buffer visible to the user.
@@ -162,6 +186,7 @@ func (w *Window) Close() {
 		return
 	}
 	w.mainThreadLoop.Execute(func() {
+		w.glfwWindow.SetSizeCallback(nil)
 		w.glfwWindow.SetKeyCallback(nil)
 		w.glfwWindow.SetMouseButtonCallback(nil)
 		w.glfwWindow.SetScrollCallback(nil)
@@ -187,17 +212,39 @@ func (w *Window) ShouldClose() bool {
 // Width returns the actual width of the window in pixels. It may be different
 // than requested width used when window was open due to platform limitation.
 // If zooming is used the width is multiplied by zoom.
-func (w *Window) Width() int {
-	width, _ := w.mouseWindow.Size()
-	return width
+func (w *Window) Width() (width int) {
+	w.mainThreadLoop.Execute(func() {
+		width, _ = w.mouseWindow.Size()
+	})
+	return
 }
 
 // Height returns the actual height of the window in pixels. It may be different
 // than requested height used when window was open due to platform limitation.
 // If zooming is used the height is multiplied by zoom.
-func (w *Window) Height() int {
-	_, height := w.mouseWindow.Size()
-	return height
+func (w *Window) Height() (height int) {
+	w.mainThreadLoop.Execute(func() {
+		_, height = w.mouseWindow.Size()
+	})
+	return
+}
+
+// X returns the X coordinate, in pixels, of the upper-left
+// corner of the client area of the window.
+func (w *Window) X() (x int) {
+	w.mainThreadLoop.Execute(func() {
+		x, _ = w.glfwWindow.GetPos()
+	})
+	return
+}
+
+// Y returns the Y coordinate, in pixels, of the upper-left
+// corner of the client area of the window.
+func (w *Window) Y() (y int) {
+	w.mainThreadLoop.Execute(func() {
+		_, y = w.glfwWindow.GetPos()
+	})
+	return
 }
 
 // Zoom returns the actual zoom. It is the zoom given during opening the window,
@@ -217,6 +264,12 @@ func (w *Window) PollKeyboardEvent() (event keyboard.Event, ok bool) {
 
 // Screen returns the image.Selection for the whole Window image
 func (w *Window) Screen() image.Selection {
+	var width, height int
+	w.mainThreadLoop.Execute(func() {
+		width = w.requestedWidth
+		height = w.requestedHeight
+	})
+	w.ensureScreenSize(width, height)
 	return w.screenImage.WholeImageSelection()
 }
 
@@ -239,4 +292,159 @@ func (w *Window) SetCursor(cursor *Cursor) {
 // Title returns title of window
 func (w *Window) Title() string {
 	return w.title
+}
+
+// Resize changes the size of the window. Works only if full screen is off.
+//
+// Please note that retained Screen instance became obsolete after Resize.
+// You have to call Window.Screen() again to get new screen
+func (w *Window) Resize(width int, height, zoom int) error {
+	done := make(chan bool)
+	w.mainThreadLoop.Execute(func() {
+		if w.fullScreenMode != nil {
+			return
+		}
+		if zoom < 1 {
+			zoom = 1
+		}
+		w.zoom = zoom
+		newWidth := width * w.zoom
+		newHeight := height * w.zoom
+		w.glfwWindow.SetSize(newWidth, newHeight)
+		w.glfwWindow.SetSizeCallback(func(ww *glfw.Window, width int, height int) {
+			close(done)
+			w.sizeCallback(ww, width, height)
+			w.glfwWindow.SetSizeCallback(w.sizeCallback)
+		})
+	})
+	select {
+	case <-done:
+		return nil
+	case <-time.After(1 * time.Second):
+		return errors.New("timeout when waiting for window to resize")
+	}
+}
+
+func (w *Window) ensureScreenSize(width int, height int) {
+	if w.screenImage.Width() != width || w.screenImage.Height() != height {
+		newAcceleratedImage := w.sharedContext.NewAcceleratedImage(width, height)
+		newImage := image.New(newAcceleratedImage)
+		newSelection := newImage.WholeImageSelection()
+		oldSelection := w.screenImage.WholeImageSelection()
+		for y := 0; y < newImage.Height(); y++ {
+			for x := 0; x < newImage.Width(); x++ {
+				newSelection.SetColor(x, y, oldSelection.Color(x, y))
+			}
+		}
+		w.screenImage.Delete()
+		w.screenAcceleratedImage = newAcceleratedImage
+		w.screenImage = newImage
+	}
+}
+
+// SetPosition sets the position, in pixels, of the upper-left corner
+// of the client area of the window.
+func (w *Window) SetPosition(x int, y int) {
+	w.mainThreadLoop.Execute(func() {
+		w.glfwWindow.SetPos(x, y)
+	})
+}
+
+// SetDecorationHint specifies whether the window will have window decorations
+// such as a border, a close widget, etc.
+func (w *Window) SetDecorationHint(enabled bool) {
+	w.mainThreadLoop.Execute(func() {
+		w.setBoolAttrib(glfw.Decorated, enabled)
+	})
+}
+
+// Decorated returns true if window has decorations such as a border, a close widget, etc.
+func (w *Window) Decorated() (decorated bool) {
+	w.mainThreadLoop.Execute(func() {
+		decorated = w.boolAttrib(glfw.Decorated)
+	})
+	return
+}
+
+func (w *Window) setBoolAttrib(hint glfw.Hint, enabled bool) {
+	if enabled {
+		w.glfwWindow.SetAttrib(hint, glfw.True)
+	} else {
+		w.glfwWindow.SetAttrib(hint, glfw.False)
+	}
+}
+
+func (w *Window) boolAttrib(hint glfw.Hint) bool {
+	return w.glfwWindow.GetAttrib(hint) == glfw.True
+}
+
+// EnterFullScreen makes window full screen using given display video mode
+func (w *Window) EnterFullScreen(mode VideoMode, zoom int) {
+	w.sizeBefore = &sizeBeforeEnteringFullScreen{
+		x:      w.X(),
+		y:      w.Y(),
+		width:  w.requestedWidth,
+		height: w.requestedHeight,
+		zoom:   w.zoom,
+	}
+	w.zoom = zoom
+	done := make(chan bool)
+	w.mainThreadLoop.Execute(func() {
+		w.fullScreenMode = &mode
+		w.setMonitor(done, mode.monitor, 0, 0, mode.Width(), mode.Height(), mode.RefreshRate())
+	})
+	<-done
+}
+
+// ExitFullScreen exits from full screen and resizes the window to previous size
+func (w *Window) ExitFullScreen() {
+	x := w.sizeBefore.x
+	y := w.sizeBefore.y
+	width := w.sizeBefore.width
+	height := w.sizeBefore.height
+	zoom := w.sizeBefore.zoom
+	w.ExitFullScreenUsing(x, y, width, height, zoom)
+}
+
+// ExitFullScreenUsing exits from full screen and resizes the window
+func (w *Window) ExitFullScreenUsing(x, y, width, height, zoom int) {
+	done := make(chan bool)
+	w.mainThreadLoop.Execute(func() {
+		w.fullScreenMode = nil
+		w.requestedWidth = width
+		w.requestedHeight = height
+		w.zoom = zoom
+		w.setMonitor(done, nil, x, y, width*zoom, height*zoom, 0)
+	})
+	<-done
+}
+
+func (w *Window) setMonitor(done chan bool, monitor *glfw.Monitor, xpos, ypos, width, height, refreshRate int) {
+	w.glfwWindow.SetMonitor(monitor, xpos, ypos, width, height, refreshRate)
+	if w.requestedWidth*w.zoom == width && w.requestedHeight*w.zoom == height {
+		close(done)
+		return
+	}
+	w.glfwWindow.SetSizeCallback(func(ww *glfw.Window, width int, height int) {
+		close(done)
+		w.sizeCallback(ww, width, height)
+		w.glfwWindow.SetSizeCallback(w.sizeCallback)
+	})
+}
+
+// SetAutoIconifyHint specifies whether fullscreen windows automatically iconify
+// (and restore the previous video mode) on focus loss.
+func (w *Window) SetAutoIconifyHint(enabled bool) {
+	w.mainThreadLoop.Execute(func() {
+		w.setBoolAttrib(glfw.AutoIconify, enabled)
+	})
+}
+
+// AutoIconify returns true when fullscreen windows automatically iconify
+// (and restore the previous video mode) on focus loss.
+func (w *Window) AutoIconify() (enabled bool) {
+	w.mainThreadLoop.Execute(func() {
+		enabled = w.boolAttrib(glfw.AutoIconify)
+	})
+	return
 }

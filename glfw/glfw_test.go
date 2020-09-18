@@ -1,9 +1,11 @@
 package glfw_test
 
 import (
+	"math"
 	"os"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -341,6 +343,134 @@ func TestOpenGL_OpenWindow(t *testing.T) {
 			})
 		}
 	})
+
+	t.Run("should open window on a given position", func(t *testing.T) {
+		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+		defer openGL.Destroy()
+		x := 100
+		y := 200
+		// when
+		window, err := openGL.OpenWindow(640, 360, glfw.Position(x, y))
+		require.NoError(t, err)
+		defer window.Close()
+		// then
+		assert.Eventually(t, func() bool {
+			return x == window.X() &&
+				y == window.Y()
+		}, 1*time.Second, 10*time.Millisecond)
+	})
+
+	t.Run("should set NoDecorationHint", func(t *testing.T) {
+		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+		defer openGL.Destroy()
+		// when
+		window, err := openGL.OpenWindow(640, 360, glfw.NoDecorationHint())
+		require.NoError(t, err)
+		defer window.Close()
+		// then
+		assert.False(t, window.Decorated())
+	})
+
+	t.Run("should open in a full screen and zoom 1", func(t *testing.T) {
+		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+		defer openGL.Destroy()
+		displays, _ := glfw.Displays(mainThreadLoop)
+		display, _ := displays.Primary()
+		videoMode := display.VideoModes()[0]
+		// when
+		window, err := openGL.OpenFullScreenWindow(videoMode)
+		require.NoError(t, err)
+		defer window.Close()
+		// then
+		assert.Eventually(t, func() bool {
+			return videoMode.Width() == window.Width() &&
+				videoMode.Height() == window.Height() &&
+				videoMode.Width() == window.Screen().Width() &&
+				videoMode.Height() == window.Screen().Height()
+		}, time.Second, 10*time.Millisecond)
+	})
+
+	t.Run("should open in a full screen and zoom 2", func(t *testing.T) {
+		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+		defer openGL.Destroy()
+		displays, _ := glfw.Displays(mainThreadLoop)
+		display, _ := displays.Primary()
+		videoMode := display.VideoModes()[0]
+		// when
+		window, err := openGL.OpenFullScreenWindow(videoMode, glfw.Zoom(2))
+		// then
+		require.NoError(t, err)
+		defer window.Close()
+		assert.Eventually(t, func() bool {
+			return videoMode.Width() == window.Width() &&
+				videoMode.Height() == window.Height() &&
+				videoMode.Width()/2 == window.Screen().Width() &&
+				videoMode.Height()/2 == window.Screen().Height()
+		}, time.Second, 10*time.Millisecond)
+	})
+
+	t.Run("should open in a full screen with partially visible right pixels", func(t *testing.T) {
+		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+		defer openGL.Destroy()
+		var (
+			displays, _    = glfw.Displays(mainThreadLoop)
+			display, _     = displays.Primary()
+			videoMode      = display.VideoModes()[0] // TODO avoid using 1:1, 2:1, 1:2 ratios
+			zoom           = videoMode.Height() / 4
+			expectedWidth  = int(math.Ceil(float64(videoMode.Width()) / float64(zoom)))
+			expectedHeight = 4
+		)
+		// when
+		window, err := openGL.OpenFullScreenWindow(videoMode, glfw.Zoom(zoom))
+		// then
+		require.NoError(t, err)
+		defer window.Close()
+		assert.Eventually(t, func() bool {
+			return videoMode.Width() == window.Width() &&
+				videoMode.Height() == window.Height() &&
+				expectedWidth == window.Screen().Width() &&
+				expectedHeight == window.Screen().Height()
+		}, time.Second, 10*time.Millisecond)
+	})
+
+	t.Run("should open in a full screen with partially visible bottom pixels", func(t *testing.T) {
+		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+		defer openGL.Destroy()
+		var (
+			displays, _    = glfw.Displays(mainThreadLoop)
+			display, _     = displays.Primary()
+			videoMode      = display.VideoModes()[0] // TODO avoid using 1:1, 2:1, 1:2 ratios
+			zoom           = videoMode.Width() / 4
+			expectedWidth  = 4
+			expectedHeight = int(math.Ceil(float64(videoMode.Height()) / float64(zoom)))
+		)
+		// when
+		window, err := openGL.OpenFullScreenWindow(videoMode, glfw.Zoom(zoom))
+		// then
+		require.NoError(t, err)
+		defer window.Close()
+		assert.Eventually(t, func() bool {
+			return videoMode.Width() == window.Width() &&
+				videoMode.Height() == window.Height() &&
+				expectedWidth == window.Screen().Width() &&
+				expectedHeight == window.Screen().Height()
+		}, time.Second, 10*time.Millisecond)
+	})
+
+	t.Run("should open full screen window with no auto iconify", func(t *testing.T) {
+		openGL, _ := glfw.NewOpenGL(mainThreadLoop)
+		defer openGL.Destroy()
+		displays, _ := glfw.Displays(mainThreadLoop)
+		display, _ := displays.Primary()
+		videoMode := display.VideoModes()[0]
+		// when
+		window, err := openGL.OpenFullScreenWindow(videoMode, glfw.NoAutoIconifyHint())
+		// then
+		require.NoError(t, err)
+		defer window.Close()
+		assert.False(t, window.AutoIconify())
+	})
+
 }
 
 func TestWindow_Width(t *testing.T) {
