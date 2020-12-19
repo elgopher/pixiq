@@ -201,12 +201,13 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 		api := newContext(g.mainThreadLoop, glfwWindow)
 		winContext = gl.NewContext(api)
 	}
-	win, err := newWindow(glfwWindow, g.mainThreadLoop, width, height, winContext, g.context, func(window *Window) {
+	onClose := func(window *Window) {
 		if glfwWindow != g.mainWindow {
 			g.mainThreadLoop.Execute(glfwWindow.Destroy)
 		}
 		g.windowsOpen--
-	}, options...)
+	}
+	win, err := newWindow(glfwWindow, g.mainThreadLoop, width, height, winContext, g.context, onClose, options...)
 	if err != nil {
 		return nil, err
 	}
