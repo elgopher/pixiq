@@ -46,8 +46,6 @@ func newWindow(glfwWindow *glfw.Window, mainThreadLoop *MainThreadLoop, width, h
 	if height < 1 {
 		height = 1
 	}
-	// FIXME: EventBuffer size should be configurable
-	keyboardEvents := internal.NewKeyboardEvents(keyboard.NewEventBuffer(32))
 	drawer, err := newWindowDrawer(glfwWindow, mainThreadLoop, width, height, context, sharedContext)
 	if err != nil {
 		return nil, err
@@ -55,7 +53,6 @@ func newWindow(glfwWindow *glfw.Window, mainThreadLoop *MainThreadLoop, width, h
 	win := &Window{
 		glfwWindow:      glfwWindow,
 		mainThreadLoop:  mainThreadLoop,
-		keyboardEvents:  keyboardEvents,
 		requestedWidth:  width,
 		requestedHeight: height,
 		zoom:            1,
@@ -79,6 +76,8 @@ func newWindow(glfwWindow *glfw.Window, mainThreadLoop *MainThreadLoop, width, h
 		win.mouseEvents = internal.NewMouseEvents(
 			mouse.NewEventBuffer(32), // FIXME: EventBuffer size should be configurable
 			win.mouseWindow)
+		// FIXME: EventBuffer size should be configurable
+		win.keyboardEvents = internal.NewKeyboardEvents(keyboard.NewEventBuffer(32))
 		win.glfwWindow.SetKeyCallback(win.keyboardEvents.OnKeyCallback)
 		win.glfwWindow.SetMouseButtonCallback(win.mouseEvents.OnMouseButtonCallback)
 		win.glfwWindow.SetScrollCallback(win.mouseEvents.OnScrollCallback)
