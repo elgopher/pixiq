@@ -39,7 +39,7 @@ type windowDrawer struct {
 	program         *gl.Program
 }
 
-func newWindow(glfwWindow *glfw.Window, mainThreadLoop *MainThreadLoop, width, height int, context, sharedContext *gl.Context, onClose func(*Window), options ...WindowOption) (*Window, error) {
+func newWindow(glfwWindow *glfw.Window, mainThreadLoop *MainThreadLoop, width, height int, context, sharedContext *gl.Context, onClose func(*Window), options []WindowOption) (*Window, error) {
 	if width < 1 {
 		width = 1
 	}
