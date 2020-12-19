@@ -207,7 +207,7 @@ func (g *OpenGL) OpenWindow(width, height int, options ...WindowOption) (*Window
 		}
 		g.windowsOpen--
 	}
-	win, err := newWindow(glfwWindow, g.mainThreadLoop, width, height, winContext, g.context, onClose, options...)
+	win, err := newWindow(glfwWindow, g.mainThreadLoop, width, height, winContext, g.context, onClose, options)
 	if err != nil {
 		return nil, err
 	}
