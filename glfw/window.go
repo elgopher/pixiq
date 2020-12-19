@@ -62,13 +62,7 @@ func newWindow(glfwWindow *glfw.Window, mainThreadLoop *MainThreadLoop, width, h
 	}
 	var sizeIsSet <-chan bool
 	mainThreadLoop.Execute(func() {
-		for _, option := range options {
-			if option == nil {
-				log.Println("nil option given when opening the window")
-				continue
-			}
-			option(win)
-		}
+		applyOptions(win, options)
 		win.mouseWindow = &mouseWindow{
 			glfwWindow: win.glfwWindow,
 			zoom:       win.zoom,
@@ -76,11 +70,11 @@ func newWindow(glfwWindow *glfw.Window, mainThreadLoop *MainThreadLoop, width, h
 		win.mouseEvents = internal.NewMouseEvents(
 			mouse.NewEventBuffer(32), // FIXME: EventBuffer size should be configurable
 			win.mouseWindow)
+		win.glfwWindow.SetMouseButtonCallback(win.mouseEvents.OnMouseButtonCallback)
+		win.glfwWindow.SetScrollCallback(win.mouseEvents.OnScrollCallback)
 		// FIXME: EventBuffer size should be configurable
 		win.keyboardEvents = internal.NewKeyboardEvents(keyboard.NewEventBuffer(32))
 		win.glfwWindow.SetKeyCallback(win.keyboardEvents.OnKeyCallback)
-		win.glfwWindow.SetMouseButtonCallback(win.mouseEvents.OnMouseButtonCallback)
-		win.glfwWindow.SetScrollCallback(win.mouseEvents.OnScrollCallback)
 		sizeIsSet = updateSize(win)
 		win.glfwWindow.Show()
 	})
@@ -104,6 +98,16 @@ func newWindowDrawer(glfwWindow *glfw.Window, mainThreadLoop *MainThreadLoop, wi
 		context:         context,
 		program:         program,
 	}, nil
+}
+
+func applyOptions(win *Window, options []WindowOption) {
+	for _, option := range options {
+		if option == nil {
+			log.Println("nil option given when opening the window")
+			continue
+		}
+		option(win)
+	}
 }
 
 func updateSize(win *Window) <-chan bool {
