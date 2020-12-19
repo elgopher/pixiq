@@ -21,9 +21,30 @@ func (c *Context) NewAcceleratedImage(width, height int) *AcceleratedImage {
 	if height > c.capabilities.maxTextureSize {
 		panic(fmt.Sprintf("height higher than MAX_TEXTURE_SIZE (%d pixels)", c.capabilities.maxTextureSize))
 	}
-	// FIXME resize image (internally) if OpenGL does support only a power-of-two dimensions.
+
+	textureID := c.createTexture(width, height)
+	frameBufferID := c.createTextureFramebuffer(textureID)
+
+	img := &AcceleratedImage{
+		textureID:     textureID,
+		frameBufferID: frameBufferID,
+		width:         width,
+		height:        height,
+		api:           c.api,
+	}
+	c.allImages[img] = img
+	img.onDelete = func() {
+		delete(c.allImages, img)
+	}
+
+	clearWithTransparentColor := c.NewClearCommand()
+	clearWithTransparentColor.Run(img.wholeSelection(), []image.AcceleratedImageSelection{})
+	return img
+}
+
+// FIXME resize image (internally) if OpenGL does support only a power-of-two dimensions.
+func (c *Context) createTexture(width int, height int) uint32 {
 	var id uint32
-	var frameBufferID uint32
 	c.api.GenTextures(1, &id)
 	c.api.BindTexture(texture2D, id)
 	c.api.TexImage2D(
@@ -41,24 +62,15 @@ func (c *Context) NewAcceleratedImage(width, height int) *AcceleratedImage {
 	c.api.TexParameteri(texture2D, textureMagFilter, nearest)
 	c.api.TexParameteri(texture2D, textureWrapS, clampToBorder)
 	c.api.TexParameteri(texture2D, textureWrapT, clampToBorder)
+	return id
+}
 
+func (c *Context) createTextureFramebuffer(id uint32) uint32 {
+	var frameBufferID uint32
 	c.api.GenFramebuffers(1, &frameBufferID)
 	c.api.BindFramebuffer(framebuffer, frameBufferID)
 	c.api.FramebufferTexture2D(framebuffer, colorAttachment0, texture2D, id, 0)
-	img := &AcceleratedImage{
-		textureID:     id,
-		frameBufferID: frameBufferID,
-		width:         width,
-		height:        height,
-		api:           c.api,
-	}
-	c.allImages[img] = img
-	img.onDelete = func() {
-		delete(c.allImages, img)
-	}
-	clearWithTransparentColor := c.NewClearCommand()
-	clearWithTransparentColor.Run(img.wholeSelection(), []image.AcceleratedImageSelection{})
-	return img
+	return frameBufferID
 }
 
 // AcceleratedImage is an image.AcceleratedImage implementation storing pixels
