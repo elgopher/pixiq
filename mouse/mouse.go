@@ -61,26 +61,7 @@ func (m *Mouse) Update() {
 	lastPosition := m.position
 	m.scroll = Scroll{}
 	defer func() {
-		if lastPosition != m.position {
-			windowLeft := false
-			if !m.position.insideWindow && lastPosition.insideWindow {
-				windowLeft = true
-			}
-			windowEntered := false
-			if m.position.insideWindow && !lastPosition.insideWindow {
-				windowEntered = true
-			}
-			m.positionChange = PositionChange{
-				x:             m.position.x - lastPosition.x,
-				y:             m.position.y - lastPosition.y,
-				realX:         m.position.realX - lastPosition.realX,
-				realY:         m.position.realY - lastPosition.realY,
-				windowLeft:    windowLeft,
-				windowEntered: windowEntered,
-			}
-		} else {
-			m.positionChange = PositionChange{}
-		}
+		m.positionChange = m.calculatePositionChange(lastPosition)
 	}()
 	for {
 		event, ok := m.source.PollMouseEvent()
@@ -114,6 +95,28 @@ func (m *Mouse) clearJustPressed() {
 func (m *Mouse) clearJustReleased() {
 	for button := range m.justReleased {
 		delete(m.justReleased, button)
+	}
+}
+
+func (m *Mouse) calculatePositionChange(lastPosition Position) PositionChange {
+	if lastPosition == m.position {
+		return PositionChange{}
+	}
+	windowLeft := false
+	if !m.position.insideWindow && lastPosition.insideWindow {
+		windowLeft = true
+	}
+	windowEntered := false
+	if m.position.insideWindow && !lastPosition.insideWindow {
+		windowEntered = true
+	}
+	return PositionChange{
+		x:             m.position.x - lastPosition.x,
+		y:             m.position.y - lastPosition.y,
+		realX:         m.position.realX - lastPosition.realX,
+		realY:         m.position.realY - lastPosition.realY,
+		windowLeft:    windowLeft,
+		windowEntered: windowEntered,
 	}
 }
 
