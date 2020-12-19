@@ -243,26 +243,8 @@ func (c *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selecti
 	if !ok {
 		panic("output image created in a different OpenGL context than program or deleted")
 	}
-
 	loc := output.Location
-	if loc.X >= img.width {
-		return
-	}
-	if loc.Y >= img.height {
-		return
-	}
-	if loc.Width == 0 {
-		return
-	}
-	if loc.Height == 0 {
-		return
-	}
-	// this not only skips unneeded processing but also fixes bug with Intel Iris GPU on MAC - see #115
-	if loc.X+loc.Width <= 0 {
-		return
-	}
-	// this not only skips unneeded processing but also fixes bug with Intel Iris GPU on MAC - see #115
-	if loc.Y+loc.Height <= 0 {
+	if shouldSkipCommandProcessing(loc, img) {
 		return
 	}
 	x := int32(loc.X)
@@ -292,4 +274,28 @@ func (c *AcceleratedCommand) Run(output image.AcceleratedImageSelection, selecti
 	}
 
 	c.command.RunGL(renderer, selections)
+}
+
+func shouldSkipCommandProcessing(output image.AcceleratedImageLocation, img *AcceleratedImage) bool {
+	if output.X >= img.width {
+		return true
+	}
+	if output.Y >= img.height {
+		return true
+	}
+	if output.Width == 0 {
+		return true
+	}
+	if output.Height == 0 {
+		return true
+	}
+	if output.X+output.Width <= 0 {
+		// this not only skips unneeded processing but also fixes bug with Intel Iris GPU on MAC - see #115
+		return true
+	}
+	if output.Y+output.Height <= 0 {
+		// this not only skips unneeded processing but also fixes bug with Intel Iris GPU on MAC - see #115
+		return true
+	}
+	return false
 }
