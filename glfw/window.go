@@ -14,54 +14,54 @@ import (
 
 // Window is an implementation of loop.Screen and keyboard.EventSource
 type Window struct {
-	glfwWindow             *glfw.Window
-	mainThreadLoop         *MainThreadLoop
-	screenPolygon          *screenPolygon
-	keyboardEvents         *internal.KeyboardEvents
-	mouseEvents            *internal.MouseEvents
-	requestedWidth         int
-	requestedHeight        int
-	zoom                   int
-	title                  string
-	screenImage            *image.Image
-	screenAcceleratedImage *gl.AcceleratedImage
-	sharedContext          *gl.Context // API for main context shared between all windows
-	context                *gl.Context
-	program                *gl.Program
-	mouseWindow            *mouseWindow
-	onClose                func(*Window)
-	closed                 bool
+	glfwWindow      *glfw.Window
+	mainThreadLoop  *MainThreadLoop
+	keyboardEvents  *internal.KeyboardEvents
+	mouseEvents     *internal.MouseEvents
+	requestedWidth  int
+	requestedHeight int
+	zoom            int
+	title           string
+	mouseWindow     *mouseWindow
+	onClose         func(*Window)
+	closed          bool
+	drawer          windowDrawer
 }
 
-func newWindow(glfwWindow *glfw.Window, mainThreadLoop *MainThreadLoop, width, height int, context *gl.Context, sharedContext *gl.Context, onClose func(*Window), options ...WindowOption) (*Window, error) {
+type windowDrawer struct {
+	glfwWindow      *glfw.Window
+	mainThreadLoop  *MainThreadLoop
+	screenPolygon   *screenPolygon
+	screenImage     *image.Image
+	screenTextureID uint32
+	sharedContext   *gl.Context // API for main context shared between all windows
+	context         *gl.Context
+	program         *gl.Program
+}
+
+func newWindow(glfwWindow *glfw.Window, mainThreadLoop *MainThreadLoop, width, height int, context, sharedContext *gl.Context, onClose func(*Window), options ...WindowOption) (*Window, error) {
 	if width < 1 {
 		width = 1
 	}
 	if height < 1 {
 		height = 1
 	}
-	screenAcceleratedImage := sharedContext.NewAcceleratedImage(width, height)
-	program, err := compileProgram(context, vertexShaderSrc, fragmentShaderSrc)
+	// FIXME: EventBuffer size should be configurable
+	keyboardEvents := internal.NewKeyboardEvents(keyboard.NewEventBuffer(32))
+	drawer, err := newWindowDrawer(glfwWindow, mainThreadLoop, width, height, context, sharedContext)
 	if err != nil {
 		return nil, err
 	}
-	// FIXME: EventBuffer size should be configurable
-	keyboardEvents := internal.NewKeyboardEvents(keyboard.NewEventBuffer(32))
 	win := &Window{
-		glfwWindow:             glfwWindow,
-		mainThreadLoop:         mainThreadLoop,
-		screenPolygon:          newScreenPolygon(context),
-		keyboardEvents:         keyboardEvents,
-		requestedWidth:         width,
-		requestedHeight:        height,
-		zoom:                   1,
-		title:                  "OpenGL Pixiq Window",
-		screenImage:            image.New(screenAcceleratedImage),
-		screenAcceleratedImage: screenAcceleratedImage,
-		sharedContext:          sharedContext,
-		context:                context,
-		program:                program,
-		onClose:                onClose,
+		glfwWindow:      glfwWindow,
+		mainThreadLoop:  mainThreadLoop,
+		keyboardEvents:  keyboardEvents,
+		requestedWidth:  width,
+		requestedHeight: height,
+		zoom:            1,
+		title:           "OpenGL Pixiq Window",
+		onClose:         onClose,
+		drawer:          drawer,
 	}
 	var sizeIsSet <-chan bool
 	mainThreadLoop.Execute(func() {
@@ -87,6 +87,24 @@ func newWindow(glfwWindow *glfw.Window, mainThreadLoop *MainThreadLoop, width, h
 	})
 	<-sizeIsSet
 	return win, nil
+}
+
+func newWindowDrawer(glfwWindow *glfw.Window, mainThreadLoop *MainThreadLoop, width, height int, context, sharedContext *gl.Context) (windowDrawer, error) {
+	screenAcceleratedImage := sharedContext.NewAcceleratedImage(width, height)
+	program, err := compileProgram(context, vertexShaderSrc, fragmentShaderSrc)
+	if err != nil {
+		return windowDrawer{}, err
+	}
+	return windowDrawer{
+		glfwWindow:      glfwWindow,
+		mainThreadLoop:  mainThreadLoop,
+		screenPolygon:   newScreenPolygon(context),
+		screenImage:     image.New(screenAcceleratedImage),
+		screenTextureID: screenAcceleratedImage.TextureID(),
+		sharedContext:   sharedContext,
+		context:         context,
+		program:         program,
+	}, nil
 }
 
 func updateSize(win *Window) <-chan bool {
@@ -130,24 +148,28 @@ func (w *Window) DrawIntoBackBuffer() {
 	if w.closed {
 		panic("DrawIntoBackBuffer forbidden for a closed window")
 	}
-	w.screenImage.Upload()
+	w.drawer.drawIntoBackBuffer()
+}
+
+func (d *windowDrawer) drawIntoBackBuffer() {
+	d.screenImage.Upload()
 	// Finish actively polls GPU which may consume a lot of CPU power.
 	// That's why Finish is called only if context synchronization is required
-	api := w.context.API()
-	if w.sharedContext.API() != api {
-		w.sharedContext.API().Finish()
+	api := d.context.API()
+	if d.sharedContext.API() != api {
+		d.sharedContext.API().Finish()
 	}
 	var width, height int
-	w.mainThreadLoop.Execute(func() {
-		width, height = w.glfwWindow.GetFramebufferSize()
+	d.mainThreadLoop.Execute(func() {
+		width, height = d.glfwWindow.GetFramebufferSize()
 	})
 	api.Disable(gl33.BLEND)
 	api.Disable(gl33.SCISSOR_TEST)
 	api.BindFramebuffer(gl33.FRAMEBUFFER, 0)
 	api.Viewport(0, 0, int32(width), int32(height))
-	api.BindTexture(gl33.TEXTURE_2D, w.screenAcceleratedImage.TextureID())
-	api.UseProgram(w.program.ID())
-	w.screenPolygon.draw()
+	api.BindTexture(gl33.TEXTURE_2D, d.screenTextureID)
+	api.UseProgram(d.program.ID())
+	d.screenPolygon.draw()
 }
 
 // SwapBuffers makes current back buffer visible to the user.
@@ -169,11 +191,15 @@ func (w *Window) Close() {
 		w.glfwWindow.SetScrollCallback(nil)
 		w.glfwWindow.Hide()
 	})
-	w.screenPolygon.delete()
-	w.program.Delete()
-	w.screenImage.Delete()
+	w.drawer.close()
 	w.onClose(w)
 	w.closed = true
+}
+
+func (d *windowDrawer) close() {
+	d.screenPolygon.delete()
+	d.program.Delete()
+	d.screenImage.Delete()
 }
 
 // ShouldClose reports the value of the close flag of the window.
@@ -219,13 +245,13 @@ func (w *Window) PollKeyboardEvent() (event keyboard.Event, ok bool) {
 
 // Screen returns the image.Selection for the whole Window image
 func (w *Window) Screen() image.Selection {
-	return w.screenImage.WholeImageSelection()
+	return w.drawer.screenImage.WholeImageSelection()
 }
 
 // ContextAPI returns window-specific OpenGL's context. Useful for accessing
 // window's framebuffer.
 func (w *Window) ContextAPI() gl.API {
-	return w.context.API()
+	return w.drawer.context.API()
 }
 
 // SetCursor sets the window cursor
