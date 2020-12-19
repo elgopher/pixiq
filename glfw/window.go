@@ -45,11 +45,13 @@ func newWindow(glfwWindow *glfw.Window, mainThreadLoop *MainThreadLoop, width, h
 	if err != nil {
 		return nil, err
 	}
+	// FIXME: EventBuffer size should be configurable
+	keyboardEvents := internal.NewKeyboardEvents(keyboard.NewEventBuffer(32))
 	win := &Window{
 		glfwWindow:             glfwWindow,
 		mainThreadLoop:         mainThreadLoop,
 		screenPolygon:          newScreenPolygon(context),
-		keyboardEvents:         internal.NewKeyboardEvents(keyboard.NewEventBuffer(32)), // FIXME: EventBuffer size should be configurable
+		keyboardEvents:         keyboardEvents,
 		requestedWidth:         width,
 		requestedHeight:        height,
 		zoom:                   1,
