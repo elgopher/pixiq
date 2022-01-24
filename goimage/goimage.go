@@ -7,7 +7,7 @@ import (
 	"image/color"
 	"image/draw"
 
-	"github.com/jacekolszak/pixiq/image"
+	"github.com/elgopher/pixiq/image"
 )
 
 // FromSelection creates a standard Go Image from Pixiq image.Selection

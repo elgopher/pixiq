@@ -3,7 +3,7 @@ package mouse_test
 import (
 	"testing"
 
-	"github.com/jacekolszak/pixiq/mouse"
+	"github.com/elgopher/pixiq/mouse"
 )
 
 func BenchmarkMouse_Update(b *testing.B) {

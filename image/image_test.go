@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/jacekolszak/pixiq/image"
-	"github.com/jacekolszak/pixiq/image/fake"
+	"github.com/elgopher/pixiq/image"
+	"github.com/elgopher/pixiq/image/fake"
 )
 
 var transparent = image.RGBA(0, 0, 0, 0)

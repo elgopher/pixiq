@@ -8,7 +8,7 @@ import (
 	_ "image/png" // Register PNG decoder
 	"os"
 
-	"github.com/jacekolszak/pixiq/image"
+	"github.com/elgopher/pixiq/image"
 )
 
 // ImageFactory creates a new image with given dimensions.

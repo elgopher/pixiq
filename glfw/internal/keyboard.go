@@ -3,7 +3,7 @@ package internal
 import (
 	"github.com/go-gl/glfw/v3.3/glfw"
 
-	"github.com/jacekolszak/pixiq/keyboard"
+	"github.com/elgopher/pixiq/keyboard"
 )
 
 // KeyboardEvents maps GLFW events to keyboard.Event. Mapped events can be

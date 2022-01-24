@@ -3,7 +3,7 @@ package internal
 import (
 	"github.com/go-gl/glfw/v3.3/glfw"
 
-	"github.com/jacekolszak/pixiq/mouse"
+	"github.com/elgopher/pixiq/mouse"
 )
 
 // MouseEvents maps GLFW events to mouse.Event. Mapped events can be

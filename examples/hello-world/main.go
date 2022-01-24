@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/jacekolszak/pixiq/colornames"
-	"github.com/jacekolszak/pixiq/glfw"
+	"github.com/elgopher/pixiq/colornames"
+	"github.com/elgopher/pixiq/glfw"
 )
 
 func main() {

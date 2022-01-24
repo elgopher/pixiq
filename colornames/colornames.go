@@ -6,7 +6,7 @@
 package colornames
 
 import (
-	"github.com/jacekolszak/pixiq/image"
+	"github.com/elgopher/pixiq/image"
 )
 
 var (

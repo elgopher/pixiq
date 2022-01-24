@@ -3,7 +3,7 @@ package internal
 import (
 	"github.com/go-gl/glfw/v3.3/glfw"
 
-	"github.com/jacekolszak/pixiq/keyboard"
+	"github.com/elgopher/pixiq/keyboard"
 )
 
 var keymap = map[glfw.Key]keyboard.Key{

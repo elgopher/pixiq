@@ -46,7 +46,7 @@ Why there is no abstraction for opening windows?
 
 > Because it is really hard to design such abstraction. There are way too many
 platforms varying in possibilities (PCs, Macs, mobile devices etc.). But we are
-open for [proposals](https://github.com/jacekolszak/pixiq/issues). There is 
+open for [proposals](https://github.com/elgopher/pixiq/issues). There is 
 a chance that it will be feasible to create such abstraction just for PCs 
 (Win, Mac and Linux).
 
@@ -57,8 +57,8 @@ for example it does not allow to change the look of the cursor or to set
 the window transparency. Why?
 
 > Because we haven't had time to do it yet. If something is really important
-for you then propably it is time to submit an  [Issue](https://github.com/jacekolszak/pixiq/issues) 
-or maybe even make a change by submitting a [Pull Request](https://github.com/jacekolszak/pixiq/pulls).
+for you then propably it is time to submit an  [Issue](https://github.com/elgopher/pixiq/issues) 
+or maybe even make a change by submitting a [Pull Request](https://github.com/elgopher/pixiq/pulls).
 The `glfw.OpenGL` struct does not need to implement any abstractions
 for opening windows, therefore it may be extended freely.
 

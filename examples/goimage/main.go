@@ -3,8 +3,8 @@ package main
 import (
 	"image"
 
-	"github.com/jacekolszak/pixiq/glfw"
-	"github.com/jacekolszak/pixiq/goimage"
+	"github.com/elgopher/pixiq/glfw"
+	"github.com/elgopher/pixiq/goimage"
 )
 
 func main() {

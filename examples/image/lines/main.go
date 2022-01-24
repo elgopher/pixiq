@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
-	"github.com/jacekolszak/pixiq/glfw"
-	"github.com/jacekolszak/pixiq/image"
+	"github.com/elgopher/pixiq/glfw"
+	"github.com/elgopher/pixiq/image"
 )
 
 // This example shows how to set all pixels using Lines

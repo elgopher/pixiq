@@ -3,9 +3,9 @@ package clear_test
 import (
 	"testing"
 
-	"github.com/jacekolszak/pixiq/clear"
-	"github.com/jacekolszak/pixiq/image"
-	"github.com/jacekolszak/pixiq/image/fake"
+	"github.com/elgopher/pixiq/clear"
+	"github.com/elgopher/pixiq/image"
+	"github.com/elgopher/pixiq/image/fake"
 )
 
 func BenchmarkTool_Clear(b *testing.B) {

@@ -12,10 +12,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/jacekolszak/pixiq/colornames"
-	"github.com/jacekolszak/pixiq/decoder"
-	"github.com/jacekolszak/pixiq/image"
-	"github.com/jacekolszak/pixiq/image/fake"
+	"github.com/elgopher/pixiq/colornames"
+	"github.com/elgopher/pixiq/decoder"
+	"github.com/elgopher/pixiq/image"
+	"github.com/elgopher/pixiq/image/fake"
 )
 
 func TestNew(t *testing.T) {

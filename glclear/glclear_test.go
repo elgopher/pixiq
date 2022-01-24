@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/jacekolszak/pixiq/gl"
-	"github.com/jacekolszak/pixiq/glclear"
+	"github.com/elgopher/pixiq/gl"
+	"github.com/elgopher/pixiq/glclear"
 )
 
 func TestNew(t *testing.T) {

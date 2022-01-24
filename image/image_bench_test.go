@@ -3,7 +3,7 @@ package image_test
 import (
 	"testing"
 
-	"github.com/jacekolszak/pixiq/image"
+	"github.com/elgopher/pixiq/image"
 )
 
 func BenchmarkSelection_SetColor(b *testing.B) {

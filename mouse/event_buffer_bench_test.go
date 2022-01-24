@@ -3,7 +3,7 @@ package mouse_test
 import (
 	"testing"
 
-	"github.com/jacekolszak/pixiq/mouse"
+	"github.com/elgopher/pixiq/mouse"
 )
 
 // Should be 0 allocs/op

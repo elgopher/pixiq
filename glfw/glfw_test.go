@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/jacekolszak/pixiq/glfw"
+	"github.com/elgopher/pixiq/glfw"
 )
 
 var mainThreadLoop *glfw.MainThreadLoop

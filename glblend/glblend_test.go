@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/jacekolszak/pixiq/glblend"
+	"github.com/elgopher/pixiq/glblend"
 )
 
 func TestNewSource(t *testing.T) {

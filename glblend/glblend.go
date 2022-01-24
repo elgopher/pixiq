@@ -3,8 +3,8 @@
 package glblend
 
 import (
-	"github.com/jacekolszak/pixiq/gl"
-	"github.com/jacekolszak/pixiq/image"
+	"github.com/elgopher/pixiq/gl"
+	"github.com/elgopher/pixiq/image"
 )
 
 // NewSource creates a new blending tool which replaces target selection with source

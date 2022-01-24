@@ -3,10 +3,10 @@ package main
 import (
 	"log"
 
-	"github.com/jacekolszak/pixiq/colornames"
-	"github.com/jacekolszak/pixiq/glfw"
-	"github.com/jacekolszak/pixiq/image"
-	"github.com/jacekolszak/pixiq/mouse"
+	"github.com/elgopher/pixiq/colornames"
+	"github.com/elgopher/pixiq/glfw"
+	"github.com/elgopher/pixiq/image"
+	"github.com/elgopher/pixiq/mouse"
 )
 
 func main() {

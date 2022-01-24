@@ -6,9 +6,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/jacekolszak/pixiq/clear"
-	"github.com/jacekolszak/pixiq/image"
-	"github.com/jacekolszak/pixiq/image/fake"
+	"github.com/elgopher/pixiq/clear"
+	"github.com/elgopher/pixiq/image"
+	"github.com/elgopher/pixiq/image/fake"
 )
 
 func TestNew(t *testing.T) {
