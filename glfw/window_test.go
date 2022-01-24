@@ -8,11 +8,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	gl2 "github.com/jacekolszak/pixiq/gl"
-	"github.com/jacekolszak/pixiq/glfw"
-	"github.com/jacekolszak/pixiq/image"
-	"github.com/jacekolszak/pixiq/keyboard"
-	"github.com/jacekolszak/pixiq/mouse"
+	gl2 "github.com/elgopher/pixiq/gl"
+	"github.com/elgopher/pixiq/glfw"
+	"github.com/elgopher/pixiq/image"
+	"github.com/elgopher/pixiq/keyboard"
+	"github.com/elgopher/pixiq/mouse"
 )
 
 func TestWindow_DrawIntoBackBuffer(t *testing.T) {

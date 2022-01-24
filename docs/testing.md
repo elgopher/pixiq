@@ -10,4 +10,4 @@
 
 * unfortunetly it is not possible to have only automated tests.
 * some tests require manual work. 
-* before merging each PR it should be tested manually using all [examples](https://github.com/jacekolszak/pixiq/tree/master/examples)
+* before merging each PR it should be tested manually using all [examples](https://github.com/elgopher/pixiq/tree/master/examples)

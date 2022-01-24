@@ -5,7 +5,7 @@
 package blend
 
 import (
-	"github.com/jacekolszak/pixiq/image"
+	"github.com/elgopher/pixiq/image"
 )
 
 // ColorBlender blends source and target colors together. It is executed by Tool

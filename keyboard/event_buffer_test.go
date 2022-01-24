@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/jacekolszak/pixiq/keyboard"
+	"github.com/elgopher/pixiq/keyboard"
 )
 
 func TestNewEventBuffer(t *testing.T) {

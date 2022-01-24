@@ -3,9 +3,9 @@ package glfw_test
 import (
 	"testing"
 
-	"github.com/jacekolszak/pixiq/glblend"
-	"github.com/jacekolszak/pixiq/glfw"
-	"github.com/jacekolszak/pixiq/image"
+	"github.com/elgopher/pixiq/glblend"
+	"github.com/elgopher/pixiq/glfw"
+	"github.com/elgopher/pixiq/image"
 )
 
 var resolutions = map[string]struct {

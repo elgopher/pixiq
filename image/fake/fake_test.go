@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/jacekolszak/pixiq/image"
-	"github.com/jacekolszak/pixiq/image/fake"
+	"github.com/elgopher/pixiq/image"
+	"github.com/elgopher/pixiq/image/fake"
 )
 
 func TestNewAcceleratedImage(t *testing.T) {

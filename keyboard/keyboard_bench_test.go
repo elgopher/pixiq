@@ -3,7 +3,7 @@ package keyboard_test
 import (
 	"testing"
 
-	"github.com/jacekolszak/pixiq/keyboard"
+	"github.com/elgopher/pixiq/keyboard"
 )
 
 func BenchmarkKeyboard_Update(b *testing.B) {

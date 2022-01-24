@@ -1,3 +1,4 @@
+//go:build nvidia
 // +build nvidia
 
 package glfw_test
@@ -5,12 +6,12 @@ package glfw_test
 import (
 	"testing"
 
-	"github.com/jacekolszak/pixiq/gl"
+	"github.com/elgopher/pixiq/gl"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/jacekolszak/pixiq/glfw"
+	"github.com/elgopher/pixiq/glfw"
 )
 
 func TestContext_Error_Nvidia(t *testing.T) {

@@ -9,7 +9,7 @@
 package gl
 
 import (
-	"github.com/jacekolszak/pixiq/image"
+	"github.com/elgopher/pixiq/image"
 )
 
 // NewContext returns an OpenGL's Context for given API.

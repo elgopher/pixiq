@@ -4,9 +4,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/jacekolszak/pixiq/gl"
-	"github.com/jacekolszak/pixiq/glfw"
-	"github.com/jacekolszak/pixiq/image"
+	"github.com/elgopher/pixiq/gl"
+	"github.com/elgopher/pixiq/glfw"
+	"github.com/elgopher/pixiq/image"
 )
 
 func main() {

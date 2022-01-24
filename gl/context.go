@@ -3,7 +3,7 @@ package gl
 import (
 	"fmt"
 
-	"github.com/jacekolszak/pixiq/image"
+	"github.com/elgopher/pixiq/image"
 )
 
 // Context is an abstraction for OpenGL context which greatly simplifies

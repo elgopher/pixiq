@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/jacekolszak/pixiq/gl"
-	"github.com/jacekolszak/pixiq/image"
+	"github.com/elgopher/pixiq/gl"
+	"github.com/elgopher/pixiq/image"
 )
 
 func TestNewContext(t *testing.T) {

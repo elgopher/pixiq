@@ -1,4 +1,4 @@
-module github.com/jacekolszak/pixiq
+module github.com/elgopher/pixiq
 
 go 1.14
 

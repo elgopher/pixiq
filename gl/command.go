@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/jacekolszak/pixiq/image"
+	"github.com/elgopher/pixiq/image"
 )
 
 // Command is a procedure drawing primitives (such as triangles) in the AcceleratedImage.

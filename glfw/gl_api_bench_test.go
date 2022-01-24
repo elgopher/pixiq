@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/jacekolszak/pixiq/glfw"
+	"github.com/elgopher/pixiq/glfw"
 )
 
 // Must be at most 1 allocs/op

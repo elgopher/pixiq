@@ -3,8 +3,8 @@
 package glclear
 
 import (
-	"github.com/jacekolszak/pixiq/gl"
-	"github.com/jacekolszak/pixiq/image"
+	"github.com/elgopher/pixiq/gl"
+	"github.com/elgopher/pixiq/image"
 )
 
 // glContext is an OpenGL context. Possible implementation is *gl.Context which can be

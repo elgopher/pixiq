@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/jacekolszak/pixiq/blend"
-	"github.com/jacekolszak/pixiq/decoder"
-	"github.com/jacekolszak/pixiq/glfw"
+	"github.com/elgopher/pixiq/blend"
+	"github.com/elgopher/pixiq/decoder"
+	"github.com/elgopher/pixiq/glfw"
 )
 
 func main() {

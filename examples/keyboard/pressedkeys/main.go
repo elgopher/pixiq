@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/jacekolszak/pixiq/glfw"
-	"github.com/jacekolszak/pixiq/keyboard"
+	"github.com/elgopher/pixiq/glfw"
+	"github.com/elgopher/pixiq/keyboard"
 )
 
 func main() {

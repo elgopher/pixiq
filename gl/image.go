@@ -3,7 +3,7 @@ package gl
 import (
 	"fmt"
 
-	"github.com/jacekolszak/pixiq/image"
+	"github.com/elgopher/pixiq/image"
 )
 
 // NewAcceleratedImage returns an OpenGL-accelerated implementation of image.AcceleratedImage

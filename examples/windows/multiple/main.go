@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/jacekolszak/pixiq/decoder"
-	"github.com/jacekolszak/pixiq/glblend"
-	"github.com/jacekolszak/pixiq/glfw"
 	"log"
+
+	"github.com/elgopher/pixiq/decoder"
+	"github.com/elgopher/pixiq/glblend"
+	"github.com/elgopher/pixiq/glfw"
 )
 
 // This example shows how to open two windows at the same time.

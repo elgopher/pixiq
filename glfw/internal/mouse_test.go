@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/jacekolszak/pixiq/glfw/internal"
-	"github.com/jacekolszak/pixiq/mouse"
+	"github.com/elgopher/pixiq/glfw/internal"
+	"github.com/elgopher/pixiq/mouse"
 )
 
 func TestNewMouseEvents(t *testing.T) {

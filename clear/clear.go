@@ -3,7 +3,7 @@
 package clear
 
 import (
-	"github.com/jacekolszak/pixiq/image"
+	"github.com/elgopher/pixiq/image"
 )
 
 // New returns new instance of *clear.Tool

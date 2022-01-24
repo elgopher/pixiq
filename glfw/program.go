@@ -1,7 +1,7 @@
 package glfw
 
 import (
-	"github.com/jacekolszak/pixiq/gl"
+	"github.com/elgopher/pixiq/gl"
 )
 
 func compileProgram(context *gl.Context, vertexShaderSrc, fragmentShaderSrc string) (*gl.Program, error) {

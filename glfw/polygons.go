@@ -3,7 +3,7 @@ package glfw
 import (
 	gl33 "github.com/go-gl/gl/v3.3-core/gl"
 
-	"github.com/jacekolszak/pixiq/gl"
+	"github.com/elgopher/pixiq/gl"
 )
 
 func newScreenPolygon(context *gl.Context) *screenPolygon {

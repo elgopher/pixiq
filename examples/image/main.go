@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/jacekolszak/pixiq/colornames"
-	"github.com/jacekolszak/pixiq/glfw"
+	"github.com/elgopher/pixiq/colornames"
+	"github.com/elgopher/pixiq/glfw"
 )
 
 // This program shows how to create an Image and manipulate its pixels.

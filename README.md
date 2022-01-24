@@ -1,8 +1,8 @@
 # Pixiq
 
-[![CircleCI](https://circleci.com/gh/jacekolszak/pixiq.svg?style=svg)](https://circleci.com/gh/jacekolszak/pixiq)
-[![GoDoc](https://godoc.org/github.com/jacekolszak/pixiq?status.svg)](https://pkg.go.dev/mod/github.com/jacekolszak/pixiq)
-[![Go Report Card](https://goreportcard.com/badge/github.com/jacekolszak/pixiq)](https://goreportcard.com/report/github.com/jacekolszak/pixiq)
+[![CircleCI](https://circleci.com/gh/elgopher/pixiq.svg?style=svg)](https://circleci.com/gh/elgopher/pixiq)
+[![GoDoc](https://godoc.org/github.com/elgopher/pixiq?status.svg)](https://pkg.go.dev/mod/github.com/elgopher/pixiq)
+[![Go Report Card](https://goreportcard.com/badge/github.com/elgopher/pixiq)](https://goreportcard.com/report/github.com/elgopher/pixiq)
 
 Create Pixel Art games in Golang with fun and ease.
 
@@ -30,15 +30,15 @@ Create Pixel Art games in Golang with fun and ease.
 
 ```
 $ go mod init hello
-$ go get -u github.com/jacekolszak/pixiq
+$ go get -u github.com/elgopher/pixiq
 ```
 
 ```go
 package main
 
 import (
-	"github.com/jacekolszak/pixiq/colornames"
-	"github.com/jacekolszak/pixiq/glfw"
+	"github.com/elgopher/pixiq/colornames"
+	"github.com/elgopher/pixiq/glfw"
 )
 
 func main() {

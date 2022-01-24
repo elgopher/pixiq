@@ -1,12 +1,12 @@
 package main
 
 import (
-	"github.com/jacekolszak/pixiq/blend"
-	"github.com/jacekolszak/pixiq/clear"
-	"github.com/jacekolszak/pixiq/colornames"
-	"github.com/jacekolszak/pixiq/glblend"
-	"github.com/jacekolszak/pixiq/glfw"
-	"github.com/jacekolszak/pixiq/image"
+	"github.com/elgopher/pixiq/blend"
+	"github.com/elgopher/pixiq/clear"
+	"github.com/elgopher/pixiq/colornames"
+	"github.com/elgopher/pixiq/glblend"
+	"github.com/elgopher/pixiq/glfw"
+	"github.com/elgopher/pixiq/image"
 )
 
 func main() {

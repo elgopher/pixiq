@@ -3,7 +3,7 @@
 package fake
 
 import (
-	"github.com/jacekolszak/pixiq/image"
+	"github.com/elgopher/pixiq/image"
 )
 
 // NewAcceleratedImage returns a new instance of *AcceleratedImage which can be
