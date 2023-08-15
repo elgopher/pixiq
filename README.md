@@ -1,3 +1,5 @@
+### This project has been archived. It took me too long to write such low-level code. In addition, over the last few years my vision of what a retro game engine should look like has changed. So I decided to write the project from scratch. A new project with a greatly simplified API and tools for the game developer. The project is called Pi and is available at: https://github.com/elgopher/pi. I encourage you to use it.
+
 # Pixiq
 
 [![CircleCI](https://circleci.com/gh/elgopher/pixiq.svg?style=svg)](https://circleci.com/gh/elgopher/pixiq)
